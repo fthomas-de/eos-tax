@@ -11,13 +11,13 @@
         <div class="panel-body" style="min-height: 100px;">
             {% if not last_month.vars %}
                 {% for tax in last_month %}
-                    {{ tax.corporation_name }}: {{ tax.tax_value }} Isk for {{ tax.month }}/{{ tax.year}} <br>
+                    {{ tax.corporation_name }}: {{ tax.tax_value }} ({{ tax.value }}) Isk for {{ tax.month }}/{{ tax.year}} <br>
                 {% endfor %}
             {% endif %}
 
             {% if not current_month.vars %}
                 {% for tax in current_month %}
-                    {{ tax.corporation_name }}: {{ tax.tax_value }} Isk for {{ tax.month }}/{{ tax.year}} <br>
+                    {{ tax.corporation_name }}: {{ tax.tax_value }} ({{ tax.value }}) for {{ tax.month }}/{{ tax.year}} <br>
                 {% endfor %}
             {% endif %}
         </div>

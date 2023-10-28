@@ -29,6 +29,7 @@ classifiers = [
 ]
 dependencies = [
     "allianceauth>=3",
+    "allianceauth-corptools>=2.5.5"
 ]
 
 
