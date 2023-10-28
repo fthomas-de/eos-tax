@@ -36,7 +36,6 @@ def index(request):
 
     for corp_id in corporation_info.keys():
         tax_rates[corp_id] = esi.get_corp_tax(corp_id)    
-        break
 
     for (m, y) in dates:
     
