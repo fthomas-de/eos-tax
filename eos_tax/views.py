@@ -12,7 +12,7 @@ from eos_tax.models import EveSwaggerProviderWithTax
 
 
 def format_isk(isk):
-    return str(f'{isk:,}').replace(',','.')
+    return str(f'{int(isk):,}').replace(',','.')
 
 @login_required
 @permission_required("eos_tax.basic_access")
