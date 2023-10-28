@@ -1,7 +1,9 @@
 from django.db import models
 
 # Create your models here.
-from corptools.models import CorporationWalletJournalEntry  
+from bravado.exception import HTTPNotFound
+from corptools.models import CorporationWalletJournalEntry
+from allianceauth.eveonline.providers import EveSwaggerProvider, ObjectNotFound
 
 class General(models.Model):
     """Meta model for app permissions"""
@@ -20,4 +22,16 @@ class MonthlyTax(models.Model):
     month = models.IntegerField(verbose_name="Taxed month")
     year = models.IntegerField(verbose_name="Taxed year")
     
+
+class EveSwaggerProviderWithTax(EveSwaggerProvider):
+    def get_corp_tax(self, corp_id: int):
+        """Fetch corporation from ESI."""
+        try:
+            data = self.client.Corporation.get_corporations_corporation_id(corporation_id=corp_id).result()
+            return float("%.2f" % data['tax_rate'])
+        
+        except HTTPNotFound:
+            raise ObjectNotFound(corp_id, 'corporation')
+
+
 
