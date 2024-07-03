@@ -1,3 +1,13 @@
+# eostax
+TAX_ALLIANCES = [99003995]
+CURRENT_MONTH = True
+LAST_MONTH = True
+TAX_RATE = 0.1
+TAX_TYPES = ['bounty_prizes']
+
+
+
+
 # Example plugin app for Alliance Auth
 
 This is an example plugin app for [Alliance Auth](https://gitlab.com/allianceauth/allianceauth) (AA) that can be used as starting point to develop custom plugins.

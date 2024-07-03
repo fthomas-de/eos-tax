@@ -10,4 +10,4 @@ logger = get_extension_logger(__name__)
 # Example Task
 @shared_task
 def update_taxes():
-    pass
+    print("test")

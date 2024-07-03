@@ -8,7 +8,7 @@ from corptools.models import CorporationWalletJournalEntry
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 
 from eos_tax.app_settings import LAST_MONTH, CURRENT_MONTH, TAX_ALLIANCES, TAX_TYPES, TAX_RATE
-from eos_tax.models import EveSwaggerProviderWithTax
+from eos_tax.models import EveSwaggerProviderWithTax, MonthlyTax
 
 
 def format_isk(isk):
