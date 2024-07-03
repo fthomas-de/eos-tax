@@ -20,7 +20,7 @@ def run_update_alliance():
     #alliance_ids = [a.alliance_id for a in EveAllianceInfo.objects.filter(alliance_id__in=TAX_ALLIANCES).all()]
     corporation_info = { 
         x.corporation_id:x.corporation_name for x in EveCorporationInfo.objects.filter().all() 
-            if get_eve_allaince_id(x.alliance_id) in TAX_ALLIANCES}
+            if get_eve_alliance_id(x.alliance_id) in TAX_ALLIANCES}
     dates = get_dates()
     #print(corporation_info)
     #print(dates)

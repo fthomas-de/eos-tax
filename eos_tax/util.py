@@ -23,5 +23,7 @@ def format_isk(isk):
 def get_corp_name(corp_id:int):
     return EveCorporationInfo.objects.filter(corporation_id=corp_id).first().corporation_name
 
-def get_eve_allaince_id(id:int):
-    return EveAllianceInfo.objects.filter(id=id).first().alliance_id
+def get_eve_alliance_id(id:int):
+    alliance = EveAllianceInfo.objects.filter(id=id).first()
+    if alliance:
+        return alliance.alliance_id
