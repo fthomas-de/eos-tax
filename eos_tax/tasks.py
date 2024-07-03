@@ -7,7 +7,7 @@ from allianceauth.eveonline.models import EveCorporationInfo
 
 from eos_tax.db_connector import update_corp
 from eos_tax.app_settings import TAX_ALLIANCES
-from eos_tax.util import get_dates, get_eve_allaince_id
+from eos_tax.util import get_dates, get_eve_allaince_id, get_corp_name
 
 logger = get_extension_logger(__name__)
 
@@ -32,4 +32,5 @@ def run_update_alliance():
 
 @shared_task
 def run_update_corporation(corp_id:int, month: int = -1, year: int = -1):
+    logger.info(f"updating: {get_corp_name(corp_id)} ({corp_id}), date: {month}/{year}")
     update_corp(corp_id=corp_id, month=month, year=year)

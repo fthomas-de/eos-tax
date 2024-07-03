@@ -1,4 +1,4 @@
 default_app_config = "eos_tax.apps.EosTaxConfig"
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
  
