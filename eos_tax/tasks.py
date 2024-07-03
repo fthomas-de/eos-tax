@@ -7,7 +7,7 @@ from allianceauth.eveonline.models import EveCorporationInfo
 
 from eos_tax.db_connector import update_corp
 from eos_tax.app_settings import TAX_ALLIANCES
-from eos_tax.util import get_dates, get_eve_allaince_id, get_corp_name
+from eos_tax.util import get_dates, get_eve_alliance_id, get_corp_name
 
 logger = get_extension_logger(__name__)
 
