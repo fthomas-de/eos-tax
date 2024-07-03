@@ -8,8 +8,8 @@ from corptools.models import CorporationWalletJournalEntry
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 
 from eos_tax.app_settings import LAST_MONTH, CURRENT_MONTH, TAX_ALLIANCES, TAX_TYPES, TAX_RATE
-from eos_tax.models import EveSwaggerProviderWithTax, MonthlyTax
-
+from eos_tax.models import EveSwaggerProviderWithTax
+from eos_tax.db_connector import set_corp_tax
 
 def format_isk(isk):
     return str(f'{int(isk):,}').replace(',','.')
@@ -48,7 +48,7 @@ def index(request):
                 print("int(tax[sum]) / tax_rates[tax['tax_receiver_id']]", int(tax["sum"]) / tax_rates[tax['tax_receiver_id']])
                 overall_ratted = int(tax["sum"]) / tax_rates[tax['tax_receiver_id']]
                 isk_to_pay = overall_ratted * TAX_RATE
-                print("isk to pay", isk_to_pay)
+                print("isk to pay", int(isk_to_pay))
                 print("tax_rates[tax['tax_receiver_id']]", tax_rates[tax['tax_receiver_id']])
                 website_data.append({
                     "corporation_id":tax['tax_receiver_id'],
@@ -58,6 +58,14 @@ def index(request):
                     "year":y,
                     "corp_tax_rate":int(tax_rates[tax['tax_receiver_id']]*100)
                 })
+                print("test:1", overall_ratted, m)
+                set_corp_tax(
+                    corp_id=tax['tax_receiver_id'], 
+                    corp_name=corporation_info[tax['tax_receiver_id']], 
+                    tax_value=int(overall_ratted),
+                    tax_percentage=int(tax_rates[tax['tax_receiver_id']]*100),
+                    month=m,
+                    year=y)
 
     context = {"title":"IGC Taxes (" + str(TAX_RATE*100) + "%)", "website_data":website_data }
     return render(request, "eos_tax/index.html", context)

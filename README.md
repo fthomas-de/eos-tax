@@ -1,12 +1,11 @@
-# eostax
+# eostax settings
+```
 TAX_ALLIANCES = [99003995]
 CURRENT_MONTH = True
 LAST_MONTH = True
 TAX_RATE = 0.1
 TAX_TYPES = ['bounty_prizes']
-
-
-
+```
 
 # Example plugin app for Alliance Auth
 

@@ -15,12 +15,13 @@ class General(models.Model):
 
 
 class MonthlyTax(models.Model):
-    corp_id = models.IntegerField(verbose_name="Corporation ID")
-    corp_name = models.CharField(verbose_name="Corporation name", max_length=254)
-    tax_value = models.IntegerField(verbose_name="Tax value")
-    tax_percentage = models.IntegerField(verbose_name="Tax percentage")
-    month = models.IntegerField(verbose_name="Taxed month")
-    year = models.IntegerField(verbose_name="Taxed year")
+    corp_id = models.IntegerField(verbose_name="Corporation ID", blank=False)
+    month = models.IntegerField(verbose_name="Taxed month", blank=False, default=0)
+    year = models.IntegerField(verbose_name="Taxed year", blank=False, default=0)
+    corp_name = models.CharField(verbose_name="Corporation name", max_length=254, blank=True, default='')
+    tax_value = models.BigIntegerField (verbose_name="Tax value", blank=False, default=0)
+    tax_percentage = models.IntegerField(verbose_name="Tax percentage", blank=False, default=0)
+
     
 
 class EveSwaggerProviderWithTax(EveSwaggerProvider):
