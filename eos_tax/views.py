@@ -6,7 +6,7 @@ from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 from eos_tax import VERSION
 from eos_tax.app_settings import TAX_RATE
 from eos_tax.db_connector import get_website_data
-from eos_tax.util import get_dates
+from eos_tax.util import get_dates, get_amount_to_pay
 
 @login_required
 @permission_required("eos_tax.basic_access")
