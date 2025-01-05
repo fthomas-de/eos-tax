@@ -36,7 +36,7 @@ def get_eve_alliance_id(id:int):
         return alliance.alliance_id
 
 def get_amount_to_pay(tax_value:int, corp_tax:int):
-    return (tax_value/(corp_tax/100))*TAX_RATE
+    return int((tax_value/(corp_tax/100))*TAX_RATE)
 
 def corp_has_payed(corp_id:int, month:int, year:int):
     
@@ -53,8 +53,8 @@ def corp_has_payed(corp_id:int, month:int, year:int):
     payed = len(payments) > 0
 
     if payed:
-        logger.info(f"corp_has_payed: Payment found ({amount_to_pay}): {get_corp_name(corp_id)} ({corp_id}) for {month}/{year}")
+        logger.info(f"corp_has_payed: Payment found ({format_isk(amount_to_pay)}): {get_corp_name(corp_id)} ({corp_id}) for {month}/{year}")
     else:
-        logger.info(f"corp_has_payed: No Payment found ({amount_to_pay}): {get_corp_name(corp_id)} ({corp_id}) for {month}/{year}")
+        logger.info(f"corp_has_payed: No Payment found ({format_isk(amount_to_pay)}): {get_corp_name(corp_id)} ({corp_id}) for {month}/{year}")
 
     return payed
