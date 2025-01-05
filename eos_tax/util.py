@@ -5,7 +5,7 @@ from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 from corptools.models import CorporationWalletJournalEntry  
 
 from eos_tax.models import MonthlyTax
-from eos_tax.app_settings import LAST_MONTH, CURRENT_MONTH, TAX_CORPORATIONS
+from eos_tax.app_settings import LAST_MONTH, CURRENT_MONTH, TAX_CORPORATIONS, USE_REASON
 
 from allianceauth.services.hooks import get_extension_logger
 
