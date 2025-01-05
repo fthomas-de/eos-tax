@@ -3,6 +3,7 @@ from django.shortcuts import render
 
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 
+from eos_tax import VERSION
 from eos_tax.app_settings import TAX_RATE
 from eos_tax.db_connector import get_website_data
 from eos_tax.util import get_dates
@@ -12,5 +13,5 @@ from eos_tax.util import get_dates
 def index(request):
     dates = get_dates()
     website_data = get_website_data(dates=dates)
-    context = {"title":"Taxes to pay: " + str(int(TAX_RATE*100)) + "%", "website_data":website_data }
+    context = {"title":"Taxes to pay: " + str(int(TAX_RATE*100)) + "%", "website_data":website_data, "version":VERSION}
     return render(request, "eos_tax/index.html", context)
