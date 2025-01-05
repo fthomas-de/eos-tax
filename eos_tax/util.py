@@ -44,7 +44,7 @@ def corp_has_payed(corp_id:int, month:int, year:int):
     if not tax_data:
         return False
     else:
-        amount_to_pay = get_amount_to_pay(tax_data.tax_value, tax_data.tax_percentage)
+        amount_to_pay = float(get_amount_to_pay(tax_data.tax_value, tax_data.tax_percentage))
 
     if USE_REASON:
         payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, reason=f"{corp_id}/{month}/{year}", amount=amount_to_pay).values('id').all()
