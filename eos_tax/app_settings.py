@@ -1,9 +1,6 @@
 from django.conf import settings
 
 # put your app settings here
-
-
-
 LAST_MONTH = getattr(settings, "LAST_MONTH", False)
 CURRENT_MONTH = getattr(settings, "CURRENT_MONTH", False)
 TAX_ALLIANCES = getattr(settings, "TAX_ALLIANCES", [])
