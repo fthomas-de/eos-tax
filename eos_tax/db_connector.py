@@ -5,7 +5,7 @@ from corptools.models import CorporationWalletJournalEntry
 from django.db.models import Sum
 
 from eos_tax.models import MonthlyTax, EveSwaggerProviderWithTax
-from eos_tax.util import get_dates, format_isk, get_corp_name, corp_has_payed
+from eos_tax.util import get_dates, format_isk, get_corp_name, corp_has_payed, get_amount_to_pay
 from eos_tax.app_settings import TAX_TYPES, TAX_RATE
 
 from allianceauth.services.hooks import get_extension_logger
