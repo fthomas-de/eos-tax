@@ -30,7 +30,7 @@ def run_update_alliance():
 
 @shared_task
 def run_update_corporation(corp_id:int, month: int = -1, year: int = -1):
-    logger.info(f"updating: {get_corp_name(corp_id)} ({corp_id}), date: {month}/{year}")
+    #logger.info(f"updating: {get_corp_name(corp_id)} ({corp_id}), date: {month}/{year}")
     for holding_corp in TAX_CORPORATIONS:
         update_corp(corp_id=corp_id, month=month, year=year)
     

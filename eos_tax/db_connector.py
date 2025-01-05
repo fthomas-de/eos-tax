@@ -17,7 +17,7 @@ logger = get_extension_logger(__name__)
     #       values('tax_receiver_id').annotate(sum=Sum('amount'))          
 def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: int = -1, month: int = -1, year: int = -1, payed: bool = False):
     selected_corp = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).first()
-    logger.info(f"Set Tax: {get_corp_name(corp_id)} ({corp_id}), tax_value: {format_isk(tax_value)} tax_percentage {tax_percentage} {month}/{year}")
+    logger.info(f"set_corp_tax: {get_corp_name(corp_id)} ({corp_id}), tax_value: {format_isk(tax_value)} tax_percentage {tax_percentage} {month}/{year}")
 
     if selected_corp:
         selected_corp.corp_name=corp_name
@@ -72,6 +72,7 @@ def update_corp(corp_id:int, month: int = -1, year: int = -1):
             overall_ratted = int(tax["sum"])
 
         payed = corp_has_payed(corp_id=corp_id, month=month, year=year)
+        logger.info(f"update_corp: {get_corp_name(corp_id)} ({corp_id}): payed {payed} - {month}/{year}")
         set_corp_tax(
             corp_id=corp_id, 
             corp_name=get_corp_name(corp_id), 
