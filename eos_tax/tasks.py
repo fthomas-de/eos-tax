@@ -26,8 +26,6 @@ def run_update_alliance():
     for corp_id in corporation_info.keys():
         for month, year in dates:
             # split for parallel processing
-            if corp_id != 98633815:
-                return
             run_update_corporation.delay(corp_id=corp_id, month=month, year=year)
 
 @shared_task
