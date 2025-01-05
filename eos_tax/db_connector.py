@@ -49,7 +49,7 @@ def get_website_data(dates: list = []):
             website_data.append({
                 "corporation_id":selected_corp.corp_id,
                 "corporation_name":selected_corp.corp_name,
-                "isk_to_pay": format_isk((selected_corp.tax_value/(selected_corp.tax_percentage/100))*TAX_RATE),
+                "isk_to_pay": format_isk(get_amount_to_pay(selected_corp.tax_value, selected_corp.tax_percentage)),
                 "month":selected_corp.month,
                 "year":selected_corp.year,
                 "corp_tax_rate":selected_corp.tax_percentage,
