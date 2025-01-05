@@ -10,6 +10,7 @@ from eos_tax.app_settings import LAST_MONTH, CURRENT_MONTH, TAX_CORPORATIONS, US
 from allianceauth.services.hooks import get_extension_logger
 
 DONATION_TYPES = ["player_donation", "corporation_account_withdrawal"]
+logger = get_extension_logger(__name__)
 
 def get_dates():
 
@@ -35,7 +36,7 @@ def get_eve_alliance_id(id:int):
         return alliance.alliance_id
 
 def corp_has_payed(corp_id:int, month:int, year:int):
-    logger = get_extension_logger(__name__)
+    
     amount_to_pay = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).values('tax_value').first()
     if not amount_to_pay:
         return False
@@ -43,7 +44,6 @@ def corp_has_payed(corp_id:int, month:int, year:int):
         amount_to_pay = amount_to_pay['tax_value']
 
     if USE_REASON:
-        logger.info(f"Using REASON for select")
         payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, reason=f"{corp_id}/{month}/{year}", amount=amount_to_pay).values('id').all()
     else:
         payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, amount=amount_to_pay).values('id').all()
