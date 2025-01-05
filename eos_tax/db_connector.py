@@ -16,8 +16,6 @@ logger = get_extension_logger(__name__)
     # tax_data = CorporationWalletJournalEntry.objects.filter(tax_receiver_id__in=corporation_info.keys(), ref_type__in=TAX_TYPES, date__year=y, date__month=m).\
     #       values('tax_receiver_id').annotate(sum=Sum('amount'))          
 def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: int = -1, month: int = -1, year: int = -1, payed: bool = False):
-
-    # exists: update
     selected_corp = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).first()
     logger.info(f"Set Tax: {get_corp_name(corp_id)} ({corp_id}), tax_value: {format_isk(tax_value)} tax_percentage {tax_percentage} {month}/{year}")
 

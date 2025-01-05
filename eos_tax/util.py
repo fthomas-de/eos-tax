@@ -41,14 +41,15 @@ def corp_has_payed(corp_id:int, month:int, year:int):
         return False
     else:
         amount_to_pay = amount_to_pay['tax_value']
-        
+
     if USE_REASON:
+        logger.info(f"Using REASON for select")
         payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, reason=f"{corp_id}/{month}/{year}", amount=amount_to_pay).values('id').all()
     else:
         payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, amount=amount_to_pay).values('id').all()
     payed = len(payments) > 0
     if payments:
-        logger.info(f"Payment found: {get_corp_name(corp_id)} ({corp_id}) for {month}/{year}")
+        logger.info(f"Payment found ({amount_to_pay}): {get_corp_name(corp_id)} ({corp_id}) for {month}/{year}")
     else:
-        logger.info(f"No Payment found: {get_corp_name(corp_id)} ({corp_id}) for {month}/{year}")
+        logger.info(f"No Payment found ({amount_to_pay}): {get_corp_name(corp_id)} ({corp_id}) for {month}/{year}")
     return payed
