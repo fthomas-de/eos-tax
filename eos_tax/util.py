@@ -47,9 +47,9 @@ def corp_has_payed(corp_id:int, month:int, year:int):
         amount_to_pay = float(get_amount_to_pay(tax_data.tax_value, tax_data.tax_percentage))
 
     if USE_REASON:
-        payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, reason=f"{corp_id}/{month}/{year}", amount=amount_to_pay).values('id').all()
+        payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, reason=f"{corp_id}/{month}/{year}", amount=amount_to_pay*-1).values('id').all()
     else:
-        payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, amount=amount_to_pay).values('id').all()
+        payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, amount=amount_to_pay*-1).values('id').all()
     payed = len(payments) > 0
 
     if payed:
