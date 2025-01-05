@@ -2,8 +2,14 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
+from corptools.models import CorporationWalletJournalEntry  
 
-from eos_tax.app_settings import LAST_MONTH, CURRENT_MONTH
+from eos_tax.models import MonthlyTax
+from eos_tax.app_settings import LAST_MONTH, CURRENT_MONTH, TAX_CORPORATIONS
+
+from allianceauth.services.hooks import get_extension_logger
+
+DONATION_TYPES = ["player_donation", "corporation_account_withdrawal"]
 
 def get_dates():
 
@@ -27,3 +33,17 @@ def get_eve_alliance_id(id:int):
     alliance = EveAllianceInfo.objects.filter(id=id).first()
     if alliance:
         return alliance.alliance_id
+
+def corp_has_payed(corp_id:int, month:int, year:int):
+    logger = get_extension_logger(__name__)
+    amount_to_pay = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).values('tax_value').first()
+    if USE_REASON:
+        payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, reason=f"{corp_id}/{month}/{year}", amount=amount_to_pay).values('id').all()
+    else:
+        payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, amount=amount_to_pay).values('id').all()
+    payed = len(payments) > 0
+    if payments:
+        logger.info(f"Payment found: {get_corp_name(corp_id)} ({corp_id}) for {month}/{year}")
+    else:
+        logger.info(f"No Payment found: {get_corp_name(corp_id)} ({corp_id}) for {month}/{year}")
+    return payed

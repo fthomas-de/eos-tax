@@ -10,8 +10,7 @@ from eos_tax.util import get_dates
 @login_required
 @permission_required("eos_tax.basic_access")
 def index(request):
-
     dates = get_dates()
     website_data = get_website_data(dates=dates)
-    context = {"title":"IGC Taxes (" + str(TAX_RATE*100) + "%)", "website_data":website_data }
+    context = {"title":"Taxes to pay: " + str(TAX_RATE*100) + "%", "website_data":website_data }
     return render(request, "eos_tax/index.html", context)

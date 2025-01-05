@@ -13,8 +13,8 @@ class EosTaxMenuItem(MenuItemHook):
         # setup menu entry for sidebar
         MenuItemHook.__init__(
             self,
-            _("eos_tax"),
-            "fas fa-cube fa-fw",
+            _("Alliance PvE Tax"),
+            "fa fa-credit-card",
             "eos_tax:index",
             navactive=["eos_tax:"],
         )

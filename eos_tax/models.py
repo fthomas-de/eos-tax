@@ -11,7 +11,7 @@ class General(models.Model):
     class Meta:
         managed = False
         default_permissions = ()
-        permissions = (("basic_access", "Can access this app"),)
+        permissions = (("basic_access", "Can view his corp data"), ("admin_view", "Can view all data"))
 
 
 class MonthlyTax(models.Model):
@@ -21,6 +21,7 @@ class MonthlyTax(models.Model):
     corp_name = models.CharField(verbose_name="Corporation name", max_length=254, blank=True, default='')
     tax_value = models.BigIntegerField (verbose_name="Tax value", blank=False, default=0)
     tax_percentage = models.IntegerField(verbose_name="Tax percentage", blank=False, default=0)
+    payed = models.BooleanField(verbose_name="Payed", default=False)
 
     
 
