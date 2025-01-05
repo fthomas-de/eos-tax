@@ -37,6 +37,11 @@ def get_eve_alliance_id(id:int):
 def corp_has_payed(corp_id:int, month:int, year:int):
     logger = get_extension_logger(__name__)
     amount_to_pay = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).values('tax_value').first()
+    if not amount_to_pay:
+        return False
+    else:
+        amount_to_pay = amount_to_pay['tax_value']
+        
     if USE_REASON:
         payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, reason=f"{corp_id}/{month}/{year}", amount=amount_to_pay).values('id').all()
     else:
