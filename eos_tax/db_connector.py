@@ -5,8 +5,8 @@ from corptools.models import CorporationWalletJournalEntry
 from django.db.models import Sum
 
 from eos_tax.models import MonthlyTax, EveSwaggerProviderWithTax
-from eos_tax.util import get_dates, format_isk, get_corp_name, corp_has_payed, get_amount_to_pay
-from eos_tax.app_settings import TAX_TYPES, TAX_RATE
+from eos_tax.util import get_alliance_name, get_dates, format_isk, get_corp_name, corp_has_payed, get_amount_to_pay, get_eve_alliance_id
+from eos_tax.app_settings import TAX_ALLIANCES, TAX_CORPORATIONS, TAX_TYPES, TAX_RATE
 
 from allianceauth.services.hooks import get_extension_logger
 
@@ -40,10 +40,15 @@ def corp_tax_exists(corp_id: int, month: int = -1, year: int = -1) -> MonthlyTax
     if selected_corp:
         return MonthlyTax
     
-def get_website_data(dates: list = []):
+def get_website_data(dates: list = [], admin: bool = False, corps=[]):
     website_data = []
     for month, year in dates:
-        selected_corps = MonthlyTax.objects.filter(month=month, year=year).all()
+        selected_corps = []
+        if not admin:
+            if corps:
+                selected_corps = MonthlyTax.objects.filter(month=month, year=year, corp_id__in=corps).all()
+        else:
+            selected_corps = MonthlyTax.objects.filter(month=month, year=year).all()
 
         for selected_corp in selected_corps:
             website_data.append({
@@ -54,7 +59,7 @@ def get_website_data(dates: list = []):
                 "year":selected_corp.year,
                 "corp_tax_rate":selected_corp.tax_percentage,
                 "payed":selected_corp.payed,
-                "reason":f"{selected_corp.corp_id}/{selected_corp.month}/{selected_corp.year}"
+                "reason":f"{selected_corp.corp_id}/{selected_corp.month}/{selected_corp.year}",
             })
 
     return website_data
@@ -82,3 +87,27 @@ def update_corp(corp_id:int, month: int = -1, year: int = -1):
             year=year,
             payed=payed
         )
+
+def get_all_corps_for_user(characters: list = []):
+    corporation_ids = []
+    for char in characters:
+        if char.corporation_id:
+            corporation_ids.append(char.corporation_id)
+    return corporation_ids
+
+def get_tax_corp(corps:list = []):
+    # input: user corps
+    logger.debug(corps)
+
+    # 1: get all tax_alliances, the user is in 
+    tax_alliances = { 
+        x.alliance_id for x in EveCorporationInfo.objects.filter(corporation_id__in=corps).all() 
+            if get_eve_alliance_id(x.alliance_id) in TAX_ALLIANCES}
+    logger.debug(tax_alliances)
+
+    tax_corp = [x.corporation_name for x in EveCorporationInfo.objects.filter(corporation_id__in=TAX_CORPORATIONS).all() 
+                if x.alliance_id in tax_alliances ]
+    logger.debug(tax_corp)
+
+    if tax_corp:
+        return tax_corp[0]

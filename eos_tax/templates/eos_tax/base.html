@@ -7,6 +7,8 @@
     <div class="eos_tax">
         <h1 class="page-header text-center">{% translate "Alliance PvE Tax" %} ({{ version }})</h1>
 
+        {% include 'eos_tax/help.html' %}
+
         {% block details %}{% endblock %}
     </div>
 {% endblock %}

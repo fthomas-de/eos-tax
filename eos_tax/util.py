@@ -28,7 +28,18 @@ def format_isk(isk):
     return str(f'{int(isk):,}').replace(',','.')
 
 def get_corp_name(corp_id:int):
-    return EveCorporationInfo.objects.filter(corporation_id=corp_id).first().corporation_name
+    corp_info = EveCorporationInfo.objects.filter(corporation_id=corp_id).first()
+    if corp_info:
+        return corp_info.corporation_name
+
+def get_alliance_name(corp_id:int):
+    corp_info = EveCorporationInfo.objects.filter(corporation_id=corp_id).first()
+    if not corp_info:
+        return
+    
+    alliance_info = EveAllianceInfo.objects.filter(id=corp_info.alliance_id).first()
+    if alliance_info:
+        return alliance_info.alliance_name
 
 def get_eve_alliance_id(id:int):
     alliance = EveAllianceInfo.objects.filter(id=id).first()

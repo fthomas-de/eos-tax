@@ -13,21 +13,20 @@ logger = get_extension_logger(__name__)
 
 # Create your tasks here
 
-
-# Example Task
+# main task
 @shared_task
 def run_update_alliance():
-    #alliance_ids = [a.alliance_id for a in EveAllianceInfo.objects.filter(alliance_id__in=TAX_ALLIANCES).all()]
     corporation_info = { 
         x.corporation_id:x.corporation_name for x in EveCorporationInfo.objects.filter().all() 
             if get_eve_alliance_id(x.alliance_id) in TAX_ALLIANCES}
     dates = get_dates()
     # check if corp in alliance 
-    for corp_id in corporation_info.keys():
+    for corp_id in corporation_info.keys(): 
         for month, year in dates:
             # split for parallel processing
             run_update_corporation.delay(corp_id=corp_id, month=month, year=year)
 
+# helper task
 @shared_task
 def run_update_corporation(corp_id:int, month: int = -1, year: int = -1):
     #logger.info(f"updating: {get_corp_name(corp_id)} ({corp_id}), date: {month}/{year}")
