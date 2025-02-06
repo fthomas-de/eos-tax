@@ -68,8 +68,8 @@ def corp_has_payed(corp_id:int, month:int, year:int):
     payed = len(payments) > 0
 
     if payed:
-        logger.info(f"corp_has_payed: Payment found ({format_isk(amount_to_pay)}): from {get_corp_name(corp_id)} ({corp_id}) to holding corp {TAX_CORPORATIONS} for {month}/{year}")
+        logger.info(f"corp_has_payed: Payment found ({format_isk(amount_to_pay)}): from {get_corp_name(corp_id)} to holding corp {TAX_CORPORATIONS} for >{corp_id}/{month}/{year}<")
     else:
-        logger.info(f"corp_has_payed: No Payment found ({format_isk(amount_to_pay)}): from {get_corp_name(corp_id)} ({corp_id}) to holding corp {TAX_CORPORATIONS} for {month}/{year}")
+        logger.info(f"corp_has_payed: No Payment found ({format_isk(amount_to_pay)}): from {get_corp_name(corp_id)} to holding corp {TAX_CORPORATIONS} for >{corp_id}/{month}/{year}<")
 
     return payed
