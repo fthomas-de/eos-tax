@@ -7,6 +7,8 @@ CURRENT_MONTH = True
 LAST_MONTH = True
 TAX_RATE = 0.1
 TAX_TYPES = ['bounty_prizes']
+USE_REASON = False
+TAX_CORPORATIONS = [98399796]
 ```
 
 If the alliance ID is not yet loaded, go to:
