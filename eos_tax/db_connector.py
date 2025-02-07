@@ -62,11 +62,14 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
                 "reason":f"{selected_corp.corp_id}/{selected_corp.month}/{selected_corp.year}",
             })
     try:
-        sorted(website_data, key=lambda x: x["corporation_name"])
+        s = sorted(website_data, key=lambda x: x["year"])
+        s = sorted(website_data, key=lambda x: x["month"])
+        s = sorted(website_data, key=lambda x: x["corporation_name"])
+        s = sorted(website_data, key=lambda x: x["payed"])
     except (KeyError):
         pass
 
-    return sorted(website_data, key=lambda x: x["corporation_name"])
+    return s
 
 def update_corp(corp_id:int, month: int = -1, year: int = -1):
     tax_data = []
