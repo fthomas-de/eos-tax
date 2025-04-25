@@ -1,3 +1,4 @@
+from datetime import datetime
 from itertools import product
 
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
@@ -50,6 +51,15 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
         else:
             selected_corps = MonthlyTax.objects.filter(month=month, year=year).all()
 
+        current_month = datetime.now().month
+        current_day = datetime.now().day
+
+        if current_month > selected_corp.month and current_day >= 2:
+            reason_code = f"{selected_corp.corp_id}/{selected_corp.month}/{selected_corp.year}"
+
+        else:
+            reason_code = ""
+
         for selected_corp in selected_corps:
             website_data.append({
                 "corporation_id":selected_corp.corp_id,
@@ -59,7 +69,7 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
                 "year":selected_corp.year,
                 "corp_tax_rate":selected_corp.tax_percentage,
                 "payed":selected_corp.payed,
-                "reason":f"{selected_corp.corp_id}/{selected_corp.month}/{selected_corp.year}",
+                "reason":reason_code,
             })
     try:
         s = sorted(website_data, key=lambda x: x["year"])
