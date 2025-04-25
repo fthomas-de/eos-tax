@@ -54,13 +54,13 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
         current_month = datetime.now().month
         current_day = datetime.now().day
 
-        if current_month > selected_corp.month and current_day >= 2:
-            reason_code = f"{selected_corp.corp_id}/{selected_corp.month}/{selected_corp.year}"
-
-        else:
-            reason_code = ""
-
         for selected_corp in selected_corps:
+            if current_month > selected_corp.month and current_day >= 2:
+                reason_code = f"{selected_corp.corp_id}/{selected_corp.month}/{selected_corp.year}"
+
+            else:
+                reason_code = ""
+        
             website_data.append({
                 "corporation_id":selected_corp.corp_id,
                 "corporation_name":selected_corp.corp_name,
