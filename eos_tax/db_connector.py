@@ -7,7 +7,7 @@ from django.db.models import Sum
 
 from eos_tax.models import MonthlyTax, EveSwaggerProviderWithTax
 from eos_tax.util import get_alliance_name, get_dates, format_isk, get_corp_name, corp_has_payed, get_amount_to_pay, get_eve_alliance_id
-from eos_tax.app_settings import TAX_ALLIANCES, TAX_CORPORATIONS, TAX_TYPES, TAX_RATE
+from eos_tax.app_settings import CORPORATION_BLACKLIST, TAX_ALLIANCES, TAX_CORPORATIONS, TAX_TYPES, TAX_RATE
 
 from allianceauth.services.hooks import get_extension_logger
 
@@ -55,6 +55,8 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
         current_day = datetime.now().day
 
         for selected_corp in selected_corps:
+            if selected_corp.corp_id in CORPORATION_BLACKLIST:
+                continue
             if current_month > selected_corp.month and current_day >= 2:
                 reason_code = f"{selected_corp.corp_id}/{selected_corp.month}/{selected_corp.year}"
 
