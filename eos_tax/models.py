@@ -30,7 +30,7 @@ class EveSwaggerProviderWithTax(EveSwaggerProvider):
         """Fetch corporation from ESI."""
         try:
             data = self.client.Corporation.get_corporations_corporation_id(corporation_id=corp_id).result()
-            return float("%.2f" % data['tax_rate'])
+            return float("%.4f" % data['tax_rate'])
         
         except HTTPNotFound:
             raise ObjectNotFound(corp_id, 'corporation')
