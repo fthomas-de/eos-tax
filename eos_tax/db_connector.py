@@ -69,7 +69,7 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
                 "isk_to_pay": format_isk(get_amount_to_pay(selected_corp.tax_value, selected_corp.tax_percentage)),
                 "month":selected_corp.month,
                 "year":selected_corp.year,
-                "corp_tax_rate":selected_corp.tax_percentage,
+                "corp_tax_rate":float("%.2f" % selected_corp.tax_percentage),
                 "payed":selected_corp.payed,
                 "reason":reason_code,
             })
@@ -87,7 +87,7 @@ def update_corp(corp_id:int, month: int = -1, year: int = -1):
     tax_data = []
     esi = EveSwaggerProviderWithTax()
         
-    corp_tax_rate = float("%.4f" % esi.get_corp_tax(corp_id))  
+    corp_tax_rate = esi.get_corp_tax(corp_id) 
     tax_data = CorporationWalletJournalEntry.objects.filter(tax_receiver_id=corp_id, ref_type__in=TAX_TYPES, date__year=year, date__month=month).\
         values('tax_receiver_id').annotate(sum=Sum('amount'))
 
