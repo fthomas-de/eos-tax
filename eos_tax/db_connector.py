@@ -16,7 +16,7 @@ logger = get_extension_logger(__name__)
     # examples: https://github.com/ppfeufer/allianceauth-afat/blob/master/afat/tasks.py   
     # tax_data = CorporationWalletJournalEntry.objects.filter(tax_receiver_id__in=corporation_info.keys(), ref_type__in=TAX_TYPES, date__year=y, date__month=m).\
     #       values('tax_receiver_id').annotate(sum=Sum('amount'))          
-def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: int = -1, month: int = -1, year: int = -1, payed: bool = False):
+def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False):
     selected_corp = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).first()
     logger.info(f"set_corp_tax: {get_corp_name(corp_id)} ({corp_id}), tax_value: {format_isk(tax_value)} tax_percentage {tax_percentage} {month}/{year}")
 
@@ -87,9 +87,9 @@ def update_corp(corp_id:int, month: int = -1, year: int = -1):
     tax_data = []
     esi = EveSwaggerProviderWithTax()
         
-    corp_tax_rate = esi.get_corp_tax(corp_id)  
+    corp_tax_rate = float("%.2f" % esi.get_corp_tax(corp_id))  
     tax_data = CorporationWalletJournalEntry.objects.filter(tax_receiver_id=corp_id, ref_type__in=TAX_TYPES, date__year=year, date__month=month).\
-        values('tax_receiver_id').annotate(sum=Sum('amount')) 
+        values('tax_receiver_id').annotate(sum=Sum('amount'))
 
     for tax in tax_data:
         if tax['sum']:
@@ -101,7 +101,7 @@ def update_corp(corp_id:int, month: int = -1, year: int = -1):
             corp_id=corp_id, 
             corp_name=get_corp_name(corp_id), 
             tax_value=overall_ratted,
-            tax_percentage=int(corp_tax_rate*100),
+            tax_percentage=corp_tax_rate*100,
             month=month,
             year=year,
             payed=payed

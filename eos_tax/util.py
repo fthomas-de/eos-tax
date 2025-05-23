@@ -46,11 +46,11 @@ def get_eve_alliance_id(id:int):
     if alliance:
         return alliance.alliance_id
 
-def get_amount_to_pay(tax_value:int, corp_tax:int):
+def get_amount_to_pay(tax_value:int, corp_tax:float):
     if corp_tax == 0:
-        return int(tax_value*TAX_RATE)
+        return float(tax_value*TAX_RATE) * 1000
     else:
-        return int((tax_value/(corp_tax/100))*TAX_RATE)
+        return float((tax_value/(corp_tax/100))*TAX_RATE) * 1000
 
 def corp_has_payed(corp_id:int, month:int, year:int):
     
@@ -58,14 +58,19 @@ def corp_has_payed(corp_id:int, month:int, year:int):
     if not tax_data:
         return False
     else:
-        amount_to_pay = float(get_amount_to_pay(tax_data.tax_value, tax_data.tax_percentage))
+        # dont check, if payed was set before
+        if tax_data.payed == True:
+            payed = True
+            return payed
+        else:
+            amount_to_pay = float(get_amount_to_pay(tax_data.tax_value, tax_data.tax_percentage))
 
     if USE_REASON:
         payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, reason__icontains=f"{corp_id}/{month}/{year}", amount__lte=amount_to_pay*-1).values('id').all()
-        logger.info(f"1")
+        logger.info("use_reason lte: " + str(amount_to_pay*-1))
         if len(payments) == 0:
             payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, reason__icontains=f"{corp_id}/{month}/{year}", amount__gte=amount_to_pay).values('id').all()
-            logger.info(f"2")
+            logger.info("use_reason gte:" + str(amount_to_pay))
     else:
         payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, amount=amount_to_pay*-1).values('id').all()
         if len(payments) == 0:
@@ -73,8 +78,8 @@ def corp_has_payed(corp_id:int, month:int, year:int):
     payed = len(payments) > 0
 
     if payed:
-        logger.info(f"corp_has_payed: Payment found ({format_isk(amount_to_pay)}): from {get_corp_name(corp_id)} to holding corp {TAX_CORPORATIONS} for >{corp_id}/{month}/{year}<")
+        logger.info(f"corp_has_payed: Payment found (to pay: {format_isk(amount_to_pay)}, payed: {payments}): from {get_corp_name(corp_id)} to holding corp {TAX_CORPORATIONS} for >{corp_id}/{month}/{year}<")
     else:
-        logger.info(f"corp_has_payed: No Payment found ({format_isk(amount_to_pay)}): from {get_corp_name(corp_id)} to holding corp {TAX_CORPORATIONS} for >{corp_id}/{month}/{year}<")
+        logger.info(f"corp_has_payed: No Payment found (to pay: {format_isk(amount_to_pay)}): from {get_corp_name(corp_id)} to holding corp {TAX_CORPORATIONS} for >{corp_id}/{month}/{year}<")
 
     return payed
