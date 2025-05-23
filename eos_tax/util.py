@@ -48,9 +48,9 @@ def get_eve_alliance_id(id:int):
 
 def get_amount_to_pay(tax_value:int, corp_tax:float):
     if corp_tax == 0:
-        return float(tax_value*TAX_RATE) * 1000
+        return float(tax_value*TAX_RATE)
     else:
-        return float((tax_value/(corp_tax/100))*TAX_RATE) * 1000
+        return float((tax_value/(corp_tax/100))*TAX_RATE)
 
 def corp_has_payed(corp_id:int, month:int, year:int):
     
