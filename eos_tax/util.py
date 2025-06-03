@@ -63,7 +63,7 @@ def corp_has_payed(corp_id:int, month:int, year:int):
             payed = True
             return payed
         else:
-            amount_to_pay = float(get_amount_to_pay(tax_data.tax_value, tax_data.tax_percentage))
+            amount_to_pay = int(get_amount_to_pay(tax_data.tax_value, tax_data.tax_percentage))
 
     if USE_REASON:
         payments = CorporationWalletJournalEntry.objects.filter(second_party_id__in=TAX_CORPORATIONS, ref_type__in=DONATION_TYPES, reason__icontains=f"{corp_id}/{month}/{year}", amount__lte=amount_to_pay*-1).values('id').all()
