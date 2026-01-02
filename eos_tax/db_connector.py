@@ -57,7 +57,7 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
         for selected_corp in selected_corps:
             if selected_corp.corp_id in CORPORATION_BLACKLIST:
                 continue
-            if current_month > selected_corp.month and current_day >= 2:
+            if ( current_month > selected_corp.month or ( current_month == 1 and selected_corp.month == 12 ) ) and current_day >= 2:
                 reason_code = f"{selected_corp.corp_id}/{selected_corp.month}/{selected_corp.year}"
 
             else:
