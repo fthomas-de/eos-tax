@@ -1,9 +1,8 @@
 from django.db import models
 
-# Create your models here.
-from bravado.exception import HTTPNotFound
-from corptools.models import CorporationWalletJournalEntry
-from allianceauth.eveonline.providers import EveSwaggerProvider, ObjectNotFound
+from allianceauth.services.hooks import get_extension_logger
+
+logger = get_extension_logger(__name__)
 
 class General(models.Model):
     """Meta model for app permissions"""
@@ -22,18 +21,3 @@ class MonthlyTax(models.Model):
     tax_value = models.BigIntegerField(verbose_name="Tax value", blank=False, default=0)
     tax_percentage = models.FloatField(verbose_name="Tax percentage", blank=False, default=0)
     payed = models.BooleanField(verbose_name="Payed", default=False)
-
-    
-
-class EveSwaggerProviderWithTax(EveSwaggerProvider):
-    def get_corp_tax(self, corp_id: int):
-        """Fetch corporation from ESI."""
-        try:
-            data = self.client.Corporation.get_corporations_corporation_id(corporation_id=corp_id).result()
-            return float("%.4f" % data['tax_rate'])
-        
-        except HTTPNotFound:
-            raise ObjectNotFound(corp_id, 'corporation')
-
-
-

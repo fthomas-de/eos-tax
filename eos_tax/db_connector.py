@@ -2,14 +2,15 @@ from datetime import datetime
 from itertools import product
 
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
-from corptools.models import CorporationWalletJournalEntry  
+from corptools.models import CorporationWalletJournalEntry 
 from django.db.models import Sum
 
-from eos_tax.models import MonthlyTax, EveSwaggerProviderWithTax
+from eos_tax.models import MonthlyTax
 from eos_tax.util import get_alliance_name, get_dates, format_isk, get_corp_name, corp_has_payed, get_amount_to_pay, get_eve_alliance_id
 from eos_tax.app_settings import CORPORATION_BLACKLIST, TAX_ALLIANCES, TAX_CORPORATIONS, TAX_TYPES, TAX_RATE
 
 from allianceauth.services.hooks import get_extension_logger
+from eos_tax import __version__
 
 logger = get_extension_logger(__name__)
 
@@ -85,9 +86,10 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
 
 def update_corp(corp_id:int, month: int = -1, year: int = -1):
     tax_data = []
-    esi = EveSwaggerProviderWithTax()
         
-    corp_tax_rate = esi.get_corp_tax(corp_id) 
+    corp_tax_rate = EveCorporationInfo.objects.filter(corporation_id=corp_id).first().tax_rate
+    corp_tax_rate = float("%.4f" % corp_tax_rate)
+    logger.info(f"dbcon update_corp1: {get_corp_name(corp_id)} ({corp_id}): tax_rate {corp_tax_rate} - {month}/{year}")
     tax_data = CorporationWalletJournalEntry.objects.filter(tax_receiver_id=corp_id, ref_type__in=TAX_TYPES, date__year=year, date__month=month).\
         values('tax_receiver_id').annotate(sum=Sum('amount'))
 
@@ -96,7 +98,7 @@ def update_corp(corp_id:int, month: int = -1, year: int = -1):
             overall_ratted = int(tax["sum"])
 
         payed = corp_has_payed(corp_id=corp_id, month=month, year=year)
-        logger.info(f"update_corp: {get_corp_name(corp_id)} ({corp_id}): payed {payed} - {month}/{year}")
+        logger.info(f"dbcon update_corp2: {get_corp_name(corp_id)} ({corp_id}): payed {payed} - {month}/{year}")
         set_corp_tax(
             corp_id=corp_id, 
             corp_name=get_corp_name(corp_id), 
