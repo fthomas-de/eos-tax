@@ -81,3 +81,15 @@ ESI_USER_CONTACT_EMAIL = "test@example.com"
 
 # Auth will not load pages correctly without SITE_URL being trusted.
 CSRF_TRUSTED_ORIGINS = [SITE_URL]
+
+# AA ships a hashing manifest storage, but this test project never runs
+# collectstatic - every {% static %} would raise "Missing staticfiles manifest
+# entry". DEBUG is no escape hatch here: the test runner forces DEBUG=False.
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
