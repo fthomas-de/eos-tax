@@ -8,37 +8,36 @@ dynamic = ["version"]
 description = "eos_tax plugin app for Alliance Auth"
 readme = "README.md"
 license = {file = "LICENSE"}
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 authors = [
-    { name = "John Doe", email = "john.doe@example.com" },
+    { name = "Flo", email = "xxxeoeoxxx@gmail.com" },
 ]
 classifiers = [
     "Environment :: Web Environment",
     "Framework :: Django",
-    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 5.2",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
 dependencies = [
-    "allianceauth>=3",
-    "allianceauth-corptools>=2.5.5"
+    "allianceauth>=5.2",
+    "allianceauth-corptools>=3.5"
 ]
 
 
 [project.urls]
-Homepage = "https://gitlab.com/ErikKalkoken/allianceauth-example-plugin"
-Documentation = "https://allianceauth-example-plugin.readthedocs.io/en/latest/"
-Source = "https://gitlab.com/ErikKalkoken/allianceauth-example-plugin"
-Changelog = "https://gitlab.com/ErikKalkoken/allianceauth-example-plugin/-/blob/master/CHANGELOG.md"
-Tracker = "https://gitlab.com/ErikKalkoken/allianceauth-example-plugin/-/issues"
+Homepage = "https://github.com/fthomas-de/eos-tax"
+Source = "https://github.com/fthomas-de/eos-tax"
+Changelog = "https://github.com/fthomas-de/eos-tax/blob/master/CHANGELOG.md"
+Tracker = "https://github.com/fthomas-de/eos-tax/issues"
 
 [tool.flit.module]
 name = "eos_tax"

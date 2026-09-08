@@ -24,20 +24,25 @@ SITE_URL = "http://127.0.0.1:8000"
 DEBUG = False
 
 # Add any additional apps to this list.
-INSTALLED_APPS += ["example"]
+INSTALLED_APPS += [
+    "modeltranslation",
+    "allianceauth.theme.bootstrap",
+    "corptools",
+    "eve_sde",
+    "eos_tax",
+]
 
 # Enter credentials to use MySQL/MariaDB. Comment out to use sqlite3
-"""
 DATABASES['default'] = {
     'ENGINE': 'django.db.backends.mysql',
-    'NAME': 'alliance_auth',
-    'USER': '',
-    'PASSWORD': '',
+    'NAME': 'aa_dev',
+    'USER': 'admin',
+    'PASSWORD': 'YOUR-PASSWORD',
     'HOST': '127.0.0.1',
     'PORT': '3306',
     'OPTIONS': {'charset': 'utf8mb4'},
+    "TEST": {"CHARSET": "utf8mb4"},
 }
-"""
 
 # Register an application at https://developers.eveonline.com for Authentication
 # & API Access and fill out these settings. Be sure to set the callback URL
@@ -70,3 +75,9 @@ DEFAULT_FROM_EMAIL = ""
 # workarounds to suppress warnings
 LOGGING = None
 STATICFILES_DIRS = []
+# Required since AA 5.x: CCP demands a maintainer contact for ESI requests.
+# Placeholder only - this file is public. Override locally if you hit ESI live.
+ESI_USER_CONTACT_EMAIL = "test@example.com"
+
+# Auth will not load pages correctly without SITE_URL being trusted.
+CSRF_TRUSTED_ORIGINS = [SITE_URL]
