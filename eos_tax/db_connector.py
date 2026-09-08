@@ -30,12 +30,15 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
         selected_corp.save()
 
     else:
-        return_value = MonthlyTax.objects.create(corp_id=corp_id, 
-                                                 corp_name=corp_name,
-                                                 tax_value=tax_value,
-                                                 tax_percentage=tax_percentage,
-                                                 month=month,
-                                                 year=year)
+        MonthlyTax.objects.create(
+            corp_id=corp_id,
+            corp_name=corp_name,
+            tax_value=tax_value,
+            tax_percentage=tax_percentage,
+            month=month,
+            year=year,
+            payed=payed,
+        )
 
 def corp_tax_exists(corp_id: int, month: int = -1, year: int = -1) -> MonthlyTax:
     selected_corp = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).first()
@@ -74,40 +77,41 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
                 "payed":selected_corp.payed,
                 "reason":reason_code,
             })
-    try:
-        s = sorted(website_data, key=lambda x: x["year"])
-        s = sorted(website_data, key=lambda x: x["month"])
-        s = sorted(website_data, key=lambda x: x["corporation_name"])
-        s = sorted(website_data, key=lambda x: x["payed"])
-    except (KeyError):
-        pass
+    # unpaid first, then by corporation, then chronologically
+    website_data.sort(key=lambda x: (x["payed"], x["corporation_name"], x["year"], x["month"]))
 
-    return s
+    return website_data
 
 def update_corp(corp_id:int, month: int = -1, year: int = -1):
-    tax_data = []
-        
-    corp_tax_rate = EveCorporationInfo.objects.filter(corporation_id=corp_id).first().tax_rate
-    corp_tax_rate = float("%.4f" % corp_tax_rate)
-    logger.info(f"dbcon update_corp1: {get_corp_name(corp_id)} ({corp_id}): tax_rate {corp_tax_rate} - {month}/{year}")
-    tax_data = CorporationWalletJournalEntry.objects.filter(tax_receiver_id=corp_id, ref_type__in=TAX_TYPES, date__year=year, date__month=month).\
-        values('tax_receiver_id').annotate(sum=Sum('amount'))
+    corp_info = EveCorporationInfo.objects.filter(corporation_id=corp_id).first()
+    if not corp_info:
+        logger.warning(f"dbcon update_corp: unknown corporation {corp_id} - skipped")
+        return
 
-    for tax in tax_data:
-        if tax['sum']:
-            overall_ratted = int(tax["sum"])
+    corp_tax_rate = float("%.4f" % corp_info.tax_rate)
+    logger.info(f"dbcon update_corp1: {corp_info.corporation_name} ({corp_id}): tax_rate {corp_tax_rate} - {month}/{year}")
 
-        payed = corp_has_payed(corp_id=corp_id, month=month, year=year)
-        logger.info(f"dbcon update_corp2: {get_corp_name(corp_id)} ({corp_id}): payed {payed} - {month}/{year}")
-        set_corp_tax(
-            corp_id=corp_id, 
-            corp_name=get_corp_name(corp_id), 
-            tax_value=overall_ratted,
-            tax_percentage=corp_tax_rate*100,
-            month=month,
-            year=year,
-            payed=payed
-        )
+    # filter is on a single corp, so the whole month collapses into one sum
+    tax_sum = CorporationWalletJournalEntry.objects.filter(
+        tax_receiver_id=corp_id, ref_type__in=TAX_TYPES, date__year=year, date__month=month
+    ).aggregate(total=Sum("amount"))["total"]
+
+    if not tax_sum:
+        logger.info(f"dbcon update_corp2: {corp_info.corporation_name} ({corp_id}): no journal entries - {month}/{year}")
+        return
+
+    overall_ratted = int(tax_sum)
+    payed = corp_has_payed(corp_id=corp_id, month=month, year=year)
+    logger.info(f"dbcon update_corp3: {corp_info.corporation_name} ({corp_id}): payed {payed} - {month}/{year}")
+    set_corp_tax(
+        corp_id=corp_id,
+        corp_name=corp_info.corporation_name,
+        tax_value=overall_ratted,
+        tax_percentage=corp_tax_rate*100,
+        month=month,
+        year=year,
+        payed=payed
+    )
 
 def get_all_corps_for_user(characters: list = []):
     corporation_ids = []
