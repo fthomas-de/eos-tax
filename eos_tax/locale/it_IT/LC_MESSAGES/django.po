@@ -1,0 +1,447 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: eos_tax\n"
+"Report-Msgid-Bugs-To: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: it-IT\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: auth_hooks.py:16 templates/eos_tax/base.html:4
+#: templates/eos_tax/base.html:29
+msgid "Alliance PvE Tax"
+msgstr "Alliance PvE Tax"
+
+#: forms.py:74 forms.py:148
+msgid "Base tax rate (%)"
+msgstr "Aliquota base (%)"
+
+#: forms.py:112
+msgid "Base rate, used for months before the first scheduled change below."
+msgstr "Aliquota base, usata per i mesi precedenti al primo cambio pianificato qui sotto."
+
+#: forms.py:129 forms.py:156
+msgid "Rate (%)"
+msgstr "Aliquota (%)"
+
+#: models.py:37
+msgid "Taxed alliances"
+msgstr "Alliances tassate"
+
+#: models.py:38
+msgid "Corporations of these alliances are taxed."
+msgstr "Le Corporations di queste Alliances vengono tassate."
+
+#: models.py:46
+msgid "Holding corporation"
+msgstr "Holding Corporation"
+
+#: models.py:47
+msgid "The single corporation that receives the tax payments."
+msgstr "L'unica Corporation che riceve i pagamenti della tassa."
+
+#: models.py:53
+msgid "Excluded corporations"
+msgstr "Corporations escluse"
+
+#: models.py:54
+msgid "Never taxed and never listed, even inside a taxed alliance."
+msgstr "Mai tassate né elencate, nemmeno all'interno di una Alliance tassata."
+
+#: models.py:57 models.py:147
+msgid "Alliance tax rate"
+msgstr "Aliquota della Alliance"
+
+#: models.py:62
+msgid "Share of the gross PvE income a corporation owes. 0.1 means 10 percent."
+msgstr "Quota del reddito lordo PvE dovuta da una Corporation. 0,1 significa 10 per cento."
+
+#: models.py:65
+msgid "Taxed journal types"
+msgstr "Tipi di Journal tassati"
+
+#: models.py:68
+msgid ""
+"Wallet journal ref_types counted as PvE income, for example bounty_prizes."
+msgstr "ref_types del Wallet Journal considerati reddito PvE, ad esempio bounty_prizes."
+
+#: models.py:72
+msgid "Include the previous month in calculations and on the overview."
+msgstr "Includere il mese precedente nei calcoli e nella panoramica."
+
+#: models.py:76
+msgid "Include the running month in calculations and on the overview."
+msgstr "Includere il mese in corso nei calcoli e nella panoramica."
+
+#: models.py:80
+msgid "Match payments by their reason code instead of by amount alone."
+msgstr "Abbinare i pagamenti tramite il codice Reason invece che solo tramite l'importo."
+
+#: models.py:83
+msgid "Bot detection: hours per day"
+msgstr "Rilevamento bot: ore al giorno"
+
+#: models.py:87
+msgid ""
+"A day counts as suspicious when a character earned taxed income in more than "
+"this many different hours of that day."
+msgstr "Un giorno è considerato sospetto quando un Character ha ottenuto reddito tassato in più di questo numero di ore diverse di quel giorno."
+
+#: models.py:92
+msgid "Bot detection: days per month"
+msgstr "Rilevamento bot: giorni al mese"
+
+#: models.py:96
+msgid ""
+"A character is listed once it exceeds this many suspicious days within the "
+"selected month."
+msgstr "Un Character viene elencato non appena supera questo numero di giorni sospetti nel mese selezionato."
+
+#: models.py:102
+msgid "Tax configuration"
+msgstr "Configurazione della tassa"
+
+#: models.py:142 templates/eos_tax/settings.html:44
+msgid "Valid from"
+msgstr "Valido dal"
+
+#: models.py:144
+msgid "First month this rate applies to. Stored as the first of that month."
+msgstr "Primo mese a cui si applica questa aliquota. Salvato come primo giorno del mese."
+
+#: models.py:151
+msgid "Share of the gross PvE income. 0.1 means 10 percent."
+msgstr "Quota del reddito lordo PvE. 0,1 significa 10 per cento."
+
+#: models.py:156
+msgid "Tax rate"
+msgstr "Aliquota"
+
+#: models.py:157 templates/eos_tax/settings.html:29
+msgid "Tax rate schedule"
+msgstr "Calendario delle aliquote"
+
+#: models.py:170
+msgid "Corporation ID"
+msgstr "ID Corporation"
+
+#: models.py:171
+msgid "Taxed month"
+msgstr "Mese tassato"
+
+#: models.py:172
+msgid "Taxed year"
+msgstr "Anno tassato"
+
+#: models.py:173
+msgid "Corporation name"
+msgstr "Nome della Corporation"
+
+#: models.py:174
+msgid "Tax value"
+msgstr "Importo della tassa"
+
+#: models.py:175
+msgid "Tax percentage"
+msgstr "Ingame Corp Tax"
+
+#: models.py:176 templates/eos_tax/index.html:24
+#: templates/eos_tax/index.html:51
+msgid "Payed"
+msgstr "Pagato"
+
+#: models.py:193
+msgid "Applied alliance tax rate"
+msgstr "Aliquota Alliance applicata"
+
+#: models.py:196
+msgid ""
+"Alliance rate in effect when this row was calculated. Stored per row so "
+"changing the rate does not rewrite what past months were owed."
+msgstr "Aliquota della Alliance in vigore al calcolo di questa riga. Salvata per riga così che un cambio di aliquota non riscriva quanto era dovuto nei mesi passati."
+
+#: templates/eos_tax/base.html:8 tests/test_translations.py:127
+msgid "Overview"
+msgstr "Panoramica"
+
+#: templates/eos_tax/base.html:14 views.py:50
+msgid "Statistics"
+msgstr "Statistiche"
+
+#: templates/eos_tax/base.html:18 views.py:137
+msgid "Bots"
+msgstr "Bots"
+
+#: templates/eos_tax/base.html:22 tests/test_translations.py:128 views.py:109
+msgid "Settings"
+msgstr "Impostazioni"
+
+#: templates/eos_tax/bots.html:16
+#, python-format
+msgid ""
+"Characters that earned taxed income in more than %(min_hours)s different\n"
+"                hours of a day, on more than %(min_days)s days of the "
+"selected month. Both thresholds\n"
+"                live on the settings page."
+msgstr "Characters che hanno ottenuto reddito tassato in più di %(min_hours)s ore diverse di un giorno, in più di %(min_days)s giorni del mese selezionato. Entrambe le soglie si trovano nella pagina delle impostazioni."
+
+#: templates/eos_tax/bots.html:23 templates/eos_tax/index.html:22
+#: templates/eos_tax/statistics.html:53
+msgid "Month"
+msgstr "Mese"
+
+#: templates/eos_tax/bots.html:29
+msgid "Show"
+msgstr "Mostra"
+
+#: templates/eos_tax/bots.html:37
+msgid ""
+"No character crossed both thresholds. The ten longest days of the month are "
+"shown instead, so the thresholds can be judged against real numbers."
+msgstr "Nessun Character ha superato entrambe le soglie. Vengono mostrati invece i dieci giorni più lunghi del mese, così da valutare le soglie su numeri reali."
+
+#: templates/eos_tax/bots.html:43
+msgid "No character crossed both thresholds in this month."
+msgstr "Nessun Character ha superato entrambe le soglie in questo mese."
+
+#: templates/eos_tax/bots.html:55
+#, python-format
+msgid "%(value)s hour blocks"
+msgstr "%(value)s blocchi orari"
+
+#: templates/eos_tax/bots.html:56
+#, python-format
+msgid "%(value)s characters"
+msgstr "%(value)s Characters"
+
+#: templates/eos_tax/bots.html:57
+#, python-format
+msgid "%(value)s hits"
+msgstr "%(value)s risultati"
+
+#: templates/eos_tax/bots.html:60
+msgid "database"
+msgstr "database"
+
+#: templates/eos_tax/bots.html:61
+msgid "aggregation"
+msgstr "aggregazione"
+
+#: templates/eos_tax/bots.html:62
+msgid "total"
+msgstr "totale"
+
+#: templates/eos_tax/help.html:5
+msgid "How to pay taxes?"
+msgstr "Come pagare la tassa?"
+
+#: templates/eos_tax/help.html:7
+#, python-format
+msgid "1. Search for: <u>%(tax_corp)s</u>"
+msgstr "1. Cerca: <u>%(tax_corp)s</u>"
+
+#: templates/eos_tax/help.html:9
+msgid "2. Right click and select <u>\"Give Money\"</u>"
+msgstr "2. Clic destro e scegli <u>\"Give Money\"</u>"
+
+#: templates/eos_tax/help.html:10
+msgid ""
+"3. Copy the \"Amount to pay in Isk\" for the current month and paste it into "
+"amount"
+msgstr "3. Copia \"Amount to pay in Isk\" del mese in corso e incollalo nell'importo"
+
+#: templates/eos_tax/help.html:11
+msgid "4. Copy the \"Reason\" into the corresponding field"
+msgstr "4. Copia il \"Reason\" nel campo corrispondente"
+
+#: templates/eos_tax/help.html:12
+msgid ""
+"4a. A reason is only shown for the last month, starting on the 2nd of the "
+"current month, to avoid outdated payments."
+msgstr "4a. Un Reason viene mostrato solo per il mese precedente, a partire dal 2 del mese in corso, per evitare pagamenti non più validi."
+
+#: templates/eos_tax/index.html:18 templates/eos_tax/statistics.html:89
+msgid "Corporation"
+msgstr "Corporation"
+
+#: templates/eos_tax/index.html:19
+msgid "Ingame Corp Tax"
+msgstr "Ingame Corp Tax"
+
+#: templates/eos_tax/index.html:20
+msgid "Alliance Tax"
+msgstr "Alliance Tax"
+
+#: templates/eos_tax/index.html:21
+msgid "Amount to pay in Isk"
+msgstr "Da pagare in ISK"
+
+#: templates/eos_tax/index.html:23
+msgid "Reason"
+msgstr "Reason"
+
+#: templates/eos_tax/index.html:42 templates/eos_tax/index.html:43
+msgid "Copy reason to clipboard"
+msgstr "Copia la causale negli appunti"
+
+#: templates/eos_tax/index.html:54
+msgid "Not payed"
+msgstr "Non pagato"
+
+#: templates/eos_tax/index.html:64
+msgid "No tax data for the selected months."
+msgstr "Nessun dato sulla tassa per i mesi selezionati."
+
+#: templates/eos_tax/index.html:76
+msgid "Corporation:"
+msgstr "Corporation:"
+
+#: templates/eos_tax/index.html:77
+msgid "Filter by corporation name"
+msgstr "Filtra per nome della Corporation"
+
+#: templates/eos_tax/partials/bot-table.html:7
+msgid "Character"
+msgstr "Character"
+
+#: templates/eos_tax/partials/bot-table.html:8
+msgid "Main"
+msgstr "Main"
+
+#: templates/eos_tax/partials/bot-table.html:9
+msgid "Suspicious days"
+msgstr "Giorni sospetti"
+
+#: templates/eos_tax/partials/bot-table.html:10
+msgid "Active days"
+msgstr "Giorni attivi"
+
+#: templates/eos_tax/partials/bot-table.html:11
+msgid "Busiest day (hours)"
+msgstr "Giorno più attivo (ore)"
+
+#: templates/eos_tax/partials/bot-table.html:12
+msgid "Contributed tax"
+msgstr "Tassa versata"
+
+#: templates/eos_tax/settings.html:18
+msgid ""
+"These values were taken over from local.py once. They are read from\n"
+"                here now, so editing local.py has no further effect."
+msgstr "Questi valori sono stati ripresi una volta da local.py. Ora vengono letti da qui, quindi modificare local.py non ha più alcun effetto."
+
+#: templates/eos_tax/settings.html:31
+msgid ""
+"The newest entry that is not in the future applies, so a\n"
+"                            change can be entered months ahead. Months "
+"before the first entry use the base\n"
+"                            rate above. Already calculated months keep the "
+"rate they were charged with."
+msgstr "Vale la voce più recente che non sia nel futuro, quindi un cambio può essere inserito con mesi di anticipo. I mesi precedenti alla prima voce usano l'aliquota base qui sopra. I mesi già calcolati mantengono l'aliquota con cui sono stati calcolati."
+
+#: templates/eos_tax/settings.html:45
+msgid "Rate"
+msgstr "Aliquota"
+
+#: templates/eos_tax/settings.html:46
+msgid "Remove"
+msgstr "Rimuovi"
+
+#: templates/eos_tax/settings.html:69
+msgid "Save settings"
+msgstr "Salva impostazioni"
+
+#: templates/eos_tax/statistics.html:21
+msgid "Year"
+msgstr "Anno"
+
+#: templates/eos_tax/statistics.html:30
+msgid "Alliance"
+msgstr "Alliance"
+
+#: templates/eos_tax/statistics.html:32
+msgid "All alliances"
+msgstr "Tutte le Alliances"
+
+#: templates/eos_tax/statistics.html:40
+msgid "Display"
+msgstr "Visualizzazione"
+
+#: templates/eos_tax/statistics.html:42
+msgid "Trend over the year"
+msgstr "Andamento dell'anno"
+
+#: templates/eos_tax/statistics.html:43
+msgid "Share of one month"
+msgstr "Ripartizione di un mese"
+
+#: templates/eos_tax/statistics.html:58
+msgid "Min. share"
+msgstr "Quota minima"
+
+#: templates/eos_tax/statistics.html:90
+msgid "PvE income"
+msgstr "Reddito PvE"
+
+#: templates/eos_tax/statistics.html:91
+msgid "Tax"
+msgstr "Tassa"
+
+#: templates/eos_tax/statistics.html:110
+msgid "No tax data recorded yet."
+msgstr "Nessun dato sulla tassa registrato finora."
+
+#: templates/eos_tax/statistics.html:145
+msgid "Loading…"
+msgstr "Caricamento…"
+
+#: templates/eos_tax/statistics.html:146
+msgid "No data for this selection."
+msgstr "Nessun dato per questa selezione."
+
+#: templates/eos_tax/statistics.html:147
+msgid "Could not load the statistics."
+msgstr "Impossibile caricare le statistiche."
+
+#: templates/eos_tax/statistics.html:148
+msgid "corporations"
+msgstr "Corporations"
+
+#: templates/eos_tax/statistics.html:149
+msgid "Other"
+msgstr "Altre"
+
+#: templates/eos_tax/statistics.html:150
+#, python-brace-format
+msgid "{shown} of {total} Corporations drawn"
+msgstr "{shown} Corporations su {total} disegnate"
+
+#: templates/eos_tax/statistics.html:151
+#, python-brace-format
+msgid "{value} of the tax covered"
+msgstr "{value} della tassa coperta"
+
+#: templates/eos_tax/statistics.html:152
+#, python-brace-format
+msgid "{value} ISK income"
+msgstr "{value} ISK di reddito"
+
+#: templates/eos_tax/statistics.html:153
+#, python-brace-format
+msgid "{value} ISK tax"
+msgstr "{value} ISK di tassa"
+
+#: views.py:41
+#, python-format
+msgid "Taxes to pay: %(rate)s%%"
+msgstr "Tassa da pagare: %(rate)s%%"
+
+#: views.py:101
+msgid "Settings saved."
+msgstr "Impostazioni salvate."

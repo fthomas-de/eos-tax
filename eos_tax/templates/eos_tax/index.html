@@ -1,5 +1,6 @@
 {% extends "eos_tax/base.html" %}
 {% load i18n %}
+{% load l10n %}
 
 {% block details %}
 
@@ -11,11 +12,12 @@
         <div class="card-body">
             {% if website_data %}
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table id="table-eos-tax" class="table table-striped table-hover w-100">
                         <thead>
                             <tr>
                                 <th scope="col">{% translate "Corporation" %}</th>
                                 <th scope="col">{% translate "Ingame Corp Tax" %}</th>
+                                <th scope="col">{% translate "Alliance Tax" %}</th>
                                 <th scope="col">{% translate "Amount to pay in Isk" %}</th>
                                 <th scope="col">{% translate "Month" %}</th>
                                 <th scope="col">{% translate "Reason" %}</th>
@@ -27,11 +29,23 @@
                             {% for data in website_data %}
                                 <tr>
                                     <th scope="row">{{ data.corporation_name }}</th>
-                                    <td>{{ data.corp_tax_rate }}%</td>
-                                    <td>{{ data.isk_to_pay }}</td>
-                                    <td>{{ data.month }}/{{ data.year }}</td>
-                                    <td>{{ data.reason }}</td>
+                                    <td data-order="{{ data.corp_tax_rate|unlocalize }}">{{ data.corp_tax_rate }}%</td>
+                                    <td data-order="{{ data.alliance_tax_rate|unlocalize }}">{{ data.alliance_tax_rate }}%</td>
+                                    <td data-order="{{ data.isk_to_pay_value|unlocalize }}">{{ data.isk_to_pay }}</td>
+                                    <td data-order="{{ data.period|unlocalize }}">{{ data.month }}/{{ data.year }}</td>
                                     <td>
+                                        {% if data.reason %}
+                                            {{ data.reason }}
+                                            <button type="button"
+                                                    class="btn btn-link btn-sm p-0 ms-2 align-baseline eos-tax-copy"
+                                                    data-clipboard-text="{{ data.reason }}"
+                                                    title="{% translate 'Copy reason to clipboard' %}"
+                                                    aria-label="{% translate 'Copy reason to clipboard' %}">
+                                                <i class="fa-regular fa-copy" aria-hidden="true"></i>
+                                            </button>
+                                        {% endif %}
+                                    </td>
+                                    <td data-order="{% if data.payed %}1{% else %}0{% endif %}">
                                         {% if data.payed %}
                                             <i class="fa-solid fa-check text-success"></i>
                                             <span class="visually-hidden">{% translate "Payed" %}</span>
@@ -56,9 +70,81 @@
 {% endblock %}
 
 {% block extra_javascript %}
+    {% include "bundles/datatables-2-js-bs5.html" %}
+    {% include "bundles/clipboard-js.html" %}
+
+    {% translate "Corporation:" as l10n_search_label %}
+    {% translate "Filter by corporation name" as l10n_search_placeholder %}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            /* global ClipboardJS, DataTable */
+            "use strict";
+
+            // a selector makes Clipboard.js delegate from the document, so the
+            // buttons DataTables renders on later pages are covered too
+            const clipboard = new ClipboardJS(".eos-tax-copy");
+
+            clipboard.on("success", function (event) {
+                event.clearSelection();
+
+                // the icon is the only acknowledgement that fits without
+                // pushing the row around
+                const icon = event.trigger.querySelector("i");
+
+                // Font Awesome Free has no regular check, only a solid one, so
+                // the style swaps with the glyph - fa-regular fa-check has no
+                // drawing behind it and the browser puts a placeholder there
+                icon.classList.replace("fa-regular", "fa-solid");
+                icon.classList.replace("fa-copy", "fa-check");
+                icon.classList.add("text-success");
+
+                window.setTimeout(function () {
+                    icon.classList.replace("fa-solid", "fa-regular");
+                    icon.classList.replace("fa-check", "fa-copy");
+                    icon.classList.remove("text-success");
+                }, 1500);
+            });
+
+            clipboard.on("error", function (event) {
+                console.error("eos_tax: copying the reason failed", event.action);
+            });
+
+            const table = document.querySelector("#table-eos-tax");
+
+            if (!table) {
+                return;  // the empty state renders no table at all
+            }
+
+            new DataTable(table, {
+                // one entry per column - the search box hits Corporation only
+                columns: [
+                    { searchable: true },   // Corporation
+                    { searchable: false },  // Ingame Corp Tax
+                    { searchable: false },  // Alliance Tax
+                    { searchable: false },  // Amount to pay in Isk
+                    { searchable: false },  // Month
+                    { searchable: false },  // Reason
+                    { searchable: false }   // Payed
+                ],
+                search: {
+                    caseInsensitive: true,  // "e" must also find "Ether Element"
+                    smart: true
+                },
+                // mirrors the server side order: unpaid first, then by corporation
+                order: [[6, "asc"], [0, "asc"]],
+                pageLength: 25,
+                language: {
+                    search: "{{ l10n_search_label|escapejs }}",
+                    searchPlaceholder: "{{ l10n_search_placeholder|escapejs }}"
+                }
+            });
+        });
+    </script>
 {% endblock %}
 
 {% block extra_css %}
+    {% include "bundles/datatables-2-css-bs5.html" %}
 {% endblock %}
 
 {% block extra_script %}

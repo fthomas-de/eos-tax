@@ -1,0 +1,447 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: eos_tax\n"
+"Report-Msgid-Bugs-To: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ko-KR\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: auth_hooks.py:16 templates/eos_tax/base.html:4
+#: templates/eos_tax/base.html:29
+msgid "Alliance PvE Tax"
+msgstr "Alliance PvE Tax"
+
+#: forms.py:74 forms.py:148
+msgid "Base tax rate (%)"
+msgstr "기본 세율 (%)"
+
+#: forms.py:112
+msgid "Base rate, used for months before the first scheduled change below."
+msgstr "기본 세율입니다. 아래의 첫 예약 변경 이전 달에 적용됩니다."
+
+#: forms.py:129 forms.py:156
+msgid "Rate (%)"
+msgstr "세율 (%)"
+
+#: models.py:37
+msgid "Taxed alliances"
+msgstr "과세 대상 Alliance"
+
+#: models.py:38
+msgid "Corporations of these alliances are taxed."
+msgstr "이 Alliance 소속 Corporation이 과세 대상이 됩니다."
+
+#: models.py:46
+msgid "Holding corporation"
+msgstr "Holding Corporation"
+
+#: models.py:47
+msgid "The single corporation that receives the tax payments."
+msgstr "세금을 받는 단일 Corporation입니다."
+
+#: models.py:53
+msgid "Excluded corporations"
+msgstr "제외할 Corporation"
+
+#: models.py:54
+msgid "Never taxed and never listed, even inside a taxed alliance."
+msgstr "과세 대상 Alliance 안에 있더라도 과세하지 않고 목록에도 표시하지 않습니다."
+
+#: models.py:57 models.py:147
+msgid "Alliance tax rate"
+msgstr "Alliance 세율"
+
+#: models.py:62
+msgid "Share of the gross PvE income a corporation owes. 0.1 means 10 percent."
+msgstr "Corporation이 납부할 PvE 총수입의 비율입니다. 0.1은 10퍼센트를 뜻합니다."
+
+#: models.py:65
+msgid "Taxed journal types"
+msgstr "과세 Journal 유형"
+
+#: models.py:68
+msgid ""
+"Wallet journal ref_types counted as PvE income, for example bounty_prizes."
+msgstr "PvE 수입으로 계산할 Wallet Journal의 ref_type입니다. 예: bounty_prizes."
+
+#: models.py:72
+msgid "Include the previous month in calculations and on the overview."
+msgstr "계산과 개요에 지난달을 포함합니다."
+
+#: models.py:76
+msgid "Include the running month in calculations and on the overview."
+msgstr "계산과 개요에 이번 달을 포함합니다."
+
+#: models.py:80
+msgid "Match payments by their reason code instead of by amount alone."
+msgstr "금액만이 아니라 Reason 코드로 납부 내역을 대조합니다."
+
+#: models.py:83
+msgid "Bot detection: hours per day"
+msgstr "봇 탐지: 하루 시간 수"
+
+#: models.py:87
+msgid ""
+"A day counts as suspicious when a character earned taxed income in more than "
+"this many different hours of that day."
+msgstr "Character가 그날 이 값보다 많은 서로 다른 시간대에 과세 수입을 올린 경우 해당 일자를 의심스러운 날로 봅니다."
+
+#: models.py:92
+msgid "Bot detection: days per month"
+msgstr "봇 탐지: 한 달 일수"
+
+#: models.py:96
+msgid ""
+"A character is listed once it exceeds this many suspicious days within the "
+"selected month."
+msgstr "선택한 달에 의심스러운 날이 이 값을 넘으면 해당 Character가 목록에 표시됩니다."
+
+#: models.py:102
+msgid "Tax configuration"
+msgstr "세금 설정"
+
+#: models.py:142 templates/eos_tax/settings.html:44
+msgid "Valid from"
+msgstr "적용 시작"
+
+#: models.py:144
+msgid "First month this rate applies to. Stored as the first of that month."
+msgstr "이 세율이 처음 적용되는 달입니다. 해당 월 1일로 저장됩니다."
+
+#: models.py:151
+msgid "Share of the gross PvE income. 0.1 means 10 percent."
+msgstr "PvE 총수입의 비율입니다. 0.1은 10퍼센트를 뜻합니다."
+
+#: models.py:156
+msgid "Tax rate"
+msgstr "세율"
+
+#: models.py:157 templates/eos_tax/settings.html:29
+msgid "Tax rate schedule"
+msgstr "세율 일정"
+
+#: models.py:170
+msgid "Corporation ID"
+msgstr "Corporation ID"
+
+#: models.py:171
+msgid "Taxed month"
+msgstr "과세 월"
+
+#: models.py:172
+msgid "Taxed year"
+msgstr "과세 연도"
+
+#: models.py:173
+msgid "Corporation name"
+msgstr "Corporation 이름"
+
+#: models.py:174
+msgid "Tax value"
+msgstr "세금 금액"
+
+#: models.py:175
+msgid "Tax percentage"
+msgstr "Ingame Corp Tax"
+
+#: models.py:176 templates/eos_tax/index.html:24
+#: templates/eos_tax/index.html:51
+msgid "Payed"
+msgstr "납부됨"
+
+#: models.py:193
+msgid "Applied alliance tax rate"
+msgstr "적용된 Alliance 세율"
+
+#: models.py:196
+msgid ""
+"Alliance rate in effect when this row was calculated. Stored per row so "
+"changing the rate does not rewrite what past months were owed."
+msgstr "이 행을 계산할 때 적용되던 Alliance 세율입니다. 행마다 저장하므로 세율을 바꾸어도 지난달의 납부액이 바뀌지 않습니다."
+
+#: templates/eos_tax/base.html:8 tests/test_translations.py:127
+msgid "Overview"
+msgstr "개요"
+
+#: templates/eos_tax/base.html:14 views.py:50
+msgid "Statistics"
+msgstr "통계"
+
+#: templates/eos_tax/base.html:18 views.py:137
+msgid "Bots"
+msgstr "봇"
+
+#: templates/eos_tax/base.html:22 tests/test_translations.py:128 views.py:109
+msgid "Settings"
+msgstr "설정"
+
+#: templates/eos_tax/bots.html:16
+#, python-format
+msgid ""
+"Characters that earned taxed income in more than %(min_hours)s different\n"
+"                hours of a day, on more than %(min_days)s days of the "
+"selected month. Both thresholds\n"
+"                live on the settings page."
+msgstr "선택한 달에 %(min_days)s일을 넘겨, 하루에 %(min_hours)s개를 넘는 서로 다른 시간대에 과세 수입을 올린 Character입니다. 두 기준값은 설정 페이지에 있습니다."
+
+#: templates/eos_tax/bots.html:23 templates/eos_tax/index.html:22
+#: templates/eos_tax/statistics.html:53
+msgid "Month"
+msgstr "월"
+
+#: templates/eos_tax/bots.html:29
+msgid "Show"
+msgstr "표시"
+
+#: templates/eos_tax/bots.html:37
+msgid ""
+"No character crossed both thresholds. The ten longest days of the month are "
+"shown instead, so the thresholds can be judged against real numbers."
+msgstr "두 기준값을 모두 넘은 Character가 없습니다. 대신 이번 달에서 가장 긴 열 개의 날을 보여 줍니다. 실제 수치로 기준값을 판단할 수 있습니다."
+
+#: templates/eos_tax/bots.html:43
+msgid "No character crossed both thresholds in this month."
+msgstr "이번 달에 두 기준값을 모두 넘은 Character가 없습니다."
+
+#: templates/eos_tax/bots.html:55
+#, python-format
+msgid "%(value)s hour blocks"
+msgstr "시간 블록 %(value)s개"
+
+#: templates/eos_tax/bots.html:56
+#, python-format
+msgid "%(value)s characters"
+msgstr "Character %(value)s명"
+
+#: templates/eos_tax/bots.html:57
+#, python-format
+msgid "%(value)s hits"
+msgstr "결과 %(value)s건"
+
+#: templates/eos_tax/bots.html:60
+msgid "database"
+msgstr "데이터베이스"
+
+#: templates/eos_tax/bots.html:61
+msgid "aggregation"
+msgstr "집계"
+
+#: templates/eos_tax/bots.html:62
+msgid "total"
+msgstr "합계"
+
+#: templates/eos_tax/help.html:5
+msgid "How to pay taxes?"
+msgstr "세금은 어떻게 내나요?"
+
+#: templates/eos_tax/help.html:7
+#, python-format
+msgid "1. Search for: <u>%(tax_corp)s</u>"
+msgstr "1. 다음을 검색하세요: <u>%(tax_corp)s</u>"
+
+#: templates/eos_tax/help.html:9
+msgid "2. Right click and select <u>\"Give Money\"</u>"
+msgstr "2. 마우스 오른쪽 버튼을 누르고 <u>\"Give Money\"</u>를 선택하세요"
+
+#: templates/eos_tax/help.html:10
+msgid ""
+"3. Copy the \"Amount to pay in Isk\" for the current month and paste it into "
+"amount"
+msgstr "3. 이번 달의 \"Amount to pay in Isk\" 값을 복사해 금액란에 붙여넣으세요"
+
+#: templates/eos_tax/help.html:11
+msgid "4. Copy the \"Reason\" into the corresponding field"
+msgstr "4. \"Reason\"을 해당 입력란에 복사해 넣으세요"
+
+#: templates/eos_tax/help.html:12
+msgid ""
+"4a. A reason is only shown for the last month, starting on the 2nd of the "
+"current month, to avoid outdated payments."
+msgstr "4a. Reason은 지난달에 대해서만, 이번 달 2일부터 표시됩니다. 기한이 지난 납부를 막기 위해서입니다."
+
+#: templates/eos_tax/index.html:18 templates/eos_tax/statistics.html:89
+msgid "Corporation"
+msgstr "Corporation"
+
+#: templates/eos_tax/index.html:19
+msgid "Ingame Corp Tax"
+msgstr "Ingame Corp Tax"
+
+#: templates/eos_tax/index.html:20
+msgid "Alliance Tax"
+msgstr "Alliance Tax"
+
+#: templates/eos_tax/index.html:21
+msgid "Amount to pay in Isk"
+msgstr "납부액 (ISK)"
+
+#: templates/eos_tax/index.html:23
+msgid "Reason"
+msgstr "Reason"
+
+#: templates/eos_tax/index.html:42 templates/eos_tax/index.html:43
+msgid "Copy reason to clipboard"
+msgstr "사유를 클립보드에 복사"
+
+#: templates/eos_tax/index.html:54
+msgid "Not payed"
+msgstr "미납"
+
+#: templates/eos_tax/index.html:64
+msgid "No tax data for the selected months."
+msgstr "선택한 달에 대한 세금 데이터가 없습니다."
+
+#: templates/eos_tax/index.html:76
+msgid "Corporation:"
+msgstr "Corporation:"
+
+#: templates/eos_tax/index.html:77
+msgid "Filter by corporation name"
+msgstr "Corporation 이름으로 거르기"
+
+#: templates/eos_tax/partials/bot-table.html:7
+msgid "Character"
+msgstr "Character"
+
+#: templates/eos_tax/partials/bot-table.html:8
+msgid "Main"
+msgstr "Main"
+
+#: templates/eos_tax/partials/bot-table.html:9
+msgid "Suspicious days"
+msgstr "의심스러운 날"
+
+#: templates/eos_tax/partials/bot-table.html:10
+msgid "Active days"
+msgstr "활동한 날"
+
+#: templates/eos_tax/partials/bot-table.html:11
+msgid "Busiest day (hours)"
+msgstr "가장 활발한 날 (시간)"
+
+#: templates/eos_tax/partials/bot-table.html:12
+msgid "Contributed tax"
+msgstr "기여한 세금"
+
+#: templates/eos_tax/settings.html:18
+msgid ""
+"These values were taken over from local.py once. They are read from\n"
+"                here now, so editing local.py has no further effect."
+msgstr "이 값들은 local.py에서 한 번 가져온 것입니다. 이제부터는 여기에서 읽으므로 local.py를 수정해도 반영되지 않습니다."
+
+#: templates/eos_tax/settings.html:31
+msgid ""
+"The newest entry that is not in the future applies, so a\n"
+"                            change can be entered months ahead. Months "
+"before the first entry use the base\n"
+"                            rate above. Already calculated months keep the "
+"rate they were charged with."
+msgstr "미래가 아닌 항목 중 가장 최근 것이 적용되므로 변경을 몇 달 앞서 입력할 수 있습니다. 첫 항목 이전의 달에는 위의 기본 세율이 적용됩니다. 이미 계산된 달은 계산 당시의 세율을 그대로 유지합니다."
+
+#: templates/eos_tax/settings.html:45
+msgid "Rate"
+msgstr "세율"
+
+#: templates/eos_tax/settings.html:46
+msgid "Remove"
+msgstr "삭제"
+
+#: templates/eos_tax/settings.html:69
+msgid "Save settings"
+msgstr "설정 저장"
+
+#: templates/eos_tax/statistics.html:21
+msgid "Year"
+msgstr "연도"
+
+#: templates/eos_tax/statistics.html:30
+msgid "Alliance"
+msgstr "Alliance"
+
+#: templates/eos_tax/statistics.html:32
+msgid "All alliances"
+msgstr "모든 Alliance"
+
+#: templates/eos_tax/statistics.html:40
+msgid "Display"
+msgstr "표시 방식"
+
+#: templates/eos_tax/statistics.html:42
+msgid "Trend over the year"
+msgstr "연간 추이"
+
+#: templates/eos_tax/statistics.html:43
+msgid "Share of one month"
+msgstr "한 달의 비중"
+
+#: templates/eos_tax/statistics.html:58
+msgid "Min. share"
+msgstr "최소 비중"
+
+#: templates/eos_tax/statistics.html:90
+msgid "PvE income"
+msgstr "PvE 수입"
+
+#: templates/eos_tax/statistics.html:91
+msgid "Tax"
+msgstr "세금"
+
+#: templates/eos_tax/statistics.html:110
+msgid "No tax data recorded yet."
+msgstr "아직 기록된 세금 데이터가 없습니다."
+
+#: templates/eos_tax/statistics.html:145
+msgid "Loading…"
+msgstr "불러오는 중…"
+
+#: templates/eos_tax/statistics.html:146
+msgid "No data for this selection."
+msgstr "이 선택에 해당하는 데이터가 없습니다."
+
+#: templates/eos_tax/statistics.html:147
+msgid "Could not load the statistics."
+msgstr "통계를 불러오지 못했습니다."
+
+#: templates/eos_tax/statistics.html:148
+msgid "corporations"
+msgstr "Corporation"
+
+#: templates/eos_tax/statistics.html:149
+msgid "Other"
+msgstr "기타"
+
+#: templates/eos_tax/statistics.html:150
+#, python-brace-format
+msgid "{shown} of {total} Corporations drawn"
+msgstr "{total}개 중 {shown}개 Corporation 표시"
+
+#: templates/eos_tax/statistics.html:151
+#, python-brace-format
+msgid "{value} of the tax covered"
+msgstr "세금의 {value} 반영"
+
+#: templates/eos_tax/statistics.html:152
+#, python-brace-format
+msgid "{value} ISK income"
+msgstr "수입 {value} ISK"
+
+#: templates/eos_tax/statistics.html:153
+#, python-brace-format
+msgid "{value} ISK tax"
+msgstr "세금 {value} ISK"
+
+#: views.py:41
+#, python-format
+msgid "Taxes to pay: %(rate)s%%"
+msgstr "납부할 세금: %(rate)s%%"
+
+#: views.py:101
+msgid "Settings saved."
+msgstr "설정을 저장했습니다."

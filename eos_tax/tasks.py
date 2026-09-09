@@ -1,13 +1,11 @@
 from celery import shared_task
 
-from itertools import product
-
 from allianceauth.services.hooks import get_extension_logger
 from allianceauth.eveonline.models import EveCorporationInfo
 
 from eos_tax.db_connector import update_corp
-from eos_tax.app_settings import TAX_ALLIANCES, TAX_CORPORATIONS
-from eos_tax.util import get_dates, get_eve_alliance_id, get_corp_name
+from eos_tax.app_settings import get_config
+from eos_tax.util import get_dates
 
 logger = get_extension_logger(__name__)
 
@@ -16,20 +14,22 @@ logger = get_extension_logger(__name__)
 # main task
 @shared_task
 def run_update_alliance():
-    corporation_info = { 
-        x.corporation_id:x.corporation_name for x in EveCorporationInfo.objects.filter().all() 
-            if get_eve_alliance_id(x.alliance_id) in TAX_ALLIANCES}
+    # one query for the whole list. Walking every corporation and resolving its
+    # alliance one by one cost a query per corporation, which is the bulk of the
+    # work once an alliance has its corporations registered in Alliance Auth.
+    corporations = EveCorporationInfo.objects.filter(
+        alliance__alliance_id__in=get_config().alliance_ids()
+    ).values_list("corporation_id", "corporation_name")
+
     dates = get_dates()
-    # check if corp in alliance 
-    for corp_id in corporation_info.keys(): 
+
+    for corp_id, corp_name in corporations:
         for month, year in dates:
+            logger.info(f"queueing: {corp_name} ({corp_id}), date: {month}/{year}")
             # split for parallel processing
             run_update_corporation.delay(corp_id=corp_id, month=month, year=year)
 
 # helper task
 @shared_task
 def run_update_corporation(corp_id:int, month: int = -1, year: int = -1):
-    logger.info(f"updating: {get_corp_name(corp_id)} ({corp_id}), date: {month}/{year}")
-    for holding_corp in TAX_CORPORATIONS: #? to avoid empty config?
-        update_corp(corp_id=corp_id, month=month, year=year)
-    
+    update_corp(corp_id=corp_id, month=month, year=year)

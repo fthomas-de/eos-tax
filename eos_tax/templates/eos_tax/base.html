@@ -1,13 +1,36 @@
-{% extends 'allianceauth/base-bs5.html' %}
+{% extends "allianceauth/base-bs5.html" %}
 {% load i18n %}
 
 {% block page_title %}{% translate "Alliance PvE Tax" %}{% endblock %}
+
+{% block header_nav_collapse_left %}
+    {% url "eos_tax:index" as overview_url %}
+    {% translate "Overview" as overview_title %}
+    {% include "eos_tax/partials/nav-item.html" with nav_url=overview_url nav_title=overview_title nav_view="eos_tax:index" %}
+
+    {# admin only pages - do not offer links that would only redirect #}
+    {% if perms.eos_tax.admin_view %}
+        {% url "eos_tax:statistics" as statistics_url %}
+        {% translate "Statistics" as statistics_title %}
+        {% include "eos_tax/partials/nav-item.html" with nav_url=statistics_url nav_title=statistics_title nav_view="eos_tax:statistics" %}
+
+        {% url "eos_tax:bots" as bots_url %}
+        {% translate "Bots" as bots_title %}
+        {% include "eos_tax/partials/nav-item.html" with nav_url=bots_url nav_title=bots_title nav_view="eos_tax:bots" %}
+
+        {% url "eos_tax:settings" as settings_url %}
+        {% translate "Settings" as settings_title %}
+        {% include "eos_tax/partials/nav-item.html" with nav_url=settings_url nav_title=settings_title nav_view="eos_tax:settings" %}
+    {% endif %}
+{% endblock %}
 
 {% block content %}
     <div class="eos_tax">
         <h1 class="text-center mb-3">{% translate "Alliance PvE Tax" %} ({{ version }})</h1>
 
-        {% include 'eos_tax/help.html' %}
+        {% block app_help %}
+            {% include "eos_tax/help.html" %}
+        {% endblock %}
 
         {% block details %}{% endblock %}
     </div>

@@ -1,0 +1,12 @@
+{% load navactive %}
+{# One entry of the app navbar: coloured while active, muted otherwise. #}
+{# The navbar is navbar-dark/text-bg-primary, so the accent has to work on blue. #}
+{% navactive request nav_view as active_class %}
+
+<li class="nav-item">
+    <a href="{{ nav_url }}"
+       class="nav-link {% if active_class %}{{ active_class }} fw-bold text-warning{% else %}text-white-50{% endif %}"
+       {% if active_class %}aria-current="page"{% endif %}>
+        {{ nav_title }}
+    </a>
+</li>

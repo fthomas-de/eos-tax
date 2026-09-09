@@ -1,0 +1,67 @@
+{% extends "eos_tax/base.html" %}
+{% load i18n %}
+{% load humanize %}
+
+{% block app_help %}{% endblock %}
+
+{% block details %}
+
+    <div class="card mb-3">
+        <div class="card-header">
+            <div class="card-title mb-0">{{ title }}</div>
+        </div>
+
+        <div class="card-body">
+            <p class="text-body-secondary small">
+                {% blocktranslate %}Characters that earned taxed income in more than {{ min_hours }} different
+                hours of a day, on more than {{ min_days }} days of the selected month. Both thresholds
+                live on the settings page.{% endblocktranslate %}
+            </p>
+
+            <form role="form" method="get" class="row g-3 align-items-end mb-4">
+                <div class="col-sm-4 col-lg-3">
+                    <label for="eos-tax-month" class="form-label">{% translate "Month" %}</label>
+                    <input type="month" class="form-control" id="eos-tax-month"
+                           name="month" value="{{ selected_month }}">
+                </div>
+
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">{% translate "Show" %}</button>
+                </div>
+            </form>
+
+            {% if candidates %}
+                {% include "eos_tax/partials/bot-table.html" with rows=candidates %}
+            {% elif longest_days %}
+                <div class="alert alert-info">
+                    {% blocktranslate %}No character crossed both thresholds. The ten longest days of the month are shown instead, so the thresholds can be judged against real numbers.{% endblocktranslate %}
+                </div>
+
+                {% include "eos_tax/partials/bot-table.html" with rows=longest_days %}
+            {% else %}
+                <div class="alert alert-success text-center">
+                    {% translate "No character crossed both thresholds in this month." %}
+                </div>
+            {% endif %}
+
+            {% comment %}
+                Runtime figures, so a slow-down shows up here instead of in a
+                timeout. Hour blocks are what the database actually hands over
+                and what the aggregation walks - the number to watch as the
+                journal grows.
+            {% endcomment %}
+            <div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top {% if stats.slow %}text-warning fw-semibold{% else %}text-body-secondary{% endif %}">
+                <span>{% blocktranslate with value=stats.buckets|intcomma %}{{ value }} hour blocks{% endblocktranslate %}</span>
+                <span>{% blocktranslate with value=stats.characters|intcomma %}{{ value }} characters{% endblocktranslate %}</span>
+                <span>{% blocktranslate with value=stats.candidates %}{{ value }} hits{% endblocktranslate %}</span>
+
+                <span class="ms-auto">
+                    {% translate "database" %} {{ stats.seconds_query|floatformat:2 }}&nbsp;s
+                    &middot; {% translate "aggregation" %} {{ stats.seconds_aggregate|floatformat:2 }}&nbsp;s
+                    &middot; {% translate "total" %} <strong>{{ stats.seconds_total|floatformat:2 }}&nbsp;s</strong>
+                </span>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
