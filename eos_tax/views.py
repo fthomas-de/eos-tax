@@ -4,7 +4,8 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.contrib import messages
 from django.shortcuts import redirect, render
-from django.utils.dates import MONTHS_3
+from django.urls import reverse
+from django.utils.dates import MONTHS_3, WEEKDAYS_ABBR
 from django.utils.translation import gettext_lazy as _
 
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
@@ -16,8 +17,11 @@ from eos_tax.app_settings import get_config
 from eos_tax.forms import TaxConfigurationForm, TaxRateFormSet
 from eos_tax.models import TaxRate
 from eos_tax.db_connector import (
+    ACTIVE_HOUR_MIN_ENTRIES,
+    find_characters,
     get_all_corps_for_user,
     get_bot_report,
+    get_character_month,
     get_statistics_alliances,
     get_statistics_series,
     get_statistics_years,
@@ -124,9 +128,38 @@ def _selected_month(request):
 
 @login_required
 @permission_required("eos_tax.admin_view")
+def bot_detail(request, character_id):
+    """One character's month, hour by hour, as a calendar."""
+    selected = _selected_month(request)
+    detail = get_character_month(character_id, selected.year, selected.month)
+
+    context = {
+        "title": detail["character_name"],
+        "version": VERSION,
+        "selected_month": selected.strftime("%Y-%m"),
+        "detail": detail,
+        # Django translates these itself, keyed 0 for Monday
+        "weekdays": [WEEKDAYS_ABBR[index] for index in range(7)],
+        "min_entries": ACTIVE_HOUR_MIN_ENTRIES,
+    }
+    return render(request, "eos_tax/bot-detail.html", context)
+
+
+@login_required
+@permission_required("eos_tax.admin_view")
 def bots(request):
     config = get_config()
     selected = _selected_month(request)
+
+    month = selected.strftime("%Y-%m")
+    wanted = request.GET.get("character", "").strip()
+    matches = find_characters(wanted)
+
+    # one hit means the name was meant, so do not make them click it again
+    if len(matches) == 1:
+        detail = reverse("eos_tax:bot_detail", args=[matches[0]["eve_id"]])
+
+        return redirect(f"{detail}?month={month}")
 
     report = get_bot_report(selected.year, selected.month)
     stats = report["stats"]
@@ -136,11 +169,13 @@ def bots(request):
     context = {
         "title": _("Bots"),
         "version": VERSION,
-        "selected_month": selected.strftime("%Y-%m"),
+        "selected_month": month,
         "candidates": report["candidates"],
         "longest_days": report["longest_days"],
         "stats": stats,
         "min_hours": config.bot_min_hours_per_day,
         "min_days": config.bot_min_days_per_month,
+        "wanted": wanted,
+        "matches": matches,
     }
     return render(request, "eos_tax/bots.html", context)

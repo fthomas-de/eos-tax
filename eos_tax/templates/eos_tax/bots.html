@@ -25,10 +25,38 @@
                            name="month" value="{{ selected_month }}">
                 </div>
 
+                <div class="col-sm-5 col-lg-4">
+                    <label for="eos-tax-character" class="form-label">{% translate "Character" %}</label>
+                    <input type="search" class="form-control" id="eos-tax-character"
+                           name="character" value="{{ wanted }}"
+                           placeholder="{% translate 'Open a character directly' %}">
+                </div>
+
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary">{% translate "Show" %}</button>
                 </div>
             </form>
+
+            {% if wanted %}
+                {% if matches %}
+                    <div class="alert alert-info">
+                        <p class="mb-2">{% translate "Several characters match:" %}</p>
+                        <ul class="mb-0">
+                            {% for match in matches %}
+                                <li>
+                                    <a href="{% url 'eos_tax:bot_detail' match.eve_id %}?month={{ selected_month }}">
+                                        {{ match.name }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        {% blocktranslate %}No character found for "{{ wanted }}".{% endblocktranslate %}
+                    </div>
+                {% endif %}
+            {% endif %}
 
             {% if candidates %}
                 {% include "eos_tax/partials/bot-table.html" with rows=candidates %}

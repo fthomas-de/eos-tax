@@ -5,6 +5,7 @@ from django.urls import reverse
 
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 
+from eos_tax.db_connector import _chart_palette
 from eos_tax.models import MonthlyTax, TaxConfiguration
 from eos_tax.util import get_amount_to_pay
 
@@ -83,6 +84,42 @@ def configure(blacklist=()):
     )
 
     return config
+
+
+class TestChartPalette(EosTaxTestCase):
+    """Colours are midpoints of equal subcubes of the RGB cube.
+
+    Rotating the hue alone kept producing colours that read as the same one;
+    two different subcubes cannot. The order is farthest-first rather than the
+    hue sort the source describes, because consecutive slots land on
+    corporations that sit next to each other in the legend.
+    """
+
+    def test_should_never_repeat_a_colour(self):
+        for count in (1, 2, 8, 27, 40, 64):
+            palette = _chart_palette(count)
+
+            self.assertEqual(len(palette), count)
+            self.assertEqual(len(set(palette)), count, f"{count} colours")
+
+    def test_should_keep_a_colour_stable_as_the_palette_grows(self):
+        """A corporation must not be repainted because another one appeared."""
+        self.assertEqual(_chart_palette(8)[0], _chart_palette(12)[0])
+
+    def test_should_emit_valid_hex(self):
+        for colour in _chart_palette(12):
+            self.assertRegex(colour, r"^#[0-9a-f]{6}$")
+
+    def test_should_avoid_the_grey_diagonal(self):
+        """Where red, green and blue are equal the cube yields greys, and greys
+        read as each other on a chart."""
+        for colour in _chart_palette(20):
+            channels = [int(colour[index:index + 2], 16) for index in (1, 3, 5)]
+
+            self.assertGreaterEqual(max(channels) - min(channels), 40, colour)
+
+    def test_should_survive_an_empty_request(self):
+        self.assertEqual(_chart_palette(0), ())
 
 
 class TestStatisticsAccess(EosTaxTestCase):

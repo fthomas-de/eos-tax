@@ -85,7 +85,12 @@
                                 <thead>
                                     <tr>
                                         <th scope="col">{% translate "Corporation" %}</th>
-                                        <th scope="col" class="text-end">{% translate "PvE income" %}</th>
+                                        {% comment %}
+                                            Income steps aside on a phone. Tax is what the page
+                                            is about, and three columns of grouped digits in
+                                            350 pixels wrap into something nobody can scan.
+                                        {% endcomment %}
+                                        <th scope="col" class="text-end d-none d-md-table-cell">{% translate "PvE income" %}</th>
                                         <th scope="col" class="text-end">{% translate "Tax" %}</th>
                                     </tr>
                                 </thead>
@@ -100,8 +105,13 @@
                     below. Same idea as the footer on the bots page: the numbers
                     behind the picture, without a second request.
                 {% endcomment %}
+                {% comment %}
+                    Two columns on a phone, one row from md up. A plain flex row
+                    wrapped the four figures into ragged lines of one and three.
+                {% endcomment %}
                 <div id="eos-tax-figures"
-                     class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary"></div>
+                     class="d-grid d-md-flex flex-md-wrap gap-2 gap-md-3 small mt-4 pt-3 border-top text-body-secondary"
+                     style="grid-template-columns: repeat(2, 1fr);"></div>
             {% else %}
                 <div class="alert alert-warning text-center">
                     {% translate "No tax data recorded yet." %}
@@ -122,6 +132,24 @@
         .eos-tax-legend-frame {
             max-height: 360px;
             overflow-y: auto;
+        }
+
+        /* Below Bootstrap's md the legend sits under the chart instead of
+           beside it, so it no longer has to match its height - capping it there
+           just buries the rows in a second scrollbar inside the page. The chart
+           takes viewport height instead of a desktop pixel count, because on a
+           phone it keeps its height while losing two thirds of its width. */
+        @media (max-width: 767.98px) {
+            .eos-tax-chart-frame {
+                height: 55vh;
+                min-height: 280px;
+                max-height: 420px;
+            }
+
+            .eos-tax-legend-frame {
+                max-height: none;
+                overflow-y: visible;
+            }
         }
 
         /* the swatch repeats the line style, so hue is never the only cue */
@@ -173,6 +201,10 @@
             const monthSelect = document.querySelector("#eos-tax-month");
             const monthField = document.querySelector("#eos-tax-month-field");
             const minShareInput = document.querySelector("#eos-tax-min-share");
+            // Bootstrap's md, the width at which the legend stops sitting
+            // beside the chart and the axis stops having room for every label
+            const narrow = window.matchMedia("(max-width: 767.98px)");
+
             const canvas = document.querySelector("#eos-tax-chart");
             const legendBody = document.querySelector("#eos-tax-legend");
             const figures = document.querySelector("#eos-tax-figures");
@@ -388,7 +420,7 @@
                 }
 
                 const incomeCell = document.createElement("td");
-                incomeCell.className = "text-end";
+                incomeCell.className = "text-end d-none d-md-table-cell";
                 incomeCell.textContent = isk.format(
                     isPie() ? entry.monthIncome : entry.incomeTotal
                 );
@@ -480,10 +512,21 @@
                             }
                         },
                         scales: {
-                            x: { grid: { display: false } },
+                            x: {
+                                grid: { display: false },
+                                ticks: {
+                                    // never turn the months on their side - a
+                                    // rotated label is what made this unreadable.
+                                    // Dropping every other one keeps the rest level.
+                                    maxRotation: 0,
+                                    autoSkip: true,
+                                    autoSkipPadding: narrow.matches ? 12 : 4
+                                }
+                            },
                             y: {
                                 beginAtZero: true,
                                 ticks: {
+                                    maxTicksLimit: narrow.matches ? 5 : 8,
                                     callback: function (value) {
                                         return axisTick(value);
                                     }

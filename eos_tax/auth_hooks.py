@@ -1,9 +1,12 @@
 from django.utils.translation import gettext_lazy as _
 
 from allianceauth import hooks
+from allianceauth.framework.api.user import get_all_characters_from_user
 from allianceauth.services.hooks import MenuItemHook, UrlHook
 
 from . import urls
+from .db_connector import get_all_corps_for_user, get_open_payment_count
+from .util import get_dates
 
 
 class EosTaxMenuItem(MenuItemHook):
@@ -20,9 +23,19 @@ class EosTaxMenuItem(MenuItemHook):
         )
 
     def render(self, request):
-        if request.user.has_perm("eos_tax.basic_access"):
-            return MenuItemHook.render(self, request)
-        return ""
+        if not request.user.has_perm("eos_tax.basic_access"):
+            return ""
+
+        # `count` is Alliance Auth's own badge on the menu entry - the same one
+        # hrapplications, srp and corptools use. None hides it, so a user with
+        # nothing outstanding sees the entry exactly as before.
+        admin = request.user.has_perm("eos_tax.admin_view")
+        corps = get_all_corps_for_user(get_all_characters_from_user(request.user))
+        due = get_open_payment_count(get_dates(), admin=admin, corps=corps)
+
+        self.count = due if due else None
+
+        return MenuItemHook.render(self, request)
 
 
 @hooks.register("menu_item_hook")

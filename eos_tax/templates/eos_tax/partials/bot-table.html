@@ -5,6 +5,7 @@
         <thead>
             <tr>
                 <th scope="col">{% translate "Character" %}</th>
+                <th scope="col">{% translate "Corporation" %}</th>
                 <th scope="col">{% translate "Main" %}</th>
                 <th scope="col" class="text-end">{% translate "Suspicious days" %}</th>
                 <th scope="col" class="text-end">{% translate "Active days" %}</th>
@@ -16,7 +17,12 @@
         <tbody>
             {% for row in rows %}
                 <tr>
-                    <th scope="row">{{ row.character_name }}</th>
+                    <th scope="row">
+                        <a href="{% url 'eos_tax:bot_detail' row.character_id %}?month={{ selected_month }}">
+                            {{ row.character_name }}
+                        </a>
+                    </th>
+                    <td>{{ row.corporation_name|default:"&mdash;" }}</td>
                     <td>{{ row.main_name|default:"&mdash;" }}</td>
                     <td class="text-end">{{ row.suspicious_days }}</td>
                     <td class="text-end">{{ row.active_days }}</td>

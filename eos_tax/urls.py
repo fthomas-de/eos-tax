@@ -10,4 +10,5 @@ urlpatterns = [
     path("statistics/data/", views.statistics_data, name="statistics_data"),
     path("settings/", views.settings, name="settings"),
     path("bots/", views.bots, name="bots"),
+    path("bots/<int:character_id>/", views.bot_detail, name="bot_detail"),
 ]

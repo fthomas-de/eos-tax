@@ -1,0 +1,114 @@
+{% extends "eos_tax/base.html" %}
+{% load i18n %}
+{% load humanize %}
+
+{% block app_help %}{% endblock %}
+
+{% block details %}
+
+    <div class="card mb-3">
+        <div class="card-header d-flex align-items-center gap-3">
+            <div class="card-title mb-0">{{ detail.character_name }}</div>
+            <a href="{% url 'eos_tax:bots' %}?month={{ selected_month }}"
+               class="ms-auto small">{% translate "Back to the list" %}</a>
+        </div>
+
+        <div class="card-body">
+            <p class="text-body-secondary small">
+                {% blocktranslate %}Active hours per day. An hour counts as active once the same taxed
+                journal type appears in it at least {{ min_entries }} times, which is the same rule the
+                list uses. Times are EVE time.{% endblocktranslate %}
+            </p>
+
+            <form role="form" method="get" class="row g-3 align-items-end mb-4">
+                <div class="col-sm-4 col-lg-3">
+                    <label for="eos-tax-month" class="form-label">{% translate "Month" %}</label>
+                    <input type="month" class="form-control" id="eos-tax-month"
+                           name="month" value="{{ selected_month }}">
+                </div>
+
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">{% translate "Show" %}</button>
+                </div>
+            </form>
+
+            {% if detail.active_days %}
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle text-center mb-0"
+                           style="table-layout: fixed;">
+                        <caption class="visually-hidden">
+                            {% translate "Active hours per day, calendar weeks as rows and weekdays as columns" %}
+                        </caption>
+
+                        <thead>
+                            <tr>
+                                <th scope="col" class="text-body-secondary small fw-normal"
+                                    style="width: 4rem;">{% translate "Week" %}</th>
+                                {% for weekday in weekdays %}
+                                    <th scope="col">{{ weekday|capfirst }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for week in detail.weeks %}
+                                <tr>
+                                    <th scope="row" class="text-body-secondary small fw-normal">
+                                        {{ week.week }}
+                                    </th>
+
+                                    {% for day in week.days %}
+                                        {% comment %}
+                                            The colour is the theme's own primary at a share of the
+                                            busiest day - one hue, light to dark. Days of the
+                                            neighbouring months keep their place so the weekday
+                                            columns line up, but carry no value.
+                                        {% endcomment %}
+                                        <td class="{% if not day.in_month %}opacity-25{% endif %}"
+                                            {% if day.alpha %}style="background-color: rgba(var(--bs-primary-rgb), {{ day.alpha }});"{% endif %}
+                                            {% if day.in_month and day.hours %}title="{% blocktranslate with hours=day.hour_list %}Active hours: {{ hours }}{% endblocktranslate %}"{% endif %}>
+                                            <div class="small text-body-secondary lh-1">{{ day.day }}</div>
+                                            {% comment %}
+                                                A quiet day says nothing. Printing a zero in every
+                                                one of them buries the few that carry a number.
+                                            {% endcomment %}
+                                            <div class="fw-semibold lh-sm">{% if day.hours %}{{ day.hours }}{% else %}&nbsp;{% endif %}</div>
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% comment %}
+                    The scale, so a colour can be read without hovering every cell.
+                {% endcomment %}
+                <div class="d-flex align-items-center gap-1 small text-body-secondary mt-3">
+                    <span class="me-1">{% translate "quiet" %}</span>
+                    {% for step in detail.legend %}
+                        <span class="d-inline-block border" style="width: 1.75rem; height: 1rem;
+                              background-color: rgba(var(--bs-primary-rgb), {{ step.alpha }});"></span>
+                    {% endfor %}
+                    <span class="ms-1">{% blocktranslate with value=detail.busiest %}{{ value }} hours{% endblocktranslate %}</span>
+                </div>
+
+                <div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
+                    <span>{% blocktranslate with value=detail.active_days %}{{ value }} active days{% endblocktranslate %}</span>
+                    <span>{% blocktranslate with value=detail.active_hours %}{{ value }} active hours{% endblocktranslate %}</span>
+                    <span>{% blocktranslate with value=detail.busiest %}busiest day {{ value }} hours{% endblocktranslate %}</span>
+                    <span>{% blocktranslate with value=detail.entries|intcomma %}{{ value }} journal entries{% endblocktranslate %}</span>
+
+                    <span class="ms-auto">
+                        {% translate "total" %} <strong>{{ detail.seconds|floatformat:2 }}&nbsp;s</strong>
+                    </span>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    {% translate "This character had no active hour in the selected month." %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock %}

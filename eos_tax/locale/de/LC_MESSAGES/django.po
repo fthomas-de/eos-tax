@@ -13,7 +13,7 @@ msgstr ""
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: auth_hooks.py:16 templates/eos_tax/base.html:4
+#: auth_hooks.py:19 templates/eos_tax/base.html:4
 #: templates/eos_tax/base.html:29
 msgid "Alliance PvE Tax"
 msgstr "Alliance PvE Tax"
@@ -170,17 +170,89 @@ msgstr "Alliance-Satz, der bei der Berechnung dieser Zeile galt. Je Zeile gespei
 msgid "Overview"
 msgstr "Übersicht"
 
-#: templates/eos_tax/base.html:14 views.py:50
+#: templates/eos_tax/base.html:14 views.py:54
 msgid "Statistics"
 msgstr "Statistik"
 
-#: templates/eos_tax/base.html:18 views.py:137
+#: templates/eos_tax/base.html:18 views.py:170
 msgid "Bots"
 msgstr "Bots"
 
-#: templates/eos_tax/base.html:22 tests/test_translations.py:128 views.py:109
+#: templates/eos_tax/base.html:22 tests/test_translations.py:128 views.py:113
 msgid "Settings"
 msgstr "Einstellungen"
+
+#: templates/eos_tax/bot-detail.html:13
+msgid "Back to the list"
+msgstr "Zurück zur Liste"
+
+#: templates/eos_tax/bot-detail.html:18
+#, python-format
+msgid ""
+"Active hours per day. An hour counts as active once the same taxed\n"
+"                journal type appears in it at least %(min_entries)s times, "
+"which is the same rule the\n"
+"                list uses. Times are EVE time."
+msgstr "Aktive Stunden je Tag. Eine Stunde gilt als aktiv, sobald derselbe besteuerte journal type darin mindestens %(min_entries)s mal vorkommt — dieselbe Regel wie in der Liste. Zeiten in EVE-Zeit."
+
+#: templates/eos_tax/bot-detail.html:25 templates/eos_tax/bots.html:23
+#: templates/eos_tax/index.html:22 templates/eos_tax/statistics.html:53
+msgid "Month"
+msgstr "Monat"
+
+#: templates/eos_tax/bot-detail.html:31 templates/eos_tax/bots.html:36
+msgid "Show"
+msgstr "Anzeigen"
+
+#: templates/eos_tax/bot-detail.html:40
+msgid "Active hours per day, calendar weeks as rows and weekdays as columns"
+msgstr "Aktive Stunden je Tag, Kalenderwochen als Zeilen und Wochentage als Spalten"
+
+#: templates/eos_tax/bot-detail.html:46
+msgid "Week"
+msgstr "KW"
+
+#: templates/eos_tax/bot-detail.html:70
+#, python-format
+msgid "Active hours: %(hours)s"
+msgstr "Aktive Stunden: %(hours)s"
+
+#: templates/eos_tax/bot-detail.html:91
+msgid "quiet"
+msgstr "ruhig"
+
+#: templates/eos_tax/bot-detail.html:96
+#, python-format
+msgid "%(value)s hours"
+msgstr "%(value)s Stunden"
+
+#: templates/eos_tax/bot-detail.html:100
+#, python-format
+msgid "%(value)s active days"
+msgstr "%(value)s aktive Tage"
+
+#: templates/eos_tax/bot-detail.html:101
+#, python-format
+msgid "%(value)s active hours"
+msgstr "%(value)s aktive Stunden"
+
+#: templates/eos_tax/bot-detail.html:102
+#, python-format
+msgid "busiest day %(value)s hours"
+msgstr "längster Tag %(value)s Stunden"
+
+#: templates/eos_tax/bot-detail.html:103
+#, python-format
+msgid "%(value)s journal entries"
+msgstr "%(value)s journal entries"
+
+#: templates/eos_tax/bot-detail.html:106 templates/eos_tax/bots.html:90
+msgid "total"
+msgstr "gesamt"
+
+#: templates/eos_tax/bot-detail.html:111
+msgid "This character had no active hour in the selected month."
+msgstr "Dieser Charakter hatte im gewählten Monat keine aktive Stunde."
 
 #: templates/eos_tax/bots.html:16
 #, python-format
@@ -191,51 +263,55 @@ msgid ""
 "                live on the settings page."
 msgstr "Characters, die an mehr als %(min_days)s Tagen des gewählten Monats in jeweils mehr als %(min_hours)s verschiedenen Stunden besteuerten Ertrag erzielt haben. Beide Schwellen stehen auf der Einstellungsseite."
 
-#: templates/eos_tax/bots.html:23 templates/eos_tax/index.html:22
-#: templates/eos_tax/statistics.html:53
-msgid "Month"
-msgstr "Monat"
+#: templates/eos_tax/bots.html:29 templates/eos_tax/partials/bot-table.html:7
+msgid "Character"
+msgstr "Character"
 
-#: templates/eos_tax/bots.html:29
-msgid "Show"
-msgstr "Anzeigen"
+#: templates/eos_tax/bots.html:32
+msgid "Open a character directly"
+msgstr "Charakter direkt öffnen"
 
-#: templates/eos_tax/bots.html:37
+#: templates/eos_tax/bots.html:43
+msgid "Several characters match:"
+msgstr "Mehrere Charaktere passen:"
+
+#: templates/eos_tax/bots.html:56
+#, python-format
+msgid "No character found for \"%(wanted)s\"."
+msgstr "Kein Charakter zu \"%(wanted)s\" gefunden."
+
+#: templates/eos_tax/bots.html:65
 msgid ""
 "No character crossed both thresholds. The ten longest days of the month are "
 "shown instead, so the thresholds can be judged against real numbers."
 msgstr "Kein Character hat beide Schwellen überschritten. Stattdessen werden die zehn längsten Tage des Monats gezeigt, damit sich die Schwellen an echten Zahlen beurteilen lassen."
 
-#: templates/eos_tax/bots.html:43
+#: templates/eos_tax/bots.html:71
 msgid "No character crossed both thresholds in this month."
 msgstr "Kein Character hat in diesem Monat beide Schwellen überschritten."
 
-#: templates/eos_tax/bots.html:55
+#: templates/eos_tax/bots.html:83
 #, python-format
 msgid "%(value)s hour blocks"
 msgstr "%(value)s Stundenblöcke"
 
-#: templates/eos_tax/bots.html:56
+#: templates/eos_tax/bots.html:84
 #, python-format
 msgid "%(value)s characters"
 msgstr "%(value)s Characters"
 
-#: templates/eos_tax/bots.html:57
+#: templates/eos_tax/bots.html:85
 #, python-format
 msgid "%(value)s hits"
 msgstr "%(value)s Treffer"
 
-#: templates/eos_tax/bots.html:60
+#: templates/eos_tax/bots.html:88
 msgid "database"
 msgstr "Datenbank"
 
-#: templates/eos_tax/bots.html:61
+#: templates/eos_tax/bots.html:89
 msgid "aggregation"
 msgstr "Auswertung"
-
-#: templates/eos_tax/bots.html:62
-msgid "total"
-msgstr "gesamt"
 
 #: templates/eos_tax/help.html:5
 msgid "How to pay taxes?"
@@ -266,7 +342,8 @@ msgid ""
 "current month, to avoid outdated payments."
 msgstr "4a. Ein Reason wird nur für den Vormonat angezeigt, ab dem 2. des laufenden Monats, um veraltete Zahlungen zu vermeiden."
 
-#: templates/eos_tax/index.html:18 templates/eos_tax/statistics.html:89
+#: templates/eos_tax/index.html:18 templates/eos_tax/partials/bot-table.html:8
+#: templates/eos_tax/statistics.html:89
 msgid "Corporation"
 msgstr "Corporation"
 
@@ -306,27 +383,23 @@ msgstr "Corporation:"
 msgid "Filter by corporation name"
 msgstr "Nach Corporation-Namen filtern"
 
-#: templates/eos_tax/partials/bot-table.html:7
-msgid "Character"
-msgstr "Character"
-
-#: templates/eos_tax/partials/bot-table.html:8
+#: templates/eos_tax/partials/bot-table.html:9
 msgid "Main"
 msgstr "Main"
 
-#: templates/eos_tax/partials/bot-table.html:9
+#: templates/eos_tax/partials/bot-table.html:10
 msgid "Suspicious days"
 msgstr "Auffällige Tage"
 
-#: templates/eos_tax/partials/bot-table.html:10
+#: templates/eos_tax/partials/bot-table.html:11
 msgid "Active days"
 msgstr "Aktive Tage"
 
-#: templates/eos_tax/partials/bot-table.html:11
+#: templates/eos_tax/partials/bot-table.html:12
 msgid "Busiest day (hours)"
 msgstr "Stärkster Tag (Stunden)"
 
-#: templates/eos_tax/partials/bot-table.html:12
+#: templates/eos_tax/partials/bot-table.html:13
 msgid "Contributed tax"
 msgstr "Beigetragene Steuer"
 
@@ -385,63 +458,63 @@ msgstr "Anteile eines Monats"
 msgid "Min. share"
 msgstr "Mindestanteil"
 
-#: templates/eos_tax/statistics.html:90
+#: templates/eos_tax/statistics.html:96
 msgid "PvE income"
 msgstr "PvE-Ertrag"
 
-#: templates/eos_tax/statistics.html:91
+#: templates/eos_tax/statistics.html:97
 msgid "Tax"
 msgstr "Steuer"
 
-#: templates/eos_tax/statistics.html:110
+#: templates/eos_tax/statistics.html:122
 msgid "No tax data recorded yet."
 msgstr "Noch keine Steuerdaten erfasst."
 
-#: templates/eos_tax/statistics.html:145
+#: templates/eos_tax/statistics.html:175
 msgid "Loading…"
 msgstr "Wird geladen…"
 
-#: templates/eos_tax/statistics.html:146
+#: templates/eos_tax/statistics.html:176
 msgid "No data for this selection."
 msgstr "Keine Daten für diese Auswahl."
 
-#: templates/eos_tax/statistics.html:147
+#: templates/eos_tax/statistics.html:177
 msgid "Could not load the statistics."
 msgstr "Statistik konnte nicht geladen werden."
 
-#: templates/eos_tax/statistics.html:148
+#: templates/eos_tax/statistics.html:178
 msgid "corporations"
 msgstr "Corporations"
 
-#: templates/eos_tax/statistics.html:149
+#: templates/eos_tax/statistics.html:179
 msgid "Other"
 msgstr "Sonstige"
 
-#: templates/eos_tax/statistics.html:150
+#: templates/eos_tax/statistics.html:180
 #, python-brace-format
 msgid "{shown} of {total} Corporations drawn"
 msgstr "{shown} von {total} Corporations gezeichnet"
 
-#: templates/eos_tax/statistics.html:151
+#: templates/eos_tax/statistics.html:181
 #, python-brace-format
 msgid "{value} of the tax covered"
 msgstr "{value} der Steuer abgedeckt"
 
-#: templates/eos_tax/statistics.html:152
+#: templates/eos_tax/statistics.html:182
 #, python-brace-format
 msgid "{value} ISK income"
 msgstr "{value} ISK Ertrag"
 
-#: templates/eos_tax/statistics.html:153
+#: templates/eos_tax/statistics.html:183
 #, python-brace-format
 msgid "{value} ISK tax"
 msgstr "{value} ISK Steuer"
 
-#: views.py:41
+#: views.py:45
 #, python-format
 msgid "Taxes to pay: %(rate)s%%"
 msgstr "Zu zahlende Steuer: %(rate)s%%"
 
-#: views.py:101
+#: views.py:105
 msgid "Settings saved."
 msgstr "Einstellungen gespeichert."

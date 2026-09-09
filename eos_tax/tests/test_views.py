@@ -2,13 +2,21 @@ import datetime
 import re
 
 from dateutil.relativedelta import relativedelta
+from django.test import RequestFactory
 
 from django.contrib.auth.models import Permission, User
 from eos_tax.tests.base import EosTaxTestCase
 from django.urls import reverse
 
 from allianceauth.authentication.models import CharacterOwnership
-from allianceauth.eveonline.models import EveCharacter
+from allianceauth.eveonline.models import (
+    EveAllianceInfo,
+    EveCharacter,
+    EveCorporationInfo,
+)
+
+from eos_tax.auth_hooks import EosTaxMenuItem
+from eos_tax.db_connector import get_open_payment_count, is_payable
 
 from eos_tax.models import MonthlyTax, TaxConfiguration
 from eos_tax.util import get_amount_to_pay
@@ -328,6 +336,144 @@ class TestOverviewTable(EosTaxTestCase):
 
     def test_should_search_case_insensitively(self):
         self.assertContains(self.overview(), "caseInsensitive: true")
+
+
+class TestPayable(EosTaxTestCase):
+    """When a month may be transferred.
+
+    One function for the overview and the badge: two places disagreeing about
+    what is due would be worse than no badge.
+    """
+
+    def test_should_refuse_the_running_month(self):
+        self.assertFalse(is_payable(9, 2026, datetime.datetime(2026, 9, 20)))
+
+    def test_should_wait_for_the_second_of_the_month(self):
+        """The last journal entries of a closed month arrive on the first."""
+        self.assertFalse(is_payable(8, 2026, datetime.datetime(2026, 9, 1)))
+        self.assertTrue(is_payable(8, 2026, datetime.datetime(2026, 9, 2)))
+
+    def test_should_carry_across_the_turn_of_the_year(self):
+        self.assertTrue(is_payable(12, 2026, datetime.datetime(2027, 1, 5)))
+
+    def test_should_refuse_a_month_in_the_future(self):
+        self.assertFalse(is_payable(11, 2026, datetime.datetime(2026, 9, 20)))
+
+
+class TestOpenPaymentCount(EosTaxTestCase):
+    """What the number on the menu entry counts."""
+
+    def setUp(self):
+        previous = datetime.datetime.now() - relativedelta(months=1)
+        self.period = (previous.month, previous.year)
+
+        config = TaxConfiguration.get_solo()
+        config.last_month = True
+        config.current_month = True
+        config.save()
+
+    def row(self, corp_id, name, payed=False, period=None):
+        month, year = period or self.period
+        row = create_tax_row(corp_id, name, payed=payed)
+        row.month = month
+        row.year = year
+        row.save()
+
+        return row
+
+    def count(self, **kwargs):
+        return get_open_payment_count([self.period], **kwargs)
+
+    def test_should_count_an_unpaid_row(self):
+        self.row(ALPHA_CORP_ID, "Alpha Corp")
+
+        self.assertEqual(self.count(admin=True), 1)
+
+    def test_should_ignore_a_paid_row(self):
+        self.row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
+
+        self.assertEqual(self.count(admin=True), 0)
+
+    def test_should_ignore_the_running_month(self):
+        """It has no reason code yet, so there is nothing to quote on a transfer."""
+        create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=False)
+        now = datetime.datetime.now()
+
+        self.assertEqual(
+            get_open_payment_count([(now.month, now.year)], admin=True), 0
+        )
+
+    def test_should_ignore_an_excluded_corporation(self):
+        row = self.row(ALPHA_CORP_ID, "Alpha Corp")
+        alliance = EveAllianceInfo.objects.create(
+            alliance_id=99000009, alliance_name="Any", alliance_ticker="ANY"
+        )
+        corporation = EveCorporationInfo.objects.create(
+            corporation_id=row.corp_id,
+            corporation_name="Alpha Corp",
+            corporation_ticker="ALPHA",
+            alliance=alliance,
+            tax_rate=0.1,
+        )
+        TaxConfiguration.get_solo().corporation_blacklist.set([corporation])
+
+        self.assertEqual(self.count(admin=True), 0)
+
+    def test_should_show_a_member_only_their_own_corporations(self):
+        self.row(ALPHA_CORP_ID, "Alpha Corp")
+        self.row(BRAVO_CORP_ID, "Bravo Corp")
+
+        self.assertEqual(self.count(admin=False, corps=[BRAVO_CORP_ID]), 1)
+        self.assertEqual(self.count(admin=True), 2)
+
+    def test_should_stay_at_zero_without_any_corporation(self):
+        self.row(ALPHA_CORP_ID, "Alpha Corp")
+
+        self.assertEqual(self.count(admin=False, corps=[]), 0)
+
+
+class TestMenuBadge(EosTaxTestCase):
+    """The badge is Alliance Auth's own `count` on the menu item."""
+
+    def setUp(self):
+        previous = datetime.datetime.now() - relativedelta(months=1)
+        config = TaxConfiguration.get_solo()
+        config.last_month = True
+        config.save()
+
+        self.row = create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
+        self.row.month = previous.month
+        self.row.year = previous.year
+        self.row.save()
+
+    def rendered_for(self, permissions):
+        user = create_user(
+            "badge", 95000010, BRAVO_CORP_ID, "Bravo Corp", permissions
+        )
+        request = RequestFactory().get(reverse("eos_tax:index"))
+        request.user = user
+
+        item = EosTaxMenuItem()
+        item.render(request)
+
+        return item
+
+    def test_should_count_what_is_due(self):
+        self.assertEqual(self.rendered_for(["basic_access"]).count, 1)
+
+    def test_should_hide_the_badge_with_nothing_due(self):
+        """None, not zero - Alliance Auth renders a zero as a badge."""
+        self.row.payed = True
+        self.row.save()
+
+        self.assertIsNone(self.rendered_for(["basic_access"]).count)
+
+    def test_should_render_nothing_without_access(self):
+        user = create_user("outsider", 95000011, BRAVO_CORP_ID, "Bravo Corp", [])
+        request = RequestFactory().get(reverse("eos_tax:index"))
+        request.user = user
+
+        self.assertEqual(EosTaxMenuItem().render(request), "")
 
 
 class TestHelpBlock(EosTaxTestCase):

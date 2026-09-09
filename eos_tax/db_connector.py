@@ -1,6 +1,8 @@
 import time
 from collections import defaultdict
-from datetime import datetime, timezone
+from functools import lru_cache
+from math import sqrt
+from datetime import date, datetime, timedelta, timezone
 from itertools import product
 
 from allianceauth.eveonline.models import (
@@ -12,7 +14,7 @@ from allianceauth.framework.api.evecharacter import (
     get_main_character_from_evecharacter,
 )
 from corptools.models import CorporationWalletJournalEntry, EveName
-from django.db.models import Sum
+from django.db.models import Count, Q, Sum
 from django.db.models.functions import ExtractHour, TruncDate
 
 from eos_tax.models import MonthlyTax
@@ -59,6 +61,46 @@ def corp_tax_exists(corp_id: int, month: int = -1, year: int = -1) -> MonthlyTax
     if selected_corp:
         return MonthlyTax
     
+def is_payable(month: int, year: int, today=None) -> bool:
+    """Whether that month is over far enough to be transferred.
+
+    The reason code appears from the second of the following month, which is
+    when the last journal entries of the closed month have arrived. The badge
+    and the overview both ask this, so they cannot disagree about what is due.
+    """
+    today = today or datetime.now()
+
+    if today.day < 2:
+        return False
+
+    return year * 100 + month < today.year * 100 + today.month
+
+
+def get_open_payment_count(dates: list, admin: bool = False, corps=None) -> int:
+    """How many rows are waiting to be paid, for the menu badge.
+
+    Rendered on every page of the site, so this counts in the database rather
+    than building the overview and measuring it.
+    """
+    payable = [(month, year) for month, year in dates if is_payable(month, year)]
+
+    if not payable or (not admin and not corps):
+        return 0
+
+    periods = Q()
+    for month, year in payable:
+        periods |= Q(month=month, year=year)
+
+    rows = MonthlyTax.objects.filter(periods, payed=False)
+
+    if not admin:
+        rows = rows.filter(corp_id__in=corps)
+
+    return rows.exclude(
+        corp_id__in=get_config().blacklisted_corporation_ids()
+    ).count()
+
+
 def get_website_data(dates: list = [], admin: bool = False, corps=[]):
     config = get_config()
     blacklist = config.blacklisted_corporation_ids()
@@ -74,17 +116,15 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
         else:
             selected_corps = MonthlyTax.objects.filter(month=month, year=year).all()
 
-        current_month = datetime.now().month
-        current_day = datetime.now().day
-
         for selected_corp in selected_corps:
             if selected_corp.corp_id in blacklist:
                 continue
-            if ( current_month > selected_corp.month or ( current_month == 1 and selected_corp.month == 12 ) ) and current_day >= 2:
-                reason_code = f"{selected_corp.corp_id}/{selected_corp.month}/{selected_corp.year}"
 
-            else:
-                reason_code = ""
+            reason_code = (
+                f"{selected_corp.corp_id}/{selected_corp.month}/{selected_corp.year}"
+                if is_payable(selected_corp.month, selected_corp.year)
+                else ""
+            )
         
             # rows written before the rate was stored per row carry a zero;
             # resolved once here so the column and the amount cannot drift
@@ -183,18 +223,168 @@ def get_tax_corp(corps:list = []):
     if holding and holding.alliance_id in tax_alliances:
         return holding.corporation_name
 
-# Validated categorical palette: eight slots that stay separable under colour
-# vision deficiency on both a light and a dark surface. Past eight corporations
-# hue alone stops working, so the line style carries part of the identity.
-CHART_PALETTE_LIGHT = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100",
-                       "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
-CHART_PALETTE_DARK = ["#3987e5", "#d95926", "#199e70", "#c98500",
-                      "#d55181", "#008300", "#9085e9", "#e66767"]
+# Line styles still carry part of the identity past the first few
+# corporations, so hue never has to do the job alone.
 CHART_DASHES = [[], [7, 4], [2, 3]]
+
+# How far a colour may stray towards black or white before it stops reading on
+# one of the two surfaces. The cube reaches into both corners.
+CHART_MIN_LIGHTNESS = 0.22
+CHART_MAX_LIGHTNESS = 0.78
+
+# How close red, green and blue may sit before the colour is a grey. The cube
+# has a full diagonal of them and they read as each other on a chart.
+CHART_MIN_SPREAD = 40
+
+
+def _lightness(rgb):
+    return (max(rgb) + min(rgb)) / 510
+
+
+def _hue(rgb):
+    red, green, blue = (channel / 255 for channel in rgb)
+    high, low = max(red, green, blue), min(red, green, blue)
+    span = high - low
+
+    if not span:
+        return 0.0
+
+    if high == red:
+        return ((green - blue) / span % 6) * 60
+    if high == green:
+        return ((blue - red) / span + 2) * 60
+
+    return ((red - green) / span + 4) * 60
+
+
+def _saturation(rgb):
+    high, low = max(rgb) / 255, min(rgb) / 255
+    span = high - low
+
+    if not span:
+        return 0.0
+
+    return span / (2 - high - low) if (high + low) > 1 else span / (high + low)
+
+
+def _oklab(rgb):
+    """Perceptual coordinates, so a distance means what the eye sees.
+
+    Plain RGB distance says #008000 and #00a000 are as far apart as #000080 and
+    #0000a0, which is nonsense - the eye separates greens far better than blues.
+    """
+    def linear(channel):
+        value = channel / 255
+        return value / 12.92 if value <= 0.04045 else ((value + 0.055) / 1.055) ** 2.4
+
+    red, green, blue = (linear(channel) for channel in rgb)
+
+    long = (0.4122214708 * red + 0.5363325363 * green + 0.0514459929 * blue) ** (1 / 3)
+    medium = (0.2119034982 * red + 0.6806995451 * green + 0.1073969566 * blue) ** (1 / 3)
+    short = (0.0883024619 * red + 0.2817188376 * green + 0.6299787005 * blue) ** (1 / 3)
+
+    return (
+        0.2104542553 * long + 0.7936177850 * medium - 0.0040720468 * short,
+        1.9779984951 * long - 2.4285922050 * medium + 0.4505937099 * short,
+        0.0259040371 * long + 0.7827717662 * medium - 0.8086757660 * short,
+    )
+
+
+def _distance(first, second):
+    return sqrt(sum((a - b) ** 2 for a, b in zip(_oklab(first), _oklab(second)))) * 100
+
+
+def _cube_colours(count):
+    """`count` colours, each the midpoint of one subcube of the RGB cube.
+
+    Cutting every axis into the same number of segments gives cuts**3 cubes, so
+    the number of colours grows cubically - three cuts already cover 27
+    corporations, four cover 64.
+    """
+    if count < 1:
+        return []
+
+    cuts = 1
+    while cuts ** 3 < count:
+        cuts += 1
+
+    usable = []
+    while True:
+        piece = 255 // cuts
+        candidates = []
+
+        for index in range(cuts ** 3):
+            blue = (index % cuts) * piece + piece // 2
+            green = (index // cuts % cuts) * piece + piece // 2
+            red = (index // (cuts * cuts) % cuts) * piece + piece // 2
+            rgb = (red, green, blue)
+
+            if max(rgb) - min(rgb) < CHART_MIN_SPREAD:
+                continue  # the grey diagonal
+            if not CHART_MIN_LIGHTNESS <= _lightness(rgb) <= CHART_MAX_LIGHTNESS:
+                continue  # too near black or white to read on one of the themes
+
+            candidates.append(rgb)
+
+        if len(candidates) >= count:
+            usable = candidates
+            break
+
+        cuts += 1  # dropping greys and extremes cost us the headroom
+
+    # Farthest first: start from the most vivid mid-lightness cube, then keep
+    # taking whichever colour sits furthest from everything already taken. The
+    # answer sorts by hue instead, which is right for rendering the palette as
+    # a gradient strip and wrong here - it puts near neighbours on consecutive
+    # slots, which is exactly the pair a reader has to tell apart.
+    chosen = [
+        max(usable, key=lambda rgb: _saturation(rgb) * (1 - abs(_lightness(rgb) - 0.5)))
+    ]
+    remaining = [rgb for rgb in usable if rgb != chosen[0]]
+
+    while len(chosen) < count:
+        pick = max(
+            remaining,
+            key=lambda rgb: min(_distance(rgb, taken) for taken in chosen),
+        )
+        chosen.append(pick)
+        remaining.remove(pick)
+
+    return chosen
+
+
+@lru_cache(maxsize=8)
+def _chart_palette(count):
+    """`count` hex colours, no two of them alike.
+
+    Cached: the answer is the same for a given count, and picking farthest
+    first costs count squared distance comparisons.
+    """
+    return tuple(
+        f"#{red:02x}{green:02x}{blue:02x}" for red, green, blue in _cube_colours(count)
+    )
 
 # how many characters the bots page falls back to when nothing crosses the
 # thresholds - enough to judge whether the thresholds fit, short enough to read
 LONGEST_DAYS_LIMIT = 10
+
+# An hour counts as active once the same taxed ref_type appears in it twice.
+# A single entry is noise - a stray bounty tick, one ess payout - and used to
+# make the hour count all the same.
+#
+# The game pays out about every 20 minutes to someone ratting without a break,
+# so an hour of uninterrupted play should really hold three entries. Two is the
+# deliberately tolerant setting: play gets interrupted, and a false negative
+# costs less than accusing a player.
+ACTIVE_HOUR_MIN_ENTRIES = 2
+
+# The matrix paints one hue at a share of the busiest day. The floor keeps a
+# single active hour visible, the ceiling keeps the number on top of it
+# readable - on the light themes and the dark ones alike, which is why this is
+# an alpha over the theme's own primary and not a palette of fixed colours.
+MATRIX_ALPHA_FLOOR = 0.10
+MATRIX_ALPHA_CEILING = 0.55
+MATRIX_LEGEND_STEPS = 5
 
 
 def get_statistics_years():
@@ -245,6 +435,7 @@ def get_statistics_series(year: int, alliance_id: int = None):
     )
     infos = _corporation_infos({row.corp_id for row in rows})
     slots = _colour_slots()
+    palette = _chart_palette(max(len(slots), 1))
     # twelve lookups instead of one per row
     fallback_rates = {month: config.rate_for(year, month) for month in range(1, 13)}
 
@@ -279,9 +470,13 @@ def get_statistics_series(year: int, alliance_id: int = None):
     series = sorted(corps.values(), key=lambda corp: corp["name"].lower())
     for corp in series:
         slot = slots.get(corp["corp_id"], 0)
-        corp["color_light"] = CHART_PALETTE_LIGHT[slot % len(CHART_PALETTE_LIGHT)]
-        corp["color_dark"] = CHART_PALETTE_DARK[slot % len(CHART_PALETTE_DARK)]
-        corp["dash"] = CHART_DASHES[(slot // len(CHART_PALETTE_LIGHT)) % len(CHART_DASHES)]
+        # the palette is built for every corporation that has data, so a
+        # corporation keeps its colour when the filter changes and when the
+        # display switches between the line chart and the pie
+        colour = palette[slot % len(palette)]
+        corp["color_light"] = colour
+        corp["color_dark"] = colour
+        corp["dash"] = CHART_DASHES[(slot // len(palette)) % len(CHART_DASHES)]
         corp["tax_total"] = round(sum(corp["tax"]))
         corp["income_total"] = round(sum(corp["income"]))
         corp["tax"] = [round(value) for value in corp["tax"]]
@@ -329,6 +524,42 @@ def _main_characters(character_ids):
     return mains
 
 
+def _tax_receivers(entries, character_ids):
+    """Corporation name per character, from the journal rows themselves.
+
+    A character who moved mid month shows up under two receivers; the one that
+    got the most tax wins, because the column names where the character earned,
+    not every corporation it passed through.
+    """
+    if not character_ids:
+        return {}
+
+    totals = (
+        entries.filter(second_party_id__in=character_ids)
+        .values("second_party_id", "tax_receiver_id")
+        .annotate(total=Sum("tax"))
+    )
+
+    dominant = {}
+    for row in totals:
+        character_id = row["second_party_id"]
+        best = dominant.get(character_id)
+
+        if best is None or (row["total"] or 0) > best[1]:
+            dominant[character_id] = (row["tax_receiver_id"], row["total"] or 0)
+
+    names = dict(
+        EveCorporationInfo.objects.filter(
+            corporation_id__in={corp_id for corp_id, _ in dominant.values()}
+        ).values_list("corporation_id", "corporation_name")
+    )
+
+    return {
+        character_id: names.get(corp_id) or str(corp_id)
+        for character_id, (corp_id, _) in dominant.items()
+    }
+
+
 def _row(character_id, days, contributed, config):
     suspicious = [
         day for day, hours in days.items() if len(hours) > config.bot_min_hours_per_day
@@ -337,6 +568,7 @@ def _row(character_id, days, contributed, config):
     return {
         "character_id": character_id,
         "character_name": str(character_id),
+        "corporation_name": "",
         "main_name": "",
         "suspicious_days": len(suspicious),
         "active_days": len(days),
@@ -394,8 +626,10 @@ def get_bot_report(year: int, month: int):
         date__lt=end,
     )
 
-    # one row per character, day and hour - at most 24 per character and day,
-    # so the grouping below stays small no matter how large the journal is
+    # one row per character, day, hour and ref_type, counted - the count is
+    # what decides whether the hour was active. Grouping replaces the DISTINCT
+    # that used to run here and returns fewer rows, because only the groups
+    # that reach the threshold survive.
     query_started = time.perf_counter()
     buckets = list(
         entries.annotate(
@@ -403,9 +637,10 @@ def get_bot_report(year: int, month: int):
             hour=ExtractHour("date", tzinfo=timezone.utc),
         )
         # the name is resolved for the handful of shown rows further down;
-        # joining it here widens the DISTINCT over the whole month
-        .values("second_party_id", "day", "hour")
-        .distinct()
+        # joining it here widens the grouping over the whole month
+        .values("second_party_id", "day", "hour", "ref_type")
+        .annotate(seen=Count("id"))
+        .filter(seen__gte=ACTIVE_HOUR_MIN_ENTRIES)
     )
     contributed = {
         row["second_party_id"]: row["total"] or 0
@@ -452,15 +687,147 @@ def get_bot_report(year: int, month: int):
         EveName.objects.filter(eve_id__in=shown_ids).values_list("eve_id", "name")
     )
     mains = _main_characters(shown_ids)
+    corporations = _tax_receivers(entries, shown_ids)
 
     for entry in shown:
         character_id = entry["character_id"]
         entry["character_name"] = names.get(character_id) or str(character_id)
+        entry["corporation_name"] = corporations.get(character_id, "")
         entry["main_name"] = mains.get(character_id, "")
 
     stats["seconds_aggregate"] = time.perf_counter() - aggregate_started
 
     return finish(candidates, longest_days)
+
+
+def _matrix_alpha(hours: int, busiest: int) -> float:
+    """Where this day sits on the ramp, as an alpha over the theme's primary."""
+    if not hours or not busiest:
+        return 0
+
+    span = MATRIX_ALPHA_CEILING - MATRIX_ALPHA_FLOOR
+
+    return round(MATRIX_ALPHA_FLOOR + span * hours / busiest, 2)
+
+
+def find_characters(name: str, limit: int = 10):
+    """Characters whose name matches, for the jump box on the bots page.
+
+    An exact name wins outright - a character called "Tux" must not be buried
+    by "Tux Tuxel" and "Tuxel". Only when nothing matches exactly does the
+    search widen, and then it is capped, because a single letter would
+    otherwise return the whole name table.
+    """
+    name = (name or "").strip()
+
+    if not name:
+        return []
+
+    characters = EveName.objects.filter(category="character")
+
+    exact = list(characters.filter(name__iexact=name).values("eve_id", "name")[:2])
+    if len(exact) == 1:
+        return exact
+
+    return list(
+        characters.filter(name__icontains=name)
+        .order_by("name")
+        .values("eve_id", "name")[:limit]
+    )
+
+
+def get_character_month(character_id: int, year: int, month: int):
+    """Active hours per day for one character, as a week by weekday matrix.
+
+    Same definition of an active hour as the list, so the two agree: the same
+    taxed ref_type twice within the hour.
+
+    The grid always starts on a Monday and ends on a Sunday, so the first and
+    last row carry days of the neighbouring months - those are marked and left
+    empty rather than dropped, or the weekdays would not line up.
+    """
+    started = time.perf_counter()
+    config = get_config()
+    corp_ids = _taxed_corporation_ids(config)
+    start, end = _month_range(year, month)
+
+    hours_per_day = defaultdict(set)
+    total_entries = 0
+
+    if corp_ids and config.tax_types:
+        groups = (
+            CorporationWalletJournalEntry.objects.filter(
+                ref_type__in=config.tax_types,
+                tax_receiver_id__in=corp_ids,
+                second_party_id=character_id,
+                date__gte=start,
+                date__lt=end,
+            )
+            .annotate(
+                day=TruncDate("date", tzinfo=timezone.utc),
+                hour=ExtractHour("date", tzinfo=timezone.utc),
+            )
+            .values("day", "hour", "ref_type")
+            .annotate(seen=Count("id"))
+            .filter(seen__gte=ACTIVE_HOUR_MIN_ENTRIES)
+        )
+
+        for row in groups:
+            hours_per_day[row["day"]].add(row["hour"])
+            total_entries += row["seen"]
+
+    first = date(year, month, 1)
+    last = (end - timedelta(days=1)).date()
+    busiest = max((len(hours) for hours in hours_per_day.values()), default=0)
+
+    weeks = []
+    cursor = first - timedelta(days=first.weekday())
+    while cursor <= last:
+        days = []
+        for offset in range(7):
+            current = cursor + timedelta(days=offset)
+            hours = sorted(hours_per_day.get(current, ()))
+
+            days.append({
+                "date": current,
+                "day": current.day,
+                "in_month": current.month == month and current.year == year,
+                "hours": len(hours),
+                # the reading is "which hours", so the tooltip spells them out
+                "hour_list": ", ".join(f"{hour:02d}" for hour in hours),
+                # One hue, light to dark, as a share of the busiest day. The
+                # ceiling stays low so the number in the cell keeps its normal
+                # ink on both the light and the dark themes - Alliance Auth has
+                # twenty of them, so the theme's own primary does the work
+                # rather than a palette that would suit exactly one.
+                "alpha": _matrix_alpha(len(hours), busiest),
+            })
+
+        weeks.append({"week": cursor.isocalendar().week, "days": days})
+        cursor += timedelta(days=7)
+
+    names = dict(
+        EveName.objects.filter(eve_id=character_id).values_list("eve_id", "name")
+    )
+
+    return {
+        "character_id": character_id,
+        "character_name": names.get(character_id) or str(character_id),
+        "weeks": weeks,
+        "busiest": busiest,
+        # the legend explains the cells, so it is stepped by the same function
+        "legend": [
+            {
+                "alpha": _matrix_alpha(step, MATRIX_LEGEND_STEPS),
+                "hours": round(busiest * step / MATRIX_LEGEND_STEPS),
+            }
+            for step in range(1, MATRIX_LEGEND_STEPS + 1)
+        ],
+        "active_days": len(hours_per_day),
+        "active_hours": sum(len(hours) for hours in hours_per_day.values()),
+        "entries": total_entries,
+        "seconds": time.perf_counter() - started,
+    }
 
 
 def get_bot_candidates(year: int, month: int):
