@@ -155,15 +155,15 @@ class TestStepDetection(TaxChangeTestCase):
 
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["corp_name"], "Bravo Corp")
-        self.assertAlmostEqual(rows[0]["biggest"]["from_rate"], 0.10, places=3)
-        self.assertAlmostEqual(rows[0]["biggest"]["to_rate"], 0.02, places=3)
-        self.assertLess(rows[0]["biggest"]["change"], 0)
+        self.assertAlmostEqual(rows[0]["step"]["from_rate"], 0.10, places=3)
+        self.assertAlmostEqual(rows[0]["step"]["to_rate"], 0.02, places=3)
+        self.assertLess(rows[0]["step"]["change"], 0)
 
     def test_should_find_a_rate_that_rose(self):
         self.steady(range(1, 6), 0.02)
         self.steady(range(6, 11), 0.10)
 
-        self.assertGreater(self.changes()[0]["biggest"]["change"], 0)
+        self.assertGreater(self.changes()[0]["step"]["change"], 0)
 
     def test_should_smooth_an_outlier_on_the_first_day(self):
         """A centred window has only two entries at the edge, and the median of
@@ -187,7 +187,7 @@ class TestStepDetection(TaxChangeTestCase):
         self.steady(range(6, 11), 0.10)
 
         self.assertAlmostEqual(
-            self.changes()[0]["biggest"]["change_points"], 1.0, places=6
+            self.changes()[0]["step"]["change_points"], 1.0, places=6
         )
 
     def test_should_weigh_a_move_the_same_at_any_level(self):
@@ -196,7 +196,7 @@ class TestStepDetection(TaxChangeTestCase):
         self.steady(range(1, 6), 0.1000)
         self.steady(range(6, 11), 0.1015)
 
-        moved = self.changes()[0]["biggest"]["change_points"]
+        moved = self.changes()[0]["step"]["change_points"]
 
         self.assertAlmostEqual(moved, 0.15, places=6)
 
@@ -245,15 +245,71 @@ class TestStepDetection(TaxChangeTestCase):
             for index, system in enumerate((30000001, 30000002, 30000003)):
                 self.payout(day, 0.02, system=system, minute=index * 5)
 
-        self.assertEqual(self.changes()[0]["biggest"]["systems"], 3)
+        self.assertEqual(self.changes()[0]["step"]["systems"], 3)
 
     def test_should_name_the_day_it_happened(self):
         self.steady(range(1, 6), 0.10)
         self.steady(range(6, 11), 0.02)
 
         self.assertEqual(
-            self.changes()[0]["biggest"]["on"], datetime.date(YEAR, 6, 6)
+            self.changes()[0]["step"]["on"], datetime.date(YEAR, 6, 6)
         )
+
+
+class TestSeveralChanges(TaxChangeTestCase):
+    """A Corporation that switched more than once shows up more than once.
+
+    The detector always found every step; the list used to keep one row per
+    Corporation and show only the largest of them.
+    """
+
+    def levels(self, *pairs):
+        """Consecutive stretches of days, each at its own rate."""
+        day = 1
+        for rate, length in pairs:
+            self.steady(range(day, day + length), rate)
+            day += length
+
+    def test_should_list_every_change_of_one_corporation(self):
+        self.levels((0.10, 5), (0.08, 5), (0.06, 5), (0.04, 5))
+
+        self.assertEqual(len(self.changes()), 3)
+
+    def test_should_name_the_corporation_on_every_row(self):
+        self.levels((0.10, 5), (0.02, 5), (0.06, 5))
+
+        names = {row["corp_name"] for row in self.changes()}
+
+        self.assertEqual(names, {"Bravo Corp"})
+
+    def test_should_carry_how_often_that_corporation_switched(self):
+        """One row still says whether it stands alone."""
+        self.levels((0.10, 5), (0.02, 5), (0.06, 5))
+
+        for row in self.changes():
+            self.assertEqual(row["changes"], 2)
+
+    def test_should_order_by_the_size_of_the_move(self):
+        self.levels((0.10, 5), (0.09, 5), (0.02, 5))
+
+        moves = [round(row["step"]["change_points"], 2) for row in self.changes()]
+
+        self.assertEqual(moves, [-7.0, -1.0])
+
+    def test_should_find_a_rate_that_came_back(self):
+        """Down and up again is two changes, not none."""
+        self.levels((0.10, 5), (0.02, 5), (0.10, 5))
+
+        self.assertEqual(len(self.changes()), 2)
+
+    def test_should_count_corporations_and_changes_apart(self):
+        self.levels((0.10, 5), (0.02, 5), (0.06, 5))
+
+        with mock.patch("eos_tax.db_connector._npc_bounties", return_value=BOUNTIES):
+            stats = get_corp_tax_changes(YEAR)["stats"]
+
+        self.assertEqual(stats["changes"], 2)
+        self.assertEqual(stats["flagged"], 1)
 
 
 class TestTaxChangePages(TaxChangeTestCase):
@@ -308,6 +364,52 @@ class TestTaxChangePages(TaxChangeTestCase):
 
         self.assertContains(response, "eos-tax-rate-chart")
         self.assertContains(response, "eos-tax-series")
+
+    def test_should_make_the_table_sortable(self):
+        response = self.as_admin(reverse("eos_tax:tax_changes"), year=YEAR)
+
+        self.assertContains(response, 'id="table-eos-tax-changes"')
+        self.assertContains(response, "dataTables.min")
+
+    def test_should_keep_the_order_the_server_sent(self):
+        """Biggest move first. DataTables would otherwise sort by the first
+        column on load and throw that away."""
+        response = self.as_admin(reverse("eos_tax:tax_changes"), year=YEAR)
+
+        self.assertContains(response, "order: []")
+
+    def test_should_make_exactly_the_corporation_column_searchable(self):
+        body = self.as_admin(reverse("eos_tax:tax_changes"), year=YEAR).content.decode()
+
+        self.assertEqual(body.count("searchable: true"), 1)
+        self.assertEqual(body.count("searchable: false"), 4)
+
+    def test_should_sort_the_change_by_its_size_not_its_text(self):
+        """The cell reads as two percentages and an arrow."""
+        response = self.as_admin(reverse("eos_tax:tax_changes"), year=YEAR)
+
+        self.assertContains(response, 'data-order="-8.0"')
+
+    def test_should_sort_the_date_chronologically(self):
+        """June 6 comes after June 5, which "June 6, 2026" as text does not."""
+        response = self.as_admin(reverse("eos_tax:tax_changes"), year=YEAR)
+
+        self.assertContains(response, f'data-order="{YEAR}-06-06"')
+
+    def test_should_not_localise_the_sort_values(self):
+        """A German locale would render the move as -8,0 and sort it as text."""
+        self.client.force_login(
+            create_user("german", 97000013, CORP_ID, "Bravo Corp", ["admin_view"])
+        )
+
+        with mock.patch("eos_tax.db_connector._npc_bounties", return_value=BOUNTIES):
+            response = self.client.get(
+                reverse("eos_tax:tax_changes"),
+                {"year": YEAR},
+                headers={"accept-language": "de"},
+            )
+
+        self.assertNotContains(response, 'data-order="-8,0"')
 
     def test_should_not_leave_a_visible_template_comment(self):
         response = self.as_admin(reverse("eos_tax:tax_changes"), year=YEAR)

@@ -212,7 +212,7 @@ msgid "Month"
 msgstr "Mese"
 
 #: templates/eos_tax/bot-detail.html:31 templates/eos_tax/bots.html:36
-#: templates/eos_tax/tax-changes.html:33
+#: templates/eos_tax/tax-changes.html:35
 msgid "Show"
 msgstr "Mostra"
 
@@ -260,7 +260,7 @@ msgstr "%(value)s journal entries"
 
 #: templates/eos_tax/bot-detail.html:106 templates/eos_tax/bots.html:90
 #: templates/eos_tax/tax-change-detail.html:74
-#: templates/eos_tax/tax-changes.html:95
+#: templates/eos_tax/tax-changes.html:105
 msgid "total"
 msgstr "totale"
 
@@ -357,7 +357,7 @@ msgid ""
 msgstr "4a. Un Reason viene mostrato solo per il mese precedente, a partire dal 2 del mese in corso, per evitare pagamenti non più validi."
 
 #: templates/eos_tax/index.html:18 templates/eos_tax/partials/bot-table.html:8
-#: templates/eos_tax/statistics.html:89 templates/eos_tax/tax-changes.html:46
+#: templates/eos_tax/statistics.html:89 templates/eos_tax/tax-changes.html:49
 msgid "Corporation"
 msgstr "Corporation"
 
@@ -393,11 +393,11 @@ msgstr "Non pagato"
 msgid "No tax data for the selected months."
 msgstr "Nessun dato sulla tassa per i mesi selezionati."
 
-#: templates/eos_tax/index.html:92
+#: templates/eos_tax/index.html:92 templates/eos_tax/tax-changes.html:116
 msgid "Corporation:"
 msgstr "Corporation:"
 
-#: templates/eos_tax/index.html:93
+#: templates/eos_tax/index.html:93 templates/eos_tax/tax-changes.html:117
 msgid "Filter by corporation name"
 msgstr "Filtra per nome della Corporation"
 
@@ -448,7 +448,7 @@ msgstr "Rimuovi"
 msgid "Save settings"
 msgstr "Salva impostazioni"
 
-#: templates/eos_tax/statistics.html:21 templates/eos_tax/tax-changes.html:24
+#: templates/eos_tax/statistics.html:21 templates/eos_tax/tax-changes.html:26
 msgid "Year"
 msgstr "Anno"
 
@@ -568,7 +568,7 @@ msgid ""
 msgstr "Il %(on)s la quota è passata dal %(before)s per cento al %(after)s per cento, su %(systems)s sistemi."
 
 #: templates/eos_tax/tax-change-detail.html:70
-#: templates/eos_tax/tax-changes.html:92
+#: templates/eos_tax/tax-changes.html:102
 #, python-format
 msgid "%(value)s payouts"
 msgstr "%(value)s pagamenti"
@@ -586,53 +586,56 @@ msgstr "Troppi pochi pagamenti quest'anno per misurare un tasso."
 msgid "Share of the bounty in percent"
 msgstr "Quota della bounty in percentuale"
 
-#: templates/eos_tax/tax-changes.html:16
+#: templates/eos_tax/tax-changes.html:17
 msgid ""
 "The corporation wallet only shows the corporation's own cut, so the ingame\n"
 "                rate is not in it directly. It is recovered from the kills "
 "behind each bounty: what the\n"
 "                NPCs were worth against what arrived. Every change of that "
 "share is listed, however small,\n"
-"                as long as the new level held for at least two days."
-msgstr "Il wallet della corporation mostra solo la sua quota, quindi l'ingame rate non è contenuto direttamente. Viene ricostruito dai kill dietro ogni bounty: quanto valevano gli NPC rispetto a quanto è arrivato. Ogni cambiamento di quella quota viene elencato, per quanto piccolo, purché il nuovo livello abbia retto almeno due giorni."
+"                as long as the new level held for at least two days - a "
+"corporation that switched\n"
+"                three times appears three times."
+msgstr "Il wallet della corporation mostra solo la sua quota, quindi l'ingame rate non è contenuto direttamente. Viene ricostruito dai kill dietro ogni bounty: quanto valevano gli NPC rispetto a quanto è arrivato. Ogni cambiamento di quella quota viene elencato, per quanto piccolo, purché il nuovo livello abbia retto almeno due giorni: una corporation che ha cambiato tre volte compare tre volte."
 
-#: templates/eos_tax/tax-changes.html:39
+#: templates/eos_tax/tax-changes.html:41
 msgid ""
 "The static data export is not available, so bounty values cannot be resolved."
 msgstr "Lo static data export non è disponibile, le taglie non possono essere risolte."
 
-#: templates/eos_tax/tax-changes.html:47
-msgid "Changes"
-msgstr "Cambiamenti"
+#: templates/eos_tax/tax-changes.html:50
+msgid "Change in the share"
+msgstr "Cambiamento nella quota"
 
-#: templates/eos_tax/tax-changes.html:48
-msgid "Largest change in the share"
-msgstr "Cambiamento maggiore nella quota"
-
-#: templates/eos_tax/tax-changes.html:49
+#: templates/eos_tax/tax-changes.html:51
 msgid "On"
 msgstr "Il"
 
-#: templates/eos_tax/tax-changes.html:50
+#: templates/eos_tax/tax-changes.html:52
 msgid "Systems"
 msgstr "Sistemi"
 
-#: templates/eos_tax/tax-changes.html:51
+#: templates/eos_tax/tax-changes.html:53
 msgid "Payouts"
 msgstr "Pagamenti"
 
-#: templates/eos_tax/tax-changes.html:68
+#: templates/eos_tax/tax-changes.html:76
 msgid "pp"
 msgstr "p.p."
 
-#: templates/eos_tax/tax-changes.html:86
+#: templates/eos_tax/tax-changes.html:95
 msgid "No corporation changed its ingame tax rate in this year."
 msgstr "Nessuna corporation ha cambiato la sua ingame tax rate quest'anno."
 
-#: templates/eos_tax/tax-changes.html:91
+#: templates/eos_tax/tax-changes.html:100
 #, python-format
 msgid "%(value)s corporations examined"
 msgstr "%(value)s corporation esaminate"
+
+#: templates/eos_tax/tax-changes.html:101
+#, python-format
+msgid "%(changes)s changes in %(corporations)s corporations"
+msgstr "%(changes)s cambiamenti in %(corporations)s corporation"
 
 #: views.py:47
 #, python-format

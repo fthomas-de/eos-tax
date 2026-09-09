@@ -40,10 +40,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   sorts by. The columns are named after what the number is: the share of the
   bounty, not the rate. It carries the system's bounty modifier too, and on
   the live data it measures 9.00 % where Alliance Auth records 15 %.
+  Every change is its own row, so the table reads as a list of events: a
+  Corporation that switched three times appears three times, and sorting by
+  name groups its changes together. The detector always found them all - the
+  list used to keep one row per Corporation and show only the largest.
+  The list is sortable per column and searchable by Corporation, the way the
+  overview is. Three columns sort by something other than what they show - the
+  move by its size rather than the arrow between two percentages, the date
+  chronologically rather than as a written month, the payout count without its
+  separators - and the table opens in the order the server sent it, biggest
+  move first, instead of DataTables' default of sorting by the first column.
 - Overview marks a Corporation whose ingame corp tax is zero. Nothing reaches
   its wallet, so nothing arrives for the alliance to tax either, and the row
   would otherwise read as an honest zero.
-- Test suite grown to 224 tests.
+- Test suite grown to 236 tests.
 
 ### Changed
 

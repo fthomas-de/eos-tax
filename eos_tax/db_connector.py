@@ -969,25 +969,29 @@ def get_corp_tax_changes(year: int, tolerance: float = RATE_STEP_TOLERANCE):
             continue
 
         info = infos.get(corp_id)
-        biggest = max(steps, key=lambda step: abs(step["change"]))
+        name = info.corporation_name if info else str(corp_id)
 
-        rows.append({
-            "corp_id": corp_id,
-            "corp_name": info.corporation_name if info else str(corp_id),
-            "steps": len(steps),
-            "biggest": biggest,
-            "first_rate": plateaus[0]["rate"],
-            "last_rate": plateaus[-1]["rate"],
-            "days": len(days),
-            "payouts": len(measured),
-        })
+        # one row per change: a Corporation that switched three times has three
+        # rows, and sorting by name puts them together
+        for step in steps:
+            rows.append({
+                "corp_id": corp_id,
+                "corp_name": name,
+                "step": step,
+                # how often this Corporation switched in total, so a single row
+                # still says whether it stands alone
+                "changes": len(steps),
+                "payouts": len(measured),
+            })
 
-    rows.sort(key=lambda row: -abs(row["biggest"]["change"]))
+    rows.sort(key=lambda row: -abs(row["step"]["change"]))
 
     return {
         "rows": rows,
         "stats": {
             "corporations": len(payouts),
+            "flagged": len({row["corp_id"] for row in rows}),
+            "changes": len(rows),
             "payouts": sum(len(measured) for measured in payouts.values()),
             "seconds": time.perf_counter() - started,
             "sde": bool(_npc_bounties()),
