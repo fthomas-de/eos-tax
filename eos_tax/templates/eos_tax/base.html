@@ -18,6 +18,10 @@
         {% translate "Bots" as bots_title %}
         {% include "eos_tax/partials/nav-item.html" with nav_url=bots_url nav_title=bots_title nav_view="eos_tax:bots" %}
 
+        {% url "eos_tax:tax_changes" as tax_changes_url %}
+        {% translate "Corp Tax Changes" as tax_changes_title %}
+        {% include "eos_tax/partials/nav-item.html" with nav_url=tax_changes_url nav_title=tax_changes_title nav_view="eos_tax:tax_changes" %}
+
         {% url "eos_tax:settings" as settings_url %}
         {% translate "Settings" as settings_title %}
         {% include "eos_tax/partials/nav-item.html" with nav_url=settings_url nav_title=settings_title nav_view="eos_tax:settings" %}

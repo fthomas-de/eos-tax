@@ -28,8 +28,23 @@
                         <tbody>
                             {% for data in website_data %}
                                 <tr>
-                                    <th scope="row">{{ data.corporation_name }}</th>
-                                    <td data-order="{{ data.corp_tax_rate|unlocalize }}">{{ data.corp_tax_rate }}%</td>
+                                    {% comment %}
+                                        A corporation at zero percent collects nothing, so
+                                        nothing arrives for the alliance to tax either. The
+                                        row would otherwise read as an honest zero.
+                                    {% endcomment %}
+                                    <th scope="row" class="{% if not data.corp_tax_rate %}text-danger{% endif %}">
+                                        {{ data.corporation_name }}
+                                        {% if not data.corp_tax_rate %}
+                                            <i class="fa-solid fa-triangle-exclamation ms-1"
+                                               title="{% translate 'No ingame corp tax, so nothing reaches the corporation wallet to tax.' %}"></i>
+                                            <span class="visually-hidden">
+                                                {% translate "No ingame corp tax, so nothing reaches the corporation wallet to tax." %}
+                                            </span>
+                                        {% endif %}
+                                    </th>
+                                    <td data-order="{{ data.corp_tax_rate|unlocalize }}"
+                                        class="{% if not data.corp_tax_rate %}text-danger fw-semibold{% endif %}">{{ data.corp_tax_rate }}%</td>
                                     <td data-order="{{ data.alliance_tax_rate|unlocalize }}">{{ data.alliance_tax_rate }}%</td>
                                     <td data-order="{{ data.isk_to_pay_value|unlocalize }}">{{ data.isk_to_pay }}</td>
                                     <td data-order="{{ data.period|unlocalize }}">{{ data.month }}/{{ data.year }}</td>

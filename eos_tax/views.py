@@ -18,7 +18,11 @@ from eos_tax.forms import TaxConfigurationForm, TaxRateFormSet
 from eos_tax.models import TaxRate
 from eos_tax.db_connector import (
     ACTIVE_HOUR_MIN_ENTRIES,
+    RATE_MIN_TOLERANCE,
+    RATE_STEP_TOLERANCE,
     find_characters,
+    get_corp_tax_changes,
+    get_corp_tax_detail,
     get_all_corps_for_user,
     get_bot_report,
     get_character_month,
@@ -82,6 +86,70 @@ def statistics_data(request):
         "labels": [str(MONTHS_3[month]) for month in range(1, 13)],
         "series": get_statistics_series(year, alliance),
     })
+
+
+def _selected_year(request):
+    """Year from the picker, falling back to the running one."""
+    try:
+        return int(request.GET.get("year", ""))
+    except ValueError:
+        return datetime.now().year
+
+
+def _selected_tolerance(request):
+    """Smallest change worth reporting, entered as a percentage."""
+    try:
+        entered = float(request.GET.get("change", "").replace(",", "."))
+    except ValueError:
+        return RATE_STEP_TOLERANCE
+
+    return max(entered / 100, RATE_MIN_TOLERANCE)
+
+
+@login_required
+@permission_required("eos_tax.admin_view")
+def tax_changes(request):
+    """Corporations whose ingame tax rate moved during the year."""
+    year = _selected_year(request)
+    tolerance = _selected_tolerance(request)
+    report = get_corp_tax_changes(year, tolerance)
+
+    context = {
+        "title": _("Corp Tax Changes"),
+        "version": VERSION,
+        "year": year,
+        "years": get_statistics_years(),
+        "rows": report["rows"],
+        "stats": report["stats"],
+        "tolerance": round(tolerance * 100, 3),
+    }
+    return render(request, "eos_tax/tax-changes.html", context)
+
+
+@login_required
+@permission_required("eos_tax.admin_view")
+def tax_change_detail(request, corp_id):
+    """The daily curve behind one corporation."""
+    year = _selected_year(request)
+    tolerance = _selected_tolerance(request)
+    detail = get_corp_tax_detail(corp_id, year, tolerance)
+
+    context = {
+        "title": detail["corp_name"],
+        "version": VERSION,
+        "year": year,
+        "years": get_statistics_years(),
+        "detail": detail,
+        "series": [
+            {"day": day["day"].isoformat(),
+             "rate": round(day["rate"] * 100, 3),
+             "payouts": day["payouts"],
+             "systems": day["systems"]}
+            for day in detail["days"]
+        ],
+        "tolerance": round(tolerance * 100, 3),
+    }
+    return render(request, "eos_tax/tax-change-detail.html", context)
 
 
 @login_required

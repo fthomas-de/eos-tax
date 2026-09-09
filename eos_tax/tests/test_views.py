@@ -334,6 +334,22 @@ class TestOverviewTable(EosTaxTestCase):
         self.assertIn('replace("fa-regular", "fa-solid")', body)
         self.assertIn('replace("fa-solid", "fa-regular")', body)
 
+    def test_should_mark_a_corporation_without_ingame_tax(self):
+        """At zero percent nothing reaches the corporation wallet, so the row
+        owing nothing says nothing about what the corporation earned."""
+        self.row.tax_percentage = 0
+        self.row.save()
+
+        response = self.overview()
+
+        self.assertContains(response, "text-danger")
+        self.assertContains(response, "fa-triangle-exclamation")
+
+    def test_should_leave_a_taxing_corporation_unmarked(self):
+        response = self.overview()
+
+        self.assertNotContains(response, "fa-triangle-exclamation")
+
     def test_should_search_case_insensitively(self):
         self.assertContains(self.overview(), "caseInsensitive: true")
 

@@ -5,13 +5,103 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased] - yyyy-mm-dd
+## [Unreleased]
 
 ### Added
 
+- Corp Tax Changes, a fourth admin page. It lists Corporations whose ingame tax
+  rate moved during the year and draws the daily curve behind each of them.
+  The corporation wallet only carries the Corporation's own cut - `tax` equals
+  `amount` on every bounty row - so the rate is not in it. It is recovered from
+  `reason`, which names the NPCs killed, against what the static data export
+  says each of them pays: the slice that arrived over the full bounty is the
+  rate that was in force at that moment.
+  The ratio also carries the system's bounty modifier, so the level on its own
+  says little. A step in it does: a Corporation switching its rate moves every
+  system on the same day, while the modifier drifts per system, and the number
+  of systems behind a step is listed for exactly that reason. Fleet payouts are
+  summed back together before measuring - split apart they would report a
+  fraction of the rate - and a three day rolling median keeps one noisy day
+  from reading as a switch. Without eve_sde the page says so instead of
+  breaking.
+  How small a change is worth seeing is set on the page, default one percent:
+  the calculation is exact, and two percent already means a Corporation pays a
+  different amount. One number decides both what counts as a single level and
+  how small a step may be, because that is the same question asked twice.
+  Measured on the live curve the smoothed daily rate sits at 0.00 percent from
+  its level on all thirty days, so even half a percent raises nothing false.
+- Overview marks a Corporation whose ingame corp tax is zero. Nothing reaches
+  its wallet, so nothing arrives for the alliance to tax either, and the row
+  would otherwise read as an honest zero.
+- Test suite grown to 216 tests.
+
 ### Changed
 
+- The pie is ordered by size, largest slice first, with Other last whatever its
+  size. The legend is fed from the same list, so the two agree. The line chart
+  keeps its order - there a series is found by its colour, and reshuffling on
+  every month change would cost the reader the position they had learned.
+
 ### Fixed
+
+## [0.2.1] - 2026-09-09
+
+### Added
+
+- A character on the bots page opens a detail view for the month: a matrix with
+  the weekdays as columns and the calendar weeks as rows, holding the active
+  hours of each day. The cells are one hue at a share of the busiest day, taken
+  from the theme's own primary rather than fixed colours, so it reads on all of
+  Alliance Auth's themes. Hovering a day names the hours behind the number.
+- A character can be opened straight from the bots page by name. The list only
+  ever shows the candidates and the ten longest days, so a character that
+  crosses neither was unreachable - and that is exactly who gets looked up when
+  someone reports a suspicion. An exact name jumps, a partial one offers what
+  it found.
+- Each row on the bots page names the Corporation whose tax the character
+  contributed to, read from the journal rather than from Alliance Auth - hardly
+  any ratter is registered there, so that column would sit as empty as the Main
+  one. A character that moved mid month is listed under the Corporation it
+  earned most for.
+- The menu entry carries a count of the payments that are due - rows that are
+  unpaid and already have a reason code to quote. Alliance Auth's own
+  `MenuItemHook.count` renders it, the way hrapplications, srp and corptools
+  do. Nothing outstanding, no badge.
+- Test suite grown to 191 tests.
+
+### Changed
+
+- An hour counts as active once the same taxed journal type appears in it at
+  least twice. A single entry used to be enough, which let one stray bounty
+  tick stand for an hour of ratting. The rule now lives in one place and the
+  bot list, the busiest day column and the detail matrix all use it, so the
+  term means one thing. On the live journal for September this leaves 100 of
+  335 active hours standing and drops the longest day from 7 hours to 2. The
+  thresholds keep their defaults: a bot earns more than two bounties an hour
+  and still reaches them, while a player's stray ticks no longer count at
+  all.
+- Chart colours are midpoints of equal subcubes of the RGB cube, after
+  https://stackoverflow.com/a/79300351. Rotating the hue alone never varies
+  saturation and lightness, so past the palette's eight slots corporations kept
+  drawing the same colour; two different subcubes cannot. Both charts use it,
+  so a corporation keeps its colour when the display changes.
+  Two departures from the source, both measured with a validator: the cube's
+  own grey diagonal and its darkest and lightest corners are skipped, and the
+  order is farthest-first instead of by hue. Sorted by hue the worst
+  neighbouring pair sits at dE 4.8, which is hard to tell apart even with full
+  colour vision; taking the farthest colour each time lifts that to 21.9.
+- Statistics reads on a phone. The chart took a desktop height while losing
+  two thirds of its width, so below Bootstrap's md it takes viewport height
+  instead; the months stay level and every other one is dropped rather than
+  rotated; the y axis keeps five ticks instead of eight. The legend drops its
+  income column - three columns of grouped digits in 350 pixels wrap into
+  something nobody can scan - and no longer caps its height, since it sits
+  under the chart there rather than beside it. The key figures move from one
+  flex row into two columns.
+- Whether a month can be paid is one function now. The overview compared month
+  numbers inline and special-cased December, and the menu badge would have had
+  to repeat it - two places disagreeing about what is due is worse than no
+  badge.
 
 ## [0.2.0] - 2026-09-09
 
@@ -30,11 +120,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Bots page. Characters whose taxed income looks automated: more than *X*
   different hours of a day, on more than *Y* days of the month, both thresholds
   configurable. Each character is listed with its main. When nothing crosses the
-  thresholds the ten longest days of the month are shown instead. Each row
-  names the Corporation whose tax the character contributed to, read from the
-  journal rather than from Alliance Auth - hardly any ratter is registered
-  there, so that column would sit as empty as the Main one. A character that
-  moved mid month is listed under the Corporation it earned most for. A footer
+  thresholds the ten longest days of the month are shown instead. A footer
   reports what the evaluation cost, so a slow-down becomes visible before it
   turns into a timeout.
 - Statistics: a minimum share in percent, default 2. Corporations below it fold
@@ -46,15 +132,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   abbreviated to billions with a B.
 - Navigation bar with Overview, Statistics, Bots and Settings. The admin pages
   are not offered without `admin_view`.
-- A character on the bots page opens a detail view for the month: a matrix with
-  the weekdays as columns and the calendar weeks as rows, holding the active
-  hours of each day. The cells are one hue at a share of the busiest day, taken
-  from the theme's own primary rather than fixed colours, so it reads on all of
-  Alliance Auth's themes. Hovering a day names the hours behind the number.
-- The menu entry carries a count of the payments that are due - rows that are
-  unpaid and already have a reason code to quote. Alliance Auth's own
-  `MenuItemHook.count` renders it, the way hrapplications, srp and corptools
-  do. Nothing outstanding, no badge.
 - Overview shows the applied alliance tax rate as its own column, between the
   ingame corp tax and the amount owed. The rate that produced the amount was
   invisible, so two months at different rates looked like a miscalculation.
@@ -70,7 +147,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Translations for German, Spanish, French, Italian, Korean and Russian. EVE
   terms stay in English. Only the German catalogue has been reviewed by a native
   speaker.
-- Test suite with 175 tests covering access, page content, markup, the
+- Test suite with 139 tests covering access, page content, markup, the
   configuration, bot detection and the translation catalogues, including a check
   that every compiled catalogue matches its source.
 
@@ -93,27 +170,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   constraint per Corporation and month; the fallback tax rate is resolved once
   per month instead of once per row. Measured at 1000 characters and 866,000
   journal rows the bot evaluation went from 11.8 s to 4.1 s.
-- An hour counts as active once the same taxed journal type appears in it at
-  least twice. A single entry used to be enough, which let one stray bounty
-  tick stand for an hour of ratting. The rule now lives in one place and the
-  bot list, the busiest day column and the detail matrix all use it, so the
-  term means one thing. On the live journal for September this leaves 100 of
-  335 active hours standing and drops the longest day from 7 hours to 2. The
-  thresholds keep their defaults: a bot earns more than two bounties an hour
-  and still reaches them, while a player's stray ticks no longer count at
-  all.
-- Statistics reads on a phone. The chart took a desktop height while losing
-  two thirds of its width, so below Bootstrap's md it takes viewport height
-  instead; the months stay level and every other one is dropped rather than
-  rotated; the y axis keeps five ticks instead of eight. The legend drops its
-  income column - three columns of grouped digits in 350 pixels wrap into
-  something nobody can scan - and no longer caps its height, since it sits
-  under the chart there rather than beside it. The key figures move from one
-  flex row into two columns.
-- Whether a month can be paid is one function now. The overview compared month
-  numbers inline and special-cased December, and the menu badge would have had
-  to repeat it - two places disagreeing about what is due is worse than no
-  badge.
 - Statistics formats ISK with dots, the way the overview always has.
   Intl.NumberFormat followed the viewer's locale and printed commas on an
   English browser, so the two pages disagreed about the same figure.

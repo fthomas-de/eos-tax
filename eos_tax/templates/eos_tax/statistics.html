@@ -592,8 +592,23 @@
                 }
 
                 if (isPie()) {
-                    chart = new Chart(canvas, pieConfig(shown));
-                    renderLegend(shown, function (index) {
+                    // Biggest share first, so the pie reads round from the
+                    // largest slice. Other stays last whatever its size - it
+                    // is a remainder, not a corporation. The colour travels
+                    // with the entry, so reordering repaints nothing.
+                    const ordered = shown.slice().sort(function (first, second) {
+                        if (first.key === "__other__") {
+                            return 1;
+                        }
+                        if (second.key === "__other__") {
+                            return -1;
+                        }
+
+                        return second.monthTax - first.monthTax;
+                    });
+
+                    chart = new Chart(canvas, pieConfig(ordered));
+                    renderLegend(ordered, function (index) {
                         chart.toggleDataVisibility(index);
                         chart.update();
                     });

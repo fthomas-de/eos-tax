@@ -14,7 +14,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
 #: auth_hooks.py:19 templates/eos_tax/base.html:4
-#: templates/eos_tax/base.html:29
+#: templates/eos_tax/base.html:33
 msgid "Alliance PvE Tax"
 msgstr "Alliance PvE Tax"
 
@@ -152,7 +152,7 @@ msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
 #: models.py:176 templates/eos_tax/index.html:24
-#: templates/eos_tax/index.html:51
+#: templates/eos_tax/index.html:67
 msgid "Payed"
 msgstr "Payé"
 
@@ -170,19 +170,24 @@ msgstr "Taux de l'Alliance en vigueur au calcul de cette ligne. Enregistré par 
 msgid "Overview"
 msgstr "Aperçu"
 
-#: templates/eos_tax/base.html:14 views.py:54
+#: templates/eos_tax/base.html:14 views.py:58
 msgid "Statistics"
 msgstr "Statistiques"
 
-#: templates/eos_tax/base.html:18 views.py:170
+#: templates/eos_tax/base.html:18 views.py:238
 msgid "Bots"
 msgstr "Bots"
 
-#: templates/eos_tax/base.html:22 tests/test_translations.py:128 views.py:113
+#: templates/eos_tax/base.html:22 views.py:118
+msgid "Corp Tax Changes"
+msgstr "Corp Tax Changes"
+
+#: templates/eos_tax/base.html:26 tests/test_translations.py:128 views.py:181
 msgid "Settings"
 msgstr "Paramètres"
 
 #: templates/eos_tax/bot-detail.html:13
+#: templates/eos_tax/tax-change-detail.html:13
 msgid "Back to the list"
 msgstr "Retour à la liste"
 
@@ -201,6 +206,8 @@ msgid "Month"
 msgstr "Mois"
 
 #: templates/eos_tax/bot-detail.html:31 templates/eos_tax/bots.html:36
+#: templates/eos_tax/tax-change-detail.html:42
+#: templates/eos_tax/tax-changes.html:42
 msgid "Show"
 msgstr "Afficher"
 
@@ -247,6 +254,8 @@ msgid "%(value)s journal entries"
 msgstr "%(value)s journal entries"
 
 #: templates/eos_tax/bot-detail.html:106 templates/eos_tax/bots.html:90
+#: templates/eos_tax/tax-change-detail.html:96
+#: templates/eos_tax/tax-changes.html:101
 msgid "total"
 msgstr "total"
 
@@ -343,7 +352,7 @@ msgid ""
 msgstr "4a. Un Reason n'est affiché que pour le mois précédent, à partir du 2 du mois en cours, afin d'éviter les paiements obsolètes."
 
 #: templates/eos_tax/index.html:18 templates/eos_tax/partials/bot-table.html:8
-#: templates/eos_tax/statistics.html:89
+#: templates/eos_tax/statistics.html:89 templates/eos_tax/tax-changes.html:55
 msgid "Corporation"
 msgstr "Corporation"
 
@@ -363,23 +372,27 @@ msgstr "À payer en ISK"
 msgid "Reason"
 msgstr "Reason"
 
-#: templates/eos_tax/index.html:42 templates/eos_tax/index.html:43
+#: templates/eos_tax/index.html:41 templates/eos_tax/index.html:43
+msgid "No ingame corp tax, so nothing reaches the corporation wallet to tax."
+msgstr "Aucune ingame corp tax, donc rien n'arrive dans le portefeuille de la corporation à taxer."
+
+#: templates/eos_tax/index.html:58 templates/eos_tax/index.html:59
 msgid "Copy reason to clipboard"
 msgstr "Copier le motif dans le presse-papiers"
 
-#: templates/eos_tax/index.html:54
+#: templates/eos_tax/index.html:70
 msgid "Not payed"
 msgstr "Non payé"
 
-#: templates/eos_tax/index.html:64
+#: templates/eos_tax/index.html:80
 msgid "No tax data for the selected months."
 msgstr "Aucune donnée de taxe pour les mois sélectionnés."
 
-#: templates/eos_tax/index.html:76
+#: templates/eos_tax/index.html:92
 msgid "Corporation:"
 msgstr "Corporation :"
 
-#: templates/eos_tax/index.html:77
+#: templates/eos_tax/index.html:93
 msgid "Filter by corporation name"
 msgstr "Filtrer par nom de Corporation"
 
@@ -419,6 +432,7 @@ msgid ""
 msgstr "C'est l'entrée la plus récente qui n'est pas dans le futur qui s'applique ; un changement peut donc être saisi des mois à l'avance. Les mois antérieurs à la première entrée utilisent le taux de base ci-dessus. Les mois déjà calculés conservent le taux avec lequel ils ont été calculés."
 
 #: templates/eos_tax/settings.html:45
+#: templates/eos_tax/tax-change-detail.html:62
 msgid "Rate"
 msgstr "Taux"
 
@@ -430,7 +444,7 @@ msgstr "Supprimer"
 msgid "Save settings"
 msgstr "Enregistrer les paramètres"
 
-#: templates/eos_tax/statistics.html:21
+#: templates/eos_tax/statistics.html:21 templates/eos_tax/tax-changes.html:24
 msgid "Year"
 msgstr "Année"
 
@@ -510,11 +524,117 @@ msgstr "{value} ISK de revenu"
 msgid "{value} ISK tax"
 msgstr "{value} ISK de taxe"
 
-#: views.py:45
+#: templates/eos_tax/tax-change-detail.html:18
+msgid ""
+"The share of the full bounty that reached the corporation, per day.\n"
+"                The value carries the system's bounty modifier as well as "
+"the rate, so the level itself\n"
+"                means little - a step in it does not."
+msgstr "La part de la bounty complète parvenue à la corporation, par jour. La valeur porte aussi le bounty modifier du système, le niveau dit donc peu de chose ; une marche, si."
+
+#: templates/eos_tax/tax-change-detail.html:21
+#, python-format
+msgid "Steps below %(tolerance)s percent are treated as one level."
+msgstr "Les marches inférieures à %(tolerance)s pour cent comptent pour un seul niveau."
+
+#: templates/eos_tax/tax-change-detail.html:33
+#: templates/eos_tax/tax-changes.html:33
+msgid "Smallest change"
+msgstr "Plus petit changement"
+
+#: templates/eos_tax/tax-change-detail.html:56
+msgid "The stretches of days the rate held, and the steps between them"
+msgstr "Les périodes où le taux a tenu, et les marches entre elles"
+
+#: templates/eos_tax/tax-change-detail.html:60
+msgid "From"
+msgstr "Du"
+
+#: templates/eos_tax/tax-change-detail.html:61
+msgid "To"
+msgstr "Au"
+
+#: templates/eos_tax/tax-change-detail.html:63
+msgid "Days"
+msgstr "Jours"
+
+#: templates/eos_tax/tax-change-detail.html:84
+#, python-format
+msgid ""
+"On %(on)s the ratio moved from %(before)s to %(after)s, across %(systems)s "
+"systems."
+msgstr "Le %(on)s le rapport est passé de %(before)s à %(after)s, sur %(systems)s systèmes."
+
+#: templates/eos_tax/tax-change-detail.html:92
+#: templates/eos_tax/tax-changes.html:98
+#, python-format
+msgid "%(value)s payouts"
+msgstr "%(value)s versements"
+
+#: templates/eos_tax/tax-change-detail.html:93
+#, python-format
+msgid "%(value)s days measured"
+msgstr "%(value)s jours mesurés"
+
+#: templates/eos_tax/tax-change-detail.html:101
+msgid "Not enough payouts in this year to measure a rate."
+msgstr "Trop peu de versements cette année pour mesurer un taux."
+
+#: templates/eos_tax/tax-change-detail.html:129
+msgid "Share of the bounty in percent"
+msgstr "Part de la bounty en pour cent"
+
+#: templates/eos_tax/tax-changes.html:16
+#, python-format
+msgid ""
+"The corporation wallet only shows the corporation's own cut, so the ingame\n"
+"                rate is not in it directly. It is recovered from the kills "
+"behind each bounty: what the\n"
+"                NPCs were worth against what arrived. A corporation listed "
+"here changed that ratio by more\n"
+"                than %(tolerance)s percent from one stretch of days to the "
+"next."
+msgstr "Le portefeuille de la corporation ne montre que sa propre part, l'ingame rate n'y figure donc pas. Il est reconstitué à partir des kills derrière chaque bounty : ce que valaient les NPC face à ce qui est arrivé. Une corporation listée ici a modifié ce rapport de plus de %(tolerance)s pour cent d'une période à l'autre."
+
+#: templates/eos_tax/tax-changes.html:48
+msgid ""
+"The static data export is not available, so bounty values cannot be resolved."
+msgstr "Le static data export n'est pas disponible, les primes ne peuvent pas être résolues."
+
+#: templates/eos_tax/tax-changes.html:56
+msgid "Changes"
+msgstr "Changements"
+
+#: templates/eos_tax/tax-changes.html:57
+msgid "Largest change"
+msgstr "Plus grand changement"
+
+#: templates/eos_tax/tax-changes.html:58
+msgid "On"
+msgstr "Le"
+
+#: templates/eos_tax/tax-changes.html:59
+msgid "Systems"
+msgstr "Systèmes"
+
+#: templates/eos_tax/tax-changes.html:60
+msgid "Payouts"
+msgstr "Versements"
+
+#: templates/eos_tax/tax-changes.html:92
+msgid "No corporation changed its ingame tax rate in this year."
+msgstr "Aucune corporation n'a modifié son ingame tax rate cette année."
+
+#: templates/eos_tax/tax-changes.html:97
+#, python-format
+msgid "%(value)s corporations examined"
+msgstr "%(value)s corporations examinées"
+
+#: views.py:49
 #, python-format
 msgid "Taxes to pay: %(rate)s%%"
 msgstr "Taxe à payer : %(rate)s%%"
 
-#: views.py:105
+#: views.py:173
 msgid "Settings saved."
 msgstr "Paramètres enregistrés."
