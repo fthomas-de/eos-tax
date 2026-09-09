@@ -18,15 +18,21 @@ msgstr ""
 msgid "Alliance PvE Tax"
 msgstr "Alliance PvE Tax"
 
-#: forms.py:74 forms.py:148
+#: forms.py:76 forms.py:205
 msgid "Base tax rate (%)"
 msgstr "Базовая ставка налога (%)"
 
 #: forms.py:112
+msgid ""
+"Corporations of the taxed alliances. Excluding any other corporation would "
+"change nothing."
+msgstr "Corporations облагаемых alliances. Исключение любой другой ничего не изменит."
+
+#: forms.py:119
 msgid "Base rate, used for months before the first scheduled change below."
 msgstr "Базовая ставка, применяется к месяцам до первого запланированного изменения ниже."
 
-#: forms.py:129 forms.py:156
+#: forms.py:186 forms.py:213
 msgid "Rate (%)"
 msgstr "Ставка (%)"
 
@@ -170,19 +176,19 @@ msgstr "Ставка Alliance, действовавшая при расчёте 
 msgid "Overview"
 msgstr "Обзор"
 
-#: templates/eos_tax/base.html:14 views.py:58
+#: templates/eos_tax/base.html:14 views.py:56
 msgid "Statistics"
 msgstr "Статистика"
 
-#: templates/eos_tax/base.html:18 views.py:238
+#: templates/eos_tax/base.html:18 views.py:223
 msgid "Bots"
 msgstr "Боты"
 
-#: templates/eos_tax/base.html:22 views.py:118
+#: templates/eos_tax/base.html:22 views.py:106
 msgid "Corp Tax Changes"
 msgstr "Corp Tax Changes"
 
-#: templates/eos_tax/base.html:26 tests/test_translations.py:128 views.py:181
+#: templates/eos_tax/base.html:26 tests/test_translations.py:128 views.py:166
 msgid "Settings"
 msgstr "Настройки"
 
@@ -206,8 +212,7 @@ msgid "Month"
 msgstr "Месяц"
 
 #: templates/eos_tax/bot-detail.html:31 templates/eos_tax/bots.html:36
-#: templates/eos_tax/tax-change-detail.html:42
-#: templates/eos_tax/tax-changes.html:42
+#: templates/eos_tax/tax-changes.html:33
 msgid "Show"
 msgstr "Показать"
 
@@ -254,8 +259,8 @@ msgid "%(value)s journal entries"
 msgstr "%(value)s journal entries"
 
 #: templates/eos_tax/bot-detail.html:106 templates/eos_tax/bots.html:90
-#: templates/eos_tax/tax-change-detail.html:96
-#: templates/eos_tax/tax-changes.html:101
+#: templates/eos_tax/tax-change-detail.html:74
+#: templates/eos_tax/tax-changes.html:95
 msgid "total"
 msgstr "всего"
 
@@ -352,7 +357,7 @@ msgid ""
 msgstr "4a. Reason показывается только для прошлого месяца, начиная со 2 числа текущего месяца, чтобы избежать устаревших платежей."
 
 #: templates/eos_tax/index.html:18 templates/eos_tax/partials/bot-table.html:8
-#: templates/eos_tax/statistics.html:89 templates/eos_tax/tax-changes.html:55
+#: templates/eos_tax/statistics.html:89 templates/eos_tax/tax-changes.html:46
 msgid "Corporation"
 msgstr "Corporation"
 
@@ -432,7 +437,6 @@ msgid ""
 msgstr "Действует самая поздняя запись, не относящаяся к будущему, поэтому изменение можно внести за месяцы вперёд. К месяцам до первой записи применяется базовая ставка выше. Уже рассчитанные месяцы сохраняют ту ставку, по которой их посчитали."
 
 #: templates/eos_tax/settings.html:45
-#: templates/eos_tax/tax-change-detail.html:62
 msgid "Rate"
 msgstr "Ставка"
 
@@ -533,108 +537,108 @@ msgid ""
 msgstr "Доля полной bounty, дошедшая до корпорации, по дням. Значение несёт в себе и bounty modifier системы, поэтому важен не уровень, а ступенька в нём."
 
 #: templates/eos_tax/tax-change-detail.html:21
-#, python-format
-msgid "Steps below %(tolerance)s percent are treated as one level."
-msgstr "Ступени меньше %(tolerance)s процентов считаются одним уровнем."
+msgid "A level counts once it held for at least two days."
+msgstr "Уровень засчитывается, как только продержался не менее двух дней."
 
-#: templates/eos_tax/tax-change-detail.html:33
-#: templates/eos_tax/tax-changes.html:33
-msgid "Smallest change"
-msgstr "Наименьшее изменение"
-
-#: templates/eos_tax/tax-change-detail.html:56
+#: templates/eos_tax/tax-change-detail.html:34
 msgid "The stretches of days the rate held, and the steps between them"
 msgstr "Отрезки, на которых ставка держалась, и ступени между ними"
 
-#: templates/eos_tax/tax-change-detail.html:60
+#: templates/eos_tax/tax-change-detail.html:38
 msgid "From"
 msgstr "С"
 
-#: templates/eos_tax/tax-change-detail.html:61
+#: templates/eos_tax/tax-change-detail.html:39
 msgid "To"
 msgstr "По"
 
-#: templates/eos_tax/tax-change-detail.html:63
+#: templates/eos_tax/tax-change-detail.html:40
+msgid "Share of the bounty"
+msgstr "Доля bounty"
+
+#: templates/eos_tax/tax-change-detail.html:41
 msgid "Days"
 msgstr "Дней"
 
-#: templates/eos_tax/tax-change-detail.html:84
+#: templates/eos_tax/tax-change-detail.html:62
 #, python-format
 msgid ""
-"On %(on)s the ratio moved from %(before)s to %(after)s, across %(systems)s "
-"systems."
-msgstr "%(on)s отношение изменилось с %(before)s на %(after)s, в %(systems)s системах."
+"On %(on)s the share moved from %(before)s percent to %(after)s percent, "
+"across %(systems)s systems."
+msgstr "%(on)s доля изменилась с %(before)s процентов на %(after)s процентов, в %(systems)s системах."
 
-#: templates/eos_tax/tax-change-detail.html:92
-#: templates/eos_tax/tax-changes.html:98
+#: templates/eos_tax/tax-change-detail.html:70
+#: templates/eos_tax/tax-changes.html:92
 #, python-format
 msgid "%(value)s payouts"
 msgstr "выплат: %(value)s"
 
-#: templates/eos_tax/tax-change-detail.html:93
+#: templates/eos_tax/tax-change-detail.html:71
 #, python-format
 msgid "%(value)s days measured"
 msgstr "измеренных дней: %(value)s"
 
-#: templates/eos_tax/tax-change-detail.html:101
+#: templates/eos_tax/tax-change-detail.html:79
 msgid "Not enough payouts in this year to measure a rate."
 msgstr "В этом году слишком мало выплат, чтобы измерить ставку."
 
-#: templates/eos_tax/tax-change-detail.html:129
+#: templates/eos_tax/tax-change-detail.html:107
 msgid "Share of the bounty in percent"
 msgstr "Доля bounty в процентах"
 
 #: templates/eos_tax/tax-changes.html:16
-#, python-format
 msgid ""
 "The corporation wallet only shows the corporation's own cut, so the ingame\n"
 "                rate is not in it directly. It is recovered from the kills "
 "behind each bounty: what the\n"
-"                NPCs were worth against what arrived. A corporation listed "
-"here changed that ratio by more\n"
-"                than %(tolerance)s percent from one stretch of days to the "
-"next."
-msgstr "В кошельке корпорации видна только её доля, поэтому ingame rate там напрямую нет. Он восстанавливается по убитым NPC за каждой bounty: сколько они стоили против того, что пришло. Корпорация в этом списке изменила это отношение более чем на %(tolerance)s процентов от одного отрезка к следующему."
+"                NPCs were worth against what arrived. Every change of that "
+"share is listed, however small,\n"
+"                as long as the new level held for at least two days."
+msgstr "В кошельке корпорации видна только её доля, поэтому ingame rate там напрямую нет. Он восстанавливается по убитым NPC за каждой bounty: сколько они стоили против того, что пришло. Перечисляется каждое изменение этой доли, даже самое малое, если новый уровень продержался не менее двух дней."
 
-#: templates/eos_tax/tax-changes.html:48
+#: templates/eos_tax/tax-changes.html:39
 msgid ""
 "The static data export is not available, so bounty values cannot be resolved."
 msgstr "static data export недоступен, значения наград определить нельзя."
 
-#: templates/eos_tax/tax-changes.html:56
+#: templates/eos_tax/tax-changes.html:47
 msgid "Changes"
 msgstr "Изменения"
 
-#: templates/eos_tax/tax-changes.html:57
-msgid "Largest change"
-msgstr "Наибольшее изменение"
+#: templates/eos_tax/tax-changes.html:48
+msgid "Largest change in the share"
+msgstr "Наибольшее изменение доли"
 
-#: templates/eos_tax/tax-changes.html:58
+#: templates/eos_tax/tax-changes.html:49
 msgid "On"
 msgstr "Дата"
 
-#: templates/eos_tax/tax-changes.html:59
+#: templates/eos_tax/tax-changes.html:50
 msgid "Systems"
 msgstr "Системы"
 
-#: templates/eos_tax/tax-changes.html:60
+#: templates/eos_tax/tax-changes.html:51
 msgid "Payouts"
 msgstr "Выплаты"
 
-#: templates/eos_tax/tax-changes.html:92
+#: templates/eos_tax/tax-changes.html:68
+msgid "pp"
+msgstr "п.п."
+
+#: templates/eos_tax/tax-changes.html:86
 msgid "No corporation changed its ingame tax rate in this year."
 msgstr "Ни одна корпорация не меняла ingame tax rate в этом году."
 
-#: templates/eos_tax/tax-changes.html:97
+#: templates/eos_tax/tax-changes.html:91
 #, python-format
 msgid "%(value)s corporations examined"
 msgstr "проверено корпораций: %(value)s"
 
-#: views.py:49
+#: views.py:47
 #, python-format
 msgid "Taxes to pay: %(rate)s%%"
 msgstr "К оплате налога: %(rate)s%%"
 
-#: views.py:173
+#: views.py:158
 msgid "Settings saved."
 msgstr "Настройки сохранены."

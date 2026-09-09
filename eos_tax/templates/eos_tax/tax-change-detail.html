@@ -9,7 +9,7 @@
     <div class="card mb-3">
         <div class="card-header d-flex align-items-center gap-3">
             <div class="card-title mb-0">{{ detail.corp_name }}</div>
-            <a href="{% url 'eos_tax:tax_changes' %}?year={{ year }}&amp;change={{ tolerance }}"
+            <a href="{% url 'eos_tax:tax_changes' %}?year={{ year }}"
                class="ms-auto small">{% translate "Back to the list" %}</a>
         </div>
 
@@ -18,29 +18,8 @@
                 {% blocktranslate %}The share of the full bounty that reached the corporation, per day.
                 The value carries the system's bounty modifier as well as the rate, so the level itself
                 means little - a step in it does not.{% endblocktranslate %}
-                {% blocktranslate %}Steps below {{ tolerance }} percent are treated as one level.{% endblocktranslate %}
+                {% blocktranslate %}A level counts once it held for at least two days.{% endblocktranslate %}
             </p>
-
-            {% comment %}
-                The same threshold as the list, carried in the link, so the curve
-                is read the way the row that led here was found.
-            {% endcomment %}
-            <form role="form" method="get" class="row g-3 align-items-end mb-4">
-                <input type="hidden" name="year" value="{{ year }}">
-
-                <div class="col-sm-4 col-lg-3">
-                    <label for="eos-tax-change" class="form-label">{% translate "Smallest change" %}</label>
-                    <div class="input-group">
-                        <input type="number" class="form-control" id="eos-tax-change"
-                               name="change" value="{{ tolerance }}" min="0.1" max="100" step="0.1">
-                        <span class="input-group-text">%</span>
-                    </div>
-                </div>
-
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-primary">{% translate "Show" %}</button>
-                </div>
-            </form>
 
             {% if detail.days %}
                 {{ series|json_script:"eos-tax-series" }}
@@ -58,7 +37,7 @@
                             <tr>
                                 <th scope="col">{% translate "From" %}</th>
                                 <th scope="col">{% translate "To" %}</th>
-                                <th scope="col" class="text-end">{% translate "Rate" %}</th>
+                                <th scope="col" class="text-end">{% translate "Share of the bounty" %}</th>
                                 <th scope="col" class="text-end">{% translate "Days" %}</th>
                             </tr>
                         </thead>
@@ -67,7 +46,7 @@
                                 <tr>
                                     <td>{{ plateau.first_day }}</td>
                                     <td>{{ plateau.last_day }}</td>
-                                    <td class="text-end fw-semibold">{{ plateau.rate|floatformat:4 }}</td>
+                                    <td class="text-end fw-semibold">{{ plateau.percent|floatformat:2 }}&nbsp;%</td>
                                     <td class="text-end">{{ plateau.days|length }}</td>
                                 </tr>
                             {% endfor %}
@@ -80,7 +59,7 @@
                         <ul class="mb-0">
                             {% for step in detail.steps %}
                                 <li>
-                                    {% blocktranslate with on=step.on before=step.from_rate|floatformat:4 after=step.to_rate|floatformat:4 systems=step.systems %}On {{ on }} the ratio moved from {{ before }} to {{ after }}, across {{ systems }} systems.{% endblocktranslate %}
+                                    {% blocktranslate with on=step.on before=step.from_percent|floatformat:2 after=step.to_percent|floatformat:2 systems=step.systems %}On {{ on }} the share moved from {{ before }} percent to {{ after }} percent, across {{ systems }} systems.{% endblocktranslate %}
                                 </li>
                             {% endfor %}
                         </ul>

@@ -18,15 +18,21 @@ msgstr ""
 msgid "Alliance PvE Tax"
 msgstr "Alliance PvE Tax"
 
-#: forms.py:74 forms.py:148
+#: forms.py:76 forms.py:205
 msgid "Base tax rate (%)"
 msgstr "기본 세율 (%)"
 
 #: forms.py:112
+msgid ""
+"Corporations of the taxed alliances. Excluding any other corporation would "
+"change nothing."
+msgstr "과세 대상 alliance의 corporation만 표시됩니다. 다른 corporation을 제외해도 달라지는 것은 없습니다."
+
+#: forms.py:119
 msgid "Base rate, used for months before the first scheduled change below."
 msgstr "기본 세율입니다. 아래의 첫 예약 변경 이전 달에 적용됩니다."
 
-#: forms.py:129 forms.py:156
+#: forms.py:186 forms.py:213
 msgid "Rate (%)"
 msgstr "세율 (%)"
 
@@ -170,19 +176,19 @@ msgstr "이 행을 계산할 때 적용되던 Alliance 세율입니다. 행마�
 msgid "Overview"
 msgstr "개요"
 
-#: templates/eos_tax/base.html:14 views.py:58
+#: templates/eos_tax/base.html:14 views.py:56
 msgid "Statistics"
 msgstr "통계"
 
-#: templates/eos_tax/base.html:18 views.py:238
+#: templates/eos_tax/base.html:18 views.py:223
 msgid "Bots"
 msgstr "봇"
 
-#: templates/eos_tax/base.html:22 views.py:118
+#: templates/eos_tax/base.html:22 views.py:106
 msgid "Corp Tax Changes"
 msgstr "Corp Tax Changes"
 
-#: templates/eos_tax/base.html:26 tests/test_translations.py:128 views.py:181
+#: templates/eos_tax/base.html:26 tests/test_translations.py:128 views.py:166
 msgid "Settings"
 msgstr "설정"
 
@@ -206,8 +212,7 @@ msgid "Month"
 msgstr "월"
 
 #: templates/eos_tax/bot-detail.html:31 templates/eos_tax/bots.html:36
-#: templates/eos_tax/tax-change-detail.html:42
-#: templates/eos_tax/tax-changes.html:42
+#: templates/eos_tax/tax-changes.html:33
 msgid "Show"
 msgstr "표시"
 
@@ -254,8 +259,8 @@ msgid "%(value)s journal entries"
 msgstr "%(value)s journal entries"
 
 #: templates/eos_tax/bot-detail.html:106 templates/eos_tax/bots.html:90
-#: templates/eos_tax/tax-change-detail.html:96
-#: templates/eos_tax/tax-changes.html:101
+#: templates/eos_tax/tax-change-detail.html:74
+#: templates/eos_tax/tax-changes.html:95
 msgid "total"
 msgstr "합계"
 
@@ -352,7 +357,7 @@ msgid ""
 msgstr "4a. Reason은 지난달에 대해서만, 이번 달 2일부터 표시됩니다. 기한이 지난 납부를 막기 위해서입니다."
 
 #: templates/eos_tax/index.html:18 templates/eos_tax/partials/bot-table.html:8
-#: templates/eos_tax/statistics.html:89 templates/eos_tax/tax-changes.html:55
+#: templates/eos_tax/statistics.html:89 templates/eos_tax/tax-changes.html:46
 msgid "Corporation"
 msgstr "Corporation"
 
@@ -432,7 +437,6 @@ msgid ""
 msgstr "미래가 아닌 항목 중 가장 최근 것이 적용되므로 변경을 몇 달 앞서 입력할 수 있습니다. 첫 항목 이전의 달에는 위의 기본 세율이 적용됩니다. 이미 계산된 달은 계산 당시의 세율을 그대로 유지합니다."
 
 #: templates/eos_tax/settings.html:45
-#: templates/eos_tax/tax-change-detail.html:62
 msgid "Rate"
 msgstr "세율"
 
@@ -533,108 +537,108 @@ msgid ""
 msgstr "전체 bounty 중 코퍼레이션에 들어온 비율을 일별로 표시합니다. 이 값에는 세율뿐 아니라 시스템의 bounty modifier도 포함되므로 절대값보다 계단 모양이 중요합니다."
 
 #: templates/eos_tax/tax-change-detail.html:21
-#, python-format
-msgid "Steps below %(tolerance)s percent are treated as one level."
-msgstr "%(tolerance)s 퍼센트 미만의 계단은 같은 수준으로 봅니다."
+msgid "A level counts once it held for at least two days."
+msgstr "이틀 이상 유지된 수준부터 하나의 수준으로 셉니다."
 
-#: templates/eos_tax/tax-change-detail.html:33
-#: templates/eos_tax/tax-changes.html:33
-msgid "Smallest change"
-msgstr "최소 변화폭"
-
-#: templates/eos_tax/tax-change-detail.html:56
+#: templates/eos_tax/tax-change-detail.html:34
 msgid "The stretches of days the rate held, and the steps between them"
 msgstr "세율이 유지된 구간과 그 사이의 계단"
 
-#: templates/eos_tax/tax-change-detail.html:60
+#: templates/eos_tax/tax-change-detail.html:38
 msgid "From"
 msgstr "시작"
 
-#: templates/eos_tax/tax-change-detail.html:61
+#: templates/eos_tax/tax-change-detail.html:39
 msgid "To"
 msgstr "종료"
 
-#: templates/eos_tax/tax-change-detail.html:63
+#: templates/eos_tax/tax-change-detail.html:40
+msgid "Share of the bounty"
+msgstr "bounty 대비 비율"
+
+#: templates/eos_tax/tax-change-detail.html:41
 msgid "Days"
 msgstr "일수"
 
-#: templates/eos_tax/tax-change-detail.html:84
+#: templates/eos_tax/tax-change-detail.html:62
 #, python-format
 msgid ""
-"On %(on)s the ratio moved from %(before)s to %(after)s, across %(systems)s "
-"systems."
-msgstr "%(on)s에 비율이 %(before)s에서 %(after)s로 바뀌었습니다. %(systems)s개 시스템에서 동시에 나타났습니다."
+"On %(on)s the share moved from %(before)s percent to %(after)s percent, "
+"across %(systems)s systems."
+msgstr "%(on)s에 비율이 %(before)s 퍼센트에서 %(after)s 퍼센트로 바뀌었습니다. %(systems)s개 시스템에서 동시에 나타났습니다."
 
-#: templates/eos_tax/tax-change-detail.html:92
-#: templates/eos_tax/tax-changes.html:98
+#: templates/eos_tax/tax-change-detail.html:70
+#: templates/eos_tax/tax-changes.html:92
 #, python-format
 msgid "%(value)s payouts"
 msgstr "지급 %(value)s건"
 
-#: templates/eos_tax/tax-change-detail.html:93
+#: templates/eos_tax/tax-change-detail.html:71
 #, python-format
 msgid "%(value)s days measured"
 msgstr "측정된 %(value)s일"
 
-#: templates/eos_tax/tax-change-detail.html:101
+#: templates/eos_tax/tax-change-detail.html:79
 msgid "Not enough payouts in this year to measure a rate."
 msgstr "이 해에는 세율을 측정할 만큼 지급 건수가 없습니다."
 
-#: templates/eos_tax/tax-change-detail.html:129
+#: templates/eos_tax/tax-change-detail.html:107
 msgid "Share of the bounty in percent"
 msgstr "bounty 대비 비율(퍼센트)"
 
 #: templates/eos_tax/tax-changes.html:16
-#, python-format
 msgid ""
 "The corporation wallet only shows the corporation's own cut, so the ingame\n"
 "                rate is not in it directly. It is recovered from the kills "
 "behind each bounty: what the\n"
-"                NPCs were worth against what arrived. A corporation listed "
-"here changed that ratio by more\n"
-"                than %(tolerance)s percent from one stretch of days to the "
-"next."
-msgstr "코퍼레이션 지갑에는 코퍼레이션 몫만 남으므로 ingame rate는 직접 들어 있지 않습니다. 각 bounty 뒤의 킬 기록으로 되짚습니다. NPC의 가치와 실제로 들어온 금액의 비율입니다. 여기 나열된 코퍼레이션은 그 비율을 한 구간에서 다음 구간으로 %(tolerance)s 퍼센트 넘게 바꿨습니다."
+"                NPCs were worth against what arrived. Every change of that "
+"share is listed, however small,\n"
+"                as long as the new level held for at least two days."
+msgstr "코퍼레이션 지갑에는 코퍼레이션 몫만 남으므로 ingame rate는 직접 들어 있지 않습니다. 각 bounty 뒤의 킬 기록으로 되짚습니다. NPC의 가치와 실제로 들어온 금액의 비율입니다. 새 수준이 이틀 이상 유지되었다면 그 비율의 모든 변화를 크기에 관계없이 보여줍니다."
 
-#: templates/eos_tax/tax-changes.html:48
+#: templates/eos_tax/tax-changes.html:39
 msgid ""
 "The static data export is not available, so bounty values cannot be resolved."
 msgstr "static data export를 사용할 수 없어 현상금 값을 확인할 수 없습니다."
 
-#: templates/eos_tax/tax-changes.html:56
+#: templates/eos_tax/tax-changes.html:47
 msgid "Changes"
 msgstr "변경 횟수"
 
-#: templates/eos_tax/tax-changes.html:57
-msgid "Largest change"
-msgstr "최대 변경"
+#: templates/eos_tax/tax-changes.html:48
+msgid "Largest change in the share"
+msgstr "비율의 최대 변화"
 
-#: templates/eos_tax/tax-changes.html:58
+#: templates/eos_tax/tax-changes.html:49
 msgid "On"
 msgstr "일자"
 
-#: templates/eos_tax/tax-changes.html:59
+#: templates/eos_tax/tax-changes.html:50
 msgid "Systems"
 msgstr "시스템"
 
-#: templates/eos_tax/tax-changes.html:60
+#: templates/eos_tax/tax-changes.html:51
 msgid "Payouts"
 msgstr "지급"
 
-#: templates/eos_tax/tax-changes.html:92
+#: templates/eos_tax/tax-changes.html:68
+msgid "pp"
+msgstr "%p"
+
+#: templates/eos_tax/tax-changes.html:86
 msgid "No corporation changed its ingame tax rate in this year."
 msgstr "이 해에 ingame tax rate를 바꾼 코퍼레이션은 없습니다."
 
-#: templates/eos_tax/tax-changes.html:97
+#: templates/eos_tax/tax-changes.html:91
 #, python-format
 msgid "%(value)s corporations examined"
 msgstr "코퍼레이션 %(value)s곳 검사"
 
-#: views.py:49
+#: views.py:47
 #, python-format
 msgid "Taxes to pay: %(rate)s%%"
 msgstr "납부할 세금: %(rate)s%%"
 
-#: views.py:173
+#: views.py:158
 msgid "Settings saved."
 msgstr "설정을 저장했습니다."

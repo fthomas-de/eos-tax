@@ -3,6 +3,8 @@ from decimal import Decimal
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
+from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
+
 from eos_tax.models import TaxConfiguration, TaxRate
 
 try:
@@ -105,12 +107,67 @@ class TaxConfigurationForm(forms.ModelForm):
 
         configured = self.instance.tax_types if self.instance.pk else []
         self.fields["tax_types"].choices = journal_type_choices(configured)
+        self.fields["corporation_blacklist"].queryset = self._excludable()
+        self.fields["corporation_blacklist"].help_text = _(
+            "Corporations of the taxed alliances. Excluding any other "
+            "corporation would change nothing."
+        )
 
         # said on the form rather than on the model, so explaining the schedule
         # does not cost a migration
         self.fields["tax_rate"].help_text = _(
             "Base rate, used for months before the first scheduled change below."
         )
+
+    def _chosen_alliances(self):
+        """Alliance ids from the submitted form, or from what is stored.
+
+        Reading the submission first keeps the choices from lagging a save
+        behind when someone adds an alliance and excludes one of its
+        Corporations in the same visit.
+        """
+        if self.is_bound:
+            key = self.add_prefix("tax_alliances")
+
+            # a request binds a QueryDict, which has getlist; a plain dict is
+            # just as valid a way to bind a form and does not
+            if hasattr(self.data, "getlist"):
+                submitted = self.data.getlist(key)
+            else:
+                submitted = self.data.get(key) or []
+
+                if isinstance(submitted, (str, int)):
+                    submitted = [submitted]
+
+            if submitted:
+                return list(
+                    EveAllianceInfo.objects.filter(pk__in=submitted).values_list(
+                        "alliance_id", flat=True
+                    )
+                )
+
+        if not self.instance.pk:
+            return []
+
+        return list(
+            self.instance.tax_alliances.values_list("alliance_id", flat=True)
+        )
+
+    def _excludable(self):
+        """Corporations worth offering for exclusion.
+
+        Those of the taxed alliances - excluding anything else changes nothing -
+        plus whatever is already excluded, so that narrowing the alliances never
+        quietly un-excludes a Corporation nobody meant to let back in.
+        """
+        corporations = EveCorporationInfo.objects.filter(
+            alliance__alliance_id__in=self._chosen_alliances()
+        )
+
+        if self.instance.pk:
+            corporations = corporations | self.instance.corporation_blacklist.all()
+
+        return corporations.distinct().order_by("corporation_name")
 
 
 class MonthInput(forms.DateInput):

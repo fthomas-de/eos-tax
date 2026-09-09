@@ -181,38 +181,60 @@ class TestStepDetection(TaxChangeTestCase):
 
         self.assertEqual(self.changes(), [])
 
-    def test_should_ignore_a_change_below_the_threshold(self):
-        """Half a percent is the measurement, not a switch."""
+    def test_should_weigh_nine_to_ten_as_one_point(self):
+        """Not the eleven percent it makes of the old value."""
+        self.steady(range(1, 6), 0.09)
+        self.steady(range(6, 11), 0.10)
+
+        self.assertAlmostEqual(
+            self.changes()[0]["biggest"]["change_points"], 1.0, places=6
+        )
+
+    def test_should_weigh_a_move_the_same_at_any_level(self):
+        """A tenth of a point is a tenth of a point, at two percent or at ten -
+        which is what points buy and relative percent does not."""
+        self.steady(range(1, 6), 0.1000)
+        self.steady(range(6, 11), 0.1015)
+
+        moved = self.changes()[0]["biggest"]["change_points"]
+
+        self.assertAlmostEqual(moved, 0.15, places=6)
+
+    def test_should_find_a_change_of_five_hundredths_of_a_point(self):
+        """Every change is listed, however small - this one is tiny and real."""
         self.steady(range(1, 6), 0.1000)
         self.steady(range(6, 11), 0.1005)
 
-        self.assertEqual(self.changes(), [])
+        self.assertEqual(len(self.changes()), 1)
 
-    def test_should_find_a_change_of_two_percent(self):
-        """The calculation is exact, and two percent is a different bill."""
+    def test_should_find_two_tenths_of_a_point(self):
+        """The calculation is exact, and a fifth of a point is a different bill."""
         self.steady(range(1, 6), 0.1000)
         self.steady(range(6, 11), 0.1020)
 
         self.assertEqual(len(self.changes()), 1)
 
-    def test_should_let_the_reader_raise_the_threshold(self):
-        """The same two percent, asked about at five."""
-        self.steady(range(1, 6), 0.1000)
-        self.steady(range(6, 11), 0.1020)
+    def test_should_ignore_a_change_below_the_measurement(self):
+        """Under a hundredth of a point the arithmetic wobbles, not the rate."""
+        self.steady(range(1, 6), 0.100000)
+        self.steady(range(6, 11), 0.100004)
 
-        self.assertEqual(self.changes(tolerance=0.05), [])
+        self.assertEqual(self.changes(), [])
 
-    def test_should_let_the_reader_lower_the_threshold(self):
-        self.steady(range(1, 6), 0.1000)
-        self.steady(range(6, 11), 0.1005)
-
-        self.assertEqual(len(self.changes(tolerance=0.002)), 1)
-
-    def test_should_refuse_to_go_below_the_noise(self):
-        """A threshold of zero would report every rounding as a switch."""
-        self.steady(range(1, 11), 0.10)
+    def test_should_hold_the_floor_against_a_lower_ask(self):
+        """Nothing sets it from outside, but a zero must not open the gate."""
+        self.steady(range(1, 6), 0.100000)
+        self.steady(range(6, 11), 0.100004)
 
         self.assertEqual(self.changes(tolerance=0), [])
+
+    def test_should_need_a_level_to_hold_for_two_days(self):
+        """Without a threshold this is what keeps single days out of the list."""
+        self.steady(range(1, 6), 0.1000)
+        self.steady([6], 0.1005)
+        self.steady(range(7, 12), 0.1000)
+
+        self.assertEqual(self.changes(), [])
 
     def test_should_count_the_systems_behind_a_step(self):
         """A rate change moves every system at once, a bounty modifier one."""

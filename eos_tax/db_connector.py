@@ -732,18 +732,23 @@ BOUNTY_ATTRIBUTE_ID = 481
 # "18085: 2,18086: 3" - NPC type and how many of them died
 KILL_PAIR = re.compile(r"(\d+)\s*:\s*(\d+)")
 
-# How far a day may drift from its plateau before it counts as a step, and how
-# small a step may be to be worth reporting - one number, because they are the
-# same question asked twice. The page can lower it: the calculation is exact,
-# and two percent already means a Corporation pays a different amount.
+# Every change is reported, so this is a floor at the measurement rather than a
+# preference: below a hundredth of a percentage point the arithmetic wobbles,
+# not the rate. Stored the way the rates are, as a fraction.
 #
-# One percent is safe rather than hopeful. On the live curve the smoothed daily
-# rate deviates from its level by 0.00 percent on all thirty days, so nothing
-# splits a plateau until the rate genuinely moves.
-RATE_STEP_TOLERANCE = 0.01
-
-# below this the measurement noise wins, whatever the reader asks for
-RATE_MIN_TOLERANCE = 0.001
+# Measured in points of the share, not relative percent, so nine percent to ten
+# is one point. That is a deliberate trade - only a relative comparison cancels
+# the system's bounty modifier out, and in points it stays in - but points are
+# what a person means when they say a Corporation went from nine to ten.
+#
+# What actually keeps noise out of the list is RATE_MIN_DAYS_PER_PLATEAU: a
+# level has to hold for two days to be a level. On the live curve the smoothed
+# daily share sits at exactly 9.0000 percent for thirty days, and even this
+# floor finds nothing there.
+#
+# Still a parameter on the functions below, because that is how the tests pin
+# the behaviour down; nothing in the interface sets it.
+RATE_STEP_TOLERANCE = 0.0001
 
 # a day with fewer payouts than this says too little to stand on its own
 RATE_MIN_PAYOUTS_PER_DAY = 3
@@ -894,7 +899,7 @@ def _plateaus(days, tolerance=RATE_STEP_TOLERANCE):
             current = found[-1]
             reference = current["rate"]
 
-            if reference and abs(day["rate"] - reference) / reference <= tolerance:
+            if abs(day["rate"] - reference) <= tolerance:
                 current["days"].append(day)
                 current["rate"] = median(entry["rate"] for entry in current["days"])
                 continue
@@ -909,6 +914,8 @@ def _plateaus(days, tolerance=RATE_STEP_TOLERANCE):
     for plateau in kept:
         plateau["first_day"] = plateau["days"][0]["day"]
         plateau["last_day"] = plateau["days"][-1]["day"]
+        # templates cannot multiply, and a ratio does not read at a glance
+        plateau["percent"] = plateau["rate"] * 100
 
     return kept
 
@@ -918,19 +925,21 @@ def _steps(plateaus, tolerance=RATE_STEP_TOLERANCE):
     steps = []
 
     for before, after in zip(plateaus, plateaus[1:]):
-        change = (
-            (after["rate"] - before["rate"]) / before["rate"]
-            if before["rate"] else 0
-        )
+        change = after["rate"] - before["rate"]
 
-        # two plateaus at the same rate are one plateau with a gap in it, not a
-        # change - the rate has to clear the tolerance that defines a plateau
+        # two plateaus at the same level are one plateau with a gap in it, not
+        # a change - it has to clear the tolerance that defines a plateau
         if abs(change) <= tolerance:
             continue
 
         steps.append({
             "from_rate": before["rate"],
             "to_rate": after["rate"],
+            "from_percent": before["rate"] * 100,
+            "to_percent": after["rate"] * 100,
+            # how far the level moved, in points of the share - what the list
+            # sorts by, and what nine to ten means
+            "change_points": change * 100,
             "on": after["days"][0]["day"],
             "change": change,
             # a rate change moves every system at once; a bounty modifier
@@ -944,7 +953,7 @@ def _steps(plateaus, tolerance=RATE_STEP_TOLERANCE):
 def get_corp_tax_changes(year: int, tolerance: float = RATE_STEP_TOLERANCE):
     """Corporations whose effective ingame rate stepped during the year."""
     started = time.perf_counter()
-    tolerance = max(tolerance, RATE_MIN_TOLERANCE)
+    tolerance = max(tolerance, RATE_STEP_TOLERANCE)
     config = get_config()
     corp_ids = _taxed_corporation_ids(config)
     payouts = _payouts(year, corp_ids)
@@ -990,7 +999,7 @@ def get_corp_tax_detail(corp_id: int, year: int,
                         tolerance: float = RATE_STEP_TOLERANCE):
     """The daily curve for one corporation, and the steps found in it."""
     started = time.perf_counter()
-    tolerance = max(tolerance, RATE_MIN_TOLERANCE)
+    tolerance = max(tolerance, RATE_STEP_TOLERANCE)
     payouts = _payouts(year, [corp_id])
     measured = payouts.get(corp_id, [])
     days = _daily_rates(measured)

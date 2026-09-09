@@ -18,8 +18,6 @@ from eos_tax.forms import TaxConfigurationForm, TaxRateFormSet
 from eos_tax.models import TaxRate
 from eos_tax.db_connector import (
     ACTIVE_HOUR_MIN_ENTRIES,
-    RATE_MIN_TOLERANCE,
-    RATE_STEP_TOLERANCE,
     find_characters,
     get_corp_tax_changes,
     get_corp_tax_detail,
@@ -96,23 +94,13 @@ def _selected_year(request):
         return datetime.now().year
 
 
-def _selected_tolerance(request):
-    """Smallest change worth reporting, entered as a percentage."""
-    try:
-        entered = float(request.GET.get("change", "").replace(",", "."))
-    except ValueError:
-        return RATE_STEP_TOLERANCE
-
-    return max(entered / 100, RATE_MIN_TOLERANCE)
-
 
 @login_required
 @permission_required("eos_tax.admin_view")
 def tax_changes(request):
     """Corporations whose ingame tax rate moved during the year."""
     year = _selected_year(request)
-    tolerance = _selected_tolerance(request)
-    report = get_corp_tax_changes(year, tolerance)
+    report = get_corp_tax_changes(year)
 
     context = {
         "title": _("Corp Tax Changes"),
@@ -121,7 +109,6 @@ def tax_changes(request):
         "years": get_statistics_years(),
         "rows": report["rows"],
         "stats": report["stats"],
-        "tolerance": round(tolerance * 100, 3),
     }
     return render(request, "eos_tax/tax-changes.html", context)
 
@@ -131,8 +118,7 @@ def tax_changes(request):
 def tax_change_detail(request, corp_id):
     """The daily curve behind one corporation."""
     year = _selected_year(request)
-    tolerance = _selected_tolerance(request)
-    detail = get_corp_tax_detail(corp_id, year, tolerance)
+    detail = get_corp_tax_detail(corp_id, year)
 
     context = {
         "title": detail["corp_name"],
@@ -147,7 +133,6 @@ def tax_change_detail(request, corp_id):
              "systems": day["systems"]}
             for day in detail["days"]
         ],
-        "tolerance": round(tolerance * 100, 3),
     }
     return render(request, "eos_tax/tax-change-detail.html", context)
 

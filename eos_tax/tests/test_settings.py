@@ -124,7 +124,12 @@ class TestSettingsForm(EosTaxTestCase):
 
     def test_should_offer_checkboxes_instead_of_a_multi_select(self):
         """A native <select multiple> only adds or drops an entry on ctrl-click."""
-        form = TaxConfigurationForm()
+        # the exclusion list only offers Corporations of the taxed alliances,
+        # so there has to be one for a checkbox to exist at all
+        config = TaxConfiguration.get_solo()
+        config.tax_alliances.set([self.alliance])
+
+        form = TaxConfigurationForm(instance=config)
 
         for name in ("tax_alliances", "corporation_blacklist"):
             with self.subTest(field=name):
@@ -434,6 +439,79 @@ class TestConfigurationTakesEffect(EosTaxTestCase):
         after = get_website_data(dates=dates, admin=True, corps=[])[0]["isk_to_pay_value"]
 
         self.assertEqual(before, after)
+
+
+class TestExcludableCorporations(EosTaxTestCase):
+    """Only Corporations of the taxed alliances can be excluded.
+
+    Excluding anything else changes nothing, and on a real install the full
+    list of everything Alliance Auth knows runs to hundreds of entries.
+    """
+
+    def setUp(self):
+        self.taxed = EveAllianceInfo.objects.create(
+            alliance_id=99000021, alliance_name="Taxed", alliance_ticker="TAX"
+        )
+        self.other = EveAllianceInfo.objects.create(
+            alliance_id=99000022, alliance_name="Other", alliance_ticker="OTH"
+        )
+        self.inside = self.corporation("Inside Corp", 98000021, self.taxed)
+        self.outside = self.corporation("Outside Corp", 98000022, self.other)
+
+        self.config = TaxConfiguration.get_solo()
+        self.config.tax_alliances.set([self.taxed])
+
+    def corporation(self, name, corp_id, alliance):
+        return EveCorporationInfo.objects.create(
+            corporation_id=corp_id,
+            corporation_name=name,
+            corporation_ticker=name[:5].upper(),
+            alliance=alliance,
+            tax_rate=0.1,
+        )
+
+    def offered(self, form=None):
+        form = form or TaxConfigurationForm(instance=self.config)
+
+        return [
+            entry.corporation_name
+            for entry in form.fields["corporation_blacklist"].queryset
+        ]
+
+    def test_should_offer_a_corporation_of_the_taxed_alliance(self):
+        self.assertIn("Inside Corp", self.offered())
+
+    def test_should_leave_out_a_corporation_of_another_alliance(self):
+        self.assertNotIn("Outside Corp", self.offered())
+
+    def test_should_offer_nothing_without_a_taxed_alliance(self):
+        self.config.tax_alliances.clear()
+
+        self.assertEqual(self.offered(), [])
+
+    def test_should_keep_an_already_excluded_corporation(self):
+        """Narrowing the alliances must not quietly let one back in: dropping
+        it from the queryset would drop it from the form, and the next save
+        would un-exclude it."""
+        self.config.corporation_blacklist.set([self.outside])
+
+        self.assertIn("Outside Corp", self.offered())
+
+    def test_should_follow_the_alliances_chosen_in_the_form(self):
+        """Otherwise the choices lag a save behind when someone adds an
+        alliance and excludes one of its Corporations in the same visit."""
+        bound = TaxConfigurationForm(
+            {"tax_alliances": [self.other.pk]}, instance=self.config
+        )
+
+        self.assertIn("Outside Corp", self.offered(bound))
+        self.assertNotIn("Inside Corp", self.offered(bound))
+
+    def test_should_not_repeat_a_corporation(self):
+        """It is both in the alliance and already excluded."""
+        self.config.corporation_blacklist.set([self.inside])
+
+        self.assertEqual(self.offered().count("Inside Corp"), 1)
 
 
 class TestUniquenessGuard(EosTaxTestCase):

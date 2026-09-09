@@ -15,8 +15,8 @@
             <p class="text-body-secondary small">
                 {% blocktranslate %}The corporation wallet only shows the corporation's own cut, so the ingame
                 rate is not in it directly. It is recovered from the kills behind each bounty: what the
-                NPCs were worth against what arrived. A corporation listed here changed that ratio by more
-                than {{ tolerance }} percent from one stretch of days to the next.{% endblocktranslate %}
+                NPCs were worth against what arrived. Every change of that share is listed, however small,
+                as long as the new level held for at least two days.{% endblocktranslate %}
             </p>
 
             <form role="form" method="get" class="row g-3 align-items-end mb-4">
@@ -27,15 +27,6 @@
                             <option value="{{ option }}" {% if option == year %}selected{% endif %}>{{ option }}</option>
                         {% endfor %}
                     </select>
-                </div>
-
-                <div class="col-sm-4 col-lg-3">
-                    <label for="eos-tax-change" class="form-label">{% translate "Smallest change" %}</label>
-                    <div class="input-group">
-                        <input type="number" class="form-control" id="eos-tax-change"
-                               name="change" value="{{ tolerance }}" min="0.1" max="100" step="0.1">
-                        <span class="input-group-text">%</span>
-                    </div>
                 </div>
 
                 <div class="col-auto">
@@ -54,7 +45,7 @@
                             <tr>
                                 <th scope="col">{% translate "Corporation" %}</th>
                                 <th scope="col" class="text-end">{% translate "Changes" %}</th>
-                                <th scope="col" class="text-end">{% translate "Largest change" %}</th>
+                                <th scope="col" class="text-end">{% translate "Largest change in the share" %}</th>
                                 <th scope="col">{% translate "On" %}</th>
                                 <th scope="col" class="text-end d-none d-md-table-cell">{% translate "Systems" %}</th>
                                 <th scope="col" class="text-end d-none d-md-table-cell">{% translate "Payouts" %}</th>
@@ -65,13 +56,16 @@
                             {% for row in rows %}
                                 <tr>
                                     <th scope="row">
-                                        <a href="{% url 'eos_tax:tax_change_detail' row.corp_id %}?year={{ year }}&amp;change={{ tolerance }}">
+                                        <a href="{% url 'eos_tax:tax_change_detail' row.corp_id %}?year={{ year }}">
                                             {{ row.corp_name }}
                                         </a>
                                     </th>
                                     <td class="text-end">{{ row.steps }}</td>
                                     <td class="text-end {% if row.biggest.change < 0 %}text-danger fw-semibold{% endif %}">
-                                        {{ row.biggest.from_rate|floatformat:4 }} &rarr; {{ row.biggest.to_rate|floatformat:4 }}
+                                        {{ row.biggest.from_percent|floatformat:2 }}&nbsp;%
+                                        &rarr;
+                                        {{ row.biggest.to_percent|floatformat:2 }}&nbsp;%
+                                        <span class="text-body-secondary">({{ row.biggest.change_points|floatformat:2 }}&nbsp;{% translate "pp" %})</span>
                                     </td>
                                     <td>{{ row.biggest.on }}</td>
                                     {% comment %}

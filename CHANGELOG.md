@@ -24,25 +24,46 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   fraction of the rate - and a three day rolling median keeps one noisy day
   from reading as a switch. Without eve_sde the page says so instead of
   breaking.
-  How small a change is worth seeing is set on the page, default one percent:
-  the calculation is exact, and two percent already means a Corporation pays a
-  different amount. One number decides both what counts as a single level and
-  how small a step may be, because that is the same question asked twice.
-  Measured on the live curve the smoothed daily rate sits at 0.00 percent from
-  its level on all thirty days, so even half a percent raises nothing false.
+  Every change is listed, however small - there is nothing to configure. What
+  remains is a floor at the measurement itself, a hundredth of a percentage
+  point, below which the arithmetic wobbles rather than the rate. The guard
+  against noise is not a threshold but the rule that a level has to hold for
+  two days to be a level, and the three day rolling median before it.
+  Moves are counted in percentage points, so nine percent to ten is one point
+  rather than the eleven percent it makes of the old value. That is a
+  deliberate trade: only a relative comparison cancels the bounty modifier
+  out, so in points the same switch weighs less where the modifier is low.
+  Points are what a person means when they say a Corporation went from nine to
+  ten.
+  Both levels are shown as percentages - 10.00 % to 2.00 % rather than 0.1000
+  to 0.0200 - with the move in points beside them, which is what the list
+  sorts by. The columns are named after what the number is: the share of the
+  bounty, not the rate. It carries the system's bounty modifier too, and on
+  the live data it measures 9.00 % where Alliance Auth records 15 %.
 - Overview marks a Corporation whose ingame corp tax is zero. Nothing reaches
   its wallet, so nothing arrives for the alliance to tax either, and the row
   would otherwise read as an honest zero.
-- Test suite grown to 216 tests.
+- Test suite grown to 224 tests.
 
 ### Changed
 
+- Settings offers only Corporations of the taxed alliances for exclusion.
+  Excluding any other one changes nothing, and the full list of everything
+  Alliance Auth knows runs long. A Corporation that is already excluded stays
+  in the list even after its alliance leaves - dropping it would remove it from
+  the form, and the next save would quietly let it back in. The choices follow
+  the alliances ticked in the form rather than only the stored ones, so they do
+  not lag a save behind.
 - The pie is ordered by size, largest slice first, with Other last whatever its
   size. The legend is fed from the same list, so the two agree. The line chart
   keeps its order - there a series is found by its colour, and reshuffling on
   every month change would cost the reader the position they had learned.
 
 ### Fixed
+
+- The settings form raised `AttributeError` when bound to a plain dict. It
+  reached straight for `getlist`, which a request's QueryDict has and a dict
+  does not, though both are valid ways to bind a form.
 
 ## [0.2.1] - 2026-09-09
 
