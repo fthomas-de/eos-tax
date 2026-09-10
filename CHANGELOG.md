@@ -24,11 +24,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   fraction of the rate - and a three day rolling median keeps one noisy day
   from reading as a switch. Without eve_sde the page says so instead of
   breaking.
-  Every change is listed, however small - there is nothing to configure. What
-  remains is a floor at the measurement itself, a hundredth of a percentage
-  point, below which the arithmetic wobbles rather than the rate. The guard
-  against noise is not a threshold but the rule that a level has to hold for
-  two days to be a level, and the three day rolling median before it.
+  A move has to reach a minimum to be listed - 0.45 percentage points by
+  default, set on the settings page next to the bot thresholds. Below it the
+  difference does not change what a Corporation pays by enough to care about.
+  The same number decides what counts as one level, so a rate switched once
+  jumps clear of it while a rate crept up in several smaller steps would be
+  absorbed; toggling is a jump, so that is a trade worth making. A level also
+  has to hold for two days, with a three day rolling median before it, which
+  is what keeps a single odd day out of the list.
   Moves are counted in percentage points, so nine percent to ten is one point
   rather than the eleven percent it makes of the old value. That is a
   deliberate trade: only a relative comparison cancels the bounty modifier
@@ -50,6 +53,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   chronologically rather than as a written month, the payout count without its
   separators - and the table opens in the order the server sent it, biggest
   move first, instead of DataTables' default of sorting by the first column.
+- Settings carries the smallest move that counts as a corp tax change, in
+  percentage points, default 0.45. Migration `0011`.
 - Overview marks a Corporation whose ingame corp tax is zero. Nothing reaches
   its wallet, so nothing arrives for the alliance to tax either, and the row
   would otherwise read as an honest zero.

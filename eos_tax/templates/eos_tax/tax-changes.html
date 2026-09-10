@@ -14,11 +14,12 @@
 
         <div class="card-body">
             <p class="text-body-secondary small">
-                {% blocktranslate %}The corporation wallet only shows the corporation's own cut, so the ingame
+                {% blocktranslate with minimum=stats.minimum %}The corporation wallet only shows the corporation's own cut, so the ingame
                 rate is not in it directly. It is recovered from the kills behind each bounty: what the
-                NPCs were worth against what arrived. Every change of that share is listed, however small,
-                as long as the new level held for at least two days - a corporation that switched
-                three times appears three times.{% endblocktranslate %}
+                NPCs were worth against what arrived. Every move of that share by at least
+                {{ minimum }} percentage points is listed, as long as the new level held for two
+                days - a corporation that switched three times appears three times. The minimum
+                is set on the settings page.{% endblocktranslate %}
             </p>
 
             <form role="form" method="get" class="row g-3 align-items-end mb-4">

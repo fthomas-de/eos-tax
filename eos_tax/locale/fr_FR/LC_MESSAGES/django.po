@@ -18,21 +18,21 @@ msgstr ""
 msgid "Alliance PvE Tax"
 msgstr "Alliance PvE Tax"
 
-#: forms.py:76 forms.py:205
+#: forms.py:76 forms.py:206
 msgid "Base tax rate (%)"
 msgstr "Taux de taxe de base (%)"
 
-#: forms.py:112
+#: forms.py:113
 msgid ""
 "Corporations of the taxed alliances. Excluding any other corporation would "
 "change nothing."
 msgstr "Corporations des alliances taxées. En exclure une autre ne changerait rien."
 
-#: forms.py:119
+#: forms.py:120
 msgid "Base rate, used for months before the first scheduled change below."
 msgstr "Taux de base, utilisé pour les mois précédant le premier changement planifié ci-dessous."
 
-#: forms.py:186 forms.py:213
+#: forms.py:187 forms.py:214
 msgid "Rate (%)"
 msgstr "Taux (%)"
 
@@ -60,7 +60,7 @@ msgstr "Corporations exclues"
 msgid "Never taxed and never listed, even inside a taxed alliance."
 msgstr "Jamais taxées ni affichées, même au sein d'une Alliance taxée."
 
-#: models.py:57 models.py:147
+#: models.py:57 models.py:160
 msgid "Alliance tax rate"
 msgstr "Taux de taxe de l'Alliance"
 
@@ -90,83 +90,94 @@ msgid "Match payments by their reason code instead of by amount alone."
 msgstr "Rapprocher les paiements par le code Reason plutôt que par le seul montant."
 
 #: models.py:83
+msgid "Corp tax change: smallest move"
+msgstr "Corp Tax Change : plus petit mouvement"
+
+#: models.py:90
+msgid ""
+"In percentage points of the share of the bounty that reaches the "
+"corporation. A move smaller than this is not listed, and days within it "
+"count as one level. Nine percent to ten is one point."
+msgstr "En points de pourcentage de la part de la bounty qui parvient à la corporation. Un mouvement plus faible n'est pas listé, et les jours compris dans cet écart comptent pour un seul niveau. De neuf pour cent à dix, il y a un point."
+
+#: models.py:96
 msgid "Bot detection: hours per day"
 msgstr "Détection de bots : heures par jour"
 
-#: models.py:87
+#: models.py:100
 msgid ""
 "A day counts as suspicious when a character earned taxed income in more than "
 "this many different hours of that day."
 msgstr "Une journée est jugée suspecte lorsqu'un Character a gagné un revenu taxé sur plus que ce nombre d'heures différentes de cette journée."
 
-#: models.py:92
+#: models.py:105
 msgid "Bot detection: days per month"
 msgstr "Détection de bots : jours par mois"
 
-#: models.py:96
+#: models.py:109
 msgid ""
 "A character is listed once it exceeds this many suspicious days within the "
 "selected month."
 msgstr "Un Character est listé dès qu'il dépasse ce nombre de jours suspects dans le mois sélectionné."
 
-#: models.py:102
+#: models.py:115
 msgid "Tax configuration"
 msgstr "Configuration de la taxe"
 
-#: models.py:142 templates/eos_tax/settings.html:44
+#: models.py:155 templates/eos_tax/settings.html:44
 msgid "Valid from"
 msgstr "Valable à partir de"
 
-#: models.py:144
+#: models.py:157
 msgid "First month this rate applies to. Stored as the first of that month."
 msgstr "Premier mois auquel ce taux s'applique. Enregistré au premier jour de ce mois."
 
-#: models.py:151
+#: models.py:164
 msgid "Share of the gross PvE income. 0.1 means 10 percent."
 msgstr "Part du revenu PvE brut. 0,1 signifie 10 pour cent."
 
-#: models.py:156
+#: models.py:169
 msgid "Tax rate"
 msgstr "Taux de taxe"
 
-#: models.py:157 templates/eos_tax/settings.html:29
+#: models.py:170 templates/eos_tax/settings.html:29
 msgid "Tax rate schedule"
 msgstr "Calendrier des taux"
 
-#: models.py:170
+#: models.py:183
 msgid "Corporation ID"
 msgstr "ID de Corporation"
 
-#: models.py:171
+#: models.py:184
 msgid "Taxed month"
 msgstr "Mois taxé"
 
-#: models.py:172
+#: models.py:185
 msgid "Taxed year"
 msgstr "Année taxée"
 
-#: models.py:173
+#: models.py:186
 msgid "Corporation name"
 msgstr "Nom de la Corporation"
 
-#: models.py:174
+#: models.py:187
 msgid "Tax value"
 msgstr "Montant de la taxe"
 
-#: models.py:175
+#: models.py:188
 msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
-#: models.py:176 templates/eos_tax/index.html:24
+#: models.py:189 templates/eos_tax/index.html:24
 #: templates/eos_tax/index.html:67
 msgid "Payed"
 msgstr "Payé"
 
-#: models.py:193
+#: models.py:206
 msgid "Applied alliance tax rate"
 msgstr "Taux d'Alliance appliqué"
 
-#: models.py:196
+#: models.py:209
 msgid ""
 "Alliance rate in effect when this row was calculated. Stored per row so "
 "changing the rate does not rewrite what past months were owed."
@@ -212,7 +223,7 @@ msgid "Month"
 msgstr "Mois"
 
 #: templates/eos_tax/bot-detail.html:31 templates/eos_tax/bots.html:36
-#: templates/eos_tax/tax-changes.html:35
+#: templates/eos_tax/tax-changes.html:36
 msgid "Show"
 msgstr "Afficher"
 
@@ -260,7 +271,7 @@ msgstr "%(value)s journal entries"
 
 #: templates/eos_tax/bot-detail.html:106 templates/eos_tax/bots.html:90
 #: templates/eos_tax/tax-change-detail.html:74
-#: templates/eos_tax/tax-changes.html:105
+#: templates/eos_tax/tax-changes.html:106
 msgid "total"
 msgstr "total"
 
@@ -357,7 +368,7 @@ msgid ""
 msgstr "4a. Un Reason n'est affiché que pour le mois précédent, à partir du 2 du mois en cours, afin d'éviter les paiements obsolètes."
 
 #: templates/eos_tax/index.html:18 templates/eos_tax/partials/bot-table.html:8
-#: templates/eos_tax/statistics.html:89 templates/eos_tax/tax-changes.html:49
+#: templates/eos_tax/statistics.html:89 templates/eos_tax/tax-changes.html:50
 msgid "Corporation"
 msgstr "Corporation"
 
@@ -393,11 +404,11 @@ msgstr "Non payé"
 msgid "No tax data for the selected months."
 msgstr "Aucune donnée de taxe pour les mois sélectionnés."
 
-#: templates/eos_tax/index.html:92 templates/eos_tax/tax-changes.html:116
+#: templates/eos_tax/index.html:92 templates/eos_tax/tax-changes.html:117
 msgid "Corporation:"
 msgstr "Corporation :"
 
-#: templates/eos_tax/index.html:93 templates/eos_tax/tax-changes.html:117
+#: templates/eos_tax/index.html:93 templates/eos_tax/tax-changes.html:118
 msgid "Filter by corporation name"
 msgstr "Filtrer par nom de Corporation"
 
@@ -448,7 +459,7 @@ msgstr "Supprimer"
 msgid "Save settings"
 msgstr "Enregistrer les paramètres"
 
-#: templates/eos_tax/statistics.html:21 templates/eos_tax/tax-changes.html:26
+#: templates/eos_tax/statistics.html:21 templates/eos_tax/tax-changes.html:27
 msgid "Year"
 msgstr "Année"
 
@@ -537,8 +548,11 @@ msgid ""
 msgstr "La part de la bounty complète parvenue à la corporation, par jour. La valeur porte aussi le bounty modifier du système, le niveau dit donc peu de chose ; une marche, si."
 
 #: templates/eos_tax/tax-change-detail.html:21
-msgid "A level counts once it held for at least two days."
-msgstr "Un niveau compte dès qu'il a tenu au moins deux jours."
+#, python-format
+msgid ""
+"A level counts once it held for at least two days, and a move of at least "
+"%(minimum)s percentage points separates one level from the next."
+msgstr "Un niveau compte dès qu'il a tenu au moins deux jours, et au moins %(minimum)s points de pourcentage séparent un niveau du suivant."
 
 #: templates/eos_tax/tax-change-detail.html:34
 msgid "The stretches of days the rate held, and the steps between them"
@@ -568,7 +582,7 @@ msgid ""
 msgstr "Le %(on)s la part est passée de %(before)s pour cent à %(after)s pour cent, sur %(systems)s systèmes."
 
 #: templates/eos_tax/tax-change-detail.html:70
-#: templates/eos_tax/tax-changes.html:102
+#: templates/eos_tax/tax-changes.html:103
 #, python-format
 msgid "%(value)s payouts"
 msgstr "%(value)s versements"
@@ -587,52 +601,55 @@ msgid "Share of the bounty in percent"
 msgstr "Part de la bounty en pour cent"
 
 #: templates/eos_tax/tax-changes.html:17
+#, python-format
 msgid ""
 "The corporation wallet only shows the corporation's own cut, so the ingame\n"
 "                rate is not in it directly. It is recovered from the kills "
 "behind each bounty: what the\n"
-"                NPCs were worth against what arrived. Every change of that "
-"share is listed, however small,\n"
-"                as long as the new level held for at least two days - a "
-"corporation that switched\n"
-"                three times appears three times."
-msgstr "Le portefeuille de la corporation ne montre que sa propre part, l'ingame rate n'y figure donc pas. Il est reconstitué à partir des kills derrière chaque bounty : ce que valaient les NPC face à ce qui est arrivé. Chaque changement de cette part est listé, si petit soit-il, dès lors que le nouveau niveau a tenu au moins deux jours : une corporation qui a changé trois fois apparaît trois fois."
+"                NPCs were worth against what arrived. Every move of that "
+"share by at least\n"
+"                %(minimum)s percentage points is listed, as long as the new "
+"level held for two\n"
+"                days - a corporation that switched three times appears three "
+"times. The minimum\n"
+"                is set on the settings page."
+msgstr "Le portefeuille de la corporation ne montre que sa propre part, l'ingame rate n'y figure donc pas. Il est reconstitué à partir des kills derrière chaque bounty : ce que valaient les NPC face à ce qui est arrivé. Chaque mouvement de cette part d'au moins %(minimum)s points de pourcentage est listé, dès lors que le nouveau niveau a tenu deux jours : une corporation qui a changé trois fois apparaît trois fois. Le minimum se règle dans les paramètres."
 
-#: templates/eos_tax/tax-changes.html:41
+#: templates/eos_tax/tax-changes.html:42
 msgid ""
 "The static data export is not available, so bounty values cannot be resolved."
 msgstr "Le static data export n'est pas disponible, les primes ne peuvent pas être résolues."
 
-#: templates/eos_tax/tax-changes.html:50
+#: templates/eos_tax/tax-changes.html:51
 msgid "Change in the share"
 msgstr "Changement de la part"
 
-#: templates/eos_tax/tax-changes.html:51
+#: templates/eos_tax/tax-changes.html:52
 msgid "On"
 msgstr "Le"
 
-#: templates/eos_tax/tax-changes.html:52
+#: templates/eos_tax/tax-changes.html:53
 msgid "Systems"
 msgstr "Systèmes"
 
-#: templates/eos_tax/tax-changes.html:53
+#: templates/eos_tax/tax-changes.html:54
 msgid "Payouts"
 msgstr "Versements"
 
-#: templates/eos_tax/tax-changes.html:76
+#: templates/eos_tax/tax-changes.html:77
 msgid "pp"
 msgstr "pts"
 
-#: templates/eos_tax/tax-changes.html:95
+#: templates/eos_tax/tax-changes.html:96
 msgid "No corporation changed its ingame tax rate in this year."
 msgstr "Aucune corporation n'a modifié son ingame tax rate cette année."
 
-#: templates/eos_tax/tax-changes.html:100
+#: templates/eos_tax/tax-changes.html:101
 #, python-format
 msgid "%(value)s corporations examined"
 msgstr "%(value)s corporations examinées"
 
-#: templates/eos_tax/tax-changes.html:101
+#: templates/eos_tax/tax-changes.html:102
 #, python-format
 msgid "%(changes)s changes in %(corporations)s corporations"
 msgstr "%(changes)s changements dans %(corporations)s corporations"

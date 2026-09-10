@@ -79,6 +79,19 @@ class TaxConfiguration(SingletonModel):
         default=False,
         help_text=_("Match payments by their reason code instead of by amount alone."),
     )
+    tax_change_min_points = models.DecimalField(
+        verbose_name=_("Corp tax change: smallest move"),
+        max_digits=5,
+        decimal_places=2,
+        default=Decimal("0.45"),
+        validators=[MinValueValidator(Decimal("0.01")),
+                    MaxValueValidator(Decimal("100"))],
+        help_text=_(
+            "In percentage points of the share of the bounty that reaches the "
+            "corporation. A move smaller than this is not listed, and days "
+            "within it count as one level. Nine percent to ten is one point."
+        ),
+    )
     bot_min_hours_per_day = models.PositiveSmallIntegerField(
         verbose_name=_("Bot detection: hours per day"),
         default=20,

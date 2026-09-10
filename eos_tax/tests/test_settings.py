@@ -89,6 +89,7 @@ class TestSettingsForm(EosTaxTestCase):
             "tax_types": ["bounty_prizes"],
             "last_month": "on",
             "current_month": "on",
+            "tax_change_min_points": "0.45",
             "bot_min_hours_per_day": "20",
             "bot_min_days_per_month": "12",
             # the rate schedule rides along in the same POST
@@ -297,6 +298,7 @@ class TestTaxRateScheduleForm(EosTaxTestCase):
             "corporation_blacklist": [],
             "tax_rate": "10",
             "tax_types": ["bounty_prizes"],
+            "tax_change_min_points": "0.45",
             "bot_min_hours_per_day": "20",
             "bot_min_days_per_month": "12",
             "form-TOTAL_FORMS": "0",

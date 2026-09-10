@@ -10,6 +10,7 @@ together, smoothing a day of noise away, and deciding what counts as a step.
 """
 
 import datetime
+from decimal import Decimal
 from unittest import mock
 
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
@@ -191,42 +192,49 @@ class TestStepDetection(TaxChangeTestCase):
         )
 
     def test_should_weigh_a_move_the_same_at_any_level(self):
-        """A tenth of a point is a tenth of a point, at two percent or at ten -
-        which is what points buy and relative percent does not."""
+        """Half a point is half a point, at two percent or at ten - which is
+        what points buy and relative percent does not."""
         self.steady(range(1, 6), 0.1000)
-        self.steady(range(6, 11), 0.1015)
+        self.steady(range(6, 11), 0.1050)
 
         moved = self.changes()[0]["step"]["change_points"]
 
-        self.assertAlmostEqual(moved, 0.15, places=6)
+        self.assertAlmostEqual(moved, 0.50, places=6)
 
-    def test_should_find_a_change_of_five_hundredths_of_a_point(self):
-        """Every change is listed, however small - this one is tiny and real."""
+    def test_should_find_a_move_that_reaches_the_minimum(self):
         self.steady(range(1, 6), 0.1000)
-        self.steady(range(6, 11), 0.1005)
+        self.steady(range(6, 11), 0.1050)
 
         self.assertEqual(len(self.changes()), 1)
 
-    def test_should_find_two_tenths_of_a_point(self):
-        """The calculation is exact, and a fifth of a point is a different bill."""
+    def test_should_ignore_a_move_below_the_minimum(self):
+        """Two tenths of a point does not change the bill enough to care."""
+        self.steady(range(1, 6), 0.1000)
+        self.steady(range(6, 11), 0.1020)
+
+        self.assertEqual(self.changes(), [])
+
+    def test_should_take_the_minimum_from_the_settings(self):
+        """The number lives on the settings page, not in the code."""
+        config = TaxConfiguration.get_solo()
+        config.tax_change_min_points = Decimal("0.10")
+        config.save()
+
         self.steady(range(1, 6), 0.1000)
         self.steady(range(6, 11), 0.1020)
 
         self.assertEqual(len(self.changes()), 1)
 
-    def test_should_ignore_a_change_below_the_measurement(self):
-        """Under a hundredth of a point the arithmetic wobbles, not the rate."""
-        self.steady(range(1, 6), 0.100000)
-        self.steady(range(6, 11), 0.100004)
+    def test_should_fall_back_when_the_setting_is_empty(self):
+        """An unset value must not mean a threshold of zero."""
+        config = TaxConfiguration.get_solo()
+        config.tax_change_min_points = 0
+        config.save()
+
+        self.steady(range(1, 6), 0.1000)
+        self.steady(range(6, 11), 0.1020)
 
         self.assertEqual(self.changes(), [])
-
-    def test_should_hold_the_floor_against_a_lower_ask(self):
-        """Nothing sets it from outside, but a zero must not open the gate."""
-        self.steady(range(1, 6), 0.100000)
-        self.steady(range(6, 11), 0.100004)
-
-        self.assertEqual(self.changes(tolerance=0), [])
 
     def test_should_need_a_level_to_hold_for_two_days(self):
         """Without a threshold this is what keeps single days out of the list."""

@@ -732,23 +732,30 @@ BOUNTY_ATTRIBUTE_ID = 481
 # "18085: 2,18086: 3" - NPC type and how many of them died
 KILL_PAIR = re.compile(r"(\d+)\s*:\s*(\d+)")
 
-# Every change is reported, so this is a floor at the measurement rather than a
-# preference: below a hundredth of a percentage point the arithmetic wobbles,
-# not the rate. Stored the way the rates are, as a fraction.
+# Fallback for how far the share has to move to be worth listing. The settings
+# page owns the real number - this is what applies before anyone has saved one.
+# Stored the way the rates are, as a fraction: 0.0045 is 0.45 percentage points.
 #
 # Measured in points of the share, not relative percent, so nine percent to ten
 # is one point. That is a deliberate trade - only a relative comparison cancels
 # the system's bounty modifier out, and in points it stays in - but points are
 # what a person means when they say a Corporation went from nine to ten.
 #
-# What actually keeps noise out of the list is RATE_MIN_DAYS_PER_PLATEAU: a
-# level has to hold for two days to be a level. On the live curve the smoothed
-# daily share sits at exactly 9.0000 percent for thirty days, and even this
-# floor finds nothing there.
+# The same number decides what counts as one level, so days within it join a
+# plateau. A rate switched once jumps clear; a rate crept upward in several
+# smaller steps would be absorbed, because the plateau's median moves with it.
+# Toggling is a jump, so that is a trade worth making, but it is a trade.
 #
-# Still a parameter on the functions below, because that is how the tests pin
-# the behaviour down; nothing in the interface sets it.
-RATE_STEP_TOLERANCE = 0.0001
+# A level also has to hold for RATE_MIN_DAYS_PER_PLATEAU days, which is what
+# keeps a single odd day out of the list.
+RATE_STEP_TOLERANCE = 0.0045
+
+
+def _configured_tolerance():
+    """The smallest move worth listing, as a fraction of the share."""
+    points = get_config().tax_change_min_points
+
+    return float(points) / 100 if points else RATE_STEP_TOLERANCE
 
 # a day with fewer payouts than this says too little to stand on its own
 RATE_MIN_PAYOUTS_PER_DAY = 3
@@ -950,10 +957,10 @@ def _steps(plateaus, tolerance=RATE_STEP_TOLERANCE):
     return steps
 
 
-def get_corp_tax_changes(year: int, tolerance: float = RATE_STEP_TOLERANCE):
+def get_corp_tax_changes(year: int, tolerance: float = None):
     """Corporations whose effective ingame rate stepped during the year."""
     started = time.perf_counter()
-    tolerance = max(tolerance, RATE_STEP_TOLERANCE)
+    tolerance = tolerance if tolerance else _configured_tolerance()
     config = get_config()
     corp_ids = _taxed_corporation_ids(config)
     payouts = _payouts(year, corp_ids)
@@ -995,15 +1002,16 @@ def get_corp_tax_changes(year: int, tolerance: float = RATE_STEP_TOLERANCE):
             "payouts": sum(len(measured) for measured in payouts.values()),
             "seconds": time.perf_counter() - started,
             "sde": bool(_npc_bounties()),
+            # in points, for the sentence above the table
+            "minimum": round(tolerance * 100, 2),
         },
     }
 
 
-def get_corp_tax_detail(corp_id: int, year: int,
-                        tolerance: float = RATE_STEP_TOLERANCE):
+def get_corp_tax_detail(corp_id: int, year: int, tolerance: float = None):
     """The daily curve for one corporation, and the steps found in it."""
     started = time.perf_counter()
-    tolerance = max(tolerance, RATE_STEP_TOLERANCE)
+    tolerance = tolerance if tolerance else _configured_tolerance()
     payouts = _payouts(year, [corp_id])
     measured = payouts.get(corp_id, [])
     days = _daily_rates(measured)
@@ -1019,6 +1027,7 @@ def get_corp_tax_detail(corp_id: int, year: int,
         "payouts": len(measured),
         "seconds": time.perf_counter() - started,
         "sde": bool(_npc_bounties()),
+        "minimum": round(tolerance * 100, 2),
     }
 
 

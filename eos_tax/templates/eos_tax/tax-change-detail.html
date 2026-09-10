@@ -18,7 +18,7 @@
                 {% blocktranslate %}The share of the full bounty that reached the corporation, per day.
                 The value carries the system's bounty modifier as well as the rate, so the level itself
                 means little - a step in it does not.{% endblocktranslate %}
-                {% blocktranslate %}A level counts once it held for at least two days.{% endblocktranslate %}
+                {% blocktranslate with minimum=detail.minimum %}A level counts once it held for at least two days, and a move of at least {{ minimum }} percentage points separates one level from the next.{% endblocktranslate %}
             </p>
 
             {% if detail.days %}
