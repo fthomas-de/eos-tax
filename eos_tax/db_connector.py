@@ -924,7 +924,47 @@ def _plateaus(days, tolerance=RATE_STEP_TOLERANCE):
         # templates cannot multiply, and a ratio does not read at a glance
         plateau["percent"] = plateau["rate"] * 100
 
+    _round_to_halves(kept)
+
     return kept
+
+
+# Hidden tokens the quick filters search for. A plain "0" would also match 10,
+# 20 and 30, so the extremes need something of their own.
+EXTREME_MARKERS = {0.0: "eostax-zero", 100.0: "eostax-full"}
+
+
+def _extremes(*values):
+    """Markers for the ends of a move that sit at nothing or at everything."""
+    return " ".join(
+        sorted({EXTREME_MARKERS[value] for value in values if value in EXTREME_MARKERS})
+    )
+
+
+def _round_to_halves(plateaus):
+    """Put each level on a half point, unless that would hide a change.
+
+    An ingame rate is set in whole or half percent and the measurement lands a
+    hair beside it, so 0.02 becomes 0 and 99.8 becomes 100 - which is what
+    makes those two searchable at all.
+
+    Two levels 0.45 apart can round onto the same half, and "9.5 to 9.5" reads
+    as nothing having happened. Where that would occur the whole Corporation
+    keeps its exact values rather than one row silently disagreeing with the
+    rest.
+    """
+    rounded = [round(plateau["percent"] * 2) / 2 for plateau in plateaus]
+
+    collapses = any(
+        before == after and plateaus[index]["percent"] != plateaus[index + 1]["percent"]
+        for index, (before, after) in enumerate(zip(rounded, rounded[1:]))
+    )
+
+    if collapses:
+        return
+
+    for plateau, value in zip(plateaus, rounded):
+        plateau["percent"] = value
 
 
 def _steps(plateaus, tolerance=RATE_STEP_TOLERANCE):
@@ -942,11 +982,15 @@ def _steps(plateaus, tolerance=RATE_STEP_TOLERANCE):
         steps.append({
             "from_rate": before["rate"],
             "to_rate": after["rate"],
-            "from_percent": before["rate"] * 100,
-            "to_percent": after["rate"] * 100,
-            # how far the level moved, in points of the share - what the list
-            # sorts by, and what nine to ten means
-            "change_points": change * 100,
+            # the levels as the plateaus report them, rounded to halves where
+            # that does not hide anything, so the row and the level table agree
+            "from_percent": before["percent"],
+            "to_percent": after["percent"],
+            # how far the level moved, in points of the share - taken from the
+            # shown values so the row adds up, and what the list sorts by
+            "change_points": after["percent"] - before["percent"],
+            # what the quick filters look for, either end of the move
+            "extremes": _extremes(before["percent"], after["percent"]),
             "on": after["days"][0]["day"],
             "change": change,
             # a rate change moves every system at once; a bounty modifier

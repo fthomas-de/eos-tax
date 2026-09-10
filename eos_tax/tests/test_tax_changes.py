@@ -99,6 +99,14 @@ class TaxChangeTestCase(EosTaxTestCase):
             for minute in range(4):
                 self.payout(day, rate, minute=minute * 5, **kwargs)
 
+    def as_admin(self, url, **params):
+        self.client.force_login(
+            create_user("taxadmin", 97000010, CORP_ID, "Bravo Corp", ["admin_view"])
+        )
+
+        with mock.patch("eos_tax.db_connector._npc_bounties", return_value=BOUNTIES):
+            return self.client.get(url, params)
+
     def changes(self, tolerance=None):
         with mock.patch("eos_tax.db_connector._npc_bounties", return_value=BOUNTIES):
             if tolerance is None:
@@ -320,19 +328,146 @@ class TestSeveralChanges(TaxChangeTestCase):
         self.assertEqual(stats["flagged"], 1)
 
 
+class TestHalfPointRounding(TaxChangeTestCase):
+    """Levels read in half points, so a zero reads as 0 and a full rate as 100.
+
+    The measurement lands a hair beside the ingame rate - 0.02 rather than 0 -
+    and nobody types 0.02 into a search box.
+    """
+
+    def levels(self, *pairs):
+        day = 1
+        for rate, length in pairs:
+            self.steady(range(day, day + length), rate)
+            day += length
+
+    def shown(self):
+        change = self.changes()[0]["step"]
+
+        return change["from_percent"], change["to_percent"]
+
+    def test_should_read_a_switched_off_tax_as_zero(self):
+        self.levels((0.0902, 5), (0.0002, 5))
+
+        self.assertEqual(self.shown(), (9.0, 0.0))
+
+    def test_should_read_a_full_rate_as_a_hundred(self):
+        self.levels((0.0902, 5), (0.998, 5))
+
+        self.assertEqual(self.shown(), (9.0, 100.0))
+
+    def test_should_keep_a_half_step(self):
+        self.levels((0.0902, 5), (0.0851, 5))
+
+        self.assertEqual(self.shown(), (9.0, 8.5))
+
+    def test_should_keep_exact_values_when_rounding_would_hide_the_change(self):
+        """0.45 apart can land on the same half, and "9.5 to 9.5" reads as
+        nothing having happened."""
+        self.levels((0.0926, 5), (0.0971, 5))
+
+        first, second = self.shown()
+
+        self.assertNotEqual(first, second)
+        self.assertAlmostEqual(first, 9.26, places=6)
+
+    def test_should_add_up_after_rounding(self):
+        """The move has to be the difference of the two numbers beside it."""
+        self.levels((0.0902, 5), (0.0002, 5))
+
+        change = self.changes()[0]["step"]
+
+        self.assertAlmostEqual(
+            change["change_points"],
+            change["to_percent"] - change["from_percent"],
+            places=6,
+        )
+
+    def test_should_render_a_zero_without_decimals(self):
+        """"0.00" is not what anyone types into a search box."""
+        self.levels((0.0902, 5), (0.0002, 5))
+
+        response = self.as_admin(reverse("eos_tax:tax_changes"), year=YEAR)
+
+        self.assertContains(response, "0&nbsp;%")
+        self.assertNotContains(response, "0.00&nbsp;%")
+
+
+class TestExtremeFilters(TaxChangeTestCase):
+    """Buttons for a tax switched off and one turned all the way up.
+
+    A substring search cannot do this: typing 0 also finds 10, 20 and 30.
+    """
+
+    def levels(self, *pairs):
+        day = 1
+        for rate, length in pairs:
+            self.steady(range(day, day + length), rate)
+            day += length
+
+    def markers(self):
+        return self.changes()[0]["step"]["extremes"]
+
+    def test_should_mark_a_move_to_zero(self):
+        self.levels((0.0902, 5), (0.0002, 5))
+
+        self.assertEqual(self.markers(), "eostax-zero")
+
+    def test_should_mark_a_move_away_from_zero(self):
+        """Switching the tax back on is worth seeing too."""
+        self.levels((0.0002, 5), (0.0902, 5))
+
+        self.assertEqual(self.markers(), "eostax-zero")
+
+    def test_should_mark_a_move_to_a_full_rate(self):
+        self.levels((0.0902, 5), (0.998, 5))
+
+        self.assertEqual(self.markers(), "eostax-full")
+
+    def test_should_mark_both_ends(self):
+        self.levels((0.0002, 5), (0.998, 5))
+
+        self.assertEqual(self.markers(), "eostax-full eostax-zero")
+
+    def test_should_leave_an_ordinary_move_unmarked(self):
+        self.levels((0.1002, 5), (0.0902, 5))
+
+        self.assertEqual(self.markers(), "")
+
+    def test_should_carry_the_marker_into_the_cell(self):
+        self.levels((0.0902, 5), (0.0002, 5))
+
+        response = self.as_admin(reverse("eos_tax:tax_changes"), year=YEAR)
+
+        self.assertContains(response, "eostax-zero")
+        self.assertContains(response, "data-search=")
+
+    def test_should_offer_the_buttons(self):
+        self.levels((0.0902, 5), (0.0002, 5))
+
+        response = self.as_admin(reverse("eos_tax:tax_changes"), year=YEAR)
+
+        self.assertContains(response, 'data-eos-filter="eostax-zero"')
+        self.assertContains(response, 'data-eos-filter="eostax-full"')
+        self.assertContains(response, 'data-eos-filter=""')
+
+    def test_should_hide_the_buttons_without_rows(self):
+        """Nothing found, nothing to filter.
+
+        Asserted on the button markup: the identifier also appears in the
+        script that binds the clicks, on every rendering of the page.
+        """
+        response = self.as_admin(reverse("eos_tax:tax_changes"), year=YEAR)
+
+        self.assertNotContains(response, 'data-eos-filter="eostax-zero"')
+        self.assertNotContains(response, 'data-eos-filter="eostax-full"')
+
+
 class TestTaxChangePages(TaxChangeTestCase):
     def setUp(self):
         super().setUp()
         self.steady(range(1, 6), 0.10)
         self.steady(range(6, 11), 0.02)
-
-    def as_admin(self, url, **params):
-        self.client.force_login(
-            create_user("taxadmin", 97000010, CORP_ID, "Bravo Corp", ["admin_view"])
-        )
-
-        with mock.patch("eos_tax.db_connector._npc_bounties", return_value=BOUNTIES):
-            return self.client.get(url, params)
 
     def test_should_reject_basic_access(self):
         self.client.force_login(
@@ -386,11 +521,12 @@ class TestTaxChangePages(TaxChangeTestCase):
 
         self.assertContains(response, "order: []")
 
-    def test_should_make_exactly_the_corporation_column_searchable(self):
+    def test_should_search_the_corporation_and_the_change(self):
+        """The change column too, so 0 and 100 find a tax switched off or up."""
         body = self.as_admin(reverse("eos_tax:tax_changes"), year=YEAR).content.decode()
 
-        self.assertEqual(body.count("searchable: true"), 1)
-        self.assertEqual(body.count("searchable: false"), 4)
+        self.assertEqual(body.count("searchable: true"), 2)
+        self.assertEqual(body.count("searchable: false"), 3)
 
     def test_should_sort_the_change_by_its_size_not_its_text(self):
         """The cell reads as two percentages and an arrow."""

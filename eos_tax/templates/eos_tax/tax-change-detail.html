@@ -46,7 +46,7 @@
                                 <tr>
                                     <td>{{ plateau.first_day }}</td>
                                     <td>{{ plateau.last_day }}</td>
-                                    <td class="text-end fw-semibold">{{ plateau.percent|floatformat:2 }}&nbsp;%</td>
+                                    <td class="text-end fw-semibold">{{ plateau.percent|floatformat:"-2" }}&nbsp;%</td>
                                     <td class="text-end">{{ plateau.days|length }}</td>
                                 </tr>
                             {% endfor %}
@@ -59,7 +59,7 @@
                         <ul class="mb-0">
                             {% for step in detail.steps %}
                                 <li>
-                                    {% blocktranslate with on=step.on before=step.from_percent|floatformat:2 after=step.to_percent|floatformat:2 systems=step.systems %}On {{ on }} the share moved from {{ before }} percent to {{ after }} percent, across {{ systems }} systems.{% endblocktranslate %}
+                                    {% blocktranslate with on=step.on before=step.from_percent|floatformat:"-2" after=step.to_percent|floatformat:"-2" systems=step.systems %}On {{ on }} the share moved from {{ before }} percent to {{ after }} percent, across {{ systems }} systems.{% endblocktranslate %}
                                 </li>
                             {% endfor %}
                         </ul>

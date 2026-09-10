@@ -43,6 +43,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   sorts by. The columns are named after what the number is: the share of the
   bounty, not the rate. It carries the system's bounty modifier too, and on
   the live data it measures 9.00 % where Alliance Auth records 15 %.
+  Levels read in half points: an ingame rate is set in whole or half percent
+  and the measurement lands a hair beside it, so 0.02 shows as 0 and 99.8 as
+  100 - which is what makes those two findable, since nobody types 0.02 into a
+  search box. Two levels 0.45 points apart can round onto the same half, and
+  "9.5 to 9.5" would read as nothing having happened; where that would occur
+  the Corporation keeps its exact values. The search covers the change column
+  as well as the Corporation name, and two buttons filter to the rates worth
+  chasing: a tax switched off and one turned all the way up. Typing 0 cannot
+  do that - it also finds 10, 20 and 30 - so each row carries a hidden marker
+  in `data-search`, the search counterpart to the `data-order` the table
+  already uses for sorting, and the buttons drive the same search box rather
+  than a mechanism of their own. Either end of a move counts: a Corporation
+  that switched its tax off and one that switched it back on both show.
   Every change is its own row, so the table reads as a list of events: a
   Corporation that switched three times appears three times, and sorting by
   name groups its changes together. The detector always found them all - the
@@ -58,7 +71,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Overview marks a Corporation whose ingame corp tax is zero. Nothing reaches
   its wallet, so nothing arrives for the alliance to tax either, and the row
   would otherwise read as an honest zero.
-- Test suite grown to 236 tests.
+- Test suite grown to 250 tests.
 
 ### Changed
 

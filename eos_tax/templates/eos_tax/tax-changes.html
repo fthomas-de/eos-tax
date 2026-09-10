@@ -37,6 +37,22 @@
                 </div>
             </form>
 
+            {% if rows %}
+                <div class="btn-group btn-group-sm mb-3" role="group"
+                     aria-label="{% translate 'Quick filters' %}">
+                    <button type="button" class="btn btn-outline-secondary active"
+                            data-eos-filter="">{% translate "All" %}</button>
+                    {% comment %}
+                        The percent sign stays out of the translated string: a lone
+                        "%" in a msgid invites xgettext to treat it as a format spec.
+                    {% endcomment %}
+                    <button type="button" class="btn btn-outline-secondary"
+                            data-eos-filter="eostax-zero">{% translate "Only" %} 0&nbsp;%</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            data-eos-filter="eostax-full">{% translate "Only" %} 100&nbsp;%</button>
+                </div>
+            {% endif %}
+
             {% if not stats.sde %}
                 <div class="alert alert-warning">
                     {% translate "The static data export is not available, so bounty values cannot be resolved." %}
@@ -68,12 +84,20 @@
                                         show: an arrow between two percentages, a written
                                         month, and a count with thousands separators.
                                     {% endcomment %}
+                                    {% comment %}
+                                        data-search is to searching what data-order is to
+                                        sorting: DataTables reads it instead of the cell.
+                                        It carries the visible numbers plus a hidden marker
+                                        for the extremes, which a plain "0" cannot single
+                                        out because it also matches 10, 20 and 30.
+                                    {% endcomment %}
                                     <td class="text-end {% if row.step.change < 0 %}text-danger fw-semibold{% endif %}"
-                                        data-order="{{ row.step.change_points|unlocalize }}">
-                                        {{ row.step.from_percent|floatformat:2 }}&nbsp;%
+                                        data-order="{{ row.step.change_points|unlocalize }}"
+                                        data-search="{{ row.step.from_percent|floatformat:'-2' }} {{ row.step.to_percent|floatformat:'-2' }} {{ row.step.extremes }}">
+                                        {{ row.step.from_percent|floatformat:"-2" }}&nbsp;%
                                         &rarr;
-                                        {{ row.step.to_percent|floatformat:2 }}&nbsp;%
-                                        <span class="text-body-secondary">({{ row.step.change_points|floatformat:2 }}&nbsp;{% translate "pp" %})</span>
+                                        {{ row.step.to_percent|floatformat:"-2" }}&nbsp;%
+                                        <span class="text-body-secondary">({{ row.step.change_points|floatformat:"-2" }}&nbsp;{% translate "pp" %})</span>
                                     </td>
                                     <td data-order="{{ row.step.on|date:'Y-m-d' }}">{{ row.step.on }}</td>
                                     {% comment %}
@@ -112,8 +136,8 @@
 {% block extra_javascript %}
     {% include "bundles/datatables-2-js-bs5.html" %}
 
-    {% translate "Corporation:" as l10n_search_label %}
-    {% translate "Filter by corporation name" as l10n_search_placeholder %}
+    {% translate "Search:" as l10n_search_label %}
+    {% translate "Corporation name, or a rate such as 0 or 100" as l10n_search_placeholder %}
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -126,11 +150,13 @@
                 return;  // nothing found, nothing to sort
             }
 
-            new DataTable(table, {
+            const changes = new DataTable(table, {
                 // one entry per column - the search box hits Corporation only
                 columns: [
                     { searchable: true },   // Corporation
-                    { searchable: false },  // Change
+                    // searchable too, so "0" and "100" find the Corporations
+                    // that switched their tax off or all the way up
+                    { searchable: true },   // Change
                     { searchable: false },  // On
                     { searchable: false },  // Systems
                     { searchable: false }   // Payouts
@@ -147,6 +173,19 @@
                     search: "{{ l10n_search_label|escapejs }}",
                     searchPlaceholder: "{{ l10n_search_placeholder|escapejs }}"
                 }
+            });
+
+            // the buttons drive the same search box, so a filter and a typed
+            // term cannot end up contradicting each other
+            document.querySelectorAll("[data-eos-filter]").forEach(function (button) {
+                button.addEventListener("click", function () {
+                    document.querySelectorAll("[data-eos-filter]").forEach(
+                        function (other) { other.classList.remove("active"); }
+                    );
+                    button.classList.add("active");
+
+                    changes.search(button.dataset.eosFilter).draw();
+                });
             });
         });
     </script>

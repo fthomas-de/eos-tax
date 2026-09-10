@@ -271,7 +271,7 @@ msgstr "%(value)s journal entries"
 
 #: templates/eos_tax/bot-detail.html:106 templates/eos_tax/bots.html:90
 #: templates/eos_tax/tax-change-detail.html:74
-#: templates/eos_tax/tax-changes.html:106
+#: templates/eos_tax/tax-changes.html:132
 msgid "total"
 msgstr "totale"
 
@@ -368,7 +368,7 @@ msgid ""
 msgstr "4a. Un Reason viene mostrato solo per il mese precedente, a partire dal 2 del mese in corso, per evitare pagamenti non più validi."
 
 #: templates/eos_tax/index.html:18 templates/eos_tax/partials/bot-table.html:8
-#: templates/eos_tax/statistics.html:89 templates/eos_tax/tax-changes.html:50
+#: templates/eos_tax/statistics.html:89 templates/eos_tax/tax-changes.html:67
 msgid "Corporation"
 msgstr "Corporation"
 
@@ -404,11 +404,11 @@ msgstr "Non pagato"
 msgid "No tax data for the selected months."
 msgstr "Nessun dato sulla tassa per i mesi selezionati."
 
-#: templates/eos_tax/index.html:92 templates/eos_tax/tax-changes.html:117
+#: templates/eos_tax/index.html:92
 msgid "Corporation:"
 msgstr "Corporation:"
 
-#: templates/eos_tax/index.html:93 templates/eos_tax/tax-changes.html:118
+#: templates/eos_tax/index.html:93
 msgid "Filter by corporation name"
 msgstr "Filtra per nome della Corporation"
 
@@ -582,7 +582,7 @@ msgid ""
 msgstr "Il %(on)s la quota è passata dal %(before)s per cento al %(after)s per cento, su %(systems)s sistemi."
 
 #: templates/eos_tax/tax-change-detail.html:70
-#: templates/eos_tax/tax-changes.html:103
+#: templates/eos_tax/tax-changes.html:129
 #, python-format
 msgid "%(value)s payouts"
 msgstr "%(value)s pagamenti"
@@ -616,43 +616,63 @@ msgid ""
 msgstr "Il wallet della corporation mostra solo la sua quota, quindi l'ingame rate non è contenuto direttamente. Viene ricostruito dai kill dietro ogni bounty: quanto valevano gli NPC rispetto a quanto è arrivato. Viene elencato ogni movimento di quella quota di almeno %(minimum)s punti percentuali, purché il nuovo livello abbia retto due giorni: una corporation che ha cambiato tre volte compare tre volte. Il minimo si imposta nelle impostazioni."
 
 #: templates/eos_tax/tax-changes.html:42
+msgid "Quick filters"
+msgstr "Filtri rapidi"
+
+#: templates/eos_tax/tax-changes.html:44
+msgid "All"
+msgstr "Tutti"
+
+#: templates/eos_tax/tax-changes.html:51 templates/eos_tax/tax-changes.html:53
+msgid "Only"
+msgstr "Solo"
+
+#: templates/eos_tax/tax-changes.html:59
 msgid ""
 "The static data export is not available, so bounty values cannot be resolved."
 msgstr "Lo static data export non è disponibile, le taglie non possono essere risolte."
 
-#: templates/eos_tax/tax-changes.html:51
+#: templates/eos_tax/tax-changes.html:68
 msgid "Change in the share"
 msgstr "Cambiamento nella quota"
 
-#: templates/eos_tax/tax-changes.html:52
+#: templates/eos_tax/tax-changes.html:69
 msgid "On"
 msgstr "Il"
 
-#: templates/eos_tax/tax-changes.html:53
+#: templates/eos_tax/tax-changes.html:70
 msgid "Systems"
 msgstr "Sistemi"
 
-#: templates/eos_tax/tax-changes.html:54
+#: templates/eos_tax/tax-changes.html:71
 msgid "Payouts"
 msgstr "Pagamenti"
 
-#: templates/eos_tax/tax-changes.html:77
+#: templates/eos_tax/tax-changes.html:103
 msgid "pp"
 msgstr "p.p."
 
-#: templates/eos_tax/tax-changes.html:96
+#: templates/eos_tax/tax-changes.html:122
 msgid "No corporation changed its ingame tax rate in this year."
 msgstr "Nessuna corporation ha cambiato la sua ingame tax rate quest'anno."
 
-#: templates/eos_tax/tax-changes.html:101
+#: templates/eos_tax/tax-changes.html:127
 #, python-format
 msgid "%(value)s corporations examined"
 msgstr "%(value)s corporation esaminate"
 
-#: templates/eos_tax/tax-changes.html:102
+#: templates/eos_tax/tax-changes.html:128
 #, python-format
 msgid "%(changes)s changes in %(corporations)s corporations"
 msgstr "%(changes)s cambiamenti in %(corporations)s corporation"
+
+#: templates/eos_tax/tax-changes.html:143
+msgid "Search:"
+msgstr "Cerca:"
+
+#: templates/eos_tax/tax-changes.html:144
+msgid "Corporation name, or a rate such as 0 or 100"
+msgstr "Nome della corporation o un tasso come 0 o 100"
 
 #: views.py:47
 #, python-format
