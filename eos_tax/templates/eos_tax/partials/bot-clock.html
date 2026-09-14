@@ -1,0 +1,115 @@
+{% load i18n %}
+{% load humanize %}
+
+{% if groups %}
+    {% if not rows %}
+        {% comment %}
+            An empty table says the threshold was not met. It does not say by
+            how much, which is the thing worth knowing when the threshold is
+            the setting under discussion.
+        {% endcomment %}
+        <div class="alert alert-info">
+            {% blocktranslate count counter=stats.min_apart %}No Character sat {{ counter }} hour or more from their Corporation. The largest distances of the month are shown instead, so the threshold can be judged against real numbers.{% plural %}No Character sat {{ counter }} hours or more from their Corporation. The largest distances of the month are shown instead, so the threshold can be judged against real numbers.{% endblocktranslate %}
+        </div>
+    {% endif %}
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle w-100">
+            <thead>
+                <tr>
+                    <th scope="col">{% translate "Character" %}</th>
+                    <th scope="col" class="d-none d-md-table-cell">{% translate "Corporation" %}</th>
+                    <th scope="col" class="d-none d-lg-table-cell">{% translate "Main" %}</th>
+                    <th scope="col" class="text-end">{% translate "Character's middle of the day" %}</th>
+                    <th scope="col" class="text-end d-none d-md-table-cell">{% translate "Corporation's middle of the day" %}</th>
+                    <th scope="col" class="text-end">{% translate "Apart" %}</th>
+                    <th scope="col" class="text-end d-none d-md-table-cell">{% translate "Payouts" %}</th>
+                    <th scope="col">{% translate "Assessment" %}</th>
+                </tr>
+            </thead>
+
+            {% for group in groups %}
+                <tbody>
+                    {% if group.count > 1 %}
+                        {% include "eos_tax/partials/bot-group-header.html" with group=group columns=8 %}
+                    {% endif %}
+            
+                    {% for row in group.characters %}
+                    <tr>
+                        {% comment %}
+                            Indented only inside a group that has a heading:
+                            a group of one has none, and its row belongs at
+                            the left edge with everything else.
+                        {% endcomment %}
+                        <th scope="row" class="{% if group.count > 1 %}ps-4{% endif %}">
+                            {# opens on the tab being read, the way the dropdown does #}
+                            <a data-eos-keep-tab
+                               href="{% url 'eos_tax:bot_detail' row.character_id %}?month={{ selected_month }}">
+                                {{ row.character_name }}
+                            </a>
+                        </th>
+                        <td class="d-none d-md-table-cell">{{ row.corporation_name }}</td>
+                        {% comment %}
+                            Empty when Alliance Auth does not know the
+                            character - a dash would read as "no main", which
+                            is a different thing from "not registered".
+                        {% endcomment %}
+                        <td class="d-none d-lg-table-cell">
+                            {% if row.main_name %}
+                                {{ row.main_name }}
+                            {% else %}
+                                <span class="text-body-secondary">{% translate "not registered" %}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end text-nowrap">{{ row.middle_at }}</td>
+                        <td class="text-end text-nowrap d-none d-md-table-cell text-body-secondary">{{ row.corp_middle_at }}</td>
+                        <td class="text-end text-nowrap">{{ row.apart_for }}</td>
+                        <td class="text-end d-none d-md-table-cell">{{ row.payouts|intcomma }}</td>
+                        <td>
+                            {% comment %}
+                                Colour and word together. The bands are relative - to the threshold, to
+                                how flat a day can get, to the distance that counts as a full deviation -
+                                so they order the list rather than decide anything, which is what the
+                                wording says. All three are on the settings page.
+                            {% endcomment %}
+                            {% if row.level == "high" %}
+                                <span class="badge text-bg-danger">{% translate "strong" %}</span>
+                            {% elif row.level == "medium" %}
+                                <span class="badge text-bg-warning">{% translate "worth a look" %}</span>
+                            {% else %}
+                                <span class="badge text-bg-success">{% translate "unremarkable" %}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            {% endfor %}
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-info text-center">
+        {% blocktranslate with value=stats.corp_min_payouts %}No Corporation has the {{ value }} payouts this month that a rhythm of its own would need.{% endblocktranslate %}
+    </div>
+{% endif %}
+
+<div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
+    <span>{% blocktranslate count counter=stats.characters %}{{ counter }} Character{% plural %}{{ counter }} Characters{% endblocktranslate %}</span>
+    {% if stats.groups_total > stats.groups_shown %}
+        <span>{% blocktranslate with shown=stats.groups_shown total=stats.groups_total %}{{ shown }} of {{ total }} groups shown{% endblocktranslate %}</span>
+    {% endif %}
+    <span>{% blocktranslate count counter=stats.corporations %}{{ counter }} Corporation with a rhythm{% plural %}{{ counter }} Corporations with a rhythm{% endblocktranslate %}</span>
+    <span>{% blocktranslate with value=stats.min_payouts %}measured from {{ value }} payouts{% endblocktranslate %}</span>
+    <span>{% blocktranslate count counter=stats.min_apart %}listed from {{ counter }} hour apart{% plural %}listed from {{ counter }} hours apart{% endblocktranslate %}</span>
+    <span>{% blocktranslate count counter=stats.max_apart %}full deviation at {{ counter }} hour{% plural %}full deviation at {{ counter }} hours{% endblocktranslate %}</span>
+    <span>{% blocktranslate with shown=stats.groups_total total=stats.measured_characters %}{{ shown }} of {{ total }} measured{% endblocktranslate %}</span>
+    {% comment %}
+        Said out loud, because it changes every figure above it: the flagged
+        characters are part of their Corporation's day too, and were taken out
+        of the yardstick before the numbers on this page were worked out.
+    {% endcomment %}
+    {% if stats.purged %}
+        <span>{% blocktranslate count counter=stats.purged %}{{ counter }} flagged character left out of the yardstick{% plural %}{{ counter }} flagged characters left out of the yardstick{% endblocktranslate %}</span>
+    {% endif %}
+    <span>{% translate "all times EVE time" %}</span>
+    <span class="ms-auto">{{ stats.seconds|floatformat:2 }}&nbsp;s</span>
+</div>

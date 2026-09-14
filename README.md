@@ -78,6 +78,13 @@ removed.
 | Match by Reason | match payments by their Reason code, not by amount alone |
 | Bot detection thresholds | hours per day and days per month |
 
+**Match by Reason is worth switching on.** Without it a payment is recognised
+by its amount and nothing else - not by who sent it, and not by which month it
+was for. Two Corporations that owe the same sum in a month, or one Corporation
+that owes the same sum in two months, cannot be told apart, and a single
+transfer can settle both. The Reason code shown on the Overview carries
+`corporation/month/year`, which is what makes a payment identifiable.
+
 The Holding Corporation has to be known to Alliance Auth. A holding without
 members never shows up on its own - import it once:
 
@@ -120,6 +127,62 @@ are configurable. When nothing crosses them, the ten longest days of the month
 are listed instead, so the thresholds can be judged against real numbers. Each
 character is listed with its main.
 
+**Corp Tax Changes** - Corporations whose *ingame* tax rate moved during the
+year, with the daily curve behind each of them. The corporation wallet only
+holds the Corporation's own cut, so the rate is not in it; it is recovered from
+the kills listed in each bounty's `reason` against what the static data export
+says those NPCs pay. A step in that share is the finding - the level on its own
+also carries the system's bounty modifier. The number of systems behind a step
+is what tells a rate change from a modifier drift: a Corporation switching its
+rate moves every system on the same day. Requires the `eve_sde` app; without it
+the page says so. Quick filters for the two extremes, 0 % and 100 %.
+
+**Bots** has three more readings beside the thresholds, as tabs. Each is
+computed only when its tab is opened, because most visits never leave the
+first one.
+
+*Unbroken runs* - the game pays a ratter about every twenty minutes, so an
+uninterrupted stretch shows up as a chain of payouts and nothing else does.
+This is the only reading that says nothing about *when* somebody plays, which
+makes it the fair one across an alliance spanning several timezones. Two
+settings: how long a run has to be to be listed, and how many interruptions it
+may contain - a daily downtime would otherwise cut every long night in two.
+Only a break under an hour can be forgiven; a longer one always ends the run.
+When nothing clears the threshold the longest runs are listed anyway, so the
+threshold can be judged against real numbers.
+
+*Against the Corporation* - how much of a Character's income falls inside the
+hours their own Corporation is busy. The Corporation is the yardstick and not
+the alliance: the alliance holds Chinese, American, European and Russian
+groups at once, so its day is flat and a round the clock script would look
+ordinary against it. A Corporation usually sits in one timezone - one in the
+journal puts 78 percent of its payouts into eight hours of the day.
+
+*Off the Corporation clock* - how far a Character's day sits from their
+Corporation's. Averaged the way a clock wraps, not read off the busiest hour:
+out of a dozen payouts the busiest hour is wherever the noise landed, and it
+moves on a single tick. Somebody genuinely living elsewhere looks exactly like
+an account played by somebody else, so this is a hint and never an accusation.
+
+Clicking a Character opens the same four readings for that one Character,
+again a tab at a time. The hours-per-day matrix is unchanged; the other three
+are drawn:
+
+- *Unbroken runs* as a point per payout, day across and time of day down. Some-
+  body who plays evenings draws a band, an uninterrupted stretch draws a
+  vertical line, and the longest run is picked out in colour.
+- *Against the Corporation* as the Character's hours against the rest of the
+  Corporation's, in shares rather than counts - one Character never has the
+  volume of a Corporation, and in counts their own day would be a flat line
+  along the bottom. The Corporation's busiest eight hours are shaded.
+- *Off the Corporation clock* round a clock face rather than along an axis,
+  because the hours either side of midnight are neighbours and a straight
+  axis puts them at opposite ends.
+
+The last two are rankings rather than verdicts, and carry no threshold. There
+is no number that separates a night shift from a script, so the list is
+ordered and each row carries the Corporation's own figure beside it.
+
 **Settings** - the configuration described above.
 
 ## Permissions
@@ -132,9 +195,70 @@ character is listed with its main.
 ## Translations
 
 Shipped in German, English, Spanish, French, Italian, Korean and Russian. EVE
-terms stay in English throughout - Corporation, Alliance, Character, ISK, PvE,
-Reason.
+terms stay in English throughout - Corporation, Alliance, wallet, bounty, ISK,
+PvE, Reason, and the ingame names of the journal types. `Character` is the one
+exception: the column label stays English while the prose uses each language's
+own word, which all seven catalogues do consistently.
+
+The rule is enforced by a test that reads every entry of every catalogue rather
+than a few labels, because this is exactly the kind of thing that survives a
+review: a translator writing a whole sentence reaches for the word their
+language has, and `bounty` had quietly become Kopfgelder, recompensas, primes,
+taglie, 현상금 and наград.
 
 The compiled `.mo` files are part of the repository. If your deployment strips
 them, run `python manage.py compilemessages` after installing, or every string
 falls back to English.
+
+## Development
+
+The suite runs against a real Alliance Auth installation, so it needs one - it
+is not a standalone package test:
+
+```bash
+python manage.py test eos_tax --keepdb
+```
+
+`--keepdb` matters: rebuilding the Alliance Auth schema costs minutes, running
+the suite costs under a minute.
+
+```bash
+python manage.py test eos_tax --keepdb --parallel 4
+```
+
+roughly halves that; Django clones the test database per worker. More workers
+are not better - on twelve cores, eight workers were slower than four, because
+the database becomes the bottleneck rather than the CPU.
+
+Two sessions testing at once will fight over the same clones. If you run
+parallel Claude Code agents or two terminals, give each its own test database
+by making the name configurable in your `local.py`:
+
+```python
+"TEST": {
+    "CHARSET": "utf8mb4",
+    "NAME": os.environ.get("EOS_TEST_DB", "test_aa_dev"),
+},
+```
+
+Fixtures live in `eos_tax/tests/factories.py`. Add new ones there rather than
+importing them from another test module.
+
+### After adding a static file
+
+The app's own JavaScript lives in `eos_tax/static/eos_tax/js/` and is loaded
+with `{% sri_static %}`, the way Alliance Auth loads its own. That goes
+through a manifest storage, so a template naming a file the manifest does not
+know raises
+
+```
+ValueError: Missing staticfiles manifest entry for 'eos_tax/js/...'
+```
+
+which renders as a 500 and says nothing about the actual cause. Run
+
+```bash
+python manage.py collectstatic --noinput
+```
+
+after adding or renaming a script, before running the tests.

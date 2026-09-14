@@ -1,7 +1,9 @@
 from datetime import datetime, timezone
+
 from dateutil.relativedelta import relativedelta
 
 from django.db.models import Q
+from django.utils.translation import gettext
 
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 from corptools.models import CorporationWalletJournalEntry
@@ -37,15 +39,6 @@ def get_corp_name(corp_id:int):
     if corp_info:
         return corp_info.corporation_name
 
-def get_alliance_name(corp_id:int):
-    corp_info = EveCorporationInfo.objects.filter(corporation_id=corp_id).first()
-    if not corp_info:
-        return
-
-    alliance_info = EveAllianceInfo.objects.filter(id=corp_info.alliance_id).first()
-    if alliance_info:
-        return alliance_info.alliance_name
-
 def get_eve_alliance_id(id:int):
     alliance = EveAllianceInfo.objects.filter(id=id).first()
     if alliance:
@@ -57,6 +50,48 @@ def get_pve_income(tax_value:int, corp_tax:float):
         return float(tax_value)
 
     return float(tax_value / (corp_tax / 100))
+
+def format_clock(hour: float) -> str:
+    """A time of day from a fractional hour: 14.6 becomes 14:36.
+
+    The circular mean of somebody's payouts lands between hours, and a reader
+    should not have to work out what six tenths of an hour is.
+    """
+    if hour is None:
+        return ""
+
+    minutes = int(round(hour * 60)) % (24 * 60)
+
+    return f"{minutes // 60:02d}:{minutes % 60:02d}"
+
+
+def format_duration(hours: float) -> str:
+    """A length of time: 4.7 becomes 4 h 42 min.
+
+    Both parts carry their unit, because the alternative - 4:42 - reads as a
+    time of day on a page that also shows those.
+    """
+    if hours is None:
+        return ""
+
+    minutes = int(round(hours * 60))
+    whole, rest = divmod(minutes, 60)
+
+    # named here rather than inside the f-strings below: xgettext reads the
+    # source instead of running it and does not descend into an
+    # interpolation, so a gettext call in there is never extracted and the
+    # unit would stay English in every language
+    hour_unit = gettext("h")
+    minute_unit = gettext("min")
+
+    if not whole:
+        return f"{rest} {minute_unit}"
+
+    if not rest:
+        return f"{whole} {hour_unit}"
+
+    return f"{whole} {hour_unit} {rest} {minute_unit}"
+
 
 def get_amount_to_pay(tax_value:int, corp_tax:float, tax_rate:float = None):
     """Share of the gross income the corp owes the alliance.

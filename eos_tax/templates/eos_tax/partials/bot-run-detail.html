@@ -1,0 +1,38 @@
+{% load i18n %}
+
+{% if detail.points %}
+    {% comment %}
+        A point per payout, day across and hour up. Somebody who plays
+        evenings draws a band; an uninterrupted stretch draws a vertical line,
+        which is the thing being looked for. The run is marked rather than
+        described.
+    {% endcomment %}
+    <p class="text-body-secondary small">
+        {% blocktranslate with value=detail.threshold %}Every payout of the month, by day and time of day. The longest unbroken run is picked out; a run counts once it reaches {{ value }} payouts without a break.{% endblocktranslate %}
+    </p>
+
+    {{ detail.points|json_script:"eos-tax-chart-data" }}
+
+    <div class="eos-tax-chart-frame">
+        <canvas data-eos-chart="runs"
+                data-eos-label-run="{% translate 'Longest run' %}"
+                data-eos-label-rest="{% translate 'Other payouts' %}"
+                data-eos-axis-day="{% translate 'Day of the month' %}"></canvas>
+    </div>
+
+    <div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
+        <span>{% blocktranslate count counter=detail.run.ticks %}longest run {{ counter }} payout{% plural %}longest run {{ counter }} payouts{% endblocktranslate %}</span>
+        <span>{{ detail.run.duration }}</span>
+        <span class="text-nowrap">
+            {{ detail.run.started_at|date:"Y-m-d H:i" }}
+            &ndash;
+            {% if detail.run.same_day %}{{ detail.run.ended_at|date:"H:i" }}{% else %}{{ detail.run.ended_at|date:"Y-m-d H:i" }}{% endif %}
+        </span>
+        <span>{% blocktranslate count counter=detail.run.gaps %}{{ counter }} interruption{% plural %}{{ counter }} interruptions{% endblocktranslate %}</span>
+        <span class="ms-auto">{% include "eos_tax/partials/bot-level-badge.html" with level=detail.run.level %}</span>
+    </div>
+{% else %}
+    <div class="alert alert-info text-center">
+        {% translate "No taxed income in this month." %}
+    </div>
+{% endif %}

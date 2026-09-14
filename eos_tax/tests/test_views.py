@@ -1,81 +1,26 @@
 import datetime
+import html
+import json
 import re
 
 from dateutil.relativedelta import relativedelta
 from django.test import RequestFactory
 
 from django.contrib.auth.models import Permission, User
-from eos_tax.tests.base import EosTaxTestCase
+from eos_tax.tests.base import EosTaxTestCase, read_static
 from django.urls import reverse
 
-from allianceauth.authentication.models import CharacterOwnership
-from allianceauth.eveonline.models import (
-    EveAllianceInfo,
-    EveCharacter,
-    EveCorporationInfo,
-)
-
 from eos_tax.auth_hooks import EosTaxMenuItem
-from eos_tax.db_connector import get_open_payment_count, is_payable
-
 from eos_tax.models import MonthlyTax, TaxConfiguration
 from eos_tax.util import get_amount_to_pay
 
-BRAVO_CORP_ID = 98000001
-ALPHA_CORP_ID = 98000002
-
-
-def create_user(username, character_id, corporation_id, corporation_name, permissions=()):
-    """Build a user AA will actually let through to an app view.
-
-    Every url registered through a UrlHook is wrapped in
-    ``main_character_required``, so a user without an owned main character is
-    redirected to the dashboard regardless of their permissions.
-    """
-    user = User.objects.create_user(username, f"{username}@example.com", "password")
-
-    character = EveCharacter.objects.create(
-        character_id=character_id,
-        character_name=f"{username} character",
-        corporation_id=corporation_id,
-        corporation_name=corporation_name,
-        corporation_ticker=corporation_name[:5].upper(),
-    )
-    CharacterOwnership.objects.create(
-        character=character, user=user, owner_hash=f"owner-hash-{character_id}"
-    )
-    user.profile.main_character = character
-    user.profile.save()
-
-    for codename in permissions:
-        user.user_permissions.add(
-            Permission.objects.get(content_type__app_label="eos_tax", codename=codename)
-        )
-
-    return User.objects.get(pk=user.pk)  # drop the cached permissions
-
-
-def enable_current_month():
-    """The overview shows nothing unless at least one month is switched on."""
-    config = TaxConfiguration.get_solo()
-    config.current_month = True
-    config.save()
-
-    return config
-
-
-def create_tax_row(corp_id, corp_name, payed, tax_value=1_000_000_000, tax_percentage=10.0):
-    now = datetime.datetime.now()
-
-    return MonthlyTax.objects.create(
-        corp_id=corp_id,
-        corp_name=corp_name,
-        tax_value=tax_value,
-        tax_percentage=tax_percentage,
-        month=now.month,
-        year=now.year,
-        payed=payed,
-    )
+from .factories import (
+    ALPHA_CORP_ID,
+    BRAVO_CORP_ID,
+    create_tax_row,
+    create_user,
+    enable_current_month,
+)
 
 
 class TestIndexAccess(EosTaxTestCase):
@@ -136,20 +81,17 @@ class TestIndexContent(EosTaxTestCase):
         self.assertContains(response, "No tax data for the selected months.")
         self.assertNotContains(response, "<tbody>")
 
-    def test_should_list_every_corporation_for_admin(self):
+    def test_should_sort_unpaid_before_paid(self):
+        """Which also covers both being listed at all - index() would raise
+        rather than report a missing Corporation."""
         create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
         create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
 
         response = self.client.get(reverse("eos_tax:index"))
-
         self.assertContains(response, "Bravo Corp")
         self.assertContains(response, "Alpha Corp")
 
-    def test_should_sort_unpaid_before_paid(self):
-        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
-        create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
-
-        body = self.client.get(reverse("eos_tax:index")).content.decode()
+        body = response.content.decode()
 
         self.assertLess(body.index("Bravo Corp"), body.index("Alpha Corp"))
 
@@ -254,12 +196,14 @@ class TestOverviewTable(EosTaxTestCase):
         self.assertContains(self.overview(), f'data-order="{expected}"')
 
     def test_should_expose_boolean_sort_value_for_payed(self):
+        """The whole cell, not the value: data-order="1" is also the start of
+        data-order="10.0" in the rate column and of the ISK amount."""
         create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
 
         response = self.overview()
 
-        self.assertContains(response, 'data-order="0"')
-        self.assertContains(response, 'data-order="1"')
+        self.assertContains(response, '<td data-order="0">')
+        self.assertContains(response, '<td data-order="1">')
 
     def test_should_not_localize_sort_values(self):
         """A German locale would otherwise render the tax rate as "10,0"."""
@@ -275,19 +219,27 @@ class TestOverviewTable(EosTaxTestCase):
     def test_should_make_exactly_the_corporation_column_searchable(self):
         """Shallow guard: overlapping columnDefs once made every column
         unsearchable, which emptied the table on any keystroke. This only
-        checks the emitted config, not the browser behaviour."""
-        body = self.overview().content.decode()
+        checks the config in the source, not the browser behaviour."""
+        script = read_static("overview.js")
 
-        self.assertEqual(body.count("searchable: true"), 1)
-        self.assertEqual(body.count("searchable: false"), 6)
-        self.assertNotIn('targets: "_all"', body)
+        self.assertEqual(script.count("searchable: true"), 1)
+        self.assertEqual(script.count("searchable: false"), 6)
+        self.assertNotIn('targets: "_all"', script)
+
+    def test_should_load_its_script_from_a_static_file(self):
+        """The checks above read the file; this is what ties it to the page."""
+        self.assertContains(self.overview(), "eos_tax/js/overview")
 
     def test_should_show_the_applied_alliance_tax_rate(self):
         """The rate is stored as a fraction and shown as a percentage."""
         self.row.alliance_tax_rate = 0.07
         self.row.save()
 
-        self.assertContains(self.overview(), '<td data-order="7.0">7.0%</td>', html=False)
+        self.assertContains(
+            self.overview(),
+            '<td class="d-none d-md-table-cell" data-order="7.0">7.0%</td>',
+            html=False,
+        )
 
     def test_should_fall_back_to_the_scheduled_rate_for_old_rows(self):
         """Rows written before the rate was stored per row carry a zero."""
@@ -329,10 +281,10 @@ class TestOverviewTable(EosTaxTestCase):
         drew a placeholder box instead of a tick.
 
         Shallow guard on the emitted script, not on the browser behaviour."""
-        body = self.overview().content.decode()
+        script = read_static("overview.js")
 
-        self.assertIn('replace("fa-regular", "fa-solid")', body)
-        self.assertIn('replace("fa-solid", "fa-regular")', body)
+        self.assertIn('replace("fa-regular", "fa-solid")', script)
+        self.assertIn('replace("fa-solid", "fa-regular")', script)
 
     def test_should_mark_a_corporation_without_ingame_tax(self):
         """At zero percent nothing reaches the corporation wallet, so the row
@@ -351,101 +303,7 @@ class TestOverviewTable(EosTaxTestCase):
         self.assertNotContains(response, "fa-triangle-exclamation")
 
     def test_should_search_case_insensitively(self):
-        self.assertContains(self.overview(), "caseInsensitive: true")
-
-
-class TestPayable(EosTaxTestCase):
-    """When a month may be transferred.
-
-    One function for the overview and the badge: two places disagreeing about
-    what is due would be worse than no badge.
-    """
-
-    def test_should_refuse_the_running_month(self):
-        self.assertFalse(is_payable(9, 2026, datetime.datetime(2026, 9, 20)))
-
-    def test_should_wait_for_the_second_of_the_month(self):
-        """The last journal entries of a closed month arrive on the first."""
-        self.assertFalse(is_payable(8, 2026, datetime.datetime(2026, 9, 1)))
-        self.assertTrue(is_payable(8, 2026, datetime.datetime(2026, 9, 2)))
-
-    def test_should_carry_across_the_turn_of_the_year(self):
-        self.assertTrue(is_payable(12, 2026, datetime.datetime(2027, 1, 5)))
-
-    def test_should_refuse_a_month_in_the_future(self):
-        self.assertFalse(is_payable(11, 2026, datetime.datetime(2026, 9, 20)))
-
-
-class TestOpenPaymentCount(EosTaxTestCase):
-    """What the number on the menu entry counts."""
-
-    def setUp(self):
-        previous = datetime.datetime.now() - relativedelta(months=1)
-        self.period = (previous.month, previous.year)
-
-        config = TaxConfiguration.get_solo()
-        config.last_month = True
-        config.current_month = True
-        config.save()
-
-    def row(self, corp_id, name, payed=False, period=None):
-        month, year = period or self.period
-        row = create_tax_row(corp_id, name, payed=payed)
-        row.month = month
-        row.year = year
-        row.save()
-
-        return row
-
-    def count(self, **kwargs):
-        return get_open_payment_count([self.period], **kwargs)
-
-    def test_should_count_an_unpaid_row(self):
-        self.row(ALPHA_CORP_ID, "Alpha Corp")
-
-        self.assertEqual(self.count(admin=True), 1)
-
-    def test_should_ignore_a_paid_row(self):
-        self.row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
-
-        self.assertEqual(self.count(admin=True), 0)
-
-    def test_should_ignore_the_running_month(self):
-        """It has no reason code yet, so there is nothing to quote on a transfer."""
-        create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=False)
-        now = datetime.datetime.now()
-
-        self.assertEqual(
-            get_open_payment_count([(now.month, now.year)], admin=True), 0
-        )
-
-    def test_should_ignore_an_excluded_corporation(self):
-        row = self.row(ALPHA_CORP_ID, "Alpha Corp")
-        alliance = EveAllianceInfo.objects.create(
-            alliance_id=99000009, alliance_name="Any", alliance_ticker="ANY"
-        )
-        corporation = EveCorporationInfo.objects.create(
-            corporation_id=row.corp_id,
-            corporation_name="Alpha Corp",
-            corporation_ticker="ALPHA",
-            alliance=alliance,
-            tax_rate=0.1,
-        )
-        TaxConfiguration.get_solo().corporation_blacklist.set([corporation])
-
-        self.assertEqual(self.count(admin=True), 0)
-
-    def test_should_show_a_member_only_their_own_corporations(self):
-        self.row(ALPHA_CORP_ID, "Alpha Corp")
-        self.row(BRAVO_CORP_ID, "Bravo Corp")
-
-        self.assertEqual(self.count(admin=False, corps=[BRAVO_CORP_ID]), 1)
-        self.assertEqual(self.count(admin=True), 2)
-
-    def test_should_stay_at_zero_without_any_corporation(self):
-        self.row(ALPHA_CORP_ID, "Alpha Corp")
-
-        self.assertEqual(self.count(admin=False, corps=[]), 0)
+        self.assertIn("caseInsensitive: true", read_static("overview.js"))
 
 
 class TestMenuBadge(EosTaxTestCase):
@@ -510,6 +368,172 @@ class TestHelpBlock(EosTaxTestCase):
 
         self.assertContains(overview, "How to pay taxes?")
         self.assertNotContains(settings_page, "How to pay taxes?")
+
+
+class TestNavigationOnDetailPages(EosTaxTestCase):
+    """A detail page keeps its own section lit.
+
+    navactive matches the resolved view name, so a detail view under a section
+    does not light that section unless it is named. Losing the highlight is
+    worst exactly here: the way back out of a detail page is a link, and the
+    navbar is where a reader looks for it.
+    """
+
+    def setUp(self):
+        self.client.force_login(
+            create_user(
+                "navdetail", 97000040, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"]
+            )
+        )
+
+    def active_entries(self, url):
+        """The navbar entries drawn as current, by their text."""
+        body = self.client.get(url).content.decode()
+
+        return re.findall(
+            r'aria-current="page">\s*([^<]+?)\s*</a>', body
+        )
+
+    def test_should_light_bots_on_a_character_detail(self):
+        entries = self.active_entries(
+            reverse("eos_tax:bot_detail", args=[2100000001])
+        )
+
+        self.assertIn("Bots", entries)
+
+    def test_should_light_corp_tax_changes_on_a_corporation_detail(self):
+        entries = self.active_entries(
+            reverse("eos_tax:tax_change_detail", args=[BRAVO_CORP_ID])
+        )
+
+        self.assertIn("Corp Tax Changes", entries)
+
+    def test_should_light_exactly_one_section(self):
+        """Naming several views must not light several entries."""
+        entries = self.active_entries(
+            reverse("eos_tax:bot_detail", args=[2100000001])
+        )
+
+        self.assertEqual(len(entries), 1)
+
+
+class TestScriptConfiguration(EosTaxTestCase):
+    """Each page hands its own script the strings it needs.
+
+    A static file cannot reach the catalogue, so the view builds a dictionary
+    and the page emits it as json_script. Renaming either end breaks the page
+    only in the browser - the response still renders, so nothing here would
+    fail without this.
+    """
+
+    ELEMENT = 'id="eos-tax-config"'
+
+    def setUp(self):
+        self.client.force_login(
+            create_user(
+                "scripts", 97000030, BRAVO_CORP_ID, "Bravo Corp",
+                ["basic_access", "admin_view"],
+            )
+        )
+        enable_current_month()
+
+    def config(self, name):
+        response = self.client.get(reverse(f"eos_tax:{name}"))
+        body = response.content.decode()
+
+        self.assertIn(self.ELEMENT, body, f"{name} carries no configuration")
+
+        raw = body.split(self.ELEMENT, 1)[1].split(">", 1)[1].split("</script>", 1)[0]
+
+        return json.loads(html.unescape(raw))
+
+    def test_should_give_the_overview_its_search_labels(self):
+        config = self.config("index")
+
+        self.assertEqual(
+            sorted(config), ["searchLabel", "searchPlaceholder"]
+        )
+
+    def test_should_give_corp_tax_changes_its_search_labels(self):
+        config = self.config("tax_changes")
+
+        self.assertEqual(
+            sorted(config), ["searchLabel", "searchPlaceholder"]
+        )
+
+    def test_should_give_the_statistics_its_url_and_texts(self):
+        config = self.config("statistics")
+
+        self.assertEqual(config["dataUrl"], reverse("eos_tax:statistics_data"))
+        self.assertEqual(
+            sorted(config["text"]),
+            ["corporations", "covered", "empty", "error", "income", "loading",
+             "other", "shown", "tax"],
+        )
+
+    def test_should_translate_what_it_hands_over(self):
+        """The strings stay lazy until the response renders, so they arrive in
+        the reader's language rather than in the one the worker started in."""
+        response = self.client.get(
+            reverse("eos_tax:index"), headers={"accept-language": "de"}
+        )
+        body = response.content.decode()
+        raw = body.split(self.ELEMENT, 1)[1].split(">", 1)[1].split("</script>", 1)[0]
+
+        self.assertEqual(
+            json.loads(html.unescape(raw))["searchPlaceholder"],
+            "Nach Corporation-Namen filtern",
+        )
+
+
+class TestNarrowScreens(EosTaxTestCase):
+    """What the overview drops on a phone, and what it must not drop.
+
+    The overview is the only page without admin_view, so it is the one every
+    member opens on a telephone. Seven columns do not fit; the four that carry
+    the purpose of the page - which Corporation, how much, for which month,
+    the reason to copy and whether it is paid - stay.
+    """
+
+    def setUp(self):
+        self.user = create_user(
+            "member", 97000001, BRAVO_CORP_ID, "Bravo Corp", ["basic_access"]
+        )
+        enable_current_month()
+        self.row = create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
+        self.client.force_login(self.user)
+
+    def overview(self):
+        return self.client.get(reverse("eos_tax:index"))
+
+    def test_should_hide_the_two_rate_columns(self):
+        body = self.overview().content.decode()
+
+        for label in ("Ingame Corp Tax", "Alliance Tax"):
+            with self.subTest(column=label):
+                self.assertIn(
+                    f'<th scope="col" class="d-none d-md-table-cell">{label}</th>',
+                    body,
+                )
+
+    def test_should_keep_the_columns_the_page_is_for(self):
+        body = self.overview().content.decode()
+
+        for label in ("Corporation", "Amount to pay in Isk", "Month", "Reason",
+                      "Payed"):
+            with self.subTest(column=label):
+                self.assertIn(f'<th scope="col">{label}</th>', body)
+
+    def test_should_keep_the_zero_rate_warning_where_it_stays_visible(self):
+        """The hidden rate column carried the red marking; the Corporation
+        cell carries it too, and that one is never hidden."""
+        self.row.tax_percentage = 0
+        self.row.save()
+
+        body = self.overview().content.decode()
+
+        self.assertIn("fa-triangle-exclamation", body)
+        self.assertIn('<th scope="row" class="text-danger">', body)
 
 
 class TestNavigation(EosTaxTestCase):

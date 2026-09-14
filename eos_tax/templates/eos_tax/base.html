@@ -16,11 +16,11 @@
 
         {% url "eos_tax:bots" as bots_url %}
         {% translate "Bots" as bots_title %}
-        {% include "eos_tax/partials/nav-item.html" with nav_url=bots_url nav_title=bots_title nav_view="eos_tax:bots" %}
+        {% include "eos_tax/partials/nav-item.html" with nav_url=bots_url nav_title=bots_title nav_view="eos_tax:bots eos_tax:bot_detail eos_tax:bot_signal" %}
 
         {% url "eos_tax:tax_changes" as tax_changes_url %}
         {% translate "Corp Tax Changes" as tax_changes_title %}
-        {% include "eos_tax/partials/nav-item.html" with nav_url=tax_changes_url nav_title=tax_changes_title nav_view="eos_tax:tax_changes" %}
+        {% include "eos_tax/partials/nav-item.html" with nav_url=tax_changes_url nav_title=tax_changes_title nav_view="eos_tax:tax_changes eos_tax:tax_change_detail" %}
 
         {% url "eos_tax:settings" as settings_url %}
         {% translate "Settings" as settings_title %}

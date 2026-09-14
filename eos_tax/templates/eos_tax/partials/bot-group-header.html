@@ -1,0 +1,18 @@
+{% load i18n %}
+
+{% comment %}
+    One person running several characters is a different finding from several
+    people, so the group says how many of its characters are on this list.
+    Groups of one are printed without a heading - the row is the group.
+{% endcomment %}
+<tr class="table-active">
+    <th scope="rowgroup" colspan="{{ columns }}">
+        {{ group.main_name }}
+        <span class="badge text-bg-secondary ms-2">
+            {% blocktranslate count counter=group.count %}{{ counter }} Character{% plural %}{{ counter }} Characters{% endblocktranslate %}
+        </span>
+        {% if not group.has_main %}
+            <span class="text-body-secondary small ms-2">{% translate "no main known" %}</span>
+        {% endif %}
+    </th>
+</tr>

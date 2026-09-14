@@ -1,6 +1,7 @@
 {% extends "eos_tax/base.html" %}
 {% load i18n %}
 {% load humanize %}
+{% load sri %}
 
 {% block app_help %}{% endblock %}
 
@@ -12,12 +13,6 @@
         </div>
 
         <div class="card-body">
-            <p class="text-body-secondary small">
-                {% blocktranslate %}Characters that earned taxed income in more than {{ min_hours }} different
-                hours of a day, on more than {{ min_days }} days of the selected month. Both thresholds
-                live on the settings page.{% endblocktranslate %}
-            </p>
-
             <form role="form" method="get" class="row g-3 align-items-end mb-4">
                 <div class="col-sm-4 col-lg-3">
                     <label for="eos-tax-month" class="form-label">{% translate "Month" %}</label>
@@ -36,6 +31,58 @@
                     <button type="submit" class="btn btn-primary">{% translate "Show" %}</button>
                 </div>
             </form>
+
+            {% comment %}
+                Four readings of the same month, deliberately disagreeing: a
+                Character at the top of one can be absent from the next, and
+                that disagreement is the information. Only this first one
+                comes with the page - the others are fetched when opened, so
+                a visit that never leaves this tab pays for one reading.
+            {% endcomment %}
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" type="button" role="tab"
+                            data-bs-toggle="tab" data-bs-target="#eos-tax-tab-hours"
+                            aria-controls="eos-tax-tab-hours" aria-selected="true">
+                        {% translate "Hours per day" %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" type="button" role="tab"
+                            data-bs-toggle="tab" data-bs-target="#eos-tax-tab-runs"
+                            aria-controls="eos-tax-tab-runs" aria-selected="false">
+                        {% translate "Unbroken runs" %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" type="button" role="tab"
+                            data-bs-toggle="tab" data-bs-target="#eos-tax-tab-rhythm"
+                            aria-controls="eos-tax-tab-rhythm" aria-selected="false">
+                        {% translate "Against the Corporation" %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" type="button" role="tab"
+                            data-bs-toggle="tab" data-bs-target="#eos-tax-tab-clock"
+                            aria-controls="eos-tax-tab-clock" aria-selected="false">
+                        {% translate "Off the Corporation clock" %}
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+            <div class="tab-pane fade show active" id="eos-tax-tab-hours" role="tabpanel">
+
+            {% comment %}
+                Inside the pane rather than above the strip: the other three
+                tabs say what they show, and this one used to look like the
+                heading of all four while describing only itself.
+            {% endcomment %}
+            <p class="text-body-secondary small">
+                {% blocktranslate %}Characters that earned taxed income in more than {{ min_hours }} different
+                hours of a day, on more than {{ min_days }} days of the selected month. Both thresholds
+                live on the settings page.{% endblocktranslate %}
+            </p>
 
             {% if wanted %}
                 {% if matches %}
@@ -59,13 +106,13 @@
             {% endif %}
 
             {% if candidates %}
-                {% include "eos_tax/partials/bot-table.html" with rows=candidates %}
+                {% include "eos_tax/partials/bot-table.html" %}
             {% elif longest_days %}
                 <div class="alert alert-info">
                     {% blocktranslate %}No character crossed both thresholds. The ten longest days of the month are shown instead, so the thresholds can be judged against real numbers.{% endblocktranslate %}
                 </div>
 
-                {% include "eos_tax/partials/bot-table.html" with rows=longest_days %}
+                {% include "eos_tax/partials/bot-table.html" %}
             {% else %}
                 <div class="alert alert-success text-center">
                     {% translate "No character crossed both thresholds in this month." %}
@@ -78,7 +125,20 @@
                 and what the aggregation walks - the number to watch as the
                 journal grows.
             {% endcomment %}
-            <div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top {% if stats.slow %}text-warning fw-semibold{% else %}text-body-secondary{% endif %}">
+            <div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
+                {% comment %}
+                    A reader who has never seen the normal colour cannot tell
+                    the warning one from it, and amber on a light theme is the
+                    harder of the two to read - so the state is said in words
+                    and the colour only underlines it.
+                {% endcomment %}
+                {% if stats.slow %}
+                    <span class="fw-semibold text-body">
+                        <i class="fa-solid fa-triangle-exclamation text-warning"
+                           aria-hidden="true"></i>
+                        {% translate "slower than usual" %}
+                    </span>
+                {% endif %}
                 <span>{% blocktranslate with value=stats.buckets|intcomma %}{{ value }} hour blocks{% endblocktranslate %}</span>
                 <span>{% blocktranslate with value=stats.characters|intcomma %}{{ value }} characters{% endblocktranslate %}</span>
                 <span>{% blocktranslate with value=stats.candidates %}{{ value }} hits{% endblocktranslate %}</span>
@@ -89,7 +149,37 @@
                     &middot; {% translate "total" %} <strong>{{ stats.seconds_total|floatformat:2 }}&nbsp;s</strong>
                 </span>
             </div>
+
+            </div>
+
+            <div class="tab-pane fade" id="eos-tax-tab-runs" role="tabpanel"
+                 data-eos-signal="runs">
+                <p class="text-body-secondary small">
+                    {% blocktranslate %}The game pays a ratter about every twenty minutes, so an uninterrupted stretch shows up as a chain of payouts and nothing else does. This says nothing about when somebody plays, which makes it the one reading that treats every timezone of the alliance alike.{% endblocktranslate %}
+                </p>
+            </div>
+
+            <div class="tab-pane fade" id="eos-tax-tab-rhythm" role="tabpanel"
+                 data-eos-signal="rhythm">
+                <p class="text-body-secondary small">
+                    {% blocktranslate %}How much of a Character's income falls inside the hours their own Corporation is busy. The Corporation is the yardstick and not the alliance: the alliance spans several timezones at once, so its day is flat and a script would look ordinary against it. A ranking, not a verdict.{% endblocktranslate %}
+                </p>
+            </div>
+
+            <div class="tab-pane fade" id="eos-tax-tab-clock" role="tabpanel"
+                 data-eos-signal="clock">
+                <p class="text-body-secondary small">
+                    {% blocktranslate %}How far a Character's day sits from their Corporation's, averaged the way a clock wraps rather than read off the busiest hour, which out of a handful of payouts is wherever the noise landed. Somebody genuinely living elsewhere looks the same as an account played by somebody else - a hint, never an accusation.{% endblocktranslate %}
+                </p>
+            </div>
+            </div>
         </div>
     </div>
 
+{% endblock %}
+
+{% block extra_javascript %}
+    {{ js_config|json_script:"eos-tax-config" }}
+
+    {% sri_static "eos_tax/js/bots.js" %}
 {% endblock %}

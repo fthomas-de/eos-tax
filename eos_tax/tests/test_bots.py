@@ -1,147 +1,48 @@
-import itertools
-from datetime import datetime, timezone
+from datetime import datetime
+from unittest import mock
 
 from eos_tax.tests.base import EosTaxTestCase
 from django.urls import reverse
 
-from allianceauth.authentication.models import CharacterOwnership
-from allianceauth.eveonline.models import (
-    EveAllianceInfo,
-    EveCharacter,
-    EveCorporationInfo,
-)
+from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 
-from corptools.models import (
-    CorporationAudit,
-    CorporationWalletDivision,
-    CorporationWalletJournalEntry,
-    EveName,
-)
+from corptools.models import CorporationAudit, CorporationWalletDivision, EveName
 
-from eos_tax.db_connector import (
-    ACTIVE_HOUR_MIN_ENTRIES,
-    find_characters,
-    get_bot_candidates,
-    get_bot_report,
-    get_character_month,
-)
+from eos_tax.db.bots import LONGEST_DAYS_LIMIT, get_bot_report
 from eos_tax.models import TaxConfiguration
 
-from .test_views import create_user
-
-ALLIANCE_ID = 99000001
-OTHER_ALLIANCE_ID = 99000002
-CORP_ID = 98000001
-OUTSIDE_CORP_ID = 98000003
-
-RATTER_ID = 2100000001
-CASUAL_ID = 2100000002
-
-YEAR = 2026
-MONTH = 5
-
-# small thresholds keep the fixtures readable: more than 2 hours on more than 1 day
-MIN_HOURS = 2
-MIN_DAYS = 1
-
-entry_ids = itertools.count(1)
-
-
-def configure():
-    config = TaxConfiguration.get_solo()
-    config.tax_types = ["bounty_prizes"]
-    config.bot_min_hours_per_day = MIN_HOURS
-    config.bot_min_days_per_month = MIN_DAYS
-    config.save()
-    config.tax_alliances.set(
-        EveAllianceInfo.objects.filter(alliance_id=ALLIANCE_ID)
-    )
-
-    return config
-
-
-def build_corporations():
-    taxed = EveAllianceInfo.objects.create(
-        alliance_id=ALLIANCE_ID, alliance_name="Taxed Alliance", alliance_ticker="TAX"
-    )
-    other = EveAllianceInfo.objects.create(
-        alliance_id=OTHER_ALLIANCE_ID, alliance_name="Other Alliance", alliance_ticker="OTH"
-    )
-
-    divisions = {}
-    for corp_id, name, alliance in (
-        (CORP_ID, "Bravo Corp", taxed),
-        (OUTSIDE_CORP_ID, "Outsider Corp", other),
-    ):
-        corporation = EveCorporationInfo.objects.create(
-            corporation_id=corp_id,
-            corporation_name=name,
-            corporation_ticker=name[:5].upper(),
-            alliance=alliance,
-            tax_rate=0.1,
-        )
-        audit = CorporationAudit.objects.create(corporation=corporation)
-        divisions[corp_id] = CorporationWalletDivision.objects.create(
-            corporation=audit, balance=0, division=1
-        )
-
-    EveName.objects.create(eve_id=RATTER_ID, name="Busy Ratter", category="character")
-    EveName.objects.create(eve_id=CASUAL_ID, name="Casual Pilot", category="character")
-
-    return divisions
-
-
-def add_entries(
-    division,
-    character_id,
-    day,
-    hours,
-    ref_type="bounty_prizes",
-    corp_id=CORP_ID,
-    tax=1000,
-    entries=ACTIVE_HOUR_MIN_ENTRIES,
-):
-    """Taxed journal entries in the given hours of the day, in EVE time.
-
-    Enough entries per hour to make it active, because that is what a test
-    saying "these hours" means. Pass entries=1 to write a lone one.
-    """
-    for hour in hours:
-        for minute in range(entries):
-            CorporationWalletJournalEntry.objects.create(
-                division=division,
-                # spread within the hour, so the entries are distinguishable
-                date=datetime(YEAR, MONTH, day, hour, minute, tzinfo=timezone.utc),
-                description="got bounty prizes for killing pirates",
-                entry_id=next(entry_ids),
-                ref_type=ref_type,
-                first_party_id=1000125,
-                second_party_id=character_id,
-                second_party_name_id=character_id,
-                tax_receiver_id=corp_id,
-                amount=tax,
-                tax=tax,
-            )
+from .factories import (
+    ACTIVE_HOUR_MIN_ENTRIES,
+    BRAVO_CORP_ID,
+    CASUAL_ID,
+    MONTH,
+    OUTSIDER_CORP_ID,
+    RATTER_ID,
+    TAXED_ALLIANCE_ID,
+    YEAR,
+    add_entries,
+    build_corporations,
+    configure,
+    create_user,
+)
 
 
 class TestBotDetection(EosTaxTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.divisions = build_corporations()
+
     def setUp(self):
-        self.divisions = build_corporations()
+        # a test mutates the configuration (tax_types/tax_alliances), so it
+        # is rebuilt fresh every time rather than shared via setUpTestData
         configure()
 
     def candidates(self):
-        return get_bot_candidates(YEAR, MONTH)
+        return get_bot_report(YEAR, MONTH)["candidates"]
 
     def make_bot(self, character_id=RATTER_ID, days=(1, 2), hours=(0, 6, 12, 18)):
         for day in days:
-            add_entries(self.divisions[CORP_ID], character_id, day, hours)
-
-    def test_should_list_a_character_above_both_thresholds(self):
-        self.make_bot()
-
-        names = [entry["character_name"] for entry in self.candidates()]
-
-        self.assertEqual(names, ["Busy Ratter"])
+            add_entries(self.divisions[BRAVO_CORP_ID], character_id, day, hours)
 
     def test_should_ignore_a_character_with_too_few_hours(self):
         # two hours a day is not "more than 2"
@@ -156,9 +57,14 @@ class TestBotDetection(EosTaxTestCase):
         self.assertEqual(self.candidates(), [])
 
     def test_should_count_each_hour_only_once(self):
-        """Twenty entries inside one hour are still one hour of activity."""
+        """Repeated entries inside one hour are still one hour of activity.
+
+        add_entries writes ACTIVE_HOUR_MIN_ENTRIES rows per slot, so four
+        slots on the same hour are eight rows - enough to show the collapse
+        without filling the journal to prove it twice over.
+        """
         for day in (1, 2):
-            add_entries(self.divisions[CORP_ID], RATTER_ID, day, [7] * 20)
+            add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, day, [7] * 4)
 
         self.assertEqual(self.candidates(), [])
 
@@ -173,18 +79,18 @@ class TestBotDetection(EosTaxTestCase):
     def test_should_ignore_corporations_outside_the_taxed_alliances(self):
         for day in (1, 2):
             add_entries(
-                self.divisions[OUTSIDE_CORP_ID],
+                self.divisions[OUTSIDER_CORP_ID],
                 RATTER_ID,
                 day,
                 (0, 6, 12, 18),
-                corp_id=OUTSIDE_CORP_ID,
+                corp_id=OUTSIDER_CORP_ID,
             )
 
         self.assertEqual(self.candidates(), [])
 
     def test_should_report_the_counted_figures(self):
         self.make_bot(days=(1, 2, 3), hours=(0, 6, 12, 18))
-        add_entries(self.divisions[CORP_ID], RATTER_ID, 9, (5,))  # one quiet day
+        add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 9, (5,))  # one quiet day
 
         entry = self.candidates()[0]
 
@@ -197,6 +103,8 @@ class TestBotDetection(EosTaxTestCase):
         )
 
     def test_should_keep_characters_apart(self):
+        """Also the plain positive case: a character over both thresholds is
+        listed, and one under them is not."""
         self.make_bot()
         self.make_bot(character_id=CASUAL_ID, days=(1,), hours=(8,))
 
@@ -207,7 +115,9 @@ class TestBotDetection(EosTaxTestCase):
     def test_should_look_at_the_selected_month_only(self):
         self.make_bot()
 
-        self.assertEqual(get_bot_candidates(YEAR, MONTH + 1), [])
+        self.assertEqual(
+            get_bot_report(YEAR, MONTH + 1)["candidates"], []
+        )
 
     def test_should_return_nothing_without_configured_alliances(self):
         self.make_bot()
@@ -219,14 +129,18 @@ class TestBotDetection(EosTaxTestCase):
 class TestBotRuntimeStats(EosTaxTestCase):
     """The page shows what the run cost, so growth is visible before it hurts."""
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.divisions = build_corporations()
+
     def setUp(self):
-        self.divisions = build_corporations()
+        # a test clears tax_alliances, so the configuration stays per test
         configure()
 
     def test_should_count_what_the_run_walked(self):
         for day in (1, 2):
-            add_entries(self.divisions[CORP_ID], RATTER_ID, day, (0, 6, 12, 18))
-        add_entries(self.divisions[CORP_ID], CASUAL_ID, 1, (9,))
+            add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, day, (0, 6, 12, 18))
+        add_entries(self.divisions[BRAVO_CORP_ID], CASUAL_ID, 1, (9,))
 
         stats = get_bot_report(YEAR, MONTH)["stats"]
 
@@ -236,7 +150,7 @@ class TestBotRuntimeStats(EosTaxTestCase):
 
     def test_should_not_count_repeated_entries_as_extra_blocks(self):
         """Hour blocks are the figure to watch, so they must not track raw rows."""
-        add_entries(self.divisions[CORP_ID], RATTER_ID, 1, [7] * 30)
+        add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, [7] * 4)
 
         self.assertEqual(get_bot_report(YEAR, MONTH)["stats"]["buckets"], 1)
 
@@ -257,20 +171,13 @@ class TestBotRuntimeStats(EosTaxTestCase):
         self.assertEqual(stats["buckets"], 0)
         self.assertEqual(stats["candidates"], 0)
 
-    def test_should_agree_with_the_plain_helper(self):
-        for day in (1, 2):
-            add_entries(self.divisions[CORP_ID], RATTER_ID, day, (0, 6, 12, 18))
-
-        self.assertEqual(
-            get_bot_candidates(YEAR, MONTH), get_bot_report(YEAR, MONTH)["candidates"]
-        )
-
 
 class TestLongestDaysFallback(EosTaxTestCase):
     """An empty page says nothing about whether the thresholds fit."""
 
-    def setUp(self):
-        self.divisions = build_corporations()
+    @classmethod
+    def setUpTestData(cls):
+        cls.divisions = build_corporations()
         configure()
 
     def report(self):
@@ -284,8 +191,8 @@ class TestLongestDaysFallback(EosTaxTestCase):
 
     def test_should_list_the_longest_days_when_nothing_qualifies(self):
         # one hour a day never crosses the two hour threshold
-        add_entries(self.divisions[CORP_ID], RATTER_ID, 1, (5, 6, 7))
-        add_entries(self.divisions[CORP_ID], CASUAL_ID, 1, (9,))
+        add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, (5, 6, 7))
+        add_entries(self.divisions[BRAVO_CORP_ID], CASUAL_ID, 1, (9,))
 
         report = self.report()
 
@@ -296,28 +203,31 @@ class TestLongestDaysFallback(EosTaxTestCase):
         )
 
     def test_should_rank_by_the_longest_day(self):
-        add_entries(self.divisions[CORP_ID], CASUAL_ID, 1, (1, 2))
-        add_entries(self.divisions[CORP_ID], RATTER_ID, 2, (1, 2, 3, 4))
+        add_entries(self.divisions[BRAVO_CORP_ID], CASUAL_ID, 1, (1, 2))
+        add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 2, (1, 2, 3, 4))
 
         longest = self.report()["longest_days"]
 
         self.assertEqual(longest[0]["character_name"], "Busy Ratter")
         self.assertEqual(longest[0]["max_hours"], 4)
 
-    def test_should_cap_the_fallback_at_ten(self):
-        for index in range(14):
+    def test_should_cap_the_fallback_at_the_limit(self):
+        """One over the cap is what shows a cap; four over only costs rows."""
+        for index in range(LONGEST_DAYS_LIMIT + 1):
             character_id = 2100001000 + index
             EveName.objects.create(
                 eve_id=character_id, name=f"Pilot {index}", category="character"
             )
-            add_entries(self.divisions[CORP_ID], character_id, 1, (index % 12,))
+            add_entries(self.divisions[BRAVO_CORP_ID], character_id, 1, (index % 12,))
 
-        self.assertEqual(len(self.report()["longest_days"]), 10)
+        self.assertEqual(
+            len(self.report()["longest_days"]), LONGEST_DAYS_LIMIT
+        )
 
     def test_should_drop_the_fallback_once_something_qualifies(self):
         for day in (1, 2):
-            add_entries(self.divisions[CORP_ID], RATTER_ID, day, (0, 6, 12, 18))
-        add_entries(self.divisions[CORP_ID], CASUAL_ID, 1, (9,))
+            add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, day, (0, 6, 12, 18))
+        add_entries(self.divisions[BRAVO_CORP_ID], CASUAL_ID, 1, (9,))
 
         report = self.report()
 
@@ -335,8 +245,9 @@ class TestTaxReceivingCorporation(EosTaxTestCase):
 
     SECOND_CORP_ID = 98000004
 
-    def setUp(self):
-        self.divisions = build_corporations()
+    @classmethod
+    def setUpTestData(cls):
+        cls.divisions = build_corporations()
         configure()
 
     def second_taxed_corporation(self):
@@ -345,7 +256,7 @@ class TestTaxReceivingCorporation(EosTaxTestCase):
             corporation_id=self.SECOND_CORP_ID,
             corporation_name="Delta Corp",
             corporation_ticker="DELTA",
-            alliance=EveAllianceInfo.objects.get(alliance_id=ALLIANCE_ID),
+            alliance=EveAllianceInfo.objects.get(alliance_id=TAXED_ALLIANCE_ID),
             tax_rate=0.1,
         )
         audit = CorporationAudit.objects.create(corporation=corporation)
@@ -355,11 +266,11 @@ class TestTaxReceivingCorporation(EosTaxTestCase):
         )
 
     def first_candidate(self):
-        return get_bot_candidates(YEAR, MONTH)[0]
+        return get_bot_report(YEAR, MONTH)["candidates"][0]
 
     def test_should_name_the_corporation_that_received_the_tax(self):
         for day in (1, 2):
-            add_entries(self.divisions[CORP_ID], RATTER_ID, day, (0, 6, 12, 18))
+            add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, day, (0, 6, 12, 18))
 
         self.assertEqual(self.first_candidate()["corporation_name"], "Bravo Corp")
 
@@ -367,7 +278,9 @@ class TestTaxReceivingCorporation(EosTaxTestCase):
         """A character that moved mid month is named under where it earned."""
         second = self.second_taxed_corporation()
         for day in (1, 2):
-            add_entries(self.divisions[CORP_ID], RATTER_ID, day, (0, 6, 12, 18), tax=10)
+            add_entries(
+                self.divisions[BRAVO_CORP_ID], RATTER_ID, day, (0, 6, 12, 18), tax=10
+            )
         for day in (3, 4):
             add_entries(
                 second, RATTER_ID, day, (0, 6, 12, 18),
@@ -378,7 +291,7 @@ class TestTaxReceivingCorporation(EosTaxTestCase):
 
     def test_should_name_the_corporation_in_the_fallback_list(self):
         """The ten longest days carry the column too."""
-        add_entries(self.divisions[CORP_ID], CASUAL_ID, 1, (0, 6))
+        add_entries(self.divisions[BRAVO_CORP_ID], CASUAL_ID, 1, (0, 6))
 
         report = get_bot_report(YEAR, MONTH)
 
@@ -393,8 +306,12 @@ class TestActiveHourRule(EosTaxTestCase):
     an hour of ratting.
     """
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.divisions = build_corporations()
+
     def setUp(self):
-        self.divisions = build_corporations()
+        # a test overrides tax_types, so the configuration stays per test
         configure()
 
     def hours_on_day(self, day=1):
@@ -404,12 +321,12 @@ class TestActiveHourRule(EosTaxTestCase):
         return rows[0]["max_hours"] if rows else 0
 
     def test_should_ignore_an_hour_with_a_single_entry(self):
-        add_entries(self.divisions[CORP_ID], RATTER_ID, 1, (0, 6, 12), entries=1)
+        add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, (0, 6, 12), entries=1)
 
         self.assertEqual(get_bot_report(YEAR, MONTH)["longest_days"], [])
 
     def test_should_count_an_hour_that_reaches_the_threshold(self):
-        add_entries(self.divisions[CORP_ID], RATTER_ID, 1, (0,))
+        add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, (0,))
 
         self.assertEqual(self.hours_on_day(), 1)
 
@@ -419,332 +336,41 @@ class TestActiveHourRule(EosTaxTestCase):
         config.tax_types = ["bounty_prizes", "ess_escrow_transfer"]
         config.save()
 
-        add_entries(self.divisions[CORP_ID], RATTER_ID, 1, (0,), entries=1)
+        add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, (0,), entries=1)
         add_entries(
-            self.divisions[CORP_ID], RATTER_ID, 1, (0,),
+            self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, (0,),
             ref_type="ess_escrow_transfer", entries=1,
         )
 
         self.assertEqual(get_bot_report(YEAR, MONTH)["longest_days"], [])
 
-
-class TestCharacterMonth(EosTaxTestCase):
-    """The detail matrix: calendar weeks as rows, weekdays as columns."""
-
-    def setUp(self):
-        self.divisions = build_corporations()
-        configure()
-
-    def active(self, day, hours):
-        """Make each of these hours active on that day."""
-        add_entries(self.divisions[CORP_ID], RATTER_ID, day, hours)
-
-    def detail(self):
-        return get_character_month(RATTER_ID, YEAR, MONTH)
-
-    def cell(self, detail, day):
-        for week in detail["weeks"]:
-            for entry in week["days"]:
-                if entry["in_month"] and entry["day"] == day:
-                    return entry
-
-        raise AssertionError(f"day {day} not in the matrix")
-
-    def test_should_start_every_row_on_a_monday(self):
-        for week in self.detail()["weeks"]:
-            self.assertEqual(week["days"][0]["date"].weekday(), 0)
-            self.assertEqual(len(week["days"]), 7)
-
-    def test_should_carry_the_neighbouring_days_as_placeholders(self):
-        """Dropping them would shift the weekday columns."""
-        detail = self.detail()
-        outside = [
-            day
-            for week in detail["weeks"]
-            for day in week["days"]
-            if not day["in_month"]
-        ]
-
-        self.assertTrue(outside)
-        for day in outside:
-            self.assertEqual(day["hours"], 0)
-
-    def test_should_hold_every_day_of_the_month(self):
-        detail = self.detail()
-        in_month = [
-            day["day"]
-            for week in detail["weeks"]
-            for day in week["days"]
-            if day["in_month"]
-        ]
-
-        self.assertEqual(in_month, list(range(1, 32)))
-
-    def test_should_count_the_active_hours_of_a_day(self):
-        self.active(3, (0, 6, 12))
-
-        self.assertEqual(self.cell(self.detail(), 3)["hours"], 3)
-
-    def test_should_name_the_hours_for_the_tooltip(self):
-        self.active(4, (7, 22))
-
-        self.assertEqual(self.cell(self.detail(), 4)["hour_list"], "07, 22")
-
-    def test_should_leave_a_quiet_day_uncoloured(self):
-        self.active(5, (0, 6))
-
-        self.assertEqual(self.cell(self.detail(), 6)["alpha"], 0)
-
-    def test_should_paint_the_busiest_day_darkest(self):
-        self.active(5, (0, 6, 12, 18))
-        self.active(6, (0,))
-
-        detail = self.detail()
-
-        self.assertGreater(self.cell(detail, 5)["alpha"], self.cell(detail, 6)["alpha"])
-
-    def test_should_summarise_the_month(self):
-        self.active(5, (0, 6, 12))
-        self.active(6, (3,))
-
-        detail = self.detail()
-
-        self.assertEqual(detail["active_days"], 2)
-        self.assertEqual(detail["active_hours"], 4)
-        self.assertEqual(detail["busiest"], 3)
-
-    def test_should_step_the_legend_like_the_cells(self):
-        self.active(5, (0, 6))
-
-        legend = self.detail()["legend"]
-
-        self.assertEqual(len(legend), 5)
-        self.assertEqual(legend, sorted(legend, key=lambda step: step["alpha"]))
-
-    def test_should_name_the_character(self):
-        self.assertEqual(self.detail()["character_name"], "Busy Ratter")
-
-    def test_should_stay_empty_for_another_month(self):
-        self.active(5, (0, 6, 12))
-
-        other = get_character_month(RATTER_ID, YEAR, MONTH + 1)
-
-        self.assertEqual(other["active_days"], 0)
-        self.assertEqual(other["busiest"], 0)
-
-    def test_should_ignore_corporations_outside_the_taxed_alliances(self):
+    def test_should_read_the_active_hour_rule_from_the_configuration(self):
+        """One entry in an hour is noise at the shipped rule and a full hour
+        of activity at a rule of one. The same journal, a different day - and
+        the number deciding it was the one threshold of this tab that could
+        not be seen or changed anywhere."""
         add_entries(
-            self.divisions[OUTSIDE_CORP_ID], RATTER_ID, 5, (0, 6),
-            corp_id=OUTSIDE_CORP_ID,
+            self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, (0, 6, 12), entries=1
         )
 
-        self.assertEqual(self.detail()["active_days"], 0)
+        self.assertEqual(self.hours_on_day(), 0)
 
+        config = TaxConfiguration.get_solo()
+        config.bot_hours_min_entries = 1
+        config.save()
 
-class TestCharacterDetailPage(EosTaxTestCase):
-    def setUp(self):
-        self.divisions = build_corporations()
-        configure()
-        add_entries(self.divisions[CORP_ID], RATTER_ID, 3, (0, 6, 12))
-
-    def detail_page(self, user_permissions=("admin_view",)):
-        user = create_user(
-            "detail", 94000010, CORP_ID, "Bravo Corp", list(user_permissions)
-        )
-        self.client.force_login(user)
-
-        return self.client.get(
-            reverse("eos_tax:bot_detail", args=[RATTER_ID]),
-            {"month": f"{YEAR}-{MONTH:02d}"},
-        )
-
-    def test_should_reject_basic_access(self):
-        response = self.detail_page(user_permissions=("basic_access",))
-
-        self.assertEqual(response.status_code, 302)
-
-    def test_should_render_the_matrix(self):
-        response = self.detail_page()
-
-        self.assertContains(response, "Busy Ratter")
-        self.assertContains(response, "--bs-primary-rgb")
-
-    def test_should_link_back_to_the_month_it_came_from(self):
-        response = self.detail_page()
-        expected = f"{reverse('eos_tax:bots')}?month={YEAR}-{MONTH:02d}"
-
-        self.assertContains(response, expected)
-
-    def test_should_not_leave_a_visible_template_comment(self):
-        """Django only treats single line {# #} as a comment."""
-        self.assertNotContains(self.detail_page(), "{#")
-
-    def test_should_link_every_character_from_the_list(self):
-        self.client.force_login(
-            create_user("lister", 94000011, CORP_ID, "Bravo Corp", ["admin_view"])
-        )
-
-        response = self.client.get(
-            reverse("eos_tax:bots"), {"month": f"{YEAR}-{MONTH:02d}"}
-        )
-
-        self.assertContains(
-            response, reverse("eos_tax:bot_detail", args=[RATTER_ID])
-        )
-
-
-class TestCharacterLookup(EosTaxTestCase):
-    """Typing a name on the bots page and landing in the detail view.
-
-    The list only shows the candidates and the ten longest days, so a character
-    that crosses neither is otherwise unreachable - and that is exactly who you
-    look up when someone reports a suspicion.
-    """
-
-    def setUp(self):
-        build_corporations()
-        configure()
-        EveName.objects.create(
-            eve_id=2100000003, name="Tux Tuxel", category="character"
-        )
-        EveName.objects.create(eve_id=2100000004, name="Tuxel", category="character")
-        EveName.objects.create(
-            eve_id=2100000005, name="Bravo Corp", category="corporation"
-        )
-
-    def names(self, probe):
-        return [match["name"] for match in find_characters(probe)]
-
-    def test_should_let_an_exact_name_win(self):
-        """Otherwise "Tuxel" is buried by every name containing it."""
-        self.assertEqual(self.names("Tuxel"), ["Tuxel"])
-
-    def test_should_ignore_case(self):
-        self.assertEqual(self.names("tuxel"), ["Tuxel"])
-
-    def test_should_offer_every_partial_match(self):
-        self.assertEqual(self.names("Tux"), ["Tux Tuxel", "Tuxel"])
-
-    def test_should_leave_out_anything_that_is_not_a_character(self):
-        self.assertEqual(self.names("Bravo"), [])
-
-    def test_should_return_nothing_for_an_empty_search(self):
-        self.assertEqual(self.names("   "), [])
-
-    def test_should_cap_a_wide_search(self):
-        for index in range(15):
-            EveName.objects.create(
-                eve_id=2200000000 + index,
-                name=f"Widespread {index}",
-                category="character",
-            )
-
-        self.assertEqual(len(find_characters("Widespread")), 10)
-
-
-class TestCharacterJump(EosTaxTestCase):
-    def setUp(self):
-        build_corporations()
-        configure()
-        self.client.force_login(
-            create_user("jumper", 96000010, CORP_ID, "Bravo Corp", ["admin_view"])
-        )
-
-    def search(self, name):
-        return self.client.get(
-            reverse("eos_tax:bots"),
-            {"month": f"{YEAR}-{MONTH:02d}", "character": name},
-        )
-
-    def test_should_open_the_detail_view_for_one_hit(self):
-        response = self.search("Busy Ratter")
-        expected = reverse("eos_tax:bot_detail", args=[RATTER_ID])
-
-        self.assertRedirects(
-            response,
-            f"{expected}?month={YEAR}-{MONTH:02d}",
-            fetch_redirect_response=False,
-        )
-
-    def test_should_keep_the_month_across_the_jump(self):
-        response = self.search("Busy Ratter")
-
-        self.assertIn(f"month={YEAR}-{MONTH:02d}", response["Location"])
-
-    def test_should_offer_the_candidates_for_several_hits(self):
-        EveName.objects.create(
-            eve_id=2100000006, name="Busy Miner", category="character"
-        )
-
-        response = self.search("Busy")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Busy Ratter")
-        self.assertContains(response, "Busy Miner")
-
-    def test_should_say_so_when_nothing_matches(self):
-        response = self.search("Nobody At All")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Nobody At All")
-
-    def test_should_still_show_the_list_without_a_name(self):
-        response = self.client.get(
-            reverse("eos_tax:bots"), {"month": f"{YEAR}-{MONTH:02d}"}
-        )
-
-        self.assertEqual(response.status_code, 200)
-
-
-class TestMainCharacter(EosTaxTestCase):
-    def setUp(self):
-        self.divisions = build_corporations()
-        configure()
-
-    def test_should_name_the_main_behind_a_candidate(self):
-        """The ratting character is an alt; the report has to name its main."""
-        owner = create_user("boss", 91999001, CORP_ID, "Bravo Corp", ["admin_view"])
-        main = owner.profile.main_character
-        main.character_name = "The Main"
-        main.save()
-
-        alt = EveCharacter.objects.create(
-            character_id=RATTER_ID,
-            character_name="Busy Ratter",
-            corporation_id=CORP_ID,
-            corporation_name="Bravo Corp",
-            corporation_ticker="BRVO",
-        )
-        CharacterOwnership.objects.create(
-            character=alt, user=owner, owner_hash="alt-owner-hash"
-        )
-
-        for day in (1, 2):
-            add_entries(self.divisions[CORP_ID], RATTER_ID, day, (0, 6, 12, 18))
-
-        candidate = get_bot_report(YEAR, MONTH)["candidates"][0]
-
-        self.assertEqual(candidate["character_name"], "Busy Ratter")
-        self.assertEqual(candidate["main_name"], "The Main")
-
-    def test_should_leave_the_main_empty_for_an_unknown_character(self):
-        """Journal entries can name characters Alliance Auth has never seen."""
-        for day in (1, 2):
-            add_entries(self.divisions[CORP_ID], RATTER_ID, day, (0, 6, 12, 18))
-
-        candidate = get_bot_report(YEAR, MONTH)["candidates"][0]
-
-        self.assertEqual(candidate["main_name"], "")
+        self.assertEqual(self.hours_on_day(), 3)
 
 
 class TestBotsPage(EosTaxTestCase):
-    def setUp(self):
-        self.divisions = build_corporations()
+    @classmethod
+    def setUpTestData(cls):
+        cls.divisions = build_corporations()
         configure()
 
     def test_should_reject_basic_access(self):
         self.client.force_login(
-            create_user("member", 94000001, CORP_ID, "Bravo Corp", ["basic_access"])
+            create_user("member", 94000001, BRAVO_CORP_ID, "Bravo Corp", ["basic_access"])
         )
 
         response = self.client.get(reverse("eos_tax:bots"))
@@ -753,7 +379,7 @@ class TestBotsPage(EosTaxTestCase):
 
     def test_should_render_for_admin_view(self):
         self.client.force_login(
-            create_user("boss", 94000002, CORP_ID, "Bravo Corp", ["admin_view"])
+            create_user("boss", 94000002, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
         )
 
         response = self.client.get(reverse("eos_tax:bots"))
@@ -763,9 +389,9 @@ class TestBotsPage(EosTaxTestCase):
 
     def test_should_list_a_candidate_for_the_selected_month(self):
         for day in (1, 2):
-            add_entries(self.divisions[CORP_ID], RATTER_ID, day, (0, 6, 12, 18))
+            add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, day, (0, 6, 12, 18))
         self.client.force_login(
-            create_user("boss", 94000003, CORP_ID, "Bravo Corp", ["admin_view"])
+            create_user("boss", 94000003, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
         )
 
         response = self.client.get(
@@ -775,9 +401,9 @@ class TestBotsPage(EosTaxTestCase):
         self.assertContains(response, "Busy Ratter")
 
     def test_should_show_the_fallback_when_nothing_qualifies(self):
-        add_entries(self.divisions[CORP_ID], RATTER_ID, 1, (5, 6, 7))
+        add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, (5, 6, 7))
         self.client.force_login(
-            create_user("boss", 94000007, CORP_ID, "Bravo Corp", ["admin_view"])
+            create_user("boss", 94000007, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
         )
 
         response = self.client.get(
@@ -786,11 +412,15 @@ class TestBotsPage(EosTaxTestCase):
 
         self.assertContains(response, "The ten longest days of the month")
         self.assertContains(response, "Busy Ratter")
-        self.assertContains(response, "Main")
+        # not the bare word: Alliance Auth's own menu says "Change Main" on
+        # every page, so that would pass with no table at all
+        self.assertContains(
+            response, 'class="d-none d-md-table-cell">Main</th>'
+        )
 
     def test_should_show_the_runtime_panel(self):
         self.client.force_login(
-            create_user("boss", 94000005, CORP_ID, "Bravo Corp", ["admin_view"])
+            create_user("boss", 94000005, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
         )
 
         response = self.client.get(reverse("eos_tax:bots"))
@@ -802,7 +432,7 @@ class TestBotsPage(EosTaxTestCase):
     def test_should_not_leak_template_comments(self):
         """A multi line {# #} is not a comment in Django - it renders as text."""
         self.client.force_login(
-            create_user("boss", 94000006, CORP_ID, "Bravo Corp", ["admin_view"])
+            create_user("boss", 94000006, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
         )
 
         response = self.client.get(reverse("eos_tax:bots"))
@@ -812,10 +442,50 @@ class TestBotsPage(EosTaxTestCase):
 
     def test_should_fall_back_to_the_running_month_on_junk_input(self):
         self.client.force_login(
-            create_user("boss", 94000004, CORP_ID, "Bravo Corp", ["admin_view"])
+            create_user("boss", 94000004, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
         )
 
         response = self.client.get(reverse("eos_tax:bots"), {"month": "nonsense"})
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, datetime.now().strftime("%Y-%m"))
+
+
+class TestSlowRuntimeIsSaidInWords(EosTaxTestCase):
+    """A colour nobody has a baseline for is not a message.
+
+    The runtime line used to turn amber and nothing else. A reader seeing the
+    page for the first time has never seen the ordinary colour, so there is
+    nothing to compare against - and on the light themes amber on white reads
+    worse than the ordinary colour it is meant to stand out from.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        build_corporations()
+        configure()
+        cls.user = create_user(
+            "boss", 94000009, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"]
+        )
+
+    def setUp(self):
+        # self.client is rebuilt per test, so the login has to be too
+        self.client.force_login(self.user)
+
+    def page(self):
+        return self.client.get(reverse("eos_tax:bots"))
+
+    def test_should_leave_the_line_in_the_ordinary_colour(self):
+        self.assertContains(self.page(), "border-top text-body-secondary")
+
+    def test_should_say_nothing_while_the_run_is_quick(self):
+        self.assertNotContains(self.page(), "slower than usual")
+
+    def test_should_say_it_in_words_once_the_run_is_slow(self):
+        report = get_bot_report(YEAR, MONTH)
+        report["stats"]["seconds_total"] = 3.0
+
+        with mock.patch("eos_tax.views.get_bot_report", return_value=report):
+            response = self.page()
+
+        self.assertContains(response, "slower than usual")

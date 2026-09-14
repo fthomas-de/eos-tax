@@ -7,15 +7,19 @@ from django import forms
 from django.db.utils import IntegrityError
 from django.urls import reverse
 
+from io import StringIO
+
+from django.core.management import call_command
+
 from eos_tax.tests.base import EosTaxTestCase
 
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 
-from eos_tax.db_connector import get_website_data
+from eos_tax.db.payments import get_website_data
 from eos_tax.forms import TaxConfigurationForm, journal_type_choices
 from eos_tax.models import MonthlyTax, TaxConfiguration, TaxRate
 
-from .test_views import create_user
+from .factories import create_user, settings_numbers
 
 BRAVO_CORP_ID = 98000001
 ALLIANCE_ID = 99000001
@@ -57,11 +61,41 @@ class TestSettingsSeed(EosTaxTestCase):
     def test_should_have_created_the_singleton(self):
         self.assertEqual(TaxConfiguration.objects.count(), 1)
 
-    def test_should_backfill_the_applied_rate_on_existing_rows(self):
-        """Rows written before the rate was stored must not read as zero."""
+    def test_should_seed_a_usable_rate(self):
+        """The seeded singleton carries a rate, so the first month calculated
+        after an install is not taxed at zero.
+
+        This is not the backfill of rows written before the rate was stored
+        per row - that runs inside migration 0005 and cannot be reached from
+        here. What a row without a stored rate falls back to at display time
+        is covered by TestOverviewTable.
+        """
         config = TaxConfiguration.get_solo()
 
         self.assertGreater(float(config.tax_rate), 0)
+
+
+class TestMigrationsAreComplete(EosTaxTestCase):
+    """Every model change is recorded in a migration.
+
+    The one that slipped through was a longer help_text. It produces no SQL,
+    so nothing broke and nothing complained until `migrate` said "No
+    migrations to apply" and warned about unrecorded changes in the same
+    breath - which is a poor place to find out.
+    """
+
+    def test_should_have_no_model_change_without_a_migration(self):
+        try:
+            call_command(
+                "makemigrations", "eos_tax",
+                check=True, dry_run=True, verbosity=0,
+                stdout=StringIO(), stderr=StringIO(),
+            )
+        except SystemExit:
+            self.fail(
+                "eos_tax has model changes with no migration - "
+                "run makemigrations eos_tax and commit the result"
+            )
 
 
 class TestSettingsForm(EosTaxTestCase):
@@ -82,6 +116,9 @@ class TestSettingsForm(EosTaxTestCase):
 
     def post(self, **overrides):
         data = {
+            # the thresholds come from the model, so adding one does not turn
+            # every settings test into a validation failure
+            **settings_numbers(),
             "tax_alliances": [self.alliance.pk],
             "tax_corporation": self.corporation.pk,
             "corporation_blacklist": [],
@@ -90,8 +127,6 @@ class TestSettingsForm(EosTaxTestCase):
             "last_month": "on",
             "current_month": "on",
             "tax_change_min_points": "0.45",
-            "bot_min_hours_per_day": "20",
-            "bot_min_days_per_month": "12",
             # the rate schedule rides along in the same POST
             "form-TOTAL_FORMS": "0",
             "form-INITIAL_FORMS": "0",
@@ -122,6 +157,48 @@ class TestSettingsForm(EosTaxTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertNotEqual(TaxConfiguration.get_solo().bot_min_hours_per_day, 30)
+
+    def test_should_render_every_field_of_the_form(self):
+        """The page names its fields one at a time, which is what lets it
+        group them - and what makes a forgotten field invisible rather than
+        broken: the form still requires it, so every save fails validation and
+        the page just does not save."""
+        # the exclusion list only offers Corporations of a taxed alliance, and
+        # a checkbox list with nothing to offer renders no input at all
+        TaxConfiguration.get_solo().tax_alliances.set([self.alliance])
+
+        body = self.client.get(reverse("eos_tax:settings")).content.decode()
+
+        for name in TaxConfigurationForm.Meta.fields:
+            with self.subTest(field=name):
+                self.assertIn(f'name="{name}"', body)
+
+    def test_should_group_the_settings_the_way_the_app_is_grouped(self):
+        """One chapter per page of the navigation, one sub-chapter per tab, so
+        a threshold is looked up where the thing it changes is looked at."""
+        body = self.client.get(reverse("eos_tax:settings")).content.decode()
+
+        for heading in (
+            "Taxation",
+            "Corp tax changes",
+            "Hours per day",
+            "Unbroken runs",
+            "Against the Corporation",
+            "Off the Corporation clock",
+        ):
+            with self.subTest(heading=heading):
+                self.assertIn(heading, body)
+
+    def test_should_reject_a_tick_tolerance_above_the_break_ceiling(self):
+        """A tolerance past the ceiling silences the ceiling. The walk asks
+        "is this still a tick?" first, so a gap the tolerance swallows never
+        reaches the question the ceiling exists to answer."""
+        response = self.post(bot_run_tick_tolerance="120", bot_run_gap_minutes="60")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotEqual(
+            TaxConfiguration.get_solo().bot_run_tick_tolerance, 120
+        )
 
     def test_should_offer_checkboxes_instead_of_a_multi_select(self):
         """A native <select multiple> only adds or drops an entry on ctrl-click."""
@@ -293,14 +370,13 @@ class TestTaxRateScheduleForm(EosTaxTestCase):
 
     def post(self, **overrides):
         data = {
+            **settings_numbers(),
             "tax_alliances": [],
             "tax_corporation": "",
             "corporation_blacklist": [],
             "tax_rate": "10",
             "tax_types": ["bounty_prizes"],
             "tax_change_min_points": "0.45",
-            "bot_min_hours_per_day": "20",
-            "bot_min_days_per_month": "12",
             "form-TOTAL_FORMS": "0",
             "form-INITIAL_FORMS": "0",
             "form-MIN_NUM_FORMS": "0",

@@ -93,8 +93,23 @@ class TaxConfigurationForm(forms.ModelForm):
             "current_month",
             "use_reason",
             "tax_change_min_points",
+            "bot_hours_min_entries",
             "bot_min_hours_per_day",
             "bot_min_days_per_month",
+            "bot_run_min_ticks",
+            "bot_run_max_gaps",
+            "bot_run_tick_tolerance",
+            "bot_run_gap_minutes",
+            "bot_rhythm_busy_hours",
+            "bot_rhythm_min_payouts",
+            "bot_rhythm_corp_min_payouts",
+            "bot_rhythm_purge_strong",
+            "bot_rhythm_min_difference",
+            "bot_clock_max_apart",
+            "bot_clock_min_payouts",
+            "bot_clock_corp_min_payouts",
+            "bot_clock_purge_strong",
+            "bot_clock_min_apart",
         ]
         # a native <select multiple> only takes a second entry - or gives one up -
         # on ctrl-click, which nobody discovers. Checkboxes say what they do.
@@ -119,6 +134,31 @@ class TaxConfigurationForm(forms.ModelForm):
         self.fields["tax_rate"].help_text = _(
             "Base rate, used for months before the first scheduled change below."
         )
+
+    def clean(self):
+        """A tick tolerance above the break ceiling would silence the ceiling.
+
+        The run walk asks "is this gap still a tick?" before it asks "is this
+        break short enough to forgive?", so a tolerance of two hours against a
+        one hour ceiling never reaches the second question and every gap under
+        two hours becomes invisible - including the ones the ceiling exists to
+        end a run on.
+        """
+        cleaned = super().clean()
+
+        tolerance = cleaned.get("bot_run_tick_tolerance")
+        ceiling = cleaned.get("bot_run_gap_minutes")
+
+        if tolerance and ceiling and tolerance > ceiling:
+            self.add_error(
+                "bot_run_tick_tolerance",
+                _(
+                    "Has to stay at or below the longest break a run can "
+                    "survive, otherwise that ceiling never applies."
+                ),
+            )
+
+        return cleaned
 
     def _chosen_alliances(self):
         """Alliance ids from the submitted form, or from what is stored.

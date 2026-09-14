@@ -2,6 +2,7 @@
 {% load i18n %}
 {% load humanize %}
 {% load l10n %}
+{% load sri %}
 
 {% block app_help %}{% endblock %}
 
@@ -41,14 +42,17 @@
                 <div class="btn-group btn-group-sm mb-3" role="group"
                      aria-label="{% translate 'Quick filters' %}">
                     <button type="button" class="btn btn-outline-secondary active"
+                            aria-pressed="true"
                             data-eos-filter="">{% translate "All" %}</button>
                     {% comment %}
                         The percent sign stays out of the translated string: a lone
                         "%" in a msgid invites xgettext to treat it as a format spec.
                     {% endcomment %}
                     <button type="button" class="btn btn-outline-secondary"
+                            aria-pressed="false"
                             data-eos-filter="eostax-zero">{% translate "Only" %} 0&nbsp;%</button>
                     <button type="button" class="btn btn-outline-secondary"
+                            aria-pressed="false"
                             data-eos-filter="eostax-full">{% translate "Only" %} 100&nbsp;%</button>
                 </div>
             {% endif %}
@@ -136,59 +140,9 @@
 {% block extra_javascript %}
     {% include "bundles/datatables-2-js-bs5.html" %}
 
-    {% translate "Search:" as l10n_search_label %}
-    {% translate "Corporation name, or a rate such as 0 or 100" as l10n_search_placeholder %}
+    {{ js_config|json_script:"eos-tax-config" }}
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            /* global DataTable */
-            "use strict";
-
-            const table = document.querySelector("#table-eos-tax-changes");
-
-            if (!table) {
-                return;  // nothing found, nothing to sort
-            }
-
-            const changes = new DataTable(table, {
-                // one entry per column - the search box hits Corporation only
-                columns: [
-                    { searchable: true },   // Corporation
-                    // searchable too, so "0" and "100" find the Corporations
-                    // that switched their tax off or all the way up
-                    { searchable: true },   // Change
-                    { searchable: false },  // On
-                    { searchable: false },  // Systems
-                    { searchable: false }   // Payouts
-                ],
-                search: {
-                    caseInsensitive: true,
-                    smart: true
-                },
-                // keep what the server sent: biggest move first. Left alone
-                // DataTables would sort by the first column and lose that.
-                order: [],
-                pageLength: 25,
-                language: {
-                    search: "{{ l10n_search_label|escapejs }}",
-                    searchPlaceholder: "{{ l10n_search_placeholder|escapejs }}"
-                }
-            });
-
-            // the buttons drive the same search box, so a filter and a typed
-            // term cannot end up contradicting each other
-            document.querySelectorAll("[data-eos-filter]").forEach(function (button) {
-                button.addEventListener("click", function () {
-                    document.querySelectorAll("[data-eos-filter]").forEach(
-                        function (other) { other.classList.remove("active"); }
-                    );
-                    button.classList.add("active");
-
-                    changes.search(button.dataset.eosFilter).draw();
-                });
-            });
-        });
-    </script>
+    {% sri_static "eos_tax/js/tax-changes.js" %}
 {% endblock %}
 
 {% block extra_css %}

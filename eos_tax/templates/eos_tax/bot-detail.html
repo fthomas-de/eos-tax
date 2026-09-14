@@ -1,25 +1,89 @@
 {% extends "eos_tax/base.html" %}
 {% load i18n %}
 {% load humanize %}
+{% load sri %}
 
 {% block app_help %}{% endblock %}
 
 {% block details %}
 
     <div class="card mb-3">
-        <div class="card-header d-flex align-items-center gap-3">
+        <div class="card-header d-flex align-items-center flex-wrap gap-3">
             <div class="card-title mb-0">{{ detail.character_name }}</div>
-            <a href="{% url 'eos_tax:bots' %}?month={{ selected_month }}"
+
+            {% comment %}
+                Who else is on this account. With an assessment each when the
+                reader came from a list that had grouped them; without one
+                when they arrived cold, because working it out here would mean
+                a second walk over the whole month for the whole alliance -
+                the cost the tabs exist to avoid.
+            {% endcomment %}
+            {% if family %}
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                            type="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                        {% blocktranslate with main=family.main count counter=family.characters|length %}{{ main }} - {{ counter }} more character{% plural %}{{ main }} - {{ counter }} more characters{% endblocktranslate %}
+                    </button>
+
+                    <ul class="dropdown-menu">
+                        {% comment %}
+                            Which list these assessments came from. The four
+                            readings disagree on purpose, so a badge without
+                            its reading would be a verdict from nowhere - and
+                            without a list behind it there are no badges, so
+                            the heading says that rather than nothing.
+                        {% endcomment %}
+                        <li>
+                            <h6 class="dropdown-header">
+                                {% if family.signal %}
+                                    {{ family.signal }}
+                                {% else %}
+                                    {% translate "Every character of this main" %}
+                                {% endif %}
+                            </h6>
+                        </li>
+
+                        {% for member in family.characters %}
+                            <li>
+                                {% comment %}
+                                    data-eos-keep-tab: the script points these
+                                    at whichever tab is open, so comparing one
+                                    reading across a main stays one click per
+                                    character.
+                                {% endcomment %}
+                                <a class="dropdown-item d-flex align-items-center gap-3"
+                                   data-eos-keep-tab
+                                   href="{% url 'eos_tax:bot_detail' member.id %}?month={{ selected_month }}">
+                                    <span>{{ member.name }}</span>
+                                    {% if member.level %}
+                                        <span class="ms-auto">
+                                            {% include "eos_tax/partials/bot-level-badge.html" with level=member.level %}
+                                        </span>
+                                    {% endif %}
+                                </a>
+                            </li>
+                        {% endfor %}
+
+                        {% if not family.signal %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <span class="dropdown-item-text text-body-secondary small">
+                                    {% translate "Open one of the bot lists to see how each of them was assessed." %}
+                                </span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            {# back to the same reading, for the same reason as the dropdown #}
+            <a data-eos-keep-tab
+               href="{% url 'eos_tax:bots' %}?month={{ selected_month }}"
                class="ms-auto small">{% translate "Back to the list" %}</a>
         </div>
 
         <div class="card-body">
-            <p class="text-body-secondary small">
-                {% blocktranslate %}Active hours per day. An hour counts as active once the same taxed
-                journal type appears in it at least {{ min_entries }} times, which is the same rule the
-                list uses. Times are EVE time.{% endblocktranslate %}
-            </p>
-
             <form role="form" method="get" class="row g-3 align-items-end mb-4">
                 <div class="col-sm-4 col-lg-3">
                     <label for="eos-tax-month" class="form-label">{% translate "Month" %}</label>
@@ -32,10 +96,61 @@
                 </div>
             </form>
 
+            {% comment %}
+                The same four readings the list page offers, for this one
+                Character. Only the matrix comes with the page; the other
+                three are fetched when opened, because most visits here are
+                about the matrix.
+            {% endcomment %}
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" type="button" role="tab"
+                            data-bs-toggle="tab" data-bs-target="#eos-tax-tab-hours"
+                            aria-controls="eos-tax-tab-hours" aria-selected="true">
+                        {% translate "Hours per day" %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" type="button" role="tab"
+                            data-bs-toggle="tab" data-bs-target="#eos-tax-tab-runs"
+                            aria-controls="eos-tax-tab-runs" aria-selected="false">
+                        {% translate "Unbroken runs" %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" type="button" role="tab"
+                            data-bs-toggle="tab" data-bs-target="#eos-tax-tab-rhythm"
+                            aria-controls="eos-tax-tab-rhythm" aria-selected="false">
+                        {% translate "Against the Corporation" %}
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" type="button" role="tab"
+                            data-bs-toggle="tab" data-bs-target="#eos-tax-tab-clock"
+                            aria-controls="eos-tax-tab-clock" aria-selected="false">
+                        {% translate "Off the Corporation clock" %}
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+            <div class="tab-pane fade show active" id="eos-tax-tab-hours" role="tabpanel">
+
+            {% comment %}
+                Inside the pane, for the same reason as on the list page: the
+                three fetched tabs carry their own caption, and this one was
+                sitting where it looked like all four.
+            {% endcomment %}
+            <p class="text-body-secondary small">
+                {% blocktranslate %}Active hours per day. An hour counts as active once the same taxed
+                journal type appears in it at least {{ min_entries }} times, which is the same rule the
+                list uses. Times are EVE time.{% endblocktranslate %}
+            </p>
+
             {% if detail.active_days %}
                 <div class="table-responsive">
                     <table class="table table-bordered align-middle text-center mb-0"
-                           style="table-layout: fixed;">
+                           style="table-layout: fixed; min-width: 34rem;">
                         <caption class="visually-hidden">
                             {% translate "Active hours per day, calendar weeks as rows and weekdays as columns" %}
                         </caption>
@@ -108,7 +223,47 @@
                     {% translate "This character had no active hour in the selected month." %}
                 </div>
             {% endif %}
+
+            </div>
+
+            <div class="tab-pane fade" id="eos-tax-tab-runs" role="tabpanel"
+                 data-eos-signal="runs"></div>
+
+            <div class="tab-pane fade" id="eos-tax-tab-rhythm" role="tabpanel"
+                 data-eos-signal="rhythm"></div>
+
+            <div class="tab-pane fade" id="eos-tax-tab-clock" role="tabpanel"
+                 data-eos-signal="clock"></div>
+            </div>
         </div>
     </div>
 
+{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .eos-tax-chart-frame {
+            position: relative;
+            height: 380px;
+        }
+
+        /* On a phone the chart keeps its height while losing most of its
+           width, so it takes viewport height instead of a desktop count. */
+        @media (max-width: 767.98px) {
+            .eos-tax-chart-frame {
+                height: 60vh;
+                min-height: 300px;
+                max-height: 460px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block extra_javascript %}
+    {% include "bundles/chart-js.html" %}
+
+    {{ js_config|json_script:"eos-tax-config" }}
+
+    {% sri_static "eos_tax/js/bot-charts.js" %}
+    {% sri_static "eos_tax/js/bots.js" %}
 {% endblock %}

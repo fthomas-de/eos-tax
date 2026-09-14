@@ -1,0 +1,481 @@
+"""The write path: update_corp turns a wallet journal into a number, and
+corp_has_payed decides whether that number was settled.
+
+update_corp is the only place in the app that produces the figures everything
+else only displays or sums - it had no coverage before this file.
+"""
+
+import datetime
+from decimal import Decimal
+
+from allianceauth.eveonline.models import EveCorporationInfo
+from corptools.models import (
+    CorporationAudit,
+    CorporationWalletDivision,
+    CorporationWalletJournalEntry,
+)
+from dateutil.relativedelta import relativedelta
+
+from eos_tax.db.payments import get_open_payment_count, is_payable, update_corp
+from eos_tax.models import MonthlyTax, TaxConfiguration
+from eos_tax.tests.base import EosTaxTestCase
+from eos_tax.util import corp_has_payed, get_amount_to_pay
+
+from .factories import (
+    ALPHA_CORP_ID,
+    BRAVO_CORP_ID,
+    create_alliance,
+    create_corporation,
+    create_tax_row,
+)
+
+ALLIANCE_ID = 99000001
+CORP_ID = 98000001
+OTHER_CORP_ID = 98000002
+HOLDING_CORP_ID = 98000003
+UNKNOWN_CORP_ID = 98099999
+RATTER_ID = 2100000001
+
+YEAR = 2026
+MONTH = 6
+
+# A payment's amount is only ever "no second party" in these tests when a
+# case needs it explicitly - None doubles as "leave it unset" everywhere else.
+_UNSET = object()
+
+
+class PaymentsTestCase(EosTaxTestCase):
+    """Shared fixture: one taxed corporation with a wallet division to fill."""
+
+    def setUp(self):
+        alliance = create_alliance(ALLIANCE_ID, "Taxed Alliance")
+        self.corporation = create_corporation(CORP_ID, "Bravo Corp", alliance)
+        audit = CorporationAudit.objects.create(corporation=self.corporation)
+        self.division = CorporationWalletDivision.objects.create(
+            corporation=audit, balance=0, division=1
+        )
+
+        self.config = TaxConfiguration.get_solo()
+        self.config.tax_types = ["bounty_prizes"]
+        self.config.save()
+        self.config.tax_alliances.set([alliance])
+
+        self.entry_id = 0
+
+    def entry(self, amount, date, ref_type="bounty_prizes", tax_receiver_id=None,
+              reason=None):
+        """One wallet journal row, dated and typed by the caller."""
+        self.entry_id += 1
+        return CorporationWalletJournalEntry.objects.create(
+            division=self.division,
+            date=date,
+            description="wallet entry",
+            entry_id=self.entry_id,
+            ref_type=ref_type,
+            first_party_id=1000125,
+            second_party_id=RATTER_ID,
+            tax_receiver_id=CORP_ID if tax_receiver_id is None else tax_receiver_id,
+            context_id=30000001,
+            context_id_type="system_id",
+            reason=reason,
+            amount=amount,
+            tax=amount,
+        )
+
+    def bounty(self, amount, day, month=MONTH, year=YEAR, hour=12, **kwargs):
+        return self.entry(
+            amount,
+            datetime.datetime(year, month, day, hour, tzinfo=datetime.timezone.utc),
+            **kwargs,
+        )
+
+    def row(self):
+        return MonthlyTax.objects.get(corp_id=CORP_ID, month=MONTH, year=YEAR)
+
+
+class TestUpdateCorpUnknownCorporation(PaymentsTestCase):
+    def test_should_ignore_an_unknown_corporation(self):
+        update_corp(UNKNOWN_CORP_ID, MONTH, YEAR)
+
+        self.assertFalse(MonthlyTax.objects.filter(corp_id=UNKNOWN_CORP_ID).exists())
+
+
+class TestUpdateCorpWithoutARate(PaymentsTestCase):
+    def test_should_skip_a_corporation_without_an_ingame_rate(self):
+        """Alliance Auth leaves tax_rate empty for a corporation it never
+        pulled from ESI - a holding imported by hand is the usual one. The
+        task runs one subtask per corporation, so formatting None would take
+        that subtask down without anything showing on the page."""
+        corporation = EveCorporationInfo.objects.get(corporation_id=CORP_ID)
+        corporation.tax_rate = None
+        corporation.save()
+        self.bounty(1_000_000_000, day=15)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertFalse(
+            MonthlyTax.objects.filter(corp_id=CORP_ID, month=MONTH, year=YEAR).exists()
+        )
+
+
+class TestUpdateCorpNoEntries(PaymentsTestCase):
+    def test_should_not_create_a_row_without_journal_entries(self):
+        """A month with no income must stay absent, not show up as a zero."""
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertFalse(
+            MonthlyTax.objects.filter(corp_id=CORP_ID, month=MONTH, year=YEAR).exists()
+        )
+
+
+class TestUpdateCorpCalculation(PaymentsTestCase):
+    def test_should_calculate_the_row_fields(self):
+        self.bounty(500_000_000, day=10)
+        self.bounty(300_000_000, day=20)
+        self.config.tax_rate = Decimal("0.15")
+        self.config.save()
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        row = self.row()
+        self.assertEqual(row.tax_value, 800_000_000)
+        self.assertEqual(row.tax_percentage, 10.0)  # corp tax_rate 0.1 -> 10.0
+        self.assertEqual(row.alliance_tax_rate, 0.15)
+        self.assertEqual(row.corp_name, "Bravo Corp")
+
+    def test_should_only_count_configured_ref_types(self):
+        self.bounty(500_000_000, day=10)
+        self.bounty(999_999_999, day=11, ref_type="market_transaction")
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(self.row().tax_value, 500_000_000)
+
+    def test_should_only_count_entries_for_this_corporation(self):
+        self.bounty(500_000_000, day=10)
+        self.bounty(999_999_999, day=11, tax_receiver_id=OTHER_CORP_ID)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(self.row().tax_value, 500_000_000)
+
+
+class TestUpdateCorpMonthBoundaries(PaymentsTestCase):
+    def test_should_respect_the_month_boundaries(self):
+        """_month_range is half open: [start, end)."""
+        # last second of the previous month - must not count
+        self.entry(
+            200_000_000,
+            datetime.datetime(YEAR, MONTH - 1, 31, 23, 59, 59, tzinfo=datetime.timezone.utc),
+        )
+        # the very first moment of the month - must count
+        self.entry(
+            100_000_000,
+            datetime.datetime(YEAR, MONTH, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
+        )
+        # the first second of the following month - must not count
+        self.entry(
+            300_000_000,
+            datetime.datetime(YEAR, MONTH + 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
+        )
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(self.row().tax_value, 100_000_000)
+
+
+class TestUpdateCorpRepeatedRuns(PaymentsTestCase):
+    def test_should_update_the_existing_row_on_a_second_run(self):
+        self.bounty(100_000_000, day=10)
+        update_corp(CORP_ID, MONTH, YEAR)
+        self.assertEqual(self.row().tax_value, 100_000_000)
+
+        self.bounty(150_000_000, day=11)
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(
+            MonthlyTax.objects.filter(corp_id=CORP_ID, month=MONTH, year=YEAR).count(),
+            1,
+        )
+        self.assertEqual(self.row().tax_value, 250_000_000)
+
+    def test_should_keep_a_payed_row_marked_payed(self):
+        create_tax_row(
+            CORP_ID, "Bravo Corp", payed=True, tax_value=1, tax_percentage=10.0,
+            month=MONTH, year=YEAR, alliance_tax_rate=0.15,
+        )
+        self.bounty(700_000_000, day=10)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        row = self.row()
+        self.assertTrue(row.payed)
+        self.assertEqual(row.tax_value, 700_000_000)
+
+
+class TestUpdateCorpYearRollover(PaymentsTestCase):
+    def test_should_roll_december_into_january(self):
+        self.entry(
+            100_000_000,
+            datetime.datetime(YEAR, 12, 31, 12, tzinfo=datetime.timezone.utc),
+        )
+        self.entry(
+            300_000_000,
+            datetime.datetime(YEAR + 1, 1, 1, 0, tzinfo=datetime.timezone.utc),
+        )
+
+        update_corp(CORP_ID, 12, YEAR)
+
+        row = MonthlyTax.objects.get(corp_id=CORP_ID, month=12, year=YEAR)
+        self.assertEqual(row.tax_value, 100_000_000)
+
+
+# --- corp_has_payed -----------------------------------------------------
+
+ALLIANCE_RATE = 0.15
+TAX_VALUE = 1_000_000_000
+TAX_PERCENTAGE = 10.0
+# the amount owed for TAX_VALUE/TAX_PERCENTAGE/ALLIANCE_RATE, worked out the
+# same way corp_has_payed itself works it out
+OWED = int(get_amount_to_pay(TAX_VALUE, TAX_PERCENTAGE, ALLIANCE_RATE))
+
+
+class CorpHasPayedTestCase(PaymentsTestCase):
+    """Shared fixture: a calculated row and a corporation to pay it to."""
+
+    def setUp(self):
+        super().setUp()
+        self.holding = create_corporation(HOLDING_CORP_ID, "Holding Corp", None)
+
+    def owe(self, payed=False, alliance_tax_rate=ALLIANCE_RATE):
+        return create_tax_row(
+            CORP_ID, "Bravo Corp", payed=payed,
+            tax_value=TAX_VALUE, tax_percentage=TAX_PERCENTAGE,
+            month=MONTH, year=YEAR, alliance_tax_rate=alliance_tax_rate,
+        )
+
+    def configure_holding(self):
+        self.config.tax_corporation = self.holding
+        self.config.save()
+
+    def pay(self, amount, when=None, ref_type="player_donation", reason=None,
+            second_party_id=_UNSET):
+        self.entry_id += 1
+        return CorporationWalletJournalEntry.objects.create(
+            division=self.division,
+            date=when or datetime.datetime(YEAR, MONTH, 2, tzinfo=datetime.timezone.utc),
+            description="tax payment",
+            entry_id=self.entry_id,
+            ref_type=ref_type,
+            first_party_id=RATTER_ID,
+            second_party_id=(
+                self.holding.corporation_id if second_party_id is _UNSET else second_party_id
+            ),
+            tax_receiver_id=None,
+            context_id=None,
+            context_id_type=None,
+            reason=reason,
+            amount=amount,
+            tax=None,
+        )
+
+    def has_payed(self):
+        return corp_has_payed(CORP_ID, MONTH, YEAR)
+
+
+class TestCorpHasPayedWithoutARow(CorpHasPayedTestCase):
+    def test_should_report_unpayed_without_a_row(self):
+        self.assertFalse(self.has_payed())
+
+
+class TestCorpHasPayedAlreadyMarked(CorpHasPayedTestCase):
+    def test_should_trust_a_row_already_marked_payed(self):
+        """No holding corporation is configured and the journal is empty -
+        checking either would have to answer False on its own."""
+        self.owe(payed=True)
+
+        self.assertTrue(self.has_payed())
+
+
+class TestCorpHasPayedHoldingCorporation(CorpHasPayedTestCase):
+    def test_should_report_unpayed_without_a_holding_corporation(self):
+        """A stray entry with no second party at all must not read as a
+        match once nothing is configured to compare it against."""
+        self.owe()
+        self.pay(OWED, second_party_id=None)
+
+        self.assertFalse(self.has_payed())
+
+
+class TestCorpHasPayedAmountMatching(CorpHasPayedTestCase):
+    def test_should_accept_a_payment_of_exactly_the_owed_amount(self):
+        self.owe()
+        self.configure_holding()
+        self.pay(OWED)
+
+        self.assertTrue(self.has_payed())
+
+    def test_should_accept_a_negative_payment_too(self):
+        self.owe()
+        self.configure_holding()
+        self.pay(-OWED)
+
+        self.assertTrue(self.has_payed())
+
+    def test_should_ignore_a_payment_before_the_month_started(self):
+        self.owe()
+        self.configure_holding()
+        self.pay(
+            OWED,
+            when=datetime.datetime(YEAR, MONTH - 1, 31, 23, 59, 59, tzinfo=datetime.timezone.utc),
+        )
+
+        self.assertFalse(self.has_payed())
+
+    def test_should_require_the_exact_amount_when_reason_is_not_used(self):
+        self.owe()
+        self.configure_holding()
+        self.pay(OWED + 1)
+
+        self.assertFalse(self.has_payed())
+
+
+class TestCorpHasPayedReasonMatching(CorpHasPayedTestCase):
+    def setUp(self):
+        super().setUp()
+        self.owe()
+        self.configure_holding()
+        self.config.use_reason = True
+        self.config.save()
+
+    def test_should_accept_a_larger_payment_when_using_reason(self):
+        self.pay(OWED + 1, reason=f"{CORP_ID}/{MONTH}/{YEAR}")
+
+        self.assertTrue(self.has_payed())
+
+    def test_should_reject_a_wrong_reason(self):
+        self.pay(OWED, reason="99999999/1/2000")
+
+        self.assertFalse(self.has_payed())
+
+    def test_should_reject_a_missing_reason(self):
+        self.pay(OWED, reason=None)
+
+        self.assertFalse(self.has_payed())
+
+
+class TestCorpHasPayedRefType(CorpHasPayedTestCase):
+    def test_should_ignore_a_payment_of_the_wrong_ref_type(self):
+        self.owe()
+        self.configure_holding()
+        self.pay(OWED, ref_type="bounty_prizes")
+
+        self.assertFalse(self.has_payed())
+
+
+class TestCorpHasPayedStoredRate(CorpHasPayedTestCase):
+    def test_should_use_the_rate_stored_on_the_row_not_todays_rate(self):
+        """The field's own help text promises this: the rate in effect when
+        the row was calculated, so a later change does not rewrite the past."""
+        self.config.tax_rate = Decimal(str(ALLIANCE_RATE))
+        self.config.save()
+        self.owe()
+        self.configure_holding()
+        self.pay(OWED)
+
+        self.assertTrue(self.has_payed())
+
+        self.config.tax_rate = Decimal("0.9")
+        self.config.save()
+
+        self.assertTrue(self.has_payed())
+
+
+# The two below moved here from test_views.py: neither renders a page.
+# is_payable is a calendar rule and get_open_payment_count is a query, and
+# both belong to the same code as the rest of this file.
+
+class TestPayable(EosTaxTestCase):
+    """When a month may be transferred.
+
+    One function for the overview and the badge: two places disagreeing about
+    what is due would be worse than no badge.
+    """
+
+    def test_should_refuse_the_running_month(self):
+        self.assertFalse(is_payable(9, 2026, datetime.datetime(2026, 9, 20)))
+
+    def test_should_wait_for_the_second_of_the_month(self):
+        """The last journal entries of a closed month arrive on the first."""
+        self.assertFalse(is_payable(8, 2026, datetime.datetime(2026, 9, 1)))
+        self.assertTrue(is_payable(8, 2026, datetime.datetime(2026, 9, 2)))
+
+    def test_should_carry_across_the_turn_of_the_year(self):
+        self.assertTrue(is_payable(12, 2026, datetime.datetime(2027, 1, 5)))
+
+    def test_should_refuse_a_month_in_the_future(self):
+        self.assertFalse(is_payable(11, 2026, datetime.datetime(2026, 9, 20)))
+
+
+class TestOpenPaymentCount(EosTaxTestCase):
+    """What the number on the menu entry counts."""
+
+    def setUp(self):
+        previous = datetime.datetime.now() - relativedelta(months=1)
+        self.period = (previous.month, previous.year)
+
+        config = TaxConfiguration.get_solo()
+        config.last_month = True
+        config.current_month = True
+        config.save()
+
+    def row(self, corp_id, name, payed=False, period=None):
+        month, year = period or self.period
+        row = create_tax_row(corp_id, name, payed=payed)
+        row.month = month
+        row.year = year
+        row.save()
+
+        return row
+
+    def count(self, **kwargs):
+        return get_open_payment_count([self.period], **kwargs)
+
+    def test_should_count_an_unpaid_row(self):
+        self.row(ALPHA_CORP_ID, "Alpha Corp")
+
+        self.assertEqual(self.count(admin=True), 1)
+
+    def test_should_ignore_a_paid_row(self):
+        self.row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
+
+        self.assertEqual(self.count(admin=True), 0)
+
+    def test_should_ignore_the_running_month(self):
+        """It has no reason code yet, so there is nothing to quote on a transfer."""
+        create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=False)
+        now = datetime.datetime.now()
+
+        self.assertEqual(
+            get_open_payment_count([(now.month, now.year)], admin=True), 0
+        )
+
+    def test_should_ignore_an_excluded_corporation(self):
+        row = self.row(ALPHA_CORP_ID, "Alpha Corp")
+        alliance = create_alliance(99000009, "Any Alliance")
+        corporation = create_corporation(row.corp_id, "Alpha Corp", alliance)
+        TaxConfiguration.get_solo().corporation_blacklist.set([corporation])
+
+        self.assertEqual(self.count(admin=True), 0)
+
+    def test_should_show_a_member_only_their_own_corporations(self):
+        self.row(ALPHA_CORP_ID, "Alpha Corp")
+        self.row(BRAVO_CORP_ID, "Bravo Corp")
+
+        self.assertEqual(self.count(admin=False, corps=[BRAVO_CORP_ID]), 1)
+        self.assertEqual(self.count(admin=True), 2)
+
+    def test_should_stay_at_zero_without_any_corporation(self):
+        self.row(ALPHA_CORP_ID, "Alpha Corp")
+
+        self.assertEqual(self.count(admin=False, corps=[]), 0)

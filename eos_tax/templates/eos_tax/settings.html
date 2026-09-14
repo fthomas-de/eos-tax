@@ -24,7 +24,31 @@
                     <form role="form" action="" method="POST">
                         {% csrf_token %}
 
-                        {% bootstrap_form form %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <h2 class="h5 border-bottom pb-2">{% translate "Taxation" %}</h2>
+                        <p class="text-body-secondary small">
+                            {% blocktranslate %}What is taxed, and what it costs. Everything the overview
+                            and the statistics are built from.{% endblocktranslate %}
+                        </p>
+
+                        <h3 class="h6 mt-4">{% translate "Scope" %}</h3>
+                        {% bootstrap_field form.tax_alliances %}
+                        {% bootstrap_field form.corporation_blacklist %}
+                        {% bootstrap_field form.tax_corporation %}
+                        {% bootstrap_field form.tax_types %}
+
+                        <h3 class="h6 mt-4">{% translate "Months" %}</h3>
+                        {% bootstrap_field form.last_month %}
+                        {% bootstrap_field form.current_month %}
+
+                        <h3 class="h6 mt-4">{% translate "Payments" %}</h3>
+                        {% bootstrap_field form.use_reason %}
+
+                        <h3 class="h6 mt-4">{% translate "Rate" %}</h3>
+                        {% bootstrap_field form.tax_rate %}
 
                         <h2 class="h6 mt-4">{% translate "Tax rate schedule" %}</h2>
                         <p class="text-body-secondary small">
@@ -38,32 +62,104 @@
                             <div class="alert alert-danger">{{ rates.non_form_errors }}</div>
                         {% endif %}
 
-                        <table class="table table-sm align-middle">
-                            <thead>
-                                <tr>
-                                    <th scope="col">{% translate "Valid from" %}</th>
-                                    <th scope="col">{% translate "Rate" %}</th>
-                                    <th scope="col" class="text-end">{% translate "Remove" %}</th>
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {% for rate_form in rates %}
+                        {% comment %}
+                            The cells hold form controls, which have a width
+                            they will not go below - without this the table
+                            pushes the whole page sideways instead of
+                            scrolling on its own.
+                        {% endcomment %}
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead>
                                     <tr>
-                                        <td>
-                                            {{ rate_form.id }}
-                                            {% bootstrap_field rate_form.valid_from show_label=False %}
-                                        </td>
-                                        <td>{% bootstrap_field rate_form.rate show_label=False %}</td>
-                                        <td class="text-end">
-                                            {% if rate_form.instance.pk %}
-                                                {% bootstrap_field rate_form.DELETE show_label=False %}
-                                            {% endif %}
-                                        </td>
+                                        <th scope="col">{% translate "Valid from" %}</th>
+                                        <th scope="col">{% translate "Rate" %}</th>
+                                        <th scope="col" class="text-end">{% translate "Remove" %}</th>
                                     </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                                </thead>
+
+                                <tbody>
+                                    {% for rate_form in rates %}
+                                        <tr>
+                                            <td>
+                                                {{ rate_form.id }}
+                                                {% bootstrap_field rate_form.valid_from show_label=False %}
+                                            </td>
+                                            <td>{% bootstrap_field rate_form.rate show_label=False %}</td>
+                                            <td class="text-end">
+                                                {% if rate_form.instance.pk %}
+                                                    {% bootstrap_field rate_form.DELETE show_label=False %}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h2 class="h5 border-bottom pb-2 mt-5">{% translate "Corp tax changes" %}</h2>
+                        <p class="text-body-secondary small">
+                            {% blocktranslate %}How large a move of a Corporation's own tax rate has to be
+                            before that page reports it.{% endblocktranslate %}
+                        </p>
+                        {% bootstrap_field form.tax_change_min_points %}
+
+                        {% comment %}
+                            One sub-chapter per tab of the bots page, named the
+                            way the tab is named. The four readings deliberately
+                            disagree with each other, so their thresholds are
+                            kept apart even where two of the numbers happen to
+                            match today - tuning one must not move the other.
+                        {% endcomment %}
+                        <h2 class="h5 border-bottom pb-2 mt-5">{% translate "Bots" %}</h2>
+                        <p class="text-body-secondary small">
+                            {% blocktranslate %}Four readings of the same month, each with its own
+                            thresholds. A Character at the top of one can be absent from the next, and
+                            that disagreement is the point.{% endblocktranslate %}
+                        </p>
+
+                        <h3 class="h6 mt-4">{% translate "Hours per day" %}</h3>
+                        <p class="text-body-secondary small">
+                            {% blocktranslate %}Counts how many different hours of a day a Character
+                            earned in, and on how many days.{% endblocktranslate %}
+                        </p>
+                        {% bootstrap_field form.bot_hours_min_entries %}
+                        {% bootstrap_field form.bot_min_hours_per_day %}
+                        {% bootstrap_field form.bot_min_days_per_month %}
+
+                        <h3 class="h6 mt-4">{% translate "Unbroken runs" %}</h3>
+                        <p class="text-body-secondary small">
+                            {% blocktranslate %}Looks at the minute rather than the hour: the game pays a
+                            ratter about every twenty minutes, so an uninterrupted stretch shows up as a
+                            chain of payouts and nothing else does.{% endblocktranslate %}
+                        </p>
+                        {% bootstrap_field form.bot_run_min_ticks %}
+                        {% bootstrap_field form.bot_run_max_gaps %}
+                        {% bootstrap_field form.bot_run_tick_tolerance %}
+                        {% bootstrap_field form.bot_run_gap_minutes %}
+
+                        <h3 class="h6 mt-4">{% translate "Against the Corporation" %}</h3>
+                        <p class="text-body-secondary small">
+                            {% blocktranslate %}How much of a Character's income falls inside the hours
+                            their own Corporation is busy. The Corporation is the yardstick and not the
+                            alliance, which spans several timezones at once.{% endblocktranslate %}
+                        </p>
+                        {% bootstrap_field form.bot_rhythm_busy_hours %}
+                        {% bootstrap_field form.bot_rhythm_min_payouts %}
+                        {% bootstrap_field form.bot_rhythm_corp_min_payouts %}
+                        {% bootstrap_field form.bot_rhythm_purge_strong %}
+                        {% bootstrap_field form.bot_rhythm_min_difference %}
+
+                        <h3 class="h6 mt-4">{% translate "Off the Corporation clock" %}</h3>
+                        <p class="text-body-secondary small">
+                            {% blocktranslate %}How far a Character's day sits from their Corporation's,
+                            averaged the way a clock wraps.{% endblocktranslate %}
+                        </p>
+                        {% bootstrap_field form.bot_clock_max_apart %}
+                        {% bootstrap_field form.bot_clock_min_payouts %}
+                        {% bootstrap_field form.bot_clock_corp_min_payouts %}
+                        {% bootstrap_field form.bot_clock_purge_strong %}
+                        {% bootstrap_field form.bot_clock_min_apart %}
 
                         <div class="form-group mt-3 clearfix">
                             {% translate "Save settings" as button_text %}

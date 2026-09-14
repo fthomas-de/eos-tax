@@ -1,6 +1,7 @@
 {% extends "eos_tax/base.html" %}
 {% load i18n %}
 {% load humanize %}
+{% load sri %}
 
 {% block app_help %}{% endblock %}
 
@@ -104,75 +105,7 @@
 {% block extra_javascript %}
     {% include "bundles/chart-js.html" %}
 
-    {% translate "Share of the bounty in percent" as l10n_axis %}
+    {{ js_config|json_script:"eos-tax-config" }}
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            /* global Chart */
-            "use strict";
-
-            const canvas = document.querySelector("#eos-tax-rate-chart");
-
-            if (!canvas) {
-                return;
-            }
-
-            const series = JSON.parse(document.querySelector("#eos-tax-series").textContent);
-            const narrow = window.matchMedia("(max-width: 767.98px)");
-            const style = window.getComputedStyle(document.body);
-
-            new Chart(canvas, {
-                type: "line",
-                data: {
-                    labels: series.map(function (point) { return point.day; }),
-                    datasets: [{
-                        // one series, so no legend box - the card title names it
-                        label: "{{ l10n_axis|escapejs }}",
-                        data: series.map(function (point) { return point.rate; }),
-                        borderColor: style.getPropertyValue("--bs-primary"),
-                        backgroundColor: style.getPropertyValue("--bs-primary"),
-                        borderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 8,
-                        tension: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: "nearest", intersect: false },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) {
-                                    const point = series[context.dataIndex];
-
-                                    return point.rate + " % · " + point.payouts
-                                        + " payouts · " + point.systems + " systems";
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: {
-                                maxRotation: 0,
-                                autoSkip: true,
-                                autoSkipPadding: narrow.matches ? 12 : 4
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                maxTicksLimit: narrow.matches ? 5 : 8,
-                                callback: function (value) { return value + " %"; }
-                            }
-                        }
-                    }
-                }
-            });
-        });
-    </script>
+    {% sri_static "eos_tax/js/tax-change-detail.js" %}
 {% endblock %}

@@ -1,0 +1,9 @@
+{% load i18n %}
+{# The one place the three words and their colours are decided. #}
+{% if level == "high" %}
+    <span class="badge text-bg-danger">{% translate "strong" %}</span>
+{% elif level == "medium" %}
+    <span class="badge text-bg-warning">{% translate "worth a look" %}</span>
+{% else %}
+    <span class="badge text-bg-success">{% translate "unremarkable" %}</span>
+{% endif %}

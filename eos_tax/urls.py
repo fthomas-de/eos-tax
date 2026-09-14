@@ -11,6 +11,15 @@ urlpatterns = [
     path("settings/", views.settings, name="settings"),
     path("bots/", views.bots, name="bots"),
     path("bots/<int:character_id>/", views.bot_detail, name="bot_detail"),
+    # the sub tabs of the bots page, fetched one at a time when opened
+    path("bots/signal/<slug:signal>/", views.bot_signal, name="bot_signal"),
+    # the same three readings for one character, behind the tabs of its
+    # detail page
+    path(
+        "bots/signal/<slug:signal>/<int:character_id>/",
+        views.bot_signal_detail,
+        name="bot_signal_detail",
+    ),
     path("tax-changes/", views.tax_changes, name="tax_changes"),
     path("tax-changes/<int:corp_id>/", views.tax_change_detail, name="tax_change_detail"),
 ]

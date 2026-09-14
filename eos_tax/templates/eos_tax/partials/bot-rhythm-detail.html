@@ -1,0 +1,45 @@
+{% load i18n %}
+
+{% if detail.series %}
+    {% comment %}
+        Two captions, because the chart is two different things. With a
+        yardstick it is a comparison; without one it is this Character alone,
+        and saying so above the chart is the whole point - the previous
+        version drew the Character against a copy of themselves and left the
+        explanation in the footer, where it lost to the picture.
+    {% endcomment %}
+    {% if detail.share is None %}
+        <div class="alert alert-warning">
+            {% translate "Nothing is left of this Corporation once the Character's own payouts are taken out, so there is no rhythm to compare against and none is drawn. Only the Character's own day is shown. The threshold is on the settings page." %}
+        </div>
+    {% else %}
+        <p class="text-body-secondary small">
+            {% blocktranslate with hours=detail.window|length %}The Character's day against the rest of their Corporation's, hour by hour. Shares rather than counts, because one Character never has the volume of a Corporation. The shaded hours are the Corporation's busiest {{ hours }}.{% endblocktranslate %}
+        </p>
+    {% endif %}
+
+    {{ detail.series|json_script:"eos-tax-chart-data" }}
+    {{ detail.window|json_script:"eos-tax-chart-window" }}
+
+    <div class="eos-tax-chart-frame">
+        <canvas data-eos-chart="rhythm"
+                data-eos-label-character="{% translate 'Character' %}"
+                data-eos-label-corporation="{% translate 'Corporation' %}"
+                data-eos-axis-hour="{% translate 'Hour of the day (EVE time)' %}"></canvas>
+    </div>
+
+    <div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
+        {% if detail.share is not None %}
+            <span>{% blocktranslate with value=detail.share %}{{ value }} % inside the busy hours{% endblocktranslate %}</span>
+            <span>{% blocktranslate with value=detail.corp_share %}Corporation {{ value }} %{% endblocktranslate %}</span>
+            <span>{% blocktranslate with value=detail.difference %}{{ value }} pp apart{% endblocktranslate %}</span>
+            <span class="ms-auto">{% include "eos_tax/partials/bot-level-badge.html" with level=detail.level %}</span>
+        {% else %}
+            <span>{% blocktranslate with value=detail.payouts %}{{ value }} payouts, no yardstick{% endblocktranslate %}</span>
+        {% endif %}
+    </div>
+{% else %}
+    <div class="alert alert-info text-center">
+        {% translate "No taxed income in this month." %}
+    </div>
+{% endif %}

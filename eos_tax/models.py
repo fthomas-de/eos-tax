@@ -77,10 +77,15 @@ class TaxConfiguration(SingletonModel):
     )
     use_reason = models.BooleanField(
         default=False,
-        help_text=_("Match payments by their reason code instead of by amount alone."),
+        help_text=_(
+            "Match payments by their reason code instead of by amount alone. "
+            "Without it a payment is recognised by its amount only, so two "
+            "Corporations owing the same sum, or one Corporation owing the "
+            "same sum twice, cannot be told apart."
+        ),
     )
     tax_change_min_points = models.DecimalField(
-        verbose_name=_("Corp tax change: smallest move"),
+        verbose_name=_("Smallest move worth listing"),
         max_digits=5,
         decimal_places=2,
         default=Decimal("0.45"),
@@ -92,8 +97,164 @@ class TaxConfiguration(SingletonModel):
             "within it count as one level. Nine percent to ten is one point."
         ),
     )
+    bot_run_min_ticks = models.PositiveSmallIntegerField(
+        verbose_name=_("Shortest run listed"),
+        default=18,
+        validators=[MinValueValidator(2), MaxValueValidator(200)],
+        help_text=_(
+            "How many payouts in a row a character has to collect without a "
+            "break before the run is listed. The game pays a ratter about "
+            "every twenty minutes, so eighteen is roughly six hours."
+        ),
+    )
+    bot_run_max_gaps = models.PositiveSmallIntegerField(
+        verbose_name=_("Interruptions allowed"),
+        default=1,
+        validators=[MaxValueValidator(20)],
+        help_text=_(
+            "How many breaks a run may contain and still count as one. A "
+            "daily downtime would otherwise cut every long night in two. Only "
+            "a break under an hour can be forgiven; a longer one always ends "
+            "the run."
+        ),
+    )
+    bot_run_tick_tolerance = models.PositiveSmallIntegerField(
+        verbose_name=_("Longest gap that still counts as the same tick"),
+        default=25,
+        validators=[MinValueValidator(1), MaxValueValidator(240)],
+        help_text=_(
+            "In minutes. The game pays about every twenty minutes and the tick "
+            "slips, so a little more than twenty leaves room for that without "
+            "calling an unbroken stretch broken."
+        ),
+    )
+    bot_run_gap_minutes = models.PositiveSmallIntegerField(
+        verbose_name=_("Longest break a run can survive"),
+        default=60,
+        validators=[MinValueValidator(1), MaxValueValidator(720)],
+        help_text=_(
+            "In minutes. A break longer than this ends the run whatever the "
+            "allowance above says. Without a ceiling one allowance would weld "
+            "a morning and an evening into a single twelve hour run."
+        ),
+    )
+    bot_rhythm_busy_hours = models.PositiveSmallIntegerField(
+        verbose_name=_("Length of the busy window"),
+        default=8,
+        validators=[MinValueValidator(1), MaxValueValidator(23)],
+        help_text=_(
+            "How many hours of the day count as the Corporation's busy window. "
+            "A character spread evenly over the clock lands on this share of "
+            "any window, which is the floor the score measures down to."
+        ),
+    )
+    bot_rhythm_min_payouts = models.PositiveSmallIntegerField(
+        verbose_name=_("Smallest character worth reading"),
+        default=12,
+        validators=[MinValueValidator(1), MaxValueValidator(1000)],
+        help_text=_(
+            "Below this many payouts in the month a character has too little "
+            "of a day to describe, and is left out of this reading."
+        ),
+    )
+    bot_rhythm_corp_min_payouts = models.PositiveSmallIntegerField(
+        verbose_name=_("Smallest usable yardstick"),
+        default=40,
+        validators=[MinValueValidator(1), MaxValueValidator(10000)],
+        help_text=_(
+            "How many payouts have to be left in the Corporation once the "
+            "character's own are taken out. Below this there is no rhythm to "
+            "compare against, only noise, and the character is not scored."
+        ),
+    )
+    bot_rhythm_purge_strong = models.BooleanField(
+        verbose_name=_("Leave flagged characters out of the yardstick"),
+        default=True,
+        help_text=_(
+            "A character flat enough to be listed is also part of their "
+            "Corporation's day, and drags it flat with them - which makes "
+            "everybody else look ordinary. With this on the reading runs "
+            "twice: once to find them, once with them taken out. A "
+            "Corporation that would fall below the floor above keeps the "
+            "plain figure."
+        ),
+    )
+    bot_rhythm_min_difference = models.PositiveSmallIntegerField(
+        verbose_name=_("Smallest difference listed"),
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text=_(
+            "In percentage points. How much flatter than the rest of their "
+            "Corporation a character has to be before the list mentions them. "
+            "A negative difference means more concentrated than the "
+            "Corporation, which is the opposite of what this looks for, so "
+            "those are never listed whatever this says."
+        ),
+    )
+    bot_clock_max_apart = models.PositiveSmallIntegerField(
+        verbose_name=_("Distance counted as a full deviation"),
+        default=12,
+        validators=[MinValueValidator(1), MaxValueValidator(12)],
+        help_text=_(
+            "In hours. Twelve is as far apart as two times of day can be, so "
+            "the default treats the whole clock as the scale. A smaller value "
+            "makes the colouring reach red sooner."
+        ),
+    )
+    bot_clock_purge_strong = models.BooleanField(
+        verbose_name=_("Leave flagged characters out of the yardstick"),
+        default=True,
+        help_text=_(
+            "The same for this reading: a character far enough from their "
+            "Corporation to be listed also pulls the Corporation's own middle "
+            "of the day towards themselves, which shortens everybody else's "
+            "distance."
+        ),
+    )
+    bot_clock_min_apart = models.PositiveSmallIntegerField(
+        verbose_name=_("Smallest distance listed"),
+        default=3,
+        validators=[MinValueValidator(0), MaxValueValidator(12)],
+        help_text=_(
+            "In hours. How far from their Corporation a character's day has "
+            "to sit before the list mentions them. A third of the scale above "
+            "is where the colouring stops calling a distance unremarkable, so "
+            "a threshold under that lets green rows into the list."
+        ),
+    )
+    bot_clock_min_payouts = models.PositiveSmallIntegerField(
+        verbose_name=_("Smallest character worth reading"),
+        default=12,
+        validators=[MinValueValidator(1), MaxValueValidator(1000)],
+        help_text=_(
+            "Below this many payouts in the month the middle of a character's "
+            "day is wherever the noise landed, so they are left out."
+        ),
+    )
+    bot_clock_corp_min_payouts = models.PositiveSmallIntegerField(
+        verbose_name=_("Smallest usable yardstick"),
+        default=40,
+        validators=[MinValueValidator(1), MaxValueValidator(10000)],
+        help_text=_(
+            "How many payouts have to be left in the Corporation once the "
+            "character's own are taken out, before its middle of the day is "
+            "worth comparing against."
+        ),
+    )
+    bot_hours_min_entries = models.PositiveSmallIntegerField(
+        verbose_name=_("Entries before an hour counts as active"),
+        default=2,
+        validators=[MinValueValidator(1), MaxValueValidator(60)],
+        help_text=_(
+            "A single entry is noise - a stray bounty tick, one ESS payout. "
+            "The game pays about every twenty minutes, so an hour of "
+            "uninterrupted play holds three; two is deliberately tolerant, "
+            "because play gets interrupted and a false negative costs less "
+            "than accusing a player."
+        ),
+    )
     bot_min_hours_per_day = models.PositiveSmallIntegerField(
-        verbose_name=_("Bot detection: hours per day"),
+        verbose_name=_("Hours in a day before it counts"),
         default=20,
         validators=[MinValueValidator(1), MaxValueValidator(24)],
         help_text=_(
@@ -102,7 +263,7 @@ class TaxConfiguration(SingletonModel):
         ),
     )
     bot_min_days_per_month = models.PositiveSmallIntegerField(
-        verbose_name=_("Bot detection: days per month"),
+        verbose_name=_("Days in a month before a character is listed"),
         default=12,
         validators=[MinValueValidator(1), MaxValueValidator(31)],
         help_text=_(

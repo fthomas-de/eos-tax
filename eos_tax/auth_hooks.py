@@ -5,7 +5,7 @@ from allianceauth.framework.api.user import get_all_characters_from_user
 from allianceauth.services.hooks import MenuItemHook, UrlHook
 
 from . import urls
-from .db_connector import get_all_corps_for_user, get_open_payment_count
+from eos_tax.db.payments import get_all_corps_for_user, get_open_payment_count
 from .util import get_dates
 
 

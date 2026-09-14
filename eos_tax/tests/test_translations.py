@@ -4,12 +4,16 @@ import re
 
 from eos_tax.tests.base import EosTaxTestCase
 from django.urls import reverse
-from django.utils import translation
 
 import eos_tax
 from eos_tax.models import TaxConfiguration
 
-from .test_views import BRAVO_CORP_ID, create_tax_row, create_user, enable_current_month
+from .factories import (
+    BRAVO_CORP_ID,
+    create_tax_row,
+    create_user,
+    enable_current_month,
+)
 
 GERMAN = {"accept-language": "de"}
 
@@ -108,6 +112,67 @@ class TestCatalogueIntegrity(EosTaxTestCase):
                     )
 
 
+class TestEveJargon(EosTaxTestCase):
+    """EVE terms stay English in every entry of every catalogue.
+
+    The rule is easy to keep in a label and easy to lose in prose: a
+    translator writing a whole sentence reaches for the word their language
+    has. That is how bounty became Kopfgelder, primes, taglie, recompensas,
+    현상금 and наград - one entry each, in all six catalogues, while the same
+    files wrote bounty correctly everywhere else.
+
+    Reading the sources rather than a rendered page is deliberate. A page
+    carries Alliance Auth's own chrome, translated through its own catalogues,
+    so Personnage legitimately appears on a French page and no assertion about
+    the page can tell the two apart.
+
+    Character is not in the list: all six translate it in prose while the
+    column label stays English, which is consistent enough across the
+    catalogues to be a decision rather than a slip.
+    """
+
+    # what each language reaches for when it forgets the rule
+    FORBIDDEN = {
+        "de": {"bounty": r"Kopfgeld\w*", "Corporation": r"Korporation\w*",
+               "Alliance": r"B[üu]ndnis\w*"},
+        "es": {"bounty": r"recompensa\w*", "Corporation": r"[Cc]orporaci[óo]n\w*",
+               "Alliance": r"[Aa]lianza\w*", "kill": r"\bmuertes\b",
+               "wallet": r"\bcartera\b"},
+        "fr_FR": {"bounty": r"\bprimes?\b", "wallet": r"\bportefeuille\b"},
+        "it_IT": {"bounty": r"\btaglie?\b", "Corporation": r"corporazion\w*",
+                  "Alliance": r"alleanz\w*"},
+        "ko_KR": {"bounty": r"현상금", "Corporation": r"코퍼레이션",
+                  "Reason": r"사유", "wallet": r"지갑"},
+        "ru": {"bounty": r"наград\w*", "Corporation": r"корпораци\w*",
+               "Reason": r"назначение платежа", "wallet": r"кошел\w*"},
+    }
+
+    def test_should_never_translate_eve_jargon(self):
+        for locale, terms in self.FORBIDDEN.items():
+            path = LOCALE_ROOT / locale / "LC_MESSAGES/django.po"
+
+            for term, pattern in terms.items():
+                found = [
+                    (msgid[:60], re.findall(pattern, msgstr))
+                    for msgid, msgstr in read_po(path)
+                    if msgstr and re.search(pattern, msgstr)
+                ]
+
+                with self.subTest(locale=locale, term=term):
+                    self.assertEqual(
+                        found, [], f"{locale}: {term} was translated"
+                    )
+
+    def test_should_name_the_reason_column_the_same_way_in_the_tooltip(self):
+        """The button sits next to a column headed Reason in every language."""
+        for locale in self.FORBIDDEN:
+            path = LOCALE_ROOT / locale / "LC_MESSAGES/django.po"
+            catalogue = dict(read_po(path))
+
+            with self.subTest(locale=locale):
+                self.assertIn("Reason", catalogue["Copy reason to clipboard"])
+
+
 class TestGermanCatalogue(EosTaxTestCase):
     """Without a compiled catalogue every translate tag silently falls back to
     English, which looks exactly like a missing translation."""
@@ -121,11 +186,6 @@ class TestGermanCatalogue(EosTaxTestCase):
             ["basic_access", "admin_view"],
         )
         self.client.force_login(self.user)
-
-    def test_should_translate_marked_strings(self):
-        with translation.override("de"):
-            self.assertEqual(str(translation.gettext("Overview")), "Übersicht")
-            self.assertEqual(str(translation.gettext("Settings")), "Einstellungen")
 
     def test_should_translate_the_navigation(self):
         response = self.client.get(reverse("eos_tax:index"), headers=GERMAN)
@@ -200,7 +260,8 @@ class TestGermanCatalogue(EosTaxTestCase):
             "de": "Besteuerte Alliances",
             "es": "Alliances gravadas",
             "fr-fr": "Alliances taxées",
-            "it-it": "Alliances tassate",
+            # Italian keeps a loanword invariable and agrees the adjective
+            "it-it": "Alliance tassate",
             "ko-kr": "과세 대상 Alliance",
             "ru": "Облагаемые Alliances",
         }

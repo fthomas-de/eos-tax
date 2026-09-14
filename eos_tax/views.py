@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required, permission_required
-from django.http import HttpResponseBadRequest, JsonResponse
+from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.urls import reverse
@@ -16,23 +16,35 @@ from eos_tax import VERSION
 from eos_tax.app_settings import get_config
 from eos_tax.forms import TaxConfigurationForm, TaxRateFormSet
 from eos_tax.models import TaxRate
-from eos_tax.db_connector import (
-    ACTIVE_HOUR_MIN_ENTRIES,
+from eos_tax.db.bots import (
     find_characters,
-    get_corp_tax_changes,
-    get_corp_tax_detail,
-    get_all_corps_for_user,
     get_bot_report,
     get_character_month,
+)
+from eos_tax.db.bot_signals import (
+    get_clock_detail,
+    get_clock_offset,
+    get_daily_profile,
+    get_rhythm_detail,
+    get_run_detail,
+    get_unbroken_runs,
+)
+from eos_tax.db.payments import get_all_corps_for_user, get_tax_corp, get_website_data
+from eos_tax.db.shared import alts_of
+from eos_tax.db.statistics import (
     get_statistics_alliances,
     get_statistics_series,
     get_statistics_years,
-    get_tax_corp,
-    get_website_data,
 )
+from eos_tax.db.tax_changes import get_corp_tax_changes, get_corp_tax_detail
 from eos_tax.util import get_dates, get_amount_to_pay
 
 logger = get_extension_logger(__name__)
+
+# what datetime() accepts, minus one at the top because the year filters are
+# built as a half open range up to January of the following year
+MIN_YEAR = 1
+MAX_YEAR = 9998
 
 @login_required
 @permission_required("eos_tax.basic_access")
@@ -44,7 +56,18 @@ def index(request):
     now = datetime.now()
     # round, not int: 0.29 * 100 lands on 28.999... in binary floating point
     current_rate = round(get_config().rate_for(now.year, now.month) * 100)
-    context = {"title": _("Taxes to pay: %(rate)s%%") % {"rate": current_rate}, "website_data":website_data, "version":VERSION, "tax_corp":get_tax_corp(corps)}
+    context = {
+        "title": _("Taxes to pay: %(rate)s%%") % {"rate": current_rate},
+        "website_data": website_data,
+        "version": VERSION,
+        "tax_corp": get_tax_corp(corps),
+        # what the page's own script needs; a static file cannot reach the
+        # catalogue, so the strings travel to it as data
+        "js_config": {
+            "searchLabel": _("Corporation:"),
+            "searchPlaceholder": _("Filter by corporation name"),
+        },
+    }
     return render(request, "eos_tax/index.html", context)
 
 
@@ -58,6 +81,20 @@ def statistics(request):
         "years": years,
         "alliances": get_statistics_alliances(),
         "selected_year": years[0] if years else "",
+        "js_config": {
+            "dataUrl": reverse("eos_tax:statistics_data"),
+            "text": {
+                "loading": _("Loading…"),
+                "empty": _("No data for this selection."),
+                "error": _("Could not load the statistics."),
+                "corporations": _("corporations"),
+                "other": _("Other"),
+                "shown": _("{shown} of {total} Corporations drawn"),
+                "covered": _("{value} of the tax covered"),
+                "income": _("{value} ISK income"),
+                "tax": _("{value} ISK tax"),
+            },
+        },
     }
     return render(request, "eos_tax/statistics.html", context)
 
@@ -87,11 +124,21 @@ def statistics_data(request):
 
 
 def _selected_year(request):
-    """Year from the picker, falling back to the running one."""
+    """Year from the picker, falling back to the running one.
+
+    The range matters as much as the type: the value goes on to build
+    datetime(year + 1, 1, 1), which refuses anything outside year 1 to 9999,
+    so a hand written ?year=9999 would raise below instead of here.
+    """
     try:
-        return int(request.GET.get("year", ""))
+        year = int(request.GET.get("year", ""))
     except ValueError:
         return datetime.now().year
+
+    if not MIN_YEAR <= year <= MAX_YEAR:
+        return datetime.now().year
+
+    return year
 
 
 
@@ -109,6 +156,10 @@ def tax_changes(request):
         "years": get_statistics_years(),
         "rows": report["rows"],
         "stats": report["stats"],
+        "js_config": {
+            "searchLabel": _("Search:"),
+            "searchPlaceholder": _("Corporation name, or a rate such as 0 or 100"),
+        },
     }
     return render(request, "eos_tax/tax-changes.html", context)
 
@@ -133,6 +184,13 @@ def tax_change_detail(request, corp_id):
              "systems": day["systems"]}
             for day in detail["days"]
         ],
+        # the two words the columns above are headed with - the tooltip used
+        # to spell them out in English while the headers were translated
+        "js_config": {
+            "axis": _("Share of the bounty in percent"),
+            "payouts": _("Payouts"),
+            "systems": _("Systems"),
+        },
     }
     return render(request, "eos_tax/tax-change-detail.html", context)
 
@@ -183,6 +241,7 @@ def _selected_month(request):
 @permission_required("eos_tax.admin_view")
 def bot_detail(request, character_id):
     """One character's month, hour by hour, as a calendar."""
+    config = get_config()
     selected = _selected_month(request)
     detail = get_character_month(character_id, selected.year, selected.month)
 
@@ -193,7 +252,27 @@ def bot_detail(request, character_id):
         "detail": detail,
         # Django translates these itself, keyed 0 for Monday
         "weekdays": [WEEKDAYS_ABBR[index] for index in range(7)],
-        "min_entries": ACTIVE_HOUR_MIN_ENTRIES,
+        "min_entries": config.bot_hours_min_entries,
+        # handed over by the list the reader clicked through from, so this
+        # page does not start a reading of its own to find out
+        "family": _family_for(
+            request, character_id, selected.strftime("%Y-%m")
+        ),
+        # the month travels in the url so a tab opened after the form was
+        # submitted fetches the month on screen, not the running one
+        "js_config": {
+            "signals": {
+                name: (
+                    reverse(
+                        "eos_tax:bot_signal_detail", args=[name, character_id]
+                    )
+                    + f"?month={selected.strftime('%Y-%m')}"
+                )
+                for name in BOT_SIGNAL_DETAILS
+            },
+            "loading": _("Loading…"),
+            "error": _("Could not load this view."),
+        },
     }
     return render(request, "eos_tax/bot-detail.html", context)
 
@@ -225,10 +304,217 @@ def bots(request):
         "selected_month": month,
         "candidates": report["candidates"],
         "longest_days": report["longest_days"],
+        "groups": report["groups"],
+        "groups_shown": report["groups_shown"],
+        "groups_total": report["groups_total"],
         "stats": stats,
         "min_hours": config.bot_min_hours_per_day,
         "min_days": config.bot_min_days_per_month,
         "wanted": wanted,
         "matches": matches,
+        # the month travels in the url, so a tab opened after the form was
+        # submitted fetches the month on screen rather than the running one
+        "js_config": {
+            "signals": {
+                name: f"{reverse('eos_tax:bot_signal', args=[name])}?month={month}"
+                for name in BOT_SIGNALS
+            },
+            "loading": _("Loading…"),
+            "error": _("Could not load this view."),
+        },
     }
+
+    _remember_groups(request, month, "hours", report["groups"])
+
     return render(request, "eos_tax/bots.html", context)
+
+
+# What the list the reader came from already knew about a main.
+#
+# Each reading walks the whole month for the whole alliance, so the character
+# page must not start one just to fill a dropdown - that is the cost the tabs
+# were split up to avoid. The grouping the reader was looking at is carried
+# forward instead: it is already on screen when they click a name.
+SESSION_FAMILY = "eos_tax_family"
+
+# Only for the heading of that dropdown, so it says which of the four lists
+# the assessments beside the names came from. The tabs carry their own copies
+# of these words; sharing one dictionary between a view and four templates
+# would be the tail wagging the dog.
+BOT_SIGNAL_LABELS = {
+    "hours": _("Hours per day"),
+    "runs": _("Unbroken runs"),
+    "rhythm": _("Against the Corporation"),
+    "clock": _("Off the Corporation clock"),
+}
+
+
+def _remember_groups(request, month, signal, groups):
+    """Keep this grouping for whichever character page is opened next.
+
+    Groups of one are left out: a dropdown listing nobody but the character
+    already on screen is a button that does nothing.
+    """
+    index = {}
+    families = []
+
+    for group in groups:
+        if group["count"] < 2:
+            continue
+
+        for row in group["characters"]:
+            index[str(row["character_id"])] = len(families)
+
+        families.append({
+            "main": group["main_name"],
+            "characters": [
+                {
+                    "id": row["character_id"],
+                    "name": row["character_name"],
+                    "level": row["level"],
+                }
+                for row in group["characters"]
+            ],
+        })
+
+    request.session[SESSION_FAMILY] = {
+        "month": month,
+        "signal": signal,
+        "index": index,
+        "families": families,
+    }
+
+
+def _remembered_family(request, character_id, month):
+    """The main's other characters, as the list that led here saw them.
+
+    Nothing when the reader did not come from a list, or came from one for a
+    different month - a stale grouping beside a fresh month would be worse
+    than no grouping, because it would look current.
+    """
+    remembered = request.session.get(SESSION_FAMILY) or {}
+
+    if remembered.get("month") != month:
+        return None
+
+    position = (remembered.get("index") or {}).get(str(character_id))
+
+    try:
+        family = remembered["families"][position]
+    except (KeyError, IndexError, TypeError):
+        return None
+
+    others = [
+        member for member in family["characters"]
+        if member["id"] != character_id
+    ]
+
+    if not others:
+        return None
+
+    return {
+        "main": family["main"],
+        "signal": BOT_SIGNAL_LABELS.get(remembered.get("signal"), ""),
+        "characters": others,
+    }
+
+
+def _family_for(request, character_id, month):
+    """Who else is on this account, with assessments where they are known.
+
+    Two sources, in that order. The grouping the reader clicked through from
+    carries an assessment per character and costs nothing, but it is only
+    there when they came from a list - and it holds only the characters that
+    list mentioned.
+
+    Arriving cold, from a bookmark or the search box, Alliance Auth still
+    knows who belongs together. That answer has no assessments in it, because
+    producing one means reading the whole month for the whole alliance, which
+    is the cost the tabs were split up to avoid. A jump list without badges is
+    worth more than no jump list.
+    """
+    remembered = _remembered_family(request, character_id, month)
+
+    if remembered:
+        return remembered
+
+    family = alts_of(character_id)
+
+    if not family or not family["characters"]:
+        return None
+
+    return {
+        "main": family["main"],
+        # no reading to name, so the dropdown says what it is instead
+        "signal": "",
+        "characters": family["characters"],
+    }
+
+
+# Which reading of the month each tab shows, and what renders it. Kept beside
+# the view rather than in the template so an unknown name is a 404 here
+# instead of an empty page there.
+BOT_SIGNALS = {
+    "runs": ("eos_tax/partials/bot-runs.html", get_unbroken_runs),
+    "rhythm": ("eos_tax/partials/bot-rhythm.html", get_daily_profile),
+    "clock": ("eos_tax/partials/bot-clock.html", get_clock_offset),
+}
+
+
+@login_required
+@permission_required("eos_tax.admin_view")
+def bot_signal(request, signal):
+    """One sub tab of the bots page, as a fragment.
+
+    The tabs fetch these when they are opened. Three of the four readings
+    would otherwise be computed on every visit to the page, and most visits
+    only ever look at the first.
+    """
+    if signal not in BOT_SIGNALS:
+        raise Http404(signal)
+
+    template, report_for = BOT_SIGNALS[signal]
+    selected = _selected_month(request)
+    report = report_for(selected.year, selected.month)
+
+    month = f"{selected.year}-{selected.month:02d}"
+    _remember_groups(request, month, signal, report["groups"])
+
+    return render(request, template, {
+        "rows": report["rows"],
+        "longest": report.get("longest", []),
+        "groups": report["groups"],
+        "stats": report["stats"],
+        "selected_month": month,
+    })
+
+
+# The same three detections, read for one character instead of for everyone.
+BOT_SIGNAL_DETAILS = {
+    "runs": ("eos_tax/partials/bot-run-detail.html", get_run_detail),
+    "rhythm": ("eos_tax/partials/bot-rhythm-detail.html", get_rhythm_detail),
+    "clock": ("eos_tax/partials/bot-clock-detail.html", get_clock_detail),
+}
+
+
+@login_required
+@permission_required("eos_tax.admin_view")
+def bot_signal_detail(request, signal, character_id):
+    """One detection, read for one character, as a fragment.
+
+    Fetched by the tabs of the character page the same way the list page
+    fetches its own - three of the four readings are never looked at on most
+    visits.
+    """
+    if signal not in BOT_SIGNAL_DETAILS:
+        raise Http404(signal)
+
+    template, detail_for = BOT_SIGNAL_DETAILS[signal]
+    selected = _selected_month(request)
+    detail = detail_for(character_id, selected.year, selected.month)
+
+    return render(request, template, {
+        "detail": detail,
+        "character_id": character_id,
+        "selected_month": f"{selected.year}-{selected.month:02d}",
+    })

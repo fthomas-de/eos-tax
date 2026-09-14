@@ -1,0 +1,42 @@
+{% load i18n %}
+
+{% if detail.series %}
+    {% comment %}
+        Round rather than straight: the question is where the middle of
+        somebody's day sits, and on a bar chart the hours either side of
+        midnight land at opposite ends of the axis.
+    {% endcomment %}
+    {% if detail.middle is None %}
+        <div class="alert alert-warning">
+            {% translate "Nothing is left of this Corporation once the Character's own payouts are taken out, so there is no clock to compare against and none is drawn. Only the Character's own day is shown. The threshold is on the settings page." %}
+        </div>
+    {% else %}
+        <p class="text-body-secondary small">
+            {% translate "The same two days drawn round a clock face, because the hours either side of midnight are neighbours and a straight axis puts them at opposite ends. The markers are the middle of each day, averaged the way a clock wraps." %}
+        </p>
+    {% endif %}
+
+    {{ detail.series|json_script:"eos-tax-chart-data" }}
+
+    <div class="eos-tax-chart-frame">
+        <canvas data-eos-chart="clock"
+                data-eos-label-character="{% translate 'Character' %}"
+                data-eos-label-corporation="{% translate 'Corporation' %}"></canvas>
+    </div>
+
+    <div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
+        {% if detail.middle is not None %}
+            <span>{% blocktranslate with value=detail.middle_at %}Character {{ value }}{% endblocktranslate %}</span>
+            <span>{% blocktranslate with value=detail.corp_middle_at %}Corporation {{ value }}{% endblocktranslate %}</span>
+            <span>{% blocktranslate with value=detail.apart_for %}{{ value }} apart{% endblocktranslate %}</span>
+            <span>{% translate "all times EVE time" %}</span>
+            <span class="ms-auto">{% include "eos_tax/partials/bot-level-badge.html" with level=detail.level %}</span>
+        {% else %}
+            <span>{% blocktranslate with value=detail.payouts %}{{ value }} payouts, no yardstick{% endblocktranslate %}</span>
+        {% endif %}
+    </div>
+{% else %}
+    <div class="alert alert-info text-center">
+        {% translate "No taxed income in this month." %}
+    </div>
+{% endif %}

@@ -1,61 +1,56 @@
 from decimal import Decimal
 
+from django.contrib.staticfiles.finders import find as find_static
 from eos_tax.tests.base import EosTaxTestCase
 from django.urls import reverse
 
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 
-from eos_tax.db_connector import _chart_palette
+from eos_tax.db.palette import _chart_palette
 from eos_tax.models import MonthlyTax, TaxConfiguration
 from eos_tax.util import get_amount_to_pay
 
-from .test_views import create_user
-
-TAXED_ALLIANCE_ID = 99000001
-OTHER_ALLIANCE_ID = 99000002
-BRAVO_CORP_ID = 98000001
-ALPHA_CORP_ID = 98000002
-OUTSIDER_CORP_ID = 98000003
+from .factories import (
+    ALPHA_CORP_ID,
+    BRAVO_CORP_ID,
+    OTHER_ALLIANCE_ID,
+    OUTSIDER_CORP_ID,
+    TAX_RATE,
+    TAXED_ALLIANCE_ID,
+    create_alliance,
+    create_user,
+)
+from . import factories
 
 YEAR = 2026
 
-# mirrors a real configuration, so income and tax are not the same figure
-TAX_RATE = 0.1
-
-
-def create_alliance(alliance_id, name):
-    return EveAllianceInfo.objects.create(
-        alliance_id=alliance_id,
-        alliance_name=name,
-        alliance_ticker=name[:5].upper(),
-    )
-
 
 def create_corporation(corp_id, name, alliance):
-    return EveCorporationInfo.objects.create(
-        corporation_id=corp_id,
-        corporation_name=name,
-        corporation_ticker=name[:5].upper(),
-        alliance=alliance,
-        tax_rate=0.1,
-        member_count=120,
-    )
+    return factories.create_corporation(corp_id, name, alliance, member_count=120)
 
 
 def create_tax_row(corp_id, name, month, tax_value=1_000_000_000, tax_percentage=10.0):
-    return MonthlyTax.objects.create(
-        corp_id=corp_id,
-        corp_name=name,
-        tax_value=tax_value,
-        tax_percentage=tax_percentage,
+    """This page reads a whole year, so the month is always given."""
+    return factories.create_tax_row(
+        corp_id,
+        name,
         month=month,
         year=YEAR,
-        payed=False,
+        tax_value=tax_value,
+        tax_percentage=tax_percentage,
         alliance_tax_rate=TAX_RATE,
     )
 
 
-def build_world(blacklist=()):
+def read_statistics_js():
+    """The rendered page only points at the (possibly hashed) static file, so
+    the guards on its contents read the source directly instead."""
+    path = find_static("eos_tax/js/statistics.js")
+    with open(path, encoding="utf-8") as handle:
+        return handle.read()
+
+
+def build_fixture():
     """Two corporations inside the taxed alliance, one outside it."""
     taxed = create_alliance(TAXED_ALLIANCE_ID, "Taxed Alliance")
     other = create_alliance(OTHER_ALLIANCE_ID, "Other Alliance")
@@ -68,6 +63,10 @@ def build_world(blacklist=()):
     create_tax_row(BRAVO_CORP_ID, "Bravo Corp", month=2, tax_value=2_000_000_000)
     create_tax_row(ALPHA_CORP_ID, "Alpha Corp", month=1, tax_value=500_000_000)
     create_tax_row(OUTSIDER_CORP_ID, "Outsider Corp", month=1)
+
+
+def build_world(blacklist=()):
+    build_fixture()
 
     return configure(blacklist=blacklist)
 
@@ -123,7 +122,8 @@ class TestChartPalette(EosTaxTestCase):
 
 
 class TestStatisticsAccess(EosTaxTestCase):
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         build_world()
 
     def test_should_reject_basic_access_on_the_page(self):
@@ -153,11 +153,19 @@ class TestStatisticsAccess(EosTaxTestCase):
 
 
 class TestStatisticsData(EosTaxTestCase):
-    def setUp(self):
-        build_world()
-        self.client.force_login(
-            create_user("boss", 92000010, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+    @classmethod
+    def setUpTestData(cls):
+        build_fixture()
+        cls.user = create_user(
+            "boss", 92000010, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"]
         )
+
+    def setUp(self):
+        # two tests below reconfigure the blacklist, so the configuration
+        # itself is rebuilt fresh every time instead of being shared
+        configure()
+        # self.client is rebuilt per test, so the login has to be too
+        self.client.force_login(self.user)
 
     def payload(self, **params):
         params.setdefault("year", YEAR)
@@ -250,10 +258,20 @@ class TestStatisticsData(EosTaxTestCase):
 
 
 class TestStatisticsPage(EosTaxTestCase):
-    def setUp(self):
-        self.user = create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = create_user(
             "boss", 92000020, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"]
         )
+        # enough to make `years` non empty: the eight tests below only need
+        # the "has data" branch of the template, never a real figure from it.
+        # A corp id of its own so it never collides with the row a test
+        # builds itself; test_should_show_an_empty_state_without_any_data
+        # deletes this row again before it runs.
+        create_tax_row(98099999, "Filler Corp", month=1)
+
+    def setUp(self):
+        # self.client is rebuilt per test, so the login has to be too
         self.client.force_login(self.user)
 
     def test_should_offer_the_years_that_carry_data(self):
@@ -277,16 +295,12 @@ class TestStatisticsPage(EosTaxTestCase):
         self.assertNotContains(response, "Other Alliance")
 
     def test_should_load_the_chart_bundle(self):
-        build_world()
-
         response = self.client.get(reverse("eos_tax:statistics"))
 
         self.assertContains(response, "chart.umd.min.js")
         self.assertContains(response, 'id="eos-tax-chart"')
 
     def test_should_offer_both_display_methods(self):
-        build_world()
-
         response = self.client.get(reverse("eos_tax:statistics"))
 
         self.assertContains(response, 'id="eos-tax-chart-type"')
@@ -294,58 +308,64 @@ class TestStatisticsPage(EosTaxTestCase):
         self.assertContains(response, 'value="pie"')
 
     def test_should_hide_the_month_field_until_the_pie_is_picked(self):
-        build_world()
-
         response = self.client.get(reverse("eos_tax:statistics"))
 
-        self.assertContains(response, 'id="eos-tax-month-field"')
-        self.assertContains(response, "hidden")
+        # the attribute on that element: "hidden" on its own also matches
+        # the line of JavaScript that later shows the field again
+        self.assertContains(response, 'id="eos-tax-month-field" hidden')
 
     def test_should_offer_the_share_threshold(self):
-        build_world()
-
         response = self.client.get(reverse("eos_tax:statistics"))
 
+        # value="2" alone also matches the year option value="2026"
         self.assertContains(response, 'id="eos-tax-min-share"')
-        self.assertContains(response, 'value="2"')
+        self.assertContains(response, 'step="0.5" value="2"')
 
     def test_should_ship_the_folding(self):
         """Shallow guard: the folding itself runs in the browser and is checked
-        separately against the live figures."""
-        build_world()
+        separately against the live figures. The logic lives in the static
+        file now, not in the rendered page."""
+        source = read_statistics_js()
 
-        response = self.client.get(reverse("eos_tax:statistics"))
-
-        self.assertContains(response, "function fold(")
-        self.assertContains(response, "function minShare()")
+        self.assertIn("function fold(", source)
+        self.assertIn("function minShare()", source)
 
     def test_should_format_isk_with_dots(self):
         """The overview formats server side with dots; Intl would have followed
         the viewer's locale and printed commas on an English browser."""
-        build_world()
+        source = read_statistics_js()
 
+        self.assertIn("function billions(", source)
+        self.assertNotIn("Intl.NumberFormat", source)
+
+    def test_should_load_the_script_as_a_static_file(self):
+        """The 486 line block used to sit inline in the template. Now the page
+        only points at the (hash named) static file and ships none of the
+        logic itself."""
         response = self.client.get(reverse("eos_tax:statistics"))
 
-        self.assertContains(response, "function billions(")
-        self.assertNotContains(response, "Intl.NumberFormat")
+        # the hash sits between the name and the extension, so this survives
+        # collectstatic whether or not manifest hashing is in effect
+        self.assertContains(response, "eos_tax/js/statistics")
+        self.assertNotContains(response, "function fold(")
 
     def test_should_offer_the_key_figures(self):
-        build_world()
-
         response = self.client.get(reverse("eos_tax:statistics"))
 
         self.assertContains(response, 'id="eos-tax-figures"')
 
     def test_should_not_leak_template_comments(self):
         """A multi line {# #} is not a comment in Django - it renders as text."""
-        build_world()
-
         response = self.client.get(reverse("eos_tax:statistics"))
 
         self.assertNotContains(response, "the legend doubles as the table view")
         self.assertNotContains(response, "{#")
 
     def test_should_show_an_empty_state_without_any_data(self):
+        # setUpTestData seeds one row so the eight tests above see a
+        # non empty `years` - this is the one test that needs none at all
+        MonthlyTax.objects.all().delete()
+
         response = self.client.get(reverse("eos_tax:statistics"))
 
         self.assertContains(response, "No tax data recorded yet.")

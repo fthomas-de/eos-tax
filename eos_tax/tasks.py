@@ -3,7 +3,7 @@ from celery import shared_task
 from allianceauth.services.hooks import get_extension_logger
 from allianceauth.eveonline.models import EveCorporationInfo
 
-from eos_tax.db_connector import update_corp
+from eos_tax.db.payments import update_corp
 from eos_tax.app_settings import get_config
 from eos_tax.util import get_dates
 
