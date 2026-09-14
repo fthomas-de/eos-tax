@@ -23,9 +23,9 @@ from allianceauth.services.hooks import get_extension_logger
 
 from eos_tax.app_settings import get_config
 from eos_tax.db.shared import (
-    GROUP_LIMIT,
     _month_range,
     _taxed_corporation_ids,
+    group_limited_rows,
     grouped,
     level_for,
 )
@@ -44,11 +44,6 @@ logger = get_extension_logger(__name__)
 # readings are meant to disagree and a shared threshold would tie them
 # together again. This one is not: it is what the game does, not a choice.
 TICK_MINUTES = 20
-
-# When nothing clears the run threshold the longest runs are shown anyway, the
-# way the first tab falls back to the longest days. An empty table says the
-# threshold was not met; it does not say by how much.
-FALLBACK_LIMIT = 10
 
 
 def _flat_share(busy_hours: int) -> float:
@@ -438,9 +433,10 @@ def get_unbroken_runs(year: int, month: int, min_ticks: int = None,
     # thresholds use, and for the same reason
     fallback = []
     if not rows:
-        fallback = sorted(
+        # cut to ten mains, not ten rows - see group_limited_rows
+        fallback = group_limited_rows(sorted(
             longest, key=lambda row: (-row["ticks"], row["character_name"])
-        )[:FALLBACK_LIMIT]
+        ))
 
     groups, total = _grouped(rows or fallback)
 
@@ -698,8 +694,8 @@ def get_daily_profile(year: int, month: int):
 
     # nothing over the threshold says nothing about how close anyone came, so
     # the largest differences are shown instead, the same way the runs tab
-    # falls back
-    fallback = rows[:FALLBACK_LIMIT] if not listed else []
+    # falls back. Cut to ten mains, not ten rows - see group_limited_rows
+    fallback = group_limited_rows(rows) if not listed else []
 
     groups, total = _grouped(listed or fallback)
 
@@ -871,7 +867,8 @@ def get_clock_offset(year: int, month: int):
     # everybody sits some distance from their Corporation; most of it is the
     # difference between playing after work and playing after dinner
     listed = [row for row in rows if row["apart"] >= min_apart]
-    fallback = rows[:FALLBACK_LIMIT] if not listed else []
+    # cut to ten mains, not ten rows - see group_limited_rows
+    fallback = group_limited_rows(rows) if not listed else []
 
     groups, total = _grouped(listed or fallback)
 

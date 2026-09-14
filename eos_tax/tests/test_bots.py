@@ -8,7 +8,8 @@ from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 
 from corptools.models import CorporationAudit, CorporationWalletDivision, EveName
 
-from eos_tax.db.bots import LONGEST_DAYS_LIMIT, get_bot_report
+from eos_tax.db.bots import get_bot_report
+from eos_tax.db.shared import GROUP_LIMIT
 from eos_tax.models import TaxConfiguration
 
 from .factories import (
@@ -23,6 +24,7 @@ from .factories import (
     add_entries,
     build_corporations,
     configure,
+    create_alt,
     create_user,
 )
 
@@ -212,8 +214,13 @@ class TestLongestDaysFallback(EosTaxTestCase):
         self.assertEqual(longest[0]["max_hours"], 4)
 
     def test_should_cap_the_fallback_at_the_limit(self):
-        """One over the cap is what shows a cap; four over only costs rows."""
-        for index in range(LONGEST_DAYS_LIMIT + 1):
+        """One over the cap is what shows a cap; four over only costs rows.
+
+        Every character here is its own main - Alliance Auth was never told
+        about any of them - so a row and a group are the same thing and this
+        does not yet tell the row cap from the group cap apart. The next test
+        does."""
+        for index in range(GROUP_LIMIT + 1):
             character_id = 2100001000 + index
             EveName.objects.create(
                 eve_id=character_id, name=f"Pilot {index}", category="character"
@@ -221,8 +228,42 @@ class TestLongestDaysFallback(EosTaxTestCase):
             add_entries(self.divisions[BRAVO_CORP_ID], character_id, 1, (index % 12,))
 
         self.assertEqual(
-            len(self.report()["longest_days"]), LONGEST_DAYS_LIMIT
+            self.report()["groups_total"], GROUP_LIMIT
         )
+
+    def test_should_show_ten_mains_even_when_two_of_the_top_rows_share_one(self):
+        """Slicing the fallback to ten rows before grouping used to cost a
+        main its whole listing: two alts of the same account filled two of
+        those ten slots, and the eleventh row - a main of its own - never
+        reached the grouping step to be counted. Grouping first and cutting
+        the groups instead means all ten distinct mains show up, main pair
+        included."""
+        owner = create_user(
+            "topalt", 94100050, BRAVO_CORP_ID, "Bravo Corp"
+        )
+        EveName.objects.create(
+            eve_id=94100050, name="topalt character", category="character"
+        )
+        create_alt(owner, RATTER_ID, "Busy Ratter")
+        # ranked first and second: six active hours each, well above the
+        # one hour singles below
+        for character_id in (94100050, RATTER_ID):
+            add_entries(self.divisions[BRAVO_CORP_ID], character_id, 1, range(6))
+
+        # nine more mains of their own, ranked third through eleventh
+        for index in range(9):
+            character_id = 2100001000 + index
+            EveName.objects.create(
+                eve_id=character_id, name=f"Pilot {index}", category="character"
+            )
+            add_entries(self.divisions[BRAVO_CORP_ID], character_id, 1, (index % 12,))
+
+        report = self.report()
+
+        # one main for the pair, nine for the singles - ten in reach, and the
+        # cap does not cost the account its own second slot in exchange
+        self.assertEqual(report["groups_total"], GROUP_LIMIT)
+        self.assertEqual(len(report["groups"]), GROUP_LIMIT)
 
     def test_should_drop_the_fallback_once_something_qualifies(self):
         for day in (1, 2):
@@ -410,7 +451,7 @@ class TestBotsPage(EosTaxTestCase):
             reverse("eos_tax:bots"), {"month": f"{YEAR}-{MONTH:02d}"}
         )
 
-        self.assertContains(response, "The ten longest days of the month")
+        self.assertContains(response, "The ten mains with the longest days")
         self.assertContains(response, "Busy Ratter")
         # not the bare word: Alliance Auth's own menu says "Change Main" on
         # every page, so that would pass with no table at all

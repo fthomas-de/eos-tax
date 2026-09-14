@@ -7,12 +7,13 @@ the shape of the result differs, because a detail page draws points and a
 list page draws rows.
 """
 
+import datetime
 import html
 import json
 
 from django.urls import reverse
 
-from corptools.models import EveName
+from corptools.models import CorporationWalletJournalEntry, EveName
 
 from eos_tax.db.bot_signals import (
     _clock_distance,
@@ -35,6 +36,7 @@ from .factories import (
     configure,
     create_alt,
     create_user,
+    entry_ids,
 )
 
 # The rest of the Corporation for the exclusion cases. Since a character is
@@ -497,24 +499,41 @@ class TestBotDetailPageTabs(EosTaxTestCase):
             str(self.page().context["family"]["signal"]), "Unbroken runs"
         )
 
-    def test_should_list_every_alt_when_opened_without_a_list(self):
+    def test_should_list_only_alts_with_a_taxed_transaction_when_opened_without_a_list(self):
         """Cold - a bookmark, the search box - Alliance Auth still knows who
         belongs together, so the jump list is there. Only the assessments are
         missing, because producing one means reading the whole month for the
-        whole alliance, and a jump list without badges beats none."""
+        whole alliance, and a jump list without badges beats none.
+
+        The main itself is a candidate too - from an alt it would be the
+        useful jump - but build_family() never gives it a payout, so it stays
+        out same as any alt would."""
         self.build_family()
 
         family = self.page().context["family"]
 
         self.assertEqual(str(family["signal"]), "")
-        # the main itself as well - from an alt it is the useful jump
         self.assertEqual(
-            sorted(member["name"] for member in family["characters"]),
-            ["Casual Pilot", "boss character"],
+            [member["name"] for member in family["characters"]], ["Casual Pilot"]
         )
         self.assertTrue(
             all(member["level"] is None for member in family["characters"])
         )
+
+    def test_should_leave_out_an_alt_without_a_taxed_transaction_this_month(self):
+        """An account collects characters for a lifetime; most of them never
+        near this corporation's income. Casual Pilot only qualifies here
+        because build_family() gives it a payout - drop that and the jump
+        list should be empty rather than list a name with nothing behind
+        it."""
+        self.build_family()
+        CorporationWalletJournalEntry.objects.filter(
+            second_party_id=CASUAL_ID
+        ).delete()
+
+        family = self.page().context["family"]
+
+        self.assertIsNone(family)
 
     def test_should_show_no_dropdown_for_a_character_alliance_auth_knows_nothing_of(self):
         """The journal names characters nobody ever registered. Without an
@@ -532,9 +551,27 @@ class TestBotDetailPageTabs(EosTaxTestCase):
     def test_should_ignore_a_grouping_from_another_month(self):
         """A stale grouping beside a fresh month would be worse than none,
         because it would look current - so the month falls back to the plain
-        list of alts rather than keeping September's assessments."""
+        list of alts rather than keeping September's assessments.
+
+        A payout of its own in January, on top of build_family()'s May ones,
+        keeps the cold fallback from returning empty here for an unrelated
+        reason - this is about the stale signal, not about January having
+        nothing to show."""
         self.build_family()
         self.client.get(reverse("eos_tax:bots"), {"month": self.month})
+        CorporationWalletJournalEntry.objects.create(
+            division=self.divisions[BRAVO_CORP_ID],
+            date=datetime.datetime(2026, 1, 15, 12, tzinfo=datetime.timezone.utc),
+            description="got bounty prizes for killing pirates",
+            entry_id=next(entry_ids),
+            ref_type="bounty_prizes",
+            first_party_id=1000125,
+            second_party_id=CASUAL_ID,
+            second_party_name_id=CASUAL_ID,
+            tax_receiver_id=BRAVO_CORP_ID,
+            amount=1000,
+            tax=1000,
+        )
 
         other = self.client.get(
             reverse("eos_tax:bot_detail", args=[RATTER_ID]),
@@ -542,6 +579,10 @@ class TestBotDetailPageTabs(EosTaxTestCase):
         )
 
         self.assertEqual(str(other.context["family"]["signal"]), "")
+        self.assertEqual(
+            [member["name"] for member in other.context["family"]["characters"]],
+            ["Casual Pilot"],
+        )
 
     def test_should_mark_the_jump_links_to_be_kept_on_the_open_tab(self):
         """Comparing one reading across a main was two clicks per character:

@@ -496,6 +496,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   borrows the page's own link colour, which every installed theme already
   picks to read against its card headers, rather than a fixed palette colour
   that happened to collide with one of them.
+- The character switcher's cold fallback - opened from a bookmark or the
+  search box, without a list behind it - listed every character Alliance Auth
+  knows on the account, whether or not it ever ratted. `alts_of` now takes
+  the selected month and keeps only characters with a taxed transaction in
+  it, the same definition every other reading of the month uses. A main with
+  five alts and one ratter used to offer four names worth nothing to click.
+- All four fallback lists - the ten longest days, and the three signals'
+  "nothing crossed the threshold" lists - capped themselves to ten rows
+  before grouping by main, not ten mains. Two alts of one account near the
+  top of the ranking cost two of those ten slots for a single main, and
+  pushed an eleventh row - a main of its own - out before grouping ever saw
+  it; the page then showed nine mains where ten were possible. The new
+  `group_limited_rows` groups first and cuts the groups instead, the way the
+  primary, over-threshold lists already did.
 
 ## [0.2.6] - 2026-09-10
 

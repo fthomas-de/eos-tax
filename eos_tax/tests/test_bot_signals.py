@@ -18,7 +18,6 @@ from corptools.models import EveName
 from allianceauth.eveonline.models import EveCorporationInfo
 
 from eos_tax.db.bot_signals import (
-    FALLBACK_LIMIT,
     _clock_distance,
     _level,
     _longest_run,
@@ -29,6 +28,7 @@ from eos_tax.db.bot_signals import (
     get_daily_profile,
     get_unbroken_runs,
 )
+from eos_tax.db.shared import GROUP_LIMIT
 from eos_tax.util import format_clock, format_duration
 from eos_tax.models import TaxConfiguration
 from eos_tax.tests.base import EosTaxTestCase
@@ -43,6 +43,7 @@ from .factories import (
     add_entries,
     build_corporations,
     configure,
+    create_alt,
     create_user,
 )
 
@@ -222,8 +223,12 @@ class TestUnbrokenRuns(EosTaxTestCase):
         self.assertEqual(names, ["Busy Ratter", "Casual Pilot"])
 
     def test_should_cap_the_fallback_list_at_the_limit(self):
-        """One over the cap is what shows a cap; more only costs rows."""
-        for index in range(FALLBACK_LIMIT + 1):
+        """One over the cap is what shows a cap; more only costs rows.
+
+        Every character here is its own main, so a row and a group are the
+        same thing and this does not yet tell the row cap from the group cap
+        apart. The next test does."""
+        for index in range(GROUP_LIMIT + 1):
             character_id = 2100002000 + index
             EveName.objects.create(
                 eve_id=character_id, name=f"Pilot {index}", category="character"
@@ -235,7 +240,40 @@ class TestUnbrokenRuns(EosTaxTestCase):
         result = get_unbroken_runs(YEAR, MONTH, min_ticks=100, max_gaps=0)
 
         self.assertEqual(result["rows"], [])
-        self.assertEqual(len(result["longest"]), FALLBACK_LIMIT)
+        self.assertEqual(result["stats"]["groups_total"], GROUP_LIMIT)
+
+    def test_should_show_ten_mains_even_when_two_of_the_top_rows_share_one(self):
+        """Slicing the fallback to ten rows before grouping used to cost a
+        main its whole listing: two alts of the same account filled two of
+        those ten slots, and the eleventh row - a main of its own - never
+        reached the grouping step to be counted."""
+        owner = create_user("topalt", 94100060, BRAVO_CORP_ID, "Bravo Corp")
+        EveName.objects.create(
+            eve_id=94100060, name="topalt character", category="character"
+        )
+        create_alt(owner, RATTER_ID, "Busy Ratter")
+        # ranked first and second: six ticks each, well above the two-tick
+        # singles below
+        for character_id in (94100060, RATTER_ID):
+            add_entries(
+                self.divisions[BRAVO_CORP_ID], character_id, 1, (0,), entries=6
+            )
+
+        # nine more mains of their own, ranked third through eleventh
+        for index in range(9):
+            character_id = 2100002000 + index
+            EveName.objects.create(
+                eve_id=character_id, name=f"Pilot {index}", category="character"
+            )
+            add_entries(
+                self.divisions[BRAVO_CORP_ID], character_id, 1, (index % 12,), entries=2
+            )
+
+        result = get_unbroken_runs(YEAR, MONTH, min_ticks=100, max_gaps=0)
+
+        self.assertEqual(result["rows"], [])
+        self.assertEqual(result["stats"]["groups_total"], GROUP_LIMIT)
+        self.assertEqual(len(result["groups"]), GROUP_LIMIT)
 
     def test_should_use_the_configured_thresholds_when_none_are_given(self):
         config = TaxConfiguration.get_solo()

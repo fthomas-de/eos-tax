@@ -2,12 +2,15 @@
 
 from datetime import datetime, timezone
 
+from corptools.models import CorporationWalletJournalEntry
 from django.core.exceptions import ObjectDoesNotExist
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.framework.api.evecharacter import (
     get_main_character_from_evecharacter,
 )
+
+from eos_tax.app_settings import get_config
 
 
 def _corporation_infos(corp_ids):
@@ -46,13 +49,14 @@ def _taxed_corporation_ids(config):
     )
 
 
-def alts_of(character_id: int):
-    """Every character on the same account as this one, and the main's name.
+def alts_of(character_id: int, year: int, month: int):
+    """The other characters on this account with a taxed payout this month,
+    and the main's name.
 
-    Alliance Auth alone, no journal: it knows who belongs together, which is
-    all this answers. It does not know which of them is worth looking at -
-    that takes a reading of the whole month for the whole alliance, so a
-    caller holding a grouping from a list should prefer it over this.
+    Alliance Auth alone knows who belongs together, but not which of them are
+    worth a jump - an account collects characters for a lifetime, most never
+    near this corporation's income. A menu listing every one of them is a
+    menu the reader has to read past to find the two or three that matter.
 
     None when the character is unknown to Alliance Auth or owned by nobody,
     which on a test system is almost everyone in the journal.
@@ -77,12 +81,35 @@ def alts_of(character_id: int):
     if not main:
         return None
 
-    others = (
+    candidates = list(
         EveCharacter.objects.filter(character_ownership__user=ownership.user)
         .exclude(character_id=character_id)
         .order_by("character_name")
         .values_list("character_id", "character_name")
     )
+
+    config = get_config()
+    corp_ids = _taxed_corporation_ids(config)
+    start, end = _month_range(year, month)
+
+    # the same definition of "taxed" every reading of the month uses - a
+    # character an account has not ratted with this month is dead weight in
+    # the menu, not a jump worth offering
+    active_ids = set()
+    if candidates and corp_ids and config.tax_types:
+        active_ids = set(
+            CorporationWalletJournalEntry.objects.filter(
+                ref_type__in=config.tax_types,
+                tax_receiver_id__in=corp_ids,
+                second_party_id__in=[eve_id for eve_id, _name in candidates],
+                date__gte=start,
+                date__lt=end,
+            )
+            .values_list("second_party_id", flat=True)
+            .distinct()
+        )
+
+    others = [row for row in candidates if row[0] in active_ids]
 
     return {
         "main": main.character_name,
@@ -184,3 +211,21 @@ def grouped(rows, limit: int = GROUP_LIMIT):
     ordered = list(groups.values())
 
     return ordered[:limit], len(ordered)
+
+
+def group_limited_rows(rows, limit: int = GROUP_LIMIT):
+    """`rows`, cut to the first `limit` mains rather than the first `limit` rows.
+
+    A fallback list is built before anything is known about grouping, so
+    slicing it straight to a row count is the obvious thing to do - and it
+    quietly hands back fewer mains than the limit promises. Two alts of one
+    main near the top of the ranking fill two of those slots; a main further
+    down never gets in front of `grouped` to be counted at all, and the page
+    ends up showing nine groups where ten were possible. Grouping the whole
+    list first and flattening the kept groups back down fixes that, and still
+    hands the caller a plain row list - what it does with rows is unaffected,
+    only how many mains are behind them.
+    """
+    groups, _ = grouped(rows, limit=limit)
+
+    return [row for group in groups for row in group["characters"]]

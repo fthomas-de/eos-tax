@@ -438,7 +438,8 @@ def _family_for(request, character_id, month):
     if remembered:
         return remembered
 
-    family = alts_of(character_id)
+    parsed = datetime.strptime(month, "%Y-%m")
+    family = alts_of(character_id, parsed.year, parsed.month)
 
     if not family or not family["characters"]:
         return None

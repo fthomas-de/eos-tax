@@ -18,15 +18,11 @@ from eos_tax.util import format_isk
 from eos_tax.db.shared import (
     _month_range,
     _taxed_corporation_ids,
+    group_limited_rows,
     grouped,
     level_for,
     main_characters,
 )
-
-
-# how many characters the bots page falls back to when nothing crosses the
-# thresholds - enough to judge whether the thresholds fit, short enough to read
-LONGEST_DAYS_LIMIT = 10
 
 
 # The matrix paints one hue at a share of the busiest day. The floor keeps a
@@ -123,8 +119,8 @@ def get_bot_report(year: int, month: int):
     listed once more than bot_min_days_per_month such days pile up.
 
     When nothing crosses both thresholds the report falls back to the ten
-    longest days of the month - an empty page says nothing about whether the
-    thresholds are sensible, that list does.
+    mains with the longest days of the month - an empty page says nothing
+    about whether the thresholds are sensible, that list does.
 
     Days are cut on EVE time, not on the server locale - otherwise the boundary
     moves and a night of ratting is split across two days.
@@ -215,14 +211,15 @@ def get_bot_report(year: int, month: int):
 
     longest_days = []
     if not candidates:
-        longest_days = sorted(
+        # cut to ten mains, not ten rows - see group_limited_rows
+        longest_days = group_limited_rows(sorted(
             rows,
             key=lambda entry: (
                 -entry["max_hours"],
                 -entry["active_days"],
                 -entry["contributed"],
             ),
-        )[:LONGEST_DAYS_LIMIT]
+        ))
 
     shown = candidates or longest_days
     shown_ids = [entry["character_id"] for entry in shown]
