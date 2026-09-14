@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-14 13:09+0200\n"
+"POT-Creation-Date: 2026-09-14 17:08+0200\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -292,7 +292,11 @@ msgid ""
 "the list mentions them. A third of the scale above is where the colouring "
 "stops calling a distance unremarkable, so a threshold under that lets green "
 "rows into the list."
-msgstr "В часах. Насколько далеко от своей Corporation должны лежать сутки character, чтобы список его назвал. На трети шкалы выше окраска перестаёт называть расстояние обычным, поэтому порог ниже этой отметки пускает в список и зелёные строки."
+msgstr ""
+"В часах. Насколько далеко от своей Corporation должны лежать сутки "
+"character, чтобы список его назвал. На трети шкалы выше окраска перестаёт "
+"называть расстояние обычным, поэтому порог ниже этой отметки пускает в "
+"список и зелёные строки."
 
 #: models.py:230
 msgid ""
@@ -400,7 +404,7 @@ msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
 #: models.py:350 templates/eos_tax/index.html:25
-#: templates/eos_tax/index.html:68
+#: templates/eos_tax/index.html:74
 msgid "Payed"
 msgstr "Оплачено"
 
@@ -437,7 +441,7 @@ msgstr "Corp Tax Changes"
 msgid "Settings"
 msgstr "Настройки"
 
-#: templates/eos_tax/bot-detail.html:27
+#: templates/eos_tax/bot-detail.html:36
 #, python-format
 msgid "%(main)s - %(counter)s more character"
 msgid_plural "%(main)s - %(counter)s more characters"
@@ -445,50 +449,50 @@ msgstr[0] "%(main)s - ещё %(counter)s character"
 msgstr[1] "%(main)s - ещё %(counter)s characters"
 msgstr[2] "%(main)s - ещё %(counter)s characters"
 
-#: templates/eos_tax/bot-detail.html:44
+#: templates/eos_tax/bot-detail.html:53
 msgid "Every character of this main"
 msgstr "Все characters этого Main"
 
-#: templates/eos_tax/bot-detail.html:75
+#: templates/eos_tax/bot-detail.html:84
 msgid "Open one of the bot lists to see how each of them was assessed."
 msgstr "Откройте один из списков ботов, чтобы увидеть оценку каждого."
 
-#: templates/eos_tax/bot-detail.html:86
+#: templates/eos_tax/bot-detail.html:95
 #: templates/eos_tax/tax-change-detail.html:14
 msgid "Back to the list"
 msgstr "Назад к списку"
 
-#: templates/eos_tax/bot-detail.html:92 templates/eos_tax/bots.html:18
+#: templates/eos_tax/bot-detail.html:101 templates/eos_tax/bots.html:18
 #: templates/eos_tax/index.html:23 templates/eos_tax/statistics.html:54
 msgid "Month"
 msgstr "Месяц"
 
-#: templates/eos_tax/bot-detail.html:98 templates/eos_tax/bots.html:31
+#: templates/eos_tax/bot-detail.html:107 templates/eos_tax/bots.html:31
 #: templates/eos_tax/tax-changes.html:37
 msgid "Show"
 msgstr "Показать"
 
-#: templates/eos_tax/bot-detail.html:114 templates/eos_tax/bots.html:48
+#: templates/eos_tax/bot-detail.html:123 templates/eos_tax/bots.html:48
 #: templates/eos_tax/settings.html:123 views.py:345
 msgid "Hours per day"
 msgstr "Часов в сутки"
 
-#: templates/eos_tax/bot-detail.html:121 templates/eos_tax/bots.html:55
+#: templates/eos_tax/bot-detail.html:130 templates/eos_tax/bots.html:55
 #: templates/eos_tax/settings.html:132 views.py:346
 msgid "Unbroken runs"
 msgstr "Непрерывные серии"
 
-#: templates/eos_tax/bot-detail.html:128 templates/eos_tax/bots.html:62
+#: templates/eos_tax/bot-detail.html:137 templates/eos_tax/bots.html:62
 #: templates/eos_tax/settings.html:143 views.py:347
 msgid "Against the Corporation"
 msgstr "В такт Corporation"
 
-#: templates/eos_tax/bot-detail.html:135 templates/eos_tax/bots.html:69
+#: templates/eos_tax/bot-detail.html:144 templates/eos_tax/bots.html:69
 #: templates/eos_tax/settings.html:155 views.py:348
 msgid "Off the Corporation clock"
 msgstr "Вне часов Corporation"
 
-#: templates/eos_tax/bot-detail.html:150
+#: templates/eos_tax/bot-detail.html:159
 #, python-format
 msgid ""
 "Active hours per day. An hour counts as active once the same taxed\n"
@@ -500,55 +504,55 @@ msgstr ""
 "journal type встречается в нём не менее %(min_entries)s раз — то же правило, "
 "что и в списке. Время по EVE."
 
-#: templates/eos_tax/bot-detail.html:160
+#: templates/eos_tax/bot-detail.html:169
 msgid "Active hours per day, calendar weeks as rows and weekdays as columns"
 msgstr "Активные часы по дням, недели по строкам и дни недели по столбцам"
 
-#: templates/eos_tax/bot-detail.html:166
+#: templates/eos_tax/bot-detail.html:175
 msgid "Week"
 msgstr "Нед."
 
-#: templates/eos_tax/bot-detail.html:190
+#: templates/eos_tax/bot-detail.html:199
 #, python-format
 msgid "Active hours: %(hours)s"
 msgstr "Активные часы: %(hours)s"
 
-#: templates/eos_tax/bot-detail.html:211
+#: templates/eos_tax/bot-detail.html:220
 msgid "quiet"
 msgstr "тихо"
 
-#: templates/eos_tax/bot-detail.html:216
+#: templates/eos_tax/bot-detail.html:225
 #, python-format
 msgid "%(value)s hours"
 msgstr "%(value)s ч"
 
-#: templates/eos_tax/bot-detail.html:220
+#: templates/eos_tax/bot-detail.html:229
 #, python-format
 msgid "%(value)s active days"
 msgstr "%(value)s активных дней"
 
-#: templates/eos_tax/bot-detail.html:221
+#: templates/eos_tax/bot-detail.html:230
 #, python-format
 msgid "%(value)s active hours"
 msgstr "%(value)s активных часов"
 
-#: templates/eos_tax/bot-detail.html:222
+#: templates/eos_tax/bot-detail.html:231
 #, python-format
 msgid "busiest day %(value)s hours"
 msgstr "самый активный день %(value)s часов"
 
-#: templates/eos_tax/bot-detail.html:223
+#: templates/eos_tax/bot-detail.html:232
 #, python-format
 msgid "%(value)s journal entries"
 msgstr "%(value)s journal entries"
 
-#: templates/eos_tax/bot-detail.html:226 templates/eos_tax/bots.html:153
+#: templates/eos_tax/bot-detail.html:235 templates/eos_tax/bots.html:153
 #: templates/eos_tax/tax-change-detail.html:75
 #: templates/eos_tax/tax-changes.html:136
 msgid "total"
 msgstr "всего"
 
-#: templates/eos_tax/bot-detail.html:231
+#: templates/eos_tax/bot-detail.html:240
 msgid "This character had no active hour in the selected month."
 msgstr "У этого персонажа не было активных часов в выбранном месяце."
 
@@ -589,11 +593,13 @@ msgstr "Персонаж по запросу «%(wanted)s» не найден."
 
 #: templates/eos_tax/bots.html:114
 msgid ""
-"No character crossed both thresholds. The ten longest days of the month are "
-"shown instead, so the thresholds can be judged against real numbers."
+"No character crossed both thresholds. The ten mains with the longest days of "
+"the month are shown instead, so the thresholds can be judged against real "
+"numbers."
 msgstr ""
-"Ни один Character не превысил оба порога. Вместо этого показаны десять самых "
-"длинных дней месяца, чтобы пороги можно было оценить по реальным числам."
+"Ни один Character не превысил оба порога. Вместо этого показаны десять "
+"Mains с самыми длинными днями месяца, чтобы пороги можно было оценить по "
+"реальным числам."
 
 #: templates/eos_tax/bots.html:120
 msgid "No character crossed both thresholds in this month."
@@ -732,15 +738,15 @@ msgstr ""
 "Нет ingame corp tax, поэтому в wallet Corporation не поступает ничего, что "
 "можно было бы обложить налогом."
 
-#: templates/eos_tax/index.html:59 templates/eos_tax/index.html:60
+#: templates/eos_tax/index.html:65 templates/eos_tax/index.html:66
 msgid "Copy reason to clipboard"
 msgstr "Скопировать Reason в буфер обмена"
 
-#: templates/eos_tax/index.html:71
+#: templates/eos_tax/index.html:77
 msgid "Not payed"
 msgstr "Не оплачено"
 
-#: templates/eos_tax/index.html:81
+#: templates/eos_tax/index.html:87
 msgid "No tax data for the selected months."
 msgstr "Нет данных по налогу за выбранные месяцы."
 

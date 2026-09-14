@@ -496,6 +496,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   borrows the page's own link colour, which every installed theme already
   picks to read against its card headers, rather than a fixed palette colour
   that happened to collide with one of them.
+## [0.3.1] - 2026-09-14
+
+### Fixed
+
 - The character switcher's cold fallback - opened from a bookmark or the
   search box, without a list behind it - listed every character Alliance Auth
   knows on the account, whether or not it ever ratted. `alts_of` now takes
