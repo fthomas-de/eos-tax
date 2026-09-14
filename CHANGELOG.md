@@ -476,6 +476,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   The overview and the statistics already left it out; these two started from
   the alliance instead and never applied the list, against what the setting
   promises - never taxed and never listed.
+- The overview table now groups by what a reader does with it rather than by
+  date: the payable month's unpaid rows first, then its paid rows, then the
+  not yet payable follow-up month, corporation name breaking every tie inside
+  a group. It used to put every paid row - of either month - ahead of every
+  unpaid row of the month actually due, burying the one thing a reader opens
+  the page to find under rows nobody has to act on yet.
+- Two colours that read as barely-there on the Darkly theme are gone. The
+  Unbroken Runs chart plotted every payout outside the longest run in
+  `--bs-secondary`, which Darkly sets to the same `#444` as the chart's own
+  card background - the "other payouts" were there, just not visible. Off the
+  Corporation Clock had the same fault the other way round: the Character's
+  line used `--bs-primary`, a navy dark enough to all but disappear against
+  the chart's grid. Both now draw in `--bs-success`, which reads on both a
+  light and a dark canvas.
+- The character switcher on a Character page was a `btn-outline-secondary`
+  button sitting on its own card header - and Darkly gives both the same
+  `#444`, so the button was there but not visible until hovered. It now
+  borrows the page's own link colour, which every installed theme already
+  picks to read against its card headers, rather than a fixed palette colour
+  that happened to collide with one of them.
 
 ## [0.2.6] - 2026-09-10
 

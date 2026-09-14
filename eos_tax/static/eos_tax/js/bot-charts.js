@@ -13,7 +13,12 @@ function eosTaxThemeColours() {
 
     return {
         accent: style.getPropertyValue("--bs-primary").trim() || "#375a7f",
-        muted: style.getPropertyValue("--bs-secondary").trim() || "#888",
+        // Darkly's --bs-secondary (#444) sits almost exactly on the card
+        // background behind a chart, and its own --bs-primary (#375a7f) is
+        // nearly as dark against the grid - a "muted" point or a thin accent
+        // line there is not dim, it is gone. --bs-success reads on both a
+        // light and a dark canvas, so the low contrast pairs use it instead.
+        success: style.getPropertyValue("--bs-success").trim() || "#00bc8c",
         danger: style.getPropertyValue("--bs-danger").trim() || "#e74c3c",
         text: style.color,
         grid: style.getPropertyValue("--bs-border-color").trim() || "#ccc",
@@ -59,7 +64,7 @@ function eosTaxRunChart(canvas, points, colours) {
                     data: rest.map(function (point) {
                         return { x: point.day, y: point.hour };
                     }),
-                    backgroundColor: colours.muted,
+                    backgroundColor: colours.success,
                     pointRadius: 3
                 },
                 {
@@ -242,7 +247,9 @@ function eosTaxClockChart(canvas, series, colours) {
         {
             label: canvas.dataset.eosLabelCharacter,
             data: series.map(function (point) { return point.character; }),
-            borderColor: colours.accent,
+            // not colours.accent: Darkly's --bs-primary is a dark navy that
+            // all but disappears behind this chart's grid lines
+            borderColor: colours.success,
             backgroundColor: "transparent",
             borderWidth: 2,
             pointRadius: 2

@@ -20,7 +20,15 @@
             {% endcomment %}
             {% if family %}
                 <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                    {% comment %}
+                        Not btn-outline-secondary: Darkly sets its text and
+                        border to the same #444 as this card header's own
+                        background, so the button vanished into it. Every
+                        Bootswatch theme picks its link colour to read
+                        against its own card header, so that is what this
+                        borrows instead of a fixed palette colour.
+                    {% endcomment %}
+                    <button class="btn btn-sm btn-link text-decoration-none dropdown-toggle"
                             type="button" data-bs-toggle="dropdown"
                             aria-expanded="false">
                         {% blocktranslate with main=family.main count counter=family.characters|length %}{{ main }} - {{ counter }} more character{% plural %}{{ main }} - {{ counter }} more characters{% endblocktranslate %}

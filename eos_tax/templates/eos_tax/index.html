@@ -49,7 +49,12 @@
                                     <td class="d-none d-md-table-cell" data-order="{{ data.alliance_tax_rate|unlocalize }}">{{ data.alliance_tax_rate }}%</td>
                                     <td data-order="{{ data.isk_to_pay_value|unlocalize }}">{{ data.isk_to_pay }}</td>
                                     <td data-order="{{ data.period|unlocalize }}">{{ data.month }}/{{ data.year }}</td>
-                                    <td>
+                                    {% comment %}
+                                        The payable month carries a reason code, the follow-up
+                                        month never does - this doubles as the group the table
+                                        sorts on, mirroring the server side order.
+                                    {% endcomment %}
+                                    <td data-order="{% if data.reason %}0{% else %}1{% endif %}">
                                         {% if data.reason %}
                                             {{ data.reason }}
                                             <button type="button"

@@ -141,8 +141,10 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
                 "payed":selected_corp.payed,
                 "reason":reason_code,
             })
-    # unpaid first, then by corporation, then chronologically
-    website_data.sort(key=lambda x: (x["payed"], x["corporation_name"], x["year"], x["month"]))
+    # the payable month first (it carries a reason code) - unpaid rows of it
+    # ahead of paid ones - then the not yet payable follow-up month; corp
+    # name breaks every tie, so a group never reorders itself by date
+    website_data.sort(key=lambda x: (not x["reason"], x["payed"], x["corporation_name"]))
 
     return website_data
 

@@ -16,7 +16,12 @@ from corptools.models import (
 )
 from dateutil.relativedelta import relativedelta
 
-from eos_tax.db.payments import get_open_payment_count, is_payable, update_corp
+from eos_tax.db.payments import (
+    get_open_payment_count,
+    get_website_data,
+    is_payable,
+    update_corp,
+)
 from eos_tax.models import MonthlyTax, TaxConfiguration
 from eos_tax.tests.base import EosTaxTestCase
 from eos_tax.util import corp_has_payed, get_amount_to_pay
@@ -24,6 +29,7 @@ from eos_tax.util import corp_has_payed, get_amount_to_pay
 from .factories import (
     ALPHA_CORP_ID,
     BRAVO_CORP_ID,
+    OUTSIDER_CORP_ID,
     create_alliance,
     create_corporation,
     create_tax_row,
@@ -479,3 +485,59 @@ class TestOpenPaymentCount(EosTaxTestCase):
         self.row(ALPHA_CORP_ID, "Alpha Corp")
 
         self.assertEqual(self.count(admin=False, corps=[]), 0)
+
+
+class TestWebsiteDataOrder(EosTaxTestCase):
+    """get_website_data's own sort - overview.js's DataTables order is
+    required to mirror it, since the client can re-sort the page after load.
+    """
+
+    def test_should_group_payable_unpaid_then_payable_paid_then_next_month(self):
+        """The payable month's unpaid rows first (they carry a reason code),
+        then its paid rows, then the not yet payable follow-up month -
+        corporation name ascending breaks every tie, so a group never
+        reorders itself by date."""
+        now = datetime.datetime.now()
+        previous = now - relativedelta(months=1)
+
+        # payable month: two unpaid rows, out of alphabetical order here
+        create_tax_row(
+            OUTSIDER_CORP_ID, "Outsider Corp", payed=False,
+            month=previous.month, year=previous.year,
+        )
+        create_tax_row(
+            BRAVO_CORP_ID, "Bravo Corp", payed=False,
+            month=previous.month, year=previous.year,
+        )
+        # payable month: a paid row, which belongs after every unpaid one
+        create_tax_row(
+            ALPHA_CORP_ID, "Alpha Corp", payed=True,
+            month=previous.month, year=previous.year,
+        )
+        # the running month: not yet payable, so always without a reason -
+        # also out of alphabetical order here
+        create_tax_row(
+            BRAVO_CORP_ID, "Bravo Corp", payed=False,
+            month=now.month, year=now.year,
+        )
+        create_tax_row(
+            ALPHA_CORP_ID, "Alpha Corp", payed=False,
+            month=now.month, year=now.year,
+        )
+
+        dates = [(previous.month, previous.year), (now.month, now.year)]
+        data = get_website_data(dates=dates, admin=True, corps=[])
+
+        self.assertEqual(
+            [
+                (row["corporation_name"], row["month"], row["year"], row["payed"])
+                for row in data
+            ],
+            [
+                ("Bravo Corp", previous.month, previous.year, False),
+                ("Outsider Corp", previous.month, previous.year, False),
+                ("Alpha Corp", previous.month, previous.year, True),
+                ("Alpha Corp", now.month, now.year, False),
+                ("Bravo Corp", now.month, now.year, False),
+            ],
+        )

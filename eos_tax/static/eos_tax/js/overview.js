@@ -61,8 +61,10 @@ document.addEventListener("DOMContentLoaded", function () {
             caseInsensitive: true,  // "e" must also find "Ether Element"
             smart: true
         },
-        // mirrors the server side order: unpaid first, then by corporation
-        order: [[6, "asc"], [0, "asc"]],
+        // mirrors the server side order: the payable month's unpaid rows
+        // first, then its paid rows, then the not yet payable follow-up
+        // month - corporation name breaks every tie
+        order: [[5, "asc"], [6, "asc"], [0, "asc"]],
         pageLength: 25,
         language: {
             search: labels.searchLabel,
