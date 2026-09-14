@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from dateutil.relativedelta import relativedelta
 
@@ -91,6 +91,41 @@ def format_duration(hours: float) -> str:
         return f"{whole} {hour_unit}"
 
     return f"{whole} {hour_unit} {rest} {minute_unit}"
+
+
+def format_age(birthday: date, today: date = None) -> str:
+    """How long ago a character was created: one unit, not a calendar.
+
+    A column has no room for "3 years, 2 months", and the day this reads as
+    a bot detection signal - a character ratting round the clock a week
+    after creation - the remainder never matters, only the order of
+    magnitude. None when Alliance Auth never had a birthday for the
+    character at all, which is most of the journal on a test system.
+    """
+    if birthday is None:
+        return ""
+
+    today = today or datetime.now(timezone.utc).date()
+    days = (today - birthday).days
+
+    if days < 0:
+        return ""
+
+    # named here rather than inside the f-strings below: xgettext reads the
+    # source instead of running it and does not descend into an
+    # interpolation, so a gettext call in there is never extracted and the
+    # unit would stay English in every language
+    day_unit = gettext("d")
+    month_unit = gettext("mo")
+    year_unit = gettext("y")
+
+    if days >= 365:
+        return f"{days // 365} {year_unit}"
+
+    if days >= 30:
+        return f"{days // 30} {month_unit}"
+
+    return f"{days} {day_unit}"
 
 
 def get_amount_to_pay(tax_value:int, corp_tax:float, tax_rate:float = None):

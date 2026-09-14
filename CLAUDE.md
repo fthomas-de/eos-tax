@@ -122,6 +122,11 @@ touched **at a commit** - see below. Everything else stays English.
   exits non-zero - `grep -c` returns 1 when it counts none - and then it never
   runs, silently. `test_compiled_catalogue_should_match_its_source` catches
   it; let it.
+- Filling in an empty `msgstr` with a script rather than the Edit tool has
+  corrupted a `.po` file before - the `msgid` line vanished, leaving a bare
+  quoted string that `msgfmt` refuses to compile. `msgfmt --check -o /dev/null
+  <file>` right after any bulk edit catches it while it is still one file to
+  revert instead of six; the Edit tool alone has not needed it yet.
 - Plural forms: de/es/fr/it 2, ko 1, ru 3.
 - Korean: never write a bare `%` that the msgid does not have - msgfmt rejects
   it as a broken format string.

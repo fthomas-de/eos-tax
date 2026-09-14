@@ -1,10 +1,14 @@
-from datetime import datetime
+from datetime import date, datetime
 from unittest import mock
 
 from eos_tax.tests.base import EosTaxTestCase
 from django.urls import reverse
 
-from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
+from allianceauth.eveonline.models import (
+    EveAllianceInfo,
+    EveCharacter,
+    EveCorporationInfo,
+)
 
 from corptools.models import CorporationAudit, CorporationWalletDivision, EveName
 
@@ -440,6 +444,31 @@ class TestBotsPage(EosTaxTestCase):
         )
 
         self.assertContains(response, "Busy Ratter")
+
+    def test_should_show_the_characters_age(self):
+        """The character list and the character page read the same
+        birthday - see get_character_month's own test for that side.
+        Busy Ratter has no EveCharacter row at all here, only the EveName
+        build_corporations() seeds, so the column falls back to a dash for
+        her rather than guessing."""
+        owner = create_user(
+            "boss", 94000008, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"]
+        )
+        EveCharacter.objects.filter(character_id=94000008).update(
+            birthday=date(YEAR - 1, MONTH, 1)
+        )
+        EveName.objects.create(
+            eve_id=94000008, name="boss character", category="character"
+        )
+        for day in (1, 2):
+            add_entries(self.divisions[BRAVO_CORP_ID], 94000008, day, (0, 6, 12, 18))
+        self.client.force_login(owner)
+
+        response = self.client.get(
+            reverse("eos_tax:bots"), {"month": f"{YEAR}-{MONTH:02d}"}
+        )
+
+        self.assertContains(response, "1 y")
 
     def test_should_show_the_fallback_when_nothing_qualifies(self):
         add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, (5, 6, 7))

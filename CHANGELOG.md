@@ -534,6 +534,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   ending up under another by mistake is exactly the fault a heading alone
   does not stop a reader from making.
 
+## [0.3.4] - 2026-09-14
+
+### Added
+
+- Every character list, and the Character page itself, now shows how old the
+  character is - Alliance Auth's own `birthday`, one unit rather than a
+  calendar (`format_age`). A character ratting round the clock a week after
+  creation is worth noticing on sight, not after a lookup. Empty rather than
+  a placeholder when Alliance Auth never had a birthday for a character at
+  all, the same as an unregistered Main.
+
 ## [0.2.6] - 2026-09-10
 
 ### Added

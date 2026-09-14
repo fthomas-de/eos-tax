@@ -10,12 +10,12 @@ way the rest of this app is.
 import html
 import json
 from collections import Counter
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from django.urls import reverse
 
 from corptools.models import EveName
-from allianceauth.eveonline.models import EveCorporationInfo
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
 from eos_tax.db.bot_signals import (
     _clock_distance,
@@ -728,6 +728,46 @@ class TestBotSignalView(EosTaxTestCase):
         self.assertContains(with_data, "Busy Ratter")
         self.assertNotContains(without_data, "Busy Ratter")
         self.assertContains(without_data, "No taxed income in this month.")
+
+    def test_should_show_the_characters_age_in_every_reading(self):
+        """The age comes from grouped(), which every reading funnels its
+        rows through - one shared computation, one column wired per
+        template. A handful of entries is enough: with nothing crossing a
+        threshold each reading falls back to listing what it has, and the
+        character still carries its age there."""
+        EveCharacter.objects.create(
+            character_id=RATTER_ID,
+            character_name="Busy Ratter",
+            corporation_id=BRAVO_CORP_ID,
+            corporation_name="Bravo Corp",
+            corporation_ticker="BRAVO",
+            birthday=date(YEAR - 1, MONTH, 1),
+        )
+        # rhythm and clock both measure a character against the rest of its
+        # own Corporation, never against itself - so a second character has
+        # to carry the baseline, and the minimum needed for one is lowered
+        # rather than manufactured, since that gate is not what this test
+        # is about
+        config = TaxConfiguration.get_solo()
+        config.bot_rhythm_min_payouts = 1
+        config.bot_rhythm_corp_min_payouts = 1
+        config.bot_clock_min_payouts = 1
+        config.bot_clock_corp_min_payouts = 1
+        config.save()
+        add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, (0, 6, 12, 18))
+        add_entries(self.divisions[BRAVO_CORP_ID], CASUAL_ID, 2, (1, 7, 13, 19))
+        self.client.force_login(
+            create_user("boss", 94100005, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+        )
+
+        for name in ("runs", "rhythm", "clock"):
+            with self.subTest(name=name):
+                response = self.client.get(
+                    reverse("eos_tax:bot_signal", args=[name]),
+                    {"month": f"{YEAR}-{MONTH:02d}"},
+                )
+
+                self.assertContains(response, "1 y")
 
 
 class TestBotsPageTabs(EosTaxTestCase):

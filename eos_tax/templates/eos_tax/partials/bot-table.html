@@ -7,6 +7,7 @@
                 <th scope="col">{% translate "Character" %}</th>
                 <th scope="col">{% translate "Corporation" %}</th>
                 <th scope="col" class="d-none d-md-table-cell">{% translate "Main" %}</th>
+                <th scope="col" class="d-none d-lg-table-cell">{% translate "Age" %}</th>
                 <th scope="col" class="text-end">{% translate "Suspicious days" %}</th>
                 <th scope="col" class="text-end d-none d-md-table-cell">{% translate "Active days" %}</th>
                 <th scope="col" class="text-end">{% translate "Busiest day (hours)" %}</th>
@@ -18,7 +19,7 @@
         {% for group in groups %}
             <tbody>
                 {% if group.count > 1 %}
-                    {% include "eos_tax/partials/bot-group-header.html" with group=group columns=8 %}
+                    {% include "eos_tax/partials/bot-group-header.html" with group=group columns=9 %}
                 {% endif %}
         
                 {% for row in group.characters %}
@@ -37,6 +38,7 @@
                     </th>
                     <td>{{ row.corporation_name|default:"&mdash;" }}</td>
                     <td class="d-none d-md-table-cell">{{ row.main_name|default:"&mdash;" }}</td>
+                    <td class="d-none d-lg-table-cell">{{ row.age|default:"&mdash;" }}</td>
                     <td class="text-end">{{ row.suspicious_days }}</td>
                     <td class="text-end d-none d-md-table-cell">{{ row.active_days }}</td>
                     <td class="text-end">{{ row.max_hours }}</td>

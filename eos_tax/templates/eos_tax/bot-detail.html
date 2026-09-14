@@ -9,7 +9,17 @@
 
     <div class="card mb-3">
         <div class="card-header d-flex align-items-center flex-wrap gap-3">
-            <div class="card-title mb-0">{{ detail.character_name }}</div>
+            <div class="card-title mb-0">
+                {{ detail.character_name }}
+                {% comment %}
+                    Empty rather than a placeholder when Alliance Auth never
+                    had a birthday for this character - a blank paren reads
+                    worse than none at all.
+                {% endcomment %}
+                {% if detail.age %}
+                    <span class="text-body-secondary fw-normal">({{ detail.age }})</span>
+                {% endif %}
+            </div>
 
             {% comment %}
                 Two jumps to where a reader would check this character

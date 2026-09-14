@@ -13,6 +13,7 @@ import json
 
 from django.urls import reverse
 
+from allianceauth.eveonline.models import EveCharacter
 from corptools.models import CorporationWalletJournalEntry, EveName
 
 from eos_tax.db.bot_signals import (
@@ -467,6 +468,34 @@ class TestBotDetailPageTabs(EosTaxTestCase):
 
         self.assertGreater(text, hours)
         self.assertLess(text, runs)
+
+    def test_should_show_the_characters_age_after_its_name(self):
+        """The character page and the character list read the same
+        birthday - see TestBotsPage's own test for the list side."""
+        EveCharacter.objects.create(
+            character_id=RATTER_ID,
+            character_name="Busy Ratter",
+            corporation_id=BRAVO_CORP_ID,
+            corporation_name="Bravo Corp",
+            corporation_ticker="BRAVO",
+            birthday=datetime.date(YEAR - 1, MONTH, 1),
+        )
+
+        body = self.page().content.decode()
+
+        self.assertIn("Busy Ratter", body)
+        self.assertIn("(1 y)", body)
+
+    def test_should_leave_the_name_alone_without_a_known_birthday(self):
+        """No EveCharacter row for the character at all here - Alliance Auth
+        never had a birthday to show, and an empty pair of parentheses would
+        read worse than none."""
+        body = self.page().content.decode()
+
+        self.assertIn("Busy Ratter", body)
+        # the age span itself, not a bare "()" - the page has other
+        # parentheses on it that have nothing to do with this
+        self.assertNotIn('fw-normal">(', body)
 
     def test_should_link_to_zkillboard_and_the_character_audit(self):
         """Two jumps to where eos_tax itself shows nothing: kills and losses,

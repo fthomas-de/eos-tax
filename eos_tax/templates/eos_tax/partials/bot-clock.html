@@ -20,6 +20,7 @@
                     <th scope="col">{% translate "Character" %}</th>
                     <th scope="col" class="d-none d-md-table-cell">{% translate "Corporation" %}</th>
                     <th scope="col" class="d-none d-lg-table-cell">{% translate "Main" %}</th>
+                    <th scope="col" class="d-none d-lg-table-cell">{% translate "Age" %}</th>
                     <th scope="col" class="text-end">{% translate "Character's middle of the day" %}</th>
                     <th scope="col" class="text-end d-none d-md-table-cell">{% translate "Corporation's middle of the day" %}</th>
                     <th scope="col" class="text-end">{% translate "Apart" %}</th>
@@ -31,7 +32,7 @@
             {% for group in groups %}
                 <tbody>
                     {% if group.count > 1 %}
-                        {% include "eos_tax/partials/bot-group-header.html" with group=group columns=8 %}
+                        {% include "eos_tax/partials/bot-group-header.html" with group=group columns=9 %}
                     {% endif %}
             
                     {% for row in group.characters %}
@@ -61,6 +62,7 @@
                                 <span class="text-body-secondary">{% translate "not registered" %}</span>
                             {% endif %}
                         </td>
+                        <td class="d-none d-lg-table-cell">{{ row.age|default:"&mdash;" }}</td>
                         <td class="text-end text-nowrap">{{ row.middle_at }}</td>
                         <td class="text-end text-nowrap d-none d-md-table-cell text-body-secondary">{{ row.corp_middle_at }}</td>
                         <td class="text-end text-nowrap">{{ row.apart_for }}</td>

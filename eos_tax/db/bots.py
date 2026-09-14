@@ -13,7 +13,7 @@ from django.db.models import Count, Sum
 from django.db.models.functions import ExtractHour, TruncDate
 
 from eos_tax.app_settings import get_config
-from eos_tax.util import format_isk
+from eos_tax.util import format_age, format_isk
 
 from eos_tax.db.shared import (
     _month_range,
@@ -349,10 +349,16 @@ def get_character_month(character_id: int, year: int, month: int):
     names = dict(
         EveName.objects.filter(eve_id=character_id).values_list("eve_id", "name")
     )
+    birthday = (
+        EveCharacter.objects.filter(character_id=character_id)
+        .values_list("birthday", flat=True)
+        .first()
+    )
 
     return {
         "character_id": character_id,
         "character_name": names.get(character_id) or str(character_id),
+        "age": format_age(birthday),
         "weeks": weeks,
         "busiest": busiest,
         # the legend explains the cells, so it is stepped by the same function

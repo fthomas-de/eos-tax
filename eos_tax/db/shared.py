@@ -11,6 +11,7 @@ from allianceauth.framework.api.evecharacter import (
 )
 
 from eos_tax.app_settings import get_config
+from eos_tax.util import format_age
 
 
 def _corporation_infos(corp_ids):
@@ -149,6 +150,22 @@ def main_characters(character_ids):
     return mains
 
 
+def character_ages(character_ids):
+    """Each character's creation date, as {character_id: date}.
+
+    A separate query rather than folded into main_characters(): that one
+    already walks the ownership chain for every row, and birthday is a plain
+    column that needs none of it. Characters Alliance Auth never pulled a
+    birthday for - unregistered, or registered before ESI filled it in -
+    are simply absent, the same convention main_characters() uses.
+    """
+    return dict(
+        EveCharacter.objects.filter(
+            character_id__in=character_ids, birthday__isnull=False
+        ).values_list("character_id", "birthday")
+    )
+
+
 # How many groups a list shows. They are ordered by how far out of the
 # ordinary a row is, and past the first handful the reader is looking at
 # ordinary people. The count of what was left out is printed underneath.
@@ -185,7 +202,9 @@ def grouped(rows, limit: int = GROUP_LIMIT):
     list in the same order as the flat one instead of inventing a second
     ranking nobody asked about.
     """
-    mains = main_characters([row["character_id"] for row in rows])
+    character_ids = [row["character_id"] for row in rows]
+    mains = main_characters(character_ids)
+    ages = character_ages(character_ids)
 
     groups = {}
     for row in rows:
@@ -201,6 +220,7 @@ def grouped(rows, limit: int = GROUP_LIMIT):
         # on the row as well, because a group of one is printed without a
         # heading and still belongs to somebody
         row["main_name"] = main[1] if main else ""
+        row["age"] = format_age(ages.get(row["character_id"]))
         group["characters"].append(row)
 
     for group in groups.values():
