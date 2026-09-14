@@ -28,6 +28,23 @@ cd ~/aa-dev/working/myauth
 ~/aa-dev/venv/bin/python manage.py test eos_tax --parallel 4 --noinput
 ```
 
+`myauth`'s own console log handler is set to `DEBUG` (useful for watching the
+dev server live), which turns that command into mostly
+`allianceauth.hooks`/`signals`/`authentication` noise - the bulk of what a
+session reads back for a run that only needs `OK` or one traceback.
+`~/bin/eos-test` wraps it and drops exactly the DEBUG/INFO lines the console
+handler adds, nothing else - a real traceback, `WARNING` or `ERROR` still
+comes through:
+
+```bash
+eos-test                          # eos_tax, whole suite, quiet
+eos-test eos_tax.tests.test_bots  # one module
+eos-test eos_tax --parallel 4     # extra args pass straight through
+```
+
+It lives in `~/bin`, not in this repo - personal tooling for whichever
+environment is running it, not part of the app.
+
 ```bash
 ~/aa-dev/venv/bin/python manage.py makemigrations eos_tax
 ```
@@ -111,6 +128,11 @@ touched **at a commit** - see below. Everything else stays English.
 - xgettext reads the source, it does not run it, and it does not descend into
   an f-string interpolation. Bind a translated unit to a local before building
   the string, or it never reaches a catalogue.
+- `makemessages` without extra flags. `--no-location` strips every `#:`
+  line-number comment from all six catalogues at once - a diff of ~2000 lines
+  for a one-string change, and it did not shrink again on the next plain run
+  because the flag is not sticky. If that happens, `git checkout` the `.po`
+  files and rerun without it.
 
 ## Committing
 
@@ -123,9 +145,13 @@ file.
 
 When the user says they are about to commit:
 
-1. Name the current version from `eos_tax/__init__.py` and ask for the new one.
+1. Check `eos_tax/__init__.py`: if the version was not already raised since
+   the last commit - by hand, or by a note the user gave - raise the patch
+   digit (0.3.0 → 0.3.1) without asking, and say which old and new version
+   that is. Only a version the user names themselves overrides this.
 2. Then, and only then, run the translations.
-3. Split `[Unreleased]` across the version numbers it belongs to.
+3. Split the running section of `CHANGELOG.md` across the version numbers it
+   belongs to, at whichever commit actually raised the version in between.
 
 ## Editing files
 

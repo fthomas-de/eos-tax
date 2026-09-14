@@ -515,6 +515,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   `group_limited_rows` groups first and cuts the groups instead, the way the
   primary, over-threshold lists already did.
 
+## [0.3.3] - 2026-09-14
+
+### Added
+
+- The Character page links to zKillboard and to corptools' own Character
+  Audit for the character on screen - kills and losses, and the account and
+  wallet data this whole page is built from, neither of which eos_tax shows
+  itself.
+
+### Changed
+
+- The four bot readings on the settings page now sit in their own card each,
+  rather than under a plain heading. Their field names alone do not say which
+  reading they belong to - `bot_run_min_ticks` a few lines above
+  `bot_rhythm_min_payouts` above `bot_clock_min_payouts` - and the thresholds
+  are deliberately not shared between readings, so a value meant for one
+  ending up under another by mistake is exactly the fault a heading alone
+  does not stop a reader from making.
+
 ## [0.2.6] - 2026-09-10
 
 ### Added

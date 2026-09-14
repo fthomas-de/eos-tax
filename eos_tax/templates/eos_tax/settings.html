@@ -118,48 +118,81 @@
                             that disagreement is the point.{% endblocktranslate %}
                         </p>
 
-                        <h3 class="h6 mt-4">{% translate "Hours per day" %}</h3>
-                        <p class="text-body-secondary small">
-                            {% blocktranslate %}Counts how many different hours of a day a Character
-                            earned in, and on how many days.{% endblocktranslate %}
-                        </p>
-                        {% bootstrap_field form.bot_hours_min_entries %}
-                        {% bootstrap_field form.bot_min_hours_per_day %}
-                        {% bootstrap_field form.bot_min_days_per_month %}
+                        {% comment %}
+                            Each reading gets its own card rather than a plain
+                            heading: the field names alone do not say which
+                            reading they belong to - bot_run_min_ticks next to
+                            bot_rhythm_min_payouts next to bot_clock_min_payouts
+                            reads as one long list otherwise, and a value
+                            tuned for one reading has ended up under another
+                            by mistake before.
+                        {% endcomment %}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3 class="h6 mb-0">{% translate "Hours per day" %}</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-body-secondary small">
+                                    {% blocktranslate %}Counts how many different hours of a day a Character
+                                    earned in, and on how many days.{% endblocktranslate %}
+                                </p>
+                                {% bootstrap_field form.bot_hours_min_entries %}
+                                {% bootstrap_field form.bot_min_hours_per_day %}
+                                {% bootstrap_field form.bot_min_days_per_month %}
+                            </div>
+                        </div>
 
-                        <h3 class="h6 mt-4">{% translate "Unbroken runs" %}</h3>
-                        <p class="text-body-secondary small">
-                            {% blocktranslate %}Looks at the minute rather than the hour: the game pays a
-                            ratter about every twenty minutes, so an uninterrupted stretch shows up as a
-                            chain of payouts and nothing else does.{% endblocktranslate %}
-                        </p>
-                        {% bootstrap_field form.bot_run_min_ticks %}
-                        {% bootstrap_field form.bot_run_max_gaps %}
-                        {% bootstrap_field form.bot_run_tick_tolerance %}
-                        {% bootstrap_field form.bot_run_gap_minutes %}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3 class="h6 mb-0">{% translate "Unbroken runs" %}</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-body-secondary small">
+                                    {% blocktranslate %}Looks at the minute rather than the hour: the game pays a
+                                    ratter about every twenty minutes, so an uninterrupted stretch shows up as a
+                                    chain of payouts and nothing else does.{% endblocktranslate %}
+                                </p>
+                                {% bootstrap_field form.bot_run_min_ticks %}
+                                {% bootstrap_field form.bot_run_max_gaps %}
+                                {% bootstrap_field form.bot_run_tick_tolerance %}
+                                {% bootstrap_field form.bot_run_gap_minutes %}
+                            </div>
+                        </div>
 
-                        <h3 class="h6 mt-4">{% translate "Against the Corporation" %}</h3>
-                        <p class="text-body-secondary small">
-                            {% blocktranslate %}How much of a Character's income falls inside the hours
-                            their own Corporation is busy. The Corporation is the yardstick and not the
-                            alliance, which spans several timezones at once.{% endblocktranslate %}
-                        </p>
-                        {% bootstrap_field form.bot_rhythm_busy_hours %}
-                        {% bootstrap_field form.bot_rhythm_min_payouts %}
-                        {% bootstrap_field form.bot_rhythm_corp_min_payouts %}
-                        {% bootstrap_field form.bot_rhythm_purge_strong %}
-                        {% bootstrap_field form.bot_rhythm_min_difference %}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3 class="h6 mb-0">{% translate "Against the Corporation" %}</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-body-secondary small">
+                                    {% blocktranslate %}How much of a Character's income falls inside the hours
+                                    their own Corporation is busy. The Corporation is the yardstick and not the
+                                    alliance, which spans several timezones at once.{% endblocktranslate %}
+                                </p>
+                                {% bootstrap_field form.bot_rhythm_busy_hours %}
+                                {% bootstrap_field form.bot_rhythm_min_payouts %}
+                                {% bootstrap_field form.bot_rhythm_corp_min_payouts %}
+                                {% bootstrap_field form.bot_rhythm_purge_strong %}
+                                {% bootstrap_field form.bot_rhythm_min_difference %}
+                            </div>
+                        </div>
 
-                        <h3 class="h6 mt-4">{% translate "Off the Corporation clock" %}</h3>
-                        <p class="text-body-secondary small">
-                            {% blocktranslate %}How far a Character's day sits from their Corporation's,
-                            averaged the way a clock wraps.{% endblocktranslate %}
-                        </p>
-                        {% bootstrap_field form.bot_clock_max_apart %}
-                        {% bootstrap_field form.bot_clock_min_payouts %}
-                        {% bootstrap_field form.bot_clock_corp_min_payouts %}
-                        {% bootstrap_field form.bot_clock_purge_strong %}
-                        {% bootstrap_field form.bot_clock_min_apart %}
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h3 class="h6 mb-0">{% translate "Off the Corporation clock" %}</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-body-secondary small">
+                                    {% blocktranslate %}How far a Character's day sits from their Corporation's,
+                                    averaged the way a clock wraps.{% endblocktranslate %}
+                                </p>
+                                {% bootstrap_field form.bot_clock_max_apart %}
+                                {% bootstrap_field form.bot_clock_min_payouts %}
+                                {% bootstrap_field form.bot_clock_corp_min_payouts %}
+                                {% bootstrap_field form.bot_clock_purge_strong %}
+                                {% bootstrap_field form.bot_clock_min_apart %}
+                            </div>
+                        </div>
 
                         <div class="form-group mt-3 clearfix">
                             {% translate "Save settings" as button_text %}

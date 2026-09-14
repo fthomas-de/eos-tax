@@ -1,4 +1,5 @@
 import datetime
+import re
 from datetime import date
 from decimal import Decimal
 from importlib import import_module
@@ -188,6 +189,27 @@ class TestSettingsForm(EosTaxTestCase):
         ):
             with self.subTest(heading=heading):
                 self.assertIn(heading, body)
+
+    def test_should_set_each_bot_reading_apart_in_its_own_card(self):
+        """The four readings disagree on purpose, and their field names alone
+        do not say which is which - bot_run_min_ticks sits a few lines above
+        bot_rhythm_min_payouts and bot_clock_min_payouts. A plain heading once
+        let a value meant for one reading end up saved under another; a card
+        border is a boundary a reader has to notice."""
+        body = self.client.get(reverse("eos_tax:settings")).content.decode()
+
+        for heading in (
+            "Hours per day",
+            "Unbroken runs",
+            "Against the Corporation",
+            "Off the Corporation clock",
+        ):
+            with self.subTest(heading=heading):
+                self.assertRegex(
+                    body,
+                    r'card-header">\s*<h3 class="h6 mb-0">' + re.escape(heading)
+                    + r"</h3>",
+                )
 
     def test_should_reject_a_tick_tolerance_above_the_break_ceiling(self):
         """A tolerance past the ceiling silences the ceiling. The walk asks

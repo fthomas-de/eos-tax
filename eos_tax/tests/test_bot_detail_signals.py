@@ -468,6 +468,16 @@ class TestBotDetailPageTabs(EosTaxTestCase):
         self.assertGreater(text, hours)
         self.assertLess(text, runs)
 
+    def test_should_link_to_zkillboard_and_the_character_audit(self):
+        """Two jumps to where eos_tax itself shows nothing: kills and losses,
+        and the account and wallet data this whole page is built from."""
+        body = self.page().content.decode()
+
+        self.assertIn(f"https://zkillboard.com/character/{RATTER_ID}/", body)
+        self.assertIn(
+            reverse("corptools:reactmain", args=[RATTER_ID]), body
+        )
+
     def test_should_offer_the_other_characters_of_the_main(self):
         """Handed over by the list the reader clicked through from, because
         working it out here would mean a second walk over the whole month for

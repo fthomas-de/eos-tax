@@ -8,12 +8,14 @@ Last updated 2026-09-14.
 
 ## Release
 
-- Version **0.3.0** in `eos_tax/__init__.py`, not committed yet
+- Version **0.3.1** in `eos_tax/__init__.py`; `[0.3.0]` is committed,
+  `[0.3.1]` is the running section
 - Migrations **0011-0018** are written and applied
 - Catalogues complete: six languages, nothing empty, nothing fuzzy
-- 400 tests green, `makemigrations --check` clean, `collectstatic` run
-- `CHANGELOG.md`: `[0.3.0]` is the running section; `[0.2.2]`-`[0.2.6]` were
-  split out retroactively by diffing each version's own changelog out of git
+- 406 tests green, `makemigrations --check` clean, `collectstatic` run
+- `CHANGELOG.md`: `[0.2.2]`-`[0.2.6]` were split out retroactively by diffing
+  each version's own changelog out of git; `[0.3.0]`/`[0.3.1]` were split at
+  the commit that actually raised the version in between
 
 ## The bots page
 
@@ -93,10 +95,16 @@ the Django test client instead (`force_login` on a user holding
 `eos_tax.admin_view`), write it to a scratch file and serve that over a small
 HTTP server.
 
-Two traps in that setup, each of which produced a wrong answer once:
+Three traps in that setup, each of which produced a wrong answer once:
 
 - **Subresource Integrity** fails for a cross-origin script because Django
   serves static files without CORS headers, and the browser reports nothing.
   Strip the `integrity` and `crossorigin` attributes from the snapshot.
 - **The browser cache** then serves the version from before the edit anyway.
   Append a `?v=<timestamp>` to the app's own script URLs.
+- **The obvious test user is the wrong one.** `force_login` on the seeded
+  superuser (`allianceserver`) 302s to `/dashboard/` with no error - it has
+  no main character, and `main_character_required` (every eos_tax URL goes
+  through it via the app's `UrlHook`) redirects there before the view ever
+  runs. Use a seeded user that has one, e.g. `kaskade`. Also reverse the URL
+  rather than guessing it: the app is mounted at `/eos_tax/`, not `/eos-tax/`.

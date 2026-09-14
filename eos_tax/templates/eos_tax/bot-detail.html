@@ -12,6 +12,23 @@
             <div class="card-title mb-0">{{ detail.character_name }}</div>
 
             {% comment %}
+                Two jumps to where a reader would check this character
+                against something eos_tax does not itself show: kills and
+                losses on zKillboard, corptools' own audit for the account
+                and wallet data this whole page is built on.
+            {% endcomment %}
+            <a href="https://zkillboard.com/character/{{ detail.character_id }}/"
+               target="_blank" rel="noopener noreferrer"
+               class="btn btn-sm btn-link text-decoration-none">
+                <i class="fa-solid fa-skull-crossbones me-1" aria-hidden="true"></i>zKillboard
+            </a>
+
+            <a href="{% url 'corptools:reactmain' detail.character_id %}"
+               class="btn btn-sm btn-link text-decoration-none">
+                <i class="fa-solid fa-id-badge me-1" aria-hidden="true"></i>{% translate "Character Audit" %}
+            </a>
+
+            {% comment %}
                 Who else is on this account. With an assessment each when the
                 reader came from a list that had grouped them; without one
                 when they arrived cold, because working it out here would mean
