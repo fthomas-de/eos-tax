@@ -588,6 +588,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - `set_corp_tax` returns the `amount_to_pay` it already works out, so a caller
   that wants the figure - the recalculate control does - does not have to
   work it out a second time and risk disagreeing with what was stored.
+- The overview is Outstanding only by default now, modelled on the same
+  toggle in eos-invoices: a corp officer lands on what still needs
+  collecting, not a history of what already came in. "Including paid" brings
+  every row back with a link (`?paid=1`), not a client side DataTables
+  re-filter - a paid row the server never sent cannot be un-hidden without
+  asking it again anyway. The empty state now tells "nothing outstanding"
+  (every row is paid) apart from "no tax data" (nothing was calculated for
+  the selected months at all), which used to be the same message.
 
 ### Changed
 

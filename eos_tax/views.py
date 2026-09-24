@@ -59,13 +59,26 @@ def index(request):
     dates = get_dates()
     characters = get_all_characters_from_user(user=request.user)
     corps = get_all_corps_for_user(characters)
+    # outstanding only by default, like eos-invoices' overview - ?paid=1
+    # brings the paid rows back rather than needing a second page
+    include_paid = request.GET.get("paid") == "1"
+
     website_data = get_website_data(dates=dates, admin=request.user.has_perm('eos_tax.admin_view'), corps=corps)
+    # told apart from "nothing owed at all" before the filter narrows it,
+    # so the empty state can say which of the two it is
+    has_any_data = bool(website_data)
+
+    if not include_paid:
+        website_data = [row for row in website_data if not row["payed"]]
+
     now = datetime.now()
     # round, not int: 0.29 * 100 lands on 28.999... in binary floating point
     current_rate = round(get_config().rate_for(now.year, now.month) * 100)
     context = {
         "title": _("Taxes to pay: %(rate)s%%") % {"rate": current_rate},
         "website_data": website_data,
+        "include_paid": include_paid,
+        "has_any_data": has_any_data,
         "version": VERSION,
         "tax_corp": get_tax_corp(corps),
         # what the page's own script needs; a static file cannot reach the

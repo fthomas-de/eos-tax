@@ -83,11 +83,13 @@ class TestIndexContent(EosTaxTestCase):
 
     def test_should_sort_unpaid_before_paid(self):
         """Which also covers both being listed at all - index() would raise
-        rather than report a missing Corporation."""
+        rather than report a missing Corporation. Fetched with paid rows
+        included: Outstanding only, the default, would leave Alpha Corp with
+        nothing to be sorted against."""
         create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
         create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
 
-        response = self.client.get(reverse("eos_tax:index"))
+        response = self.client.get(reverse("eos_tax:index"), {"paid": "1"})
         self.assertContains(response, "Bravo Corp")
         self.assertContains(response, "Alpha Corp")
 
@@ -107,6 +109,77 @@ class TestIndexContent(EosTaxTestCase):
 
         self.assertContains(response, "Bravo Corp")
         self.assertNotContains(response, "Alpha Corp")
+
+
+class TestOutstandingOnly(EosTaxTestCase):
+    """The overview's paid/unpaid toggle - modelled on the one in
+    eos-invoices: outstanding only by default, a link brings paid rows
+    back rather than a client side re-filter of rows never sent."""
+
+    def setUp(self):
+        enable_current_month()
+        self.user = create_user(
+            "toggle",
+            91000006,
+            BRAVO_CORP_ID,
+            "Bravo Corp",
+            ["basic_access", "admin_view"],
+        )
+        self.client.force_login(self.user)
+
+    def test_should_hide_paid_rows_by_default(self):
+        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
+        create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
+
+        response = self.client.get(reverse("eos_tax:index"))
+
+        self.assertContains(response, "Bravo Corp")
+        self.assertNotContains(response, "Alpha Corp")
+
+    def test_should_show_paid_rows_on_request(self):
+        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
+        create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
+
+        response = self.client.get(reverse("eos_tax:index"), {"paid": "1"})
+
+        self.assertContains(response, "Bravo Corp")
+        self.assertContains(response, "Alpha Corp")
+
+    def test_should_highlight_outstanding_only_by_default(self):
+        response = self.client.get(reverse("eos_tax:index"))
+
+        self.assertContains(response, '<a href="?" class="btn btn-primary">')
+        self.assertContains(response, '<a href="?paid=1" class="btn btn-outline-primary">')
+
+    def test_should_highlight_including_paid_on_request(self):
+        response = self.client.get(reverse("eos_tax:index"), {"paid": "1"})
+
+        self.assertContains(response, '<a href="?" class="btn btn-outline-primary">')
+        self.assertContains(response, '<a href="?paid=1" class="btn btn-primary">')
+
+    def test_should_explain_nothing_outstanding_when_everything_is_paid(self):
+        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=True)
+
+        response = self.client.get(reverse("eos_tax:index"))
+
+        self.assertContains(response, "Nothing outstanding.")
+        self.assertNotContains(response, "No tax data for the selected months.")
+
+    def test_should_explain_no_data_when_nothing_was_calculated_at_all(self):
+        """Distinct from "nothing outstanding" - there is nothing to filter
+        in the first place, calculated or not."""
+        response = self.client.get(reverse("eos_tax:index"))
+
+        self.assertContains(response, "No tax data for the selected months.")
+        self.assertNotContains(response, "Nothing outstanding.")
+
+    def test_should_keep_showing_everything_paid_when_requested(self):
+        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=True)
+
+        response = self.client.get(reverse("eos_tax:index"), {"paid": "1"})
+
+        self.assertContains(response, "Bravo Corp")
+        self.assertNotContains(response, "Nothing outstanding.")
 
 
 class TestIndexMarkup(EosTaxTestCase):
@@ -197,10 +270,12 @@ class TestOverviewTable(EosTaxTestCase):
 
     def test_should_expose_boolean_sort_value_for_payed(self):
         """The whole cell, not the value: data-order="1" is also the start of
-        data-order="10.0" in the rate column and of the ISK amount."""
+        data-order="10.0" in the rate column and of the ISK amount. Fetched
+        with paid rows included, or the payed=True row Alpha Corp needs for
+        this would not be on the page at all."""
         create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
 
-        response = self.overview()
+        response = self.client.get(reverse("eos_tax:index"), {"paid": "1"})
 
         self.assertContains(response, '<td data-order="0">')
         self.assertContains(response, '<td data-order="1">')
