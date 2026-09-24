@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-14 20:15+0200\n"
+"POT-Creation-Date: 2026-09-24 11:41+0200\n"
 "Language: fr-FR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -422,6 +422,18 @@ msgstr ""
 "Taux de l'Alliance en vigueur au calcul de cette ligne. Enregistré par ligne "
 "afin qu'un changement de taux ne réécrive pas ce qui était dû les mois "
 "passés."
+
+#: models.py:376
+msgid "Amount to pay"
+msgstr "Montant à payer"
+
+#: models.py:379
+msgid ""
+"ISK owed to the alliance for this month, in whole ISK. Worked out from "
+"tax_value, tax_percentage and alliance_tax_rate whenever the row is written, "
+"and kept with them from then on - the page, the chart and the payment check "
+"read it rather than redoing the arithmetic."
+msgstr "ISK dus à l'Alliance pour ce mois, en ISK entiers. Calculé à partir de tax_value, tax_percentage et alliance_tax_rate chaque fois que la ligne est écrite, puis conservé avec eux - la page, le graphique et la vérification des paiements le lisent au lieu de refaire le calcul."
 
 #: templates/eos_tax/base.html:8
 msgid "Overview"

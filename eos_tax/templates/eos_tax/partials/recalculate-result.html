@@ -1,0 +1,56 @@
+{% load i18n %}
+
+{% if breakdown.ok %}
+    <div class="alert alert-success mb-0">
+        <h4 class="alert-heading h6">
+            {% blocktranslate with corp=breakdown.corp_name month=breakdown.month year=breakdown.year %}{{ corp }} — {{ month }}/{{ year }}{% endblocktranslate %}
+        </h4>
+
+        <ol class="mb-0 ps-3 small">
+            <li>
+                {% blocktranslate with types=breakdown.tax_types|join:", " %}Tax types considered: {{ types }}{% endblocktranslate %}
+            </li>
+            {% for row in breakdown.by_type %}
+                <li>
+                    {% blocktranslate with type=row.ref_type count=row.count sum=row.sum %}{{ type }}: {{ count }} entries, {{ sum }} ISK{% endblocktranslate %}
+                </li>
+            {% endfor %}
+            <li>
+                {% blocktranslate with count=breakdown.entries_considered value=breakdown.tax_value %}Sum of all tax types, {{ count }} entries: {{ value }} ISK{% endblocktranslate %}
+            </li>
+            <li>
+                {% blocktranslate with rate=breakdown.corp_tax_percent %}Corporation's ingame tax rate: {{ rate }}%{% endblocktranslate %}
+            </li>
+            <li>
+                {% blocktranslate with value=breakdown.gross_income %}Gross PvE income, the corp tax backed out: {{ value }} ISK{% endblocktranslate %}
+            </li>
+            <li>
+                {% blocktranslate with rate=breakdown.alliance_tax_percent %}Alliance tax rate applied: {{ rate }}%{% endblocktranslate %}
+            </li>
+            <li>
+                <strong>
+                    {% blocktranslate with value=breakdown.amount_to_pay %}Amount owed to the alliance: {{ value }} ISK{% endblocktranslate %}
+                </strong>
+            </li>
+            <li>
+                {% if breakdown.payed %}
+                    {% translate "Already marked as paid." %}
+                {% else %}
+                    {% translate "Not marked as paid yet." %}
+                {% endif %}
+            </li>
+        </ol>
+    </div>
+{% else %}
+    <div class="alert alert-warning mb-0">
+        {% if breakdown.reason == "unknown_corp" %}
+            {% blocktranslate with corp_id=breakdown.corp_id %}Corporation {{ corp_id }} is not known to Alliance Auth.{% endblocktranslate %}
+        {% elif breakdown.reason == "no_tax_rate" %}
+            {% blocktranslate with corp=breakdown.corp_name %}{{ corp }} has no ingame tax rate on file yet - it has never been pulled from ESI.{% endblocktranslate %}
+        {% elif breakdown.reason == "no_entries" %}
+            {% blocktranslate with corp=breakdown.corp_name month=breakdown.month year=breakdown.year %}{{ corp }} has no journal entries of the configured tax types for {{ month }}/{{ year }}.{% endblocktranslate %}
+        {% else %}
+            {% translate "Nothing could be calculated for this selection." %}
+        {% endif %}
+    </div>
+{% endif %}

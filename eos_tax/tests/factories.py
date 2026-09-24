@@ -29,8 +29,10 @@ from django.contrib.auth.models import Permission, User
 
 from django.db import models as django_models
 
+from eos_tax.app_settings import get_config
 from eos_tax.forms import TaxConfigurationForm
 from eos_tax.models import MonthlyTax, TaxConfiguration
+from eos_tax.util import get_amount_to_pay
 
 def settings_numbers():
     """Every plain setting at its model default, as form input.
@@ -181,19 +183,27 @@ def create_tax_row(corp_id, corp_name, payed=False, tax_value=1_000_000_000,
     """One calculated month for one Corporation.
 
     Defaults to the running month, which is what the overview shows; the
-    statistics pass a year and a month of their own.
+    statistics pass a year and a month of their own. amount_to_pay is worked
+    out the same way update_corp() works it out, so a row built here behaves
+    like one a real task wrote - a test comparing against its own call to
+    get_amount_to_pay() is comparing against what this factory already
+    stored, not against a live recalculation.
     """
     now = datetime.datetime.now()
+    month = now.month if month is None else month
+    year = now.year if year is None else year
+    applied_rate = alliance_tax_rate or get_config().rate_for(year, month)
 
     return MonthlyTax.objects.create(
         corp_id=corp_id,
         corp_name=corp_name,
         tax_value=tax_value,
         tax_percentage=tax_percentage,
-        month=now.month if month is None else month,
-        year=now.year if year is None else year,
+        month=month,
+        year=year,
         payed=payed,
         alliance_tax_rate=alliance_tax_rate,
+        amount_to_pay=int(get_amount_to_pay(tax_value, tax_percentage, applied_rate)),
     )
 
 

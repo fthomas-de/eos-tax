@@ -7,6 +7,8 @@ call it - so it gets a file of its own instead of attaching to either.
 """
 import datetime
 
+from django.utils import translation
+
 from eos_tax.tests.base import EosTaxTestCase
 from eos_tax.util import format_age
 
@@ -18,9 +20,20 @@ class TestFormatAge(EosTaxTestCase):
     a bot detection signal - a character ratting round the clock a week
     after creation - the remainder never matters, only the order of
     magnitude.
+
+    The units themselves are translated (gettext("d")/("mo")/("y")), and
+    Django's active language is a thread-local another test's request can
+    leave switched on - a request with an Accept-Language header activates
+    it but nothing deactivates it again once the test method returns. This
+    pins English regardless of what ran before it in the same process,
+    rather than assuming a clean slate.
     """
 
     TODAY = datetime.date(2026, 9, 14)
+
+    def setUp(self):
+        translation.activate("en")
+        self.addCleanup(translation.deactivate)
 
     def age(self, birthday):
         return format_age(birthday, today=self.TODAY)

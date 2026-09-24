@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-14 20:15+0200\n"
+"POT-Creation-Date: 2026-09-24 11:41+0200\n"
 "Language: ko-KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -409,6 +409,18 @@ msgid ""
 msgstr ""
 "이 행을 계산할 때 적용되던 Alliance 세율입니다. 행마다 저장하므로 세율을 바꾸"
 "어도 이미 지난 달들의 납부액은 바뀌지 않습니다."
+
+#: models.py:376
+msgid "Amount to pay"
+msgstr "납부액"
+
+#: models.py:379
+msgid ""
+"ISK owed to the alliance for this month, in whole ISK. Worked out from "
+"tax_value, tax_percentage and alliance_tax_rate whenever the row is written, "
+"and kept with them from then on - the page, the chart and the payment check "
+"read it rather than redoing the arithmetic."
+msgstr "이번 달 Alliance에 납부할 금액으로, 정수 ISK 단위입니다. 행을 기록할 때마다 tax_value, tax_percentage, alliance_tax_rate로 계산해 함께 보관하며, 페이지·차트·납부 확인은 다시 계산하지 않고 이 값을 읽습니다."
 
 #: templates/eos_tax/base.html:8
 msgid "Overview"

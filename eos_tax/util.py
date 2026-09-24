@@ -161,12 +161,10 @@ def corp_has_payed(corp_id:int, month:int, year:int, config=None, corp_name:str 
         # nothing configured that a payment could have gone to
         return False
 
-    # rows written before the rate was stored fall back to whatever the
-    # schedule says for that month, not to today's rate
-    applied_rate = tax_data.alliance_tax_rate or config.rate_for(year, month)
-    amount_to_pay = int(
-        get_amount_to_pay(tax_data.tax_value, tax_data.tax_percentage, applied_rate)
-    )
+    # the figure the overview shows, read off the same row - worked out here
+    # a second time it could disagree with the page by a rounding step, and
+    # a payment of exactly what the page said would then not match
+    amount_to_pay = tax_data.amount_to_pay
 
     payments = CorporationWalletJournalEntry.objects.filter(
         second_party_id=holding_corp_id,

@@ -3,6 +3,7 @@ import re
 from datetime import date
 from decimal import Decimal
 from importlib import import_module
+from unittest.mock import patch
 
 from django import forms
 from django.db.utils import IntegrityError
@@ -12,6 +13,12 @@ from io import StringIO
 
 from django.core.management import call_command
 
+from corptools.models import (
+    CorporationAudit,
+    CorporationWalletDivision,
+    CorporationWalletJournalEntry,
+)
+
 from eos_tax.tests.base import EosTaxTestCase
 
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
@@ -19,8 +26,9 @@ from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 from eos_tax.db.payments import get_website_data
 from eos_tax.forms import TaxConfigurationForm, journal_type_choices
 from eos_tax.models import MonthlyTax, TaxConfiguration, TaxRate
+from eos_tax.util import format_isk
 
-from .factories import create_user, settings_numbers
+from .factories import create_tax_row, create_user, settings_numbers
 
 BRAVO_CORP_ID = 98000001
 ALLIANCE_ID = 99000001
@@ -250,7 +258,10 @@ class TestSettingsForm(EosTaxTestCase):
         for field in ("tax_alliances", "corporation_blacklist"):
             with self.subTest(field=field):
                 self.assertIn(f"#id_{field}", body)
-                self.assertIn(f'<div id="id_{field}"', body)
+                # the id, wherever it sits in the tag - a widget update began
+                # writing class="" first, and a literal '<div id=' then failed
+                # while the page and its styling were fine
+                self.assertRegex(body, rf'<div\b[^>]*\bid="id_{field}"')
 
         self.assertIn("overflow-y: auto", body)
 
@@ -334,6 +345,202 @@ class TestSettingsForm(EosTaxTestCase):
         choices = dict(journal_type_choices(["some_custom_type"]))
 
         self.assertIn("some_custom_type", choices)
+
+
+class TestSettingsTabs(EosTaxTestCase):
+    """Tax and Bot live in separate tabs now - a threshold and a taxed
+    journal type used to sit in the same scroll with nothing between them."""
+
+    def setUp(self):
+        self.client.force_login(
+            create_user("boss", 93000040, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+        )
+
+    def test_should_offer_a_tax_and_a_bot_tab(self):
+        body = self.client.get(reverse("eos_tax:settings")).content.decode()
+
+        self.assertRegex(
+            body, r'data-bs-target="#eos-tax-settings-tax"[^>]*aria-controls="eos-tax-settings-tax"'
+        )
+        self.assertRegex(
+            body, r'data-bs-target="#eos-tax-settings-bot"[^>]*aria-controls="eos-tax-settings-bot"'
+        )
+
+    def test_should_open_the_tax_tab_by_default(self):
+        body = self.client.get(reverse("eos_tax:settings")).content.decode()
+
+        self.assertRegex(
+            body, r'data-bs-target="#eos-tax-settings-tax"[^>]*aria-selected="true"'
+        )
+        self.assertRegex(
+            body, r'data-bs-target="#eos-tax-settings-bot"[^>]*aria-selected="false"'
+        )
+
+    def test_should_reopen_the_bot_tab_after_a_bot_only_error(self):
+        response = self.client.post(reverse("eos_tax:settings"), {
+            **settings_numbers(),
+            "tax_alliances": [],
+            "tax_corporation": "",
+            "corporation_blacklist": [],
+            "tax_rate": "10",
+            "tax_types": ["bounty_prizes"],
+            "tax_change_min_points": "0.45",
+            "bot_min_hours_per_day": "30",  # above the model's own ceiling
+            "form-TOTAL_FORMS": "0",
+            "form-INITIAL_FORMS": "0",
+            "form-MIN_NUM_FORMS": "0",
+            "form-MAX_NUM_FORMS": "1000",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        self.assertRegex(
+            body, r'data-bs-target="#eos-tax-settings-bot"[^>]*aria-selected="true"'
+        )
+
+    def test_should_keep_the_tax_tab_open_for_a_tax_error(self):
+        response = self.client.post(reverse("eos_tax:settings"), {
+            **settings_numbers(),
+            "tax_alliances": [],
+            "tax_corporation": "",
+            "corporation_blacklist": [],
+            "tax_rate": "150",  # above 100%
+            "tax_types": ["bounty_prizes"],
+            "tax_change_min_points": "0.45",
+            "form-TOTAL_FORMS": "0",
+            "form-INITIAL_FORMS": "0",
+            "form-MIN_NUM_FORMS": "0",
+            "form-MAX_NUM_FORMS": "1000",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        self.assertRegex(
+            body, r'data-bs-target="#eos-tax-settings-tax"[^>]*aria-selected="true"'
+        )
+
+
+class TestSettingsRecalculate(EosTaxTestCase):
+    """The recalculate button: one Corporation runs immediately and shows
+    its arithmetic, every Corporation is queued the way the periodic task
+    queues them."""
+
+    def setUp(self):
+        self.client.force_login(
+            create_user("boss", 93000041, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+        )
+        self.alliance = EveAllianceInfo.objects.create(
+            alliance_id=99000041, alliance_name="Taxed Alliance", alliance_ticker="TAX"
+        )
+        self.corporation = EveCorporationInfo.objects.create(
+            corporation_id=BRAVO_CORP_ID,
+            corporation_name="Bravo Corp",
+            corporation_ticker="BRVO",
+            alliance=self.alliance,
+            tax_rate=0.1,
+        )
+        self.config = TaxConfiguration.get_solo()
+        self.config.tax_types = ["bounty_prizes"]
+        self.config.tax_rate = Decimal("0.07")
+        self.config.save()
+        self.config.tax_alliances.set([self.alliance])
+
+    def post(self, **data):
+        return self.client.post(reverse("eos_tax:settings_recalculate"), data)
+
+    def journal_entry(self, amount, day):
+        audit, _created = CorporationAudit.objects.get_or_create(corporation=self.corporation)
+        division, _created = CorporationWalletDivision.objects.get_or_create(
+            corporation=audit, division=1, defaults={"balance": 0}
+        )
+
+        return CorporationWalletJournalEntry.objects.create(
+            division=division,
+            date=datetime.datetime(2026, 9, day, 12, tzinfo=datetime.timezone.utc),
+            description="wallet entry",
+            entry_id=day,
+            ref_type="bounty_prizes",
+            first_party_id=1000125,
+            second_party_id=2100000001,
+            tax_receiver_id=BRAVO_CORP_ID,
+            context_id=30000001,
+            context_id_type="system_id",
+            amount=amount,
+            tax=amount,
+        )
+
+    def test_should_reject_a_get_request(self):
+        response = self.client.get(reverse("eos_tax:settings_recalculate"))
+
+        self.assertEqual(response.status_code, 405)
+
+    def test_should_reject_basic_access(self):
+        self.client.force_login(
+            create_user("member", 93000042, BRAVO_CORP_ID, "Bravo Corp", ["basic_access"])
+        )
+
+        response = self.post(corp_id="all", month="9", year="2026")
+
+        self.assertEqual(response.status_code, 302)
+
+    def test_should_queue_every_configured_corporation(self):
+        second = EveCorporationInfo.objects.create(
+            corporation_id=98000049, corporation_name="Second Corp",
+            corporation_ticker="SEC", alliance=self.alliance, tax_rate=0.1,
+        )
+
+        with patch("eos_tax.views.run_update_corporation.delay") as delay:
+            response = self.post(corp_id="all", month="9", year="2026")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(delay.call_count, 2)
+        delay.assert_any_call(corp_id=BRAVO_CORP_ID, month=9, year=2026)
+        delay.assert_any_call(corp_id=second.corporation_id, month=9, year=2026)
+        self.assertIn("2", response.content.decode())
+
+    def test_should_not_queue_a_corporation_outside_the_taxed_alliances(self):
+        outside_alliance = EveAllianceInfo.objects.create(
+            alliance_id=99000042, alliance_name="Other Alliance", alliance_ticker="OTH"
+        )
+        EveCorporationInfo.objects.create(
+            corporation_id=98000050, corporation_name="Outside Corp",
+            corporation_ticker="OUT", alliance=outside_alliance, tax_rate=0.1,
+        )
+
+        with patch("eos_tax.views.run_update_corporation.delay") as delay:
+            self.post(corp_id="all", month="9", year="2026")
+
+        self.assertEqual(delay.call_count, 1)
+
+    def test_should_calculate_one_corporation_immediately(self):
+        self.journal_entry(1_000_000_000, day=15)
+
+        response = self.post(corp_id=str(BRAVO_CORP_ID), month="9", year="2026")
+
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        self.assertIn("Bravo Corp", body)
+        # 1,000M skimmed at 10% is 10,000M earned; 7% of that is owed
+        self.assertIn(format_isk(700_000_000), body)
+        self.assertTrue(
+            MonthlyTax.objects.filter(corp_id=BRAVO_CORP_ID, month=9, year=2026).exists()
+        )
+
+    def test_should_explain_a_month_without_entries(self):
+        response = self.post(corp_id=str(BRAVO_CORP_ID), month="9", year="2026")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("no journal entries", response.content.decode().lower())
+
+    def test_should_reject_a_non_numeric_month(self):
+        response = self.post(corp_id="all", month="not-a-month", year="2026")
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_should_reject_a_month_outside_one_to_twelve(self):
+        response = self.post(corp_id="all", month="13", year="2026")
+
+        self.assertEqual(response.status_code, 400)
 
 
 class TestTaxRateSchedule(EosTaxTestCase):
@@ -497,16 +704,8 @@ class TestConfigurationTakesEffect(EosTaxTestCase):
         config.tax_rate = Decimal("0.1")
         config.save()
 
-        now = datetime.datetime.now()
-        self.row = MonthlyTax.objects.create(
-            corp_id=BRAVO_CORP_ID,
-            corp_name="Bravo Corp",
-            tax_value=1_000_000_000,
-            tax_percentage=10.0,
-            month=now.month,
-            year=now.year,
-            payed=False,
-            alliance_tax_rate=0.1,
+        self.row = create_tax_row(
+            BRAVO_CORP_ID, "Bravo Corp", alliance_tax_rate=0.1,
         )
 
     def test_should_apply_a_changed_rate_to_the_overview_title(self):

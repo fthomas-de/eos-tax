@@ -4,7 +4,7 @@ from datetime import datetime
 
 from allianceauth.eveonline.models import EveCorporationInfo
 from corptools.models import CorporationWalletJournalEntry
-from django.db.models import Q, Sum
+from django.db.models import Count, Q, Sum
 from allianceauth.services.hooks import get_extension_logger
 
 from eos_tax.app_settings import get_config
@@ -14,6 +14,7 @@ from eos_tax.util import (
     format_isk,
     get_amount_to_pay,
     get_eve_alliance_id,
+    get_pve_income,
 )
 
 from eos_tax.db.shared import _month_range
@@ -26,6 +27,10 @@ logger = get_extension_logger(__name__)
     #       values('tax_receiver_id').annotate(sum=Sum('amount'))          
 def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False, alliance_tax_rate: float = 0):
     selected_corp = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).first()
+    # worked out here from the three values this function writes anyway,
+    # rather than handed in: a caller that forgot to pass it used to store a
+    # silent 0 - every corporation "owing" nothing - and no test noticed
+    amount_to_pay = int(get_amount_to_pay(tax_value, tax_percentage, alliance_tax_rate))
     # corp_name is handed in by the caller; looking it up again cost a query
     # per corporation and month, for a log line
     logger.info(f"set_corp_tax: {corp_name or corp_id} ({corp_id}), tax_value: {format_isk(tax_value)} tax_percentage {tax_percentage} {month}/{year}")
@@ -36,7 +41,8 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
         selected_corp.tax_percentage=tax_percentage
         selected_corp.payed=payed
         selected_corp.alliance_tax_rate=alliance_tax_rate
-        
+        selected_corp.amount_to_pay=amount_to_pay
+
         selected_corp.save()
 
     else:
@@ -49,7 +55,10 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
             year=year,
             payed=payed,
             alliance_tax_rate=alliance_tax_rate,
+            amount_to_pay=amount_to_pay,
         )
+
+    return amount_to_pay
 
 
 def is_payable(month: int, year: int, today=None) -> bool:
@@ -118,20 +127,17 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
             )
         
             # rows written before the rate was stored per row carry a zero;
-            # resolved once here so the column and the amount cannot drift
+            # resolved once here so the displayed percentage cannot drift.
+            # The amount needs no such fallback: migration 0019 worked it out
+            # for those rows with this same rule, and set_corp_tax stores it
+            # for every row written since.
             applied_rate = selected_corp.alliance_tax_rate or fallback_rate
-
-            amount_to_pay = get_amount_to_pay(
-                selected_corp.tax_value,
-                selected_corp.tax_percentage,
-                applied_rate,
-            )
 
             website_data.append({
                 "corporation_id":selected_corp.corp_id,
                 "corporation_name":selected_corp.corp_name,
-                "isk_to_pay": format_isk(amount_to_pay),
-                "isk_to_pay_value": int(amount_to_pay),
+                "isk_to_pay": format_isk(selected_corp.amount_to_pay),
+                "isk_to_pay_value": selected_corp.amount_to_pay,
                 "month":selected_corp.month,
                 "year":selected_corp.year,
                 "period": selected_corp.year * 100 + selected_corp.month,
@@ -149,11 +155,21 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
     return website_data
 
 
-def update_corp(corp_id:int, month: int = -1, year: int = -1):
+def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
+    """Recalculate one Corporation's month and persist it.
+
+    Returns every step the stored figures are built from - "ok": False and a
+    machine readable "reason" when nothing could be calculated. The
+    settings page's recalculate button renders this as a log; the periodic
+    task, the only other caller, ignores it.
+    """
     corp_info = EveCorporationInfo.objects.filter(corporation_id=corp_id).first()
     if not corp_info:
         logger.warning(f"dbcon update_corp: unknown corporation {corp_id} - skipped")
-        return
+        return {
+            "ok": False, "reason": "unknown_corp",
+            "corp_id": corp_id, "month": month, "year": year,
+        }
 
     if corp_info.tax_rate is None:
         # Alliance Auth leaves the rate empty for a corporation it never
@@ -165,7 +181,10 @@ def update_corp(corp_id:int, month: int = -1, year: int = -1):
             f"dbcon update_corp: {corp_info.corporation_name} ({corp_id}) has "
             f"no ingame tax rate - skipped"
         )
-        return
+        return {
+            "ok": False, "reason": "no_tax_rate", "corp_id": corp_id,
+            "corp_name": corp_info.corporation_name, "month": month, "year": year,
+        }
 
     corp_tax_rate = float("%.4f" % corp_info.tax_rate)
     logger.info(f"dbcon update_corp1: {corp_info.corporation_name} ({corp_id}): tax_rate {corp_tax_rate} - {month}/{year}")
@@ -174,16 +193,30 @@ def update_corp(corp_id:int, month: int = -1, year: int = -1):
     start, end = _month_range(year, month)
 
     # filter is on a single corp, so the whole month collapses into one sum
-    tax_sum = CorporationWalletJournalEntry.objects.filter(
+    entries = CorporationWalletJournalEntry.objects.filter(
         tax_receiver_id=corp_id,
         ref_type__in=config.tax_types,
         date__gte=start,
         date__lt=end,
-    ).aggregate(total=Sum("amount"))["total"]
+    )
+    # one sum per tax type, so the log can show what each contributed - the
+    # total below is their sum, which is what the rest of the calculation
+    # uses. Grouping this way costs one query, the same as the plain
+    # aggregate it replaces.
+    by_type = list(
+        entries.values("ref_type")
+        .annotate(sum=Sum("amount"), count=Count("id"))
+        .order_by("ref_type")
+    )
+    tax_sum = sum(row["sum"] for row in by_type)
 
     if not tax_sum:
         logger.info(f"dbcon update_corp2: {corp_info.corporation_name} ({corp_id}): no journal entries - {month}/{year}")
-        return
+        return {
+            "ok": False, "reason": "no_entries", "corp_id": corp_id,
+            "corp_name": corp_info.corporation_name, "corp_tax_percent": corp_tax_rate * 100,
+            "tax_types": config.tax_types, "month": month, "year": year,
+        }
 
     overall_ratted = int(tax_sum)
     payed = corp_has_payed(
@@ -194,16 +227,39 @@ def update_corp(corp_id:int, month: int = -1, year: int = -1):
         corp_name=corp_info.corporation_name,
     )
     logger.info(f"dbcon update_corp3: {corp_info.corporation_name} ({corp_id}): payed {payed} - {month}/{year}")
-    set_corp_tax(
+
+    corp_tax_percent = corp_tax_rate * 100
+    alliance_tax_rate = config.rate_for(year, month)
+    gross_income = int(get_pve_income(overall_ratted, corp_tax_percent))
+
+    amount_to_pay = set_corp_tax(
         corp_id=corp_id,
         corp_name=corp_info.corporation_name,
         tax_value=overall_ratted,
-        tax_percentage=corp_tax_rate*100,
+        tax_percentage=corp_tax_percent,
         month=month,
         year=year,
         payed=payed,
-        alliance_tax_rate=config.rate_for(year, month),
+        alliance_tax_rate=alliance_tax_rate,
     )
+
+    return {
+        "ok": True,
+        "corp_id": corp_id,
+        "corp_name": corp_info.corporation_name,
+        "month": month,
+        "year": year,
+        "tax_types": config.tax_types,
+        "by_type": by_type,
+        "entries_considered": sum(row["count"] for row in by_type),
+        "tax_value": overall_ratted,
+        "corp_tax_percent": corp_tax_percent,
+        "gross_income": gross_income,
+        "alliance_tax_rate": alliance_tax_rate,
+        "alliance_tax_percent": float("%.2f" % (alliance_tax_rate * 100)),
+        "amount_to_pay": amount_to_pay,
+        "payed": payed,
+    }
 
 
 def get_all_corps_for_user(characters: list = []):

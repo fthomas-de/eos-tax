@@ -371,3 +371,14 @@ class MonthlyTax(models.Model):
             "changing the rate does not rewrite what past months were owed."
         ),
     )
+
+    amount_to_pay = models.BigIntegerField(
+        verbose_name=_("Amount to pay"),
+        default=0,
+        help_text=_(
+            "ISK owed to the alliance for this month, in whole ISK. Worked out from "
+            "tax_value, tax_percentage and alliance_tax_rate whenever the row is "
+            "written, and kept with them from then on - the page, the chart and the "
+            "payment check read it rather than redoing the arithmetic."
+        ),
+    )

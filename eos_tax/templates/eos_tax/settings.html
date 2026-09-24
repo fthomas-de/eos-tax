@@ -2,6 +2,7 @@
 
 {% load django_bootstrap5 %}
 {% load i18n %}
+{% load sri %}
 
 {# the payment instructions belong next to the tax table #}
 {% block app_help %}{% endblock %}
@@ -28,169 +29,253 @@
                             <div class="alert alert-danger">{{ form.non_field_errors }}</div>
                         {% endif %}
 
-                        <h2 class="h5 border-bottom pb-2">{% translate "Taxation" %}</h2>
-                        <p class="text-body-secondary small">
-                            {% blocktranslate %}What is taxed, and what it costs. Everything the overview
-                            and the statistics are built from.{% endblocktranslate %}
-                        </p>
-
-                        <h3 class="h6 mt-4">{% translate "Scope" %}</h3>
-                        {% bootstrap_field form.tax_alliances %}
-                        {% bootstrap_field form.corporation_blacklist %}
-                        {% bootstrap_field form.tax_corporation %}
-                        {% bootstrap_field form.tax_types %}
-
-                        <h3 class="h6 mt-4">{% translate "Months" %}</h3>
-                        {% bootstrap_field form.last_month %}
-                        {% bootstrap_field form.current_month %}
-
-                        <h3 class="h6 mt-4">{% translate "Payments" %}</h3>
-                        {% bootstrap_field form.use_reason %}
-
-                        <h3 class="h6 mt-4">{% translate "Rate" %}</h3>
-                        {% bootstrap_field form.tax_rate %}
-
-                        <h2 class="h6 mt-4">{% translate "Tax rate schedule" %}</h2>
-                        <p class="text-body-secondary small">
-                            {% blocktranslate %}The newest entry that is not in the future applies, so a
-                            change can be entered months ahead. Months before the first entry use the base
-                            rate above. Already calculated months keep the rate they were charged with.{% endblocktranslate %}
-                        </p>
-
-                        {{ rates.management_form }}
-                        {% if rates.non_form_errors %}
-                            <div class="alert alert-danger">{{ rates.non_form_errors }}</div>
-                        {% endif %}
-
                         {% comment %}
-                            The cells hold form controls, which have a width
-                            they will not go below - without this the table
-                            pushes the whole page sideways instead of
-                            scrolling on its own.
+                            One tab per concern rather than one long scroll: a
+                            reader tuning a bot threshold never has to pass the
+                            taxation fields to get there, and the other way
+                            round. A field error re-opens the tab it belongs
+                            to, via active_tab from the view - both forms ride
+                            in the same POST, so a tax error must not hide
+                            behind the tab a bot error would otherwise open.
                         {% endcomment %}
-                        <div class="table-responsive">
-                            <table class="table table-sm align-middle">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">{% translate "Valid from" %}</th>
-                                        <th scope="col">{% translate "Rate" %}</th>
-                                        <th scope="col" class="text-end">{% translate "Remove" %}</th>
-                                    </tr>
-                                </thead>
+                        <ul class="nav nav-tabs mb-3" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link{% if active_tab == 'tax' %} active{% endif %}"
+                                        type="button" role="tab"
+                                        data-bs-toggle="tab" data-bs-target="#eos-tax-settings-tax"
+                                        aria-controls="eos-tax-settings-tax"
+                                        aria-selected="{% if active_tab == 'tax' %}true{% else %}false{% endif %}">
+                                    {% translate "Tax" %}
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link{% if active_tab == 'bot' %} active{% endif %}"
+                                        type="button" role="tab"
+                                        data-bs-toggle="tab" data-bs-target="#eos-tax-settings-bot"
+                                        aria-controls="eos-tax-settings-bot"
+                                        aria-selected="{% if active_tab == 'bot' %}true{% else %}false{% endif %}">
+                                    {% translate "Bot" %}
+                                </button>
+                            </li>
+                        </ul>
 
-                                <tbody>
-                                    {% for rate_form in rates %}
-                                        <tr>
-                                            <td>
-                                                {{ rate_form.id }}
-                                                {% bootstrap_field rate_form.valid_from show_label=False %}
-                                            </td>
-                                            <td>{% bootstrap_field rate_form.rate show_label=False %}</td>
-                                            <td class="text-end">
-                                                {% if rate_form.instance.pk %}
-                                                    {% bootstrap_field rate_form.DELETE show_label=False %}
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                        <div class="tab-content">
+                            <div class="tab-pane fade{% if active_tab == 'tax' %} show active{% endif %}"
+                                 id="eos-tax-settings-tax" role="tabpanel">
 
-                        <h2 class="h5 border-bottom pb-2 mt-5">{% translate "Corp tax changes" %}</h2>
-                        <p class="text-body-secondary small">
-                            {% blocktranslate %}How large a move of a Corporation's own tax rate has to be
-                            before that page reports it.{% endblocktranslate %}
-                        </p>
-                        {% bootstrap_field form.tax_change_min_points %}
-
-                        {% comment %}
-                            One sub-chapter per tab of the bots page, named the
-                            way the tab is named. The four readings deliberately
-                            disagree with each other, so their thresholds are
-                            kept apart even where two of the numbers happen to
-                            match today - tuning one must not move the other.
-                        {% endcomment %}
-                        <h2 class="h5 border-bottom pb-2 mt-5">{% translate "Bots" %}</h2>
-                        <p class="text-body-secondary small">
-                            {% blocktranslate %}Four readings of the same month, each with its own
-                            thresholds. A Character at the top of one can be absent from the next, and
-                            that disagreement is the point.{% endblocktranslate %}
-                        </p>
-
-                        {% comment %}
-                            Each reading gets its own card rather than a plain
-                            heading: the field names alone do not say which
-                            reading they belong to - bot_run_min_ticks next to
-                            bot_rhythm_min_payouts next to bot_clock_min_payouts
-                            reads as one long list otherwise, and a value
-                            tuned for one reading has ended up under another
-                            by mistake before.
-                        {% endcomment %}
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h3 class="h6 mb-0">{% translate "Hours per day" %}</h3>
-                            </div>
-                            <div class="card-body">
+                                <h2 class="h5 border-bottom pb-2">{% translate "Taxation" %}</h2>
                                 <p class="text-body-secondary small">
-                                    {% blocktranslate %}Counts how many different hours of a day a Character
-                                    earned in, and on how many days.{% endblocktranslate %}
+                                    {% blocktranslate %}What is taxed, and what it costs. Everything the overview
+                                    and the statistics are built from.{% endblocktranslate %}
                                 </p>
-                                {% bootstrap_field form.bot_hours_min_entries %}
-                                {% bootstrap_field form.bot_min_hours_per_day %}
-                                {% bootstrap_field form.bot_min_days_per_month %}
-                            </div>
-                        </div>
 
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h3 class="h6 mb-0">{% translate "Unbroken runs" %}</h3>
-                            </div>
-                            <div class="card-body">
-                                <p class="text-body-secondary small">
-                                    {% blocktranslate %}Looks at the minute rather than the hour: the game pays a
-                                    ratter about every twenty minutes, so an uninterrupted stretch shows up as a
-                                    chain of payouts and nothing else does.{% endblocktranslate %}
-                                </p>
-                                {% bootstrap_field form.bot_run_min_ticks %}
-                                {% bootstrap_field form.bot_run_max_gaps %}
-                                {% bootstrap_field form.bot_run_tick_tolerance %}
-                                {% bootstrap_field form.bot_run_gap_minutes %}
-                            </div>
-                        </div>
+                                <h3 class="h6 mt-4">{% translate "Scope" %}</h3>
+                                {% bootstrap_field form.tax_alliances %}
+                                {% bootstrap_field form.corporation_blacklist %}
+                                {% bootstrap_field form.tax_corporation %}
+                                {% bootstrap_field form.tax_types %}
 
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h3 class="h6 mb-0">{% translate "Against the Corporation" %}</h3>
-                            </div>
-                            <div class="card-body">
-                                <p class="text-body-secondary small">
-                                    {% blocktranslate %}How much of a Character's income falls inside the hours
-                                    their own Corporation is busy. The Corporation is the yardstick and not the
-                                    alliance, which spans several timezones at once.{% endblocktranslate %}
-                                </p>
-                                {% bootstrap_field form.bot_rhythm_busy_hours %}
-                                {% bootstrap_field form.bot_rhythm_min_payouts %}
-                                {% bootstrap_field form.bot_rhythm_corp_min_payouts %}
-                                {% bootstrap_field form.bot_rhythm_purge_strong %}
-                                {% bootstrap_field form.bot_rhythm_min_difference %}
-                            </div>
-                        </div>
+                                <h3 class="h6 mt-4">{% translate "Months" %}</h3>
+                                {% bootstrap_field form.last_month %}
+                                {% bootstrap_field form.current_month %}
 
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h3 class="h6 mb-0">{% translate "Off the Corporation clock" %}</h3>
-                            </div>
-                            <div class="card-body">
+                                <h3 class="h6 mt-4">{% translate "Payments" %}</h3>
+                                {% bootstrap_field form.use_reason %}
+
+                                <h3 class="h6 mt-4">{% translate "Rate" %}</h3>
+                                {% bootstrap_field form.tax_rate %}
+
+                                <h2 class="h6 mt-4">{% translate "Tax rate schedule" %}</h2>
                                 <p class="text-body-secondary small">
-                                    {% blocktranslate %}How far a Character's day sits from their Corporation's,
-                                    averaged the way a clock wraps.{% endblocktranslate %}
+                                    {% blocktranslate %}The newest entry that is not in the future applies, so a
+                                    change can be entered months ahead. Months before the first entry use the base
+                                    rate above. Already calculated months keep the rate they were charged with.{% endblocktranslate %}
                                 </p>
-                                {% bootstrap_field form.bot_clock_max_apart %}
-                                {% bootstrap_field form.bot_clock_min_payouts %}
-                                {% bootstrap_field form.bot_clock_corp_min_payouts %}
-                                {% bootstrap_field form.bot_clock_purge_strong %}
-                                {% bootstrap_field form.bot_clock_min_apart %}
+
+                                {{ rates.management_form }}
+                                {% if rates.non_form_errors %}
+                                    <div class="alert alert-danger">{{ rates.non_form_errors }}</div>
+                                {% endif %}
+
+                                {% comment %}
+                                    The cells hold form controls, which have a width
+                                    they will not go below - without this the table
+                                    pushes the whole page sideways instead of
+                                    scrolling on its own.
+                                {% endcomment %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">{% translate "Valid from" %}</th>
+                                                <th scope="col">{% translate "Rate" %}</th>
+                                                <th scope="col" class="text-end">{% translate "Remove" %}</th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            {% for rate_form in rates %}
+                                                <tr>
+                                                    <td>
+                                                        {{ rate_form.id }}
+                                                        {% bootstrap_field rate_form.valid_from show_label=False %}
+                                                    </td>
+                                                    <td>{% bootstrap_field rate_form.rate show_label=False %}</td>
+                                                    <td class="text-end">
+                                                        {% if rate_form.instance.pk %}
+                                                            {% bootstrap_field rate_form.DELETE show_label=False %}
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <h2 class="h5 border-bottom pb-2 mt-5">{% translate "Corp tax changes" %}</h2>
+                                <p class="text-body-secondary small">
+                                    {% blocktranslate %}How large a move of a Corporation's own tax rate has to be
+                                    before that page reports it.{% endblocktranslate %}
+                                </p>
+                                {% bootstrap_field form.tax_change_min_points %}
+
+                                {% comment %}
+                                    Outside both forms above on purpose: it posts to its own
+                                    endpoint through settings.js rather than through this
+                                    page's save, so recalculating a month never depends on
+                                    the rest of the configuration also being valid right now.
+                                {% endcomment %}
+                                <h2 class="h5 border-bottom pb-2 mt-5">{% translate "Recalculate" %}</h2>
+                                <p class="text-body-secondary small">
+                                    {% blocktranslate %}Runs the calculation again for one month, outside the
+                                    periodic task - useful right after a journal import finished or a rate was
+                                    corrected. One Corporation runs immediately and shows the arithmetic behind its
+                                    figure; every Corporation is queued the way the periodic task queues them,
+                                    without waiting for the result here.{% endblocktranslate %}
+                                </p>
+
+                                <div class="row g-3 align-items-end mb-3">
+                                    <div class="col-sm-5 col-lg-4">
+                                        <label for="eos-tax-recalc-corp" class="form-label">
+                                            {% translate "Corporation" %}
+                                        </label>
+                                        <select class="form-select" id="eos-tax-recalc-corp">
+                                            <option value="all">{% translate "All configured Corporations" %}</option>
+                                            {% for corporation in corporations %}
+                                                <option value="{{ corporation.corporation_id }}">
+                                                    {{ corporation.corporation_name }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-3 col-lg-2">
+                                        <label for="eos-tax-recalc-month" class="form-label">
+                                            {% translate "Month" %}
+                                        </label>
+                                        <input type="number" min="1" max="12" class="form-control"
+                                               id="eos-tax-recalc-month" value="{{ recalculate_month }}">
+                                    </div>
+                                    <div class="col-sm-3 col-lg-2">
+                                        <label for="eos-tax-recalc-year" class="form-label">
+                                            {% translate "Year" %}
+                                        </label>
+                                        <input type="number" min="2000" max="2100" class="form-control"
+                                               id="eos-tax-recalc-year" value="{{ recalculate_year }}">
+                                    </div>
+                                    <div class="col-auto">
+                                        <button type="button" class="btn btn-secondary" id="eos-tax-recalc-run">
+                                            {% translate "Recalculate" %}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="eos-tax-recalc-result" class="mb-4"></div>
+                            </div>
+
+                            <div class="tab-pane fade{% if active_tab == 'bot' %} show active{% endif %}"
+                                 id="eos-tax-settings-bot" role="tabpanel">
+
+                                <p class="text-body-secondary small">
+                                    {% blocktranslate %}Four readings of the same month, each with its own
+                                    thresholds. A Character at the top of one can be absent from the next, and
+                                    that disagreement is the point.{% endblocktranslate %}
+                                </p>
+
+                                {% comment %}
+                                    Each reading gets its own card rather than a plain
+                                    heading: the field names alone do not say which
+                                    reading they belong to - bot_run_min_ticks next to
+                                    bot_rhythm_min_payouts next to bot_clock_min_payouts
+                                    reads as one long list otherwise, and a value
+                                    tuned for one reading has ended up under another
+                                    by mistake before.
+                                {% endcomment %}
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h3 class="h6 mb-0">{% translate "Hours per day" %}</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-body-secondary small">
+                                            {% blocktranslate %}Counts how many different hours of a day a Character
+                                            earned in, and on how many days.{% endblocktranslate %}
+                                        </p>
+                                        {% bootstrap_field form.bot_hours_min_entries %}
+                                        {% bootstrap_field form.bot_min_hours_per_day %}
+                                        {% bootstrap_field form.bot_min_days_per_month %}
+                                    </div>
+                                </div>
+
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h3 class="h6 mb-0">{% translate "Unbroken runs" %}</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-body-secondary small">
+                                            {% blocktranslate %}Looks at the minute rather than the hour: the game pays a
+                                            ratter about every twenty minutes, so an uninterrupted stretch shows up as a
+                                            chain of payouts and nothing else does.{% endblocktranslate %}
+                                        </p>
+                                        {% bootstrap_field form.bot_run_min_ticks %}
+                                        {% bootstrap_field form.bot_run_max_gaps %}
+                                        {% bootstrap_field form.bot_run_tick_tolerance %}
+                                        {% bootstrap_field form.bot_run_gap_minutes %}
+                                    </div>
+                                </div>
+
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h3 class="h6 mb-0">{% translate "Against the Corporation" %}</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-body-secondary small">
+                                            {% blocktranslate %}How much of a Character's income falls inside the hours
+                                            their own Corporation is busy. The Corporation is the yardstick and not the
+                                            alliance, which spans several timezones at once.{% endblocktranslate %}
+                                        </p>
+                                        {% bootstrap_field form.bot_rhythm_busy_hours %}
+                                        {% bootstrap_field form.bot_rhythm_min_payouts %}
+                                        {% bootstrap_field form.bot_rhythm_corp_min_payouts %}
+                                        {% bootstrap_field form.bot_rhythm_purge_strong %}
+                                        {% bootstrap_field form.bot_rhythm_min_difference %}
+                                    </div>
+                                </div>
+
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h3 class="h6 mb-0">{% translate "Off the Corporation clock" %}</h3>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="text-body-secondary small">
+                                            {% blocktranslate %}How far a Character's day sits from their Corporation's,
+                                            averaged the way a clock wraps.{% endblocktranslate %}
+                                        </p>
+                                        {% bootstrap_field form.bot_clock_max_apart %}
+                                        {% bootstrap_field form.bot_clock_min_payouts %}
+                                        {% bootstrap_field form.bot_clock_corp_min_payouts %}
+                                        {% bootstrap_field form.bot_clock_purge_strong %}
+                                        {% bootstrap_field form.bot_clock_min_apart %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -226,4 +311,10 @@
             border-radius: var(--bs-border-radius);
         }
     </style>
+{% endblock %}
+
+{% block extra_javascript %}
+    {{ js_config|json_script:"eos-tax-config" }}
+
+    {% sri_static "eos_tax/js/settings.js" %}
 {% endblock %}

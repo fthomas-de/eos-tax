@@ -6,7 +6,7 @@ at all - this module only decides which corporation gets which palette slot.
 
 from eos_tax.app_settings import get_config
 from eos_tax.models import MonthlyTax
-from eos_tax.util import get_amount_to_pay, get_pve_income
+from eos_tax.util import get_pve_income
 
 from eos_tax.db.palette import _chart_palette
 from eos_tax.db.shared import _corporation_infos
@@ -57,8 +57,6 @@ def get_statistics_series(year: int, alliance_id: int = None):
     infos = _corporation_infos({row.corp_id for row in rows})
     slots = _colour_slots()
     palette = _chart_palette(max(len(slots), 1))
-    # twelve lookups instead of one per row
-    fallback_rates = {month: config.rate_for(year, month) for month in range(1, 13)}
 
     corps = {}
     for row in rows:
@@ -81,11 +79,9 @@ def get_statistics_series(year: int, alliance_id: int = None):
             "tax": [0.0] * 12,
             "income": [0.0] * 12,
         })
-        corp["tax"][row.month - 1] += get_amount_to_pay(
-            row.tax_value,
-            row.tax_percentage,
-            row.alliance_tax_rate or fallback_rates[row.month],
-        )
+        # the figure the overview shows for this month, so the chart and the
+        # page cannot disagree about what a corporation owed
+        corp["tax"][row.month - 1] += row.amount_to_pay
         corp["income"][row.month - 1] += get_pve_income(row.tax_value, row.tax_percentage)
 
     series = sorted(corps.values(), key=lambda corp: corp["name"].lower())

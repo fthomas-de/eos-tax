@@ -7,8 +7,10 @@ else only displays or sums - it had no coverage before this file.
 
 import datetime
 from decimal import Decimal
+from importlib import import_module
 
 from allianceauth.eveonline.models import EveCorporationInfo
+from django.apps import apps as installed_apps
 from corptools.models import (
     CorporationAudit,
     CorporationWalletDivision,
@@ -22,7 +24,7 @@ from eos_tax.db.payments import (
     is_payable,
     update_corp,
 )
-from eos_tax.models import MonthlyTax, TaxConfiguration
+from eos_tax.models import MonthlyTax, TaxConfiguration, TaxRate
 from eos_tax.tests.base import EosTaxTestCase
 from eos_tax.util import corp_has_payed, get_amount_to_pay
 
@@ -148,6 +150,10 @@ class TestUpdateCorpCalculation(PaymentsTestCase):
         self.assertEqual(row.tax_percentage, 10.0)  # corp tax_rate 0.1 -> 10.0
         self.assertEqual(row.alliance_tax_rate, 0.15)
         self.assertEqual(row.corp_name, "Bravo Corp")
+        # 800M skimmed at 10% is 8,000M earned; 15% of that is owed. The one
+        # figure the reader copies to pay - a default of 0 here once went
+        # unnoticed by every test, because they all built their rows by hand
+        self.assertEqual(row.amount_to_pay, 1_200_000_000)
 
     def test_should_only_count_configured_ref_types(self):
         self.bounty(500_000_000, day=10)
@@ -205,6 +211,23 @@ class TestUpdateCorpRepeatedRuns(PaymentsTestCase):
         )
         self.assertEqual(self.row().tax_value, 250_000_000)
 
+    def test_should_move_the_amount_with_the_income_on_a_second_run(self):
+        """The update branch writes the row it found rather than creating one,
+        which is the path a forgotten field silently keeps stale on."""
+        self.bounty(100_000_000, day=10)
+        update_corp(CORP_ID, MONTH, YEAR)
+        first = self.row().amount_to_pay
+
+        self.bounty(150_000_000, day=11)
+        update_corp(CORP_ID, MONTH, YEAR)
+        row = self.row()
+
+        self.assertEqual(
+            row.amount_to_pay,
+            int(get_amount_to_pay(250_000_000, 10.0, row.alliance_tax_rate)),
+        )
+        self.assertGreater(row.amount_to_pay, first)
+
     def test_should_keep_a_payed_row_marked_payed(self):
         create_tax_row(
             CORP_ID, "Bravo Corp", payed=True, tax_value=1, tax_percentage=10.0,
@@ -234,6 +257,68 @@ class TestUpdateCorpYearRollover(PaymentsTestCase):
 
         row = MonthlyTax.objects.get(corp_id=CORP_ID, month=12, year=YEAR)
         self.assertEqual(row.tax_value, 100_000_000)
+
+
+class TestUpdateCorpBreakdown(PaymentsTestCase):
+    """update_corp's return value: the settings page's recalculate button
+    renders this as a log, so every step it claims to show has to be here."""
+
+    def test_should_return_the_calculation_steps(self):
+        self.bounty(500_000_000, day=10)
+        self.bounty(300_000_000, day=20)
+        self.config.tax_rate = Decimal("0.15")
+        self.config.save()
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertTrue(breakdown["ok"])
+        self.assertEqual(breakdown["corp_id"], CORP_ID)
+        self.assertEqual(breakdown["corp_name"], "Bravo Corp")
+        self.assertEqual(breakdown["tax_types"], ["bounty_prizes"])
+        self.assertEqual(breakdown["tax_value"], 800_000_000)
+        self.assertEqual(breakdown["entries_considered"], 2)
+        self.assertEqual(breakdown["corp_tax_percent"], 10.0)
+        # 800M skimmed at 10% is 8,000M earned
+        self.assertEqual(breakdown["gross_income"], 8_000_000_000)
+        self.assertEqual(breakdown["alliance_tax_rate"], 0.15)
+        self.assertEqual(breakdown["alliance_tax_percent"], 15.0)
+        self.assertEqual(breakdown["amount_to_pay"], self.row().amount_to_pay)
+        self.assertFalse(breakdown["payed"])
+
+    def test_should_break_the_sum_down_by_tax_type(self):
+        self.config.tax_types = ["bounty_prizes", "ess_escrow_transfer"]
+        self.config.save()
+        self.bounty(500_000_000, day=10, ref_type="bounty_prizes")
+        self.bounty(200_000_000, day=11, ref_type="ess_escrow_transfer")
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        by_type = {row["ref_type"]: row["sum"] for row in breakdown["by_type"]}
+        self.assertEqual(by_type["bounty_prizes"], 500_000_000)
+        self.assertEqual(by_type["ess_escrow_transfer"], 200_000_000)
+        self.assertEqual(breakdown["tax_value"], 700_000_000)
+
+    def test_should_explain_an_unknown_corporation(self):
+        breakdown = update_corp(UNKNOWN_CORP_ID, MONTH, YEAR)
+
+        self.assertFalse(breakdown["ok"])
+        self.assertEqual(breakdown["reason"], "unknown_corp")
+
+    def test_should_explain_a_missing_ingame_rate(self):
+        corporation = EveCorporationInfo.objects.get(corporation_id=CORP_ID)
+        corporation.tax_rate = None
+        corporation.save()
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertFalse(breakdown["ok"])
+        self.assertEqual(breakdown["reason"], "no_tax_rate")
+
+    def test_should_explain_a_month_without_entries(self):
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertFalse(breakdown["ok"])
+        self.assertEqual(breakdown["reason"], "no_entries")
 
 
 # --- corp_has_payed -----------------------------------------------------
@@ -541,3 +626,75 @@ class TestWebsiteDataOrder(EosTaxTestCase):
                 ("Bravo Corp", now.month, now.year, False),
             ],
         )
+
+
+# the migration module name starts with a digit, so it cannot be imported
+# with a plain import statement
+backfill_amount_to_pay = import_module(
+    "eos_tax.migrations.0019_monthlytax_amount_to_pay"
+).backfill_amount_to_pay
+
+
+class TestAmountToPayBackfill(EosTaxTestCase):
+    """Migration 0019 working out amount_to_pay for rows written before it.
+
+    Called with the installed app registry instead of a historical one: the
+    three models it reads have not changed since, and the rows it has to get
+    right are the ones the running app can still produce.
+    """
+
+    def setUp(self):
+        config = TaxConfiguration.get_solo()
+        config.tax_rate = Decimal("0.2")
+        config.save()
+
+    def old_row(self, corp_id, month, year, alliance_tax_rate):
+        """A row as the app left it before 0019: the field at its default."""
+        return MonthlyTax.objects.create(
+            corp_id=corp_id, corp_name="Old Corp", tax_value=1_000_000_000,
+            tax_percentage=10.0, month=month, year=year, payed=False,
+            alliance_tax_rate=alliance_tax_rate, amount_to_pay=0,
+        )
+
+    def backfill(self):
+        backfill_amount_to_pay(installed_apps, None)
+
+    def test_should_work_it_out_from_the_rate_on_the_row(self):
+        row = self.old_row(CORP_ID, 3, 2026, alliance_tax_rate=0.1)
+
+        self.backfill()
+        row.refresh_from_db()
+
+        # 1,000M skimmed at 10% is 10,000M earned; 10% of that
+        self.assertEqual(row.amount_to_pay, 1_000_000_000)
+
+    def test_should_fall_back_to_the_schedule_for_a_row_without_a_rate(self):
+        """What the overview used to do at read time for such a row - the
+        amount has to come out the same, or 0019 changes what is owed."""
+        TaxRate.objects.create(valid_from=datetime.date(2026, 1, 1), rate=Decimal("0.05"))
+        row = self.old_row(CORP_ID, 3, 2026, alliance_tax_rate=0)
+
+        self.backfill()
+        row.refresh_from_db()
+
+        self.assertEqual(row.amount_to_pay, 500_000_000)
+
+    def test_should_fall_back_to_the_base_rate_before_the_schedule_starts(self):
+        TaxRate.objects.create(valid_from=datetime.date(2026, 6, 1), rate=Decimal("0.05"))
+        row = self.old_row(CORP_ID, 3, 2026, alliance_tax_rate=0)
+
+        self.backfill()
+        row.refresh_from_db()
+
+        self.assertEqual(row.amount_to_pay, 2_000_000_000)
+
+    def test_should_not_crash_on_a_row_without_a_month(self):
+        """month and year default to 0, and date() refuses both. On MariaDB a
+        crash here leaves the column added and the migration unrecorded, so
+        the next migrate fails on the duplicate column."""
+        row = self.old_row(CORP_ID, 0, 0, alliance_tax_rate=0)
+
+        self.backfill()
+        row.refresh_from_db()
+
+        self.assertEqual(row.amount_to_pay, 2_000_000_000)

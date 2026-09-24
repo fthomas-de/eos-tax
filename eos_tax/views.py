@@ -7,6 +7,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.dates import MONTHS_3, WEEKDAYS_ABBR
 from django.utils.translation import gettext_lazy as _
+from django.views.decorators.http import require_POST
 
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 from allianceauth.services.hooks import get_extension_logger
@@ -29,7 +30,12 @@ from eos_tax.db.bot_signals import (
     get_run_detail,
     get_unbroken_runs,
 )
-from eos_tax.db.payments import get_all_corps_for_user, get_tax_corp, get_website_data
+from eos_tax.db.payments import (
+    get_all_corps_for_user,
+    get_tax_corp,
+    get_website_data,
+    update_corp,
+)
 from eos_tax.db.shared import alts_of
 from eos_tax.db.statistics import (
     get_statistics_alliances,
@@ -37,7 +43,8 @@ from eos_tax.db.statistics import (
     get_statistics_years,
 )
 from eos_tax.db.tax_changes import get_corp_tax_changes, get_corp_tax_detail
-from eos_tax.util import get_dates, get_amount_to_pay
+from eos_tax.tasks import run_update_corporation
+from eos_tax.util import get_dates, get_amount_to_pay, format_isk
 
 logger = get_extension_logger(__name__)
 
@@ -195,11 +202,18 @@ def tax_change_detail(request, corp_id):
     return render(request, "eos_tax/tax-change-detail.html", context)
 
 
+# Every bot-detection field starts this way; used only to decide which tab
+# reopens after a failed save. The template groups the fields itself, so this
+# is not a second copy of that grouping - just the one bit a redisplay needs.
+BOT_FIELD_PREFIX = "bot_"
+
+
 @login_required
 @permission_required("eos_tax.admin_view")
 def settings(request):
     config = get_config()
     schedule = TaxRate.objects.all()
+    active_tab = "tax"
 
     if request.method == "POST":
         form = TaxConfigurationForm(request.POST, instance=config)
@@ -216,17 +230,115 @@ def settings(request):
             messages.success(request, _("Settings saved."))
 
             return redirect("eos_tax:settings")
+
+        # a bot-only error must reopen the Bot tab, or the page looks like it
+        # silently dropped the change instead of rejecting it. A tax error -
+        # on the form or on the rate schedule - keeps the default Tax tab,
+        # even when a bot field also failed: the plain tabs here cannot show
+        # both panes' errors at once, and a tax error is never allowed to
+        # hide behind a tab that is not open.
+        bot_only = (
+            form.errors
+            and all(name.startswith(BOT_FIELD_PREFIX) for name in form.errors)
+            and not any(rates.errors)
+            and not rates.non_form_errors()
+        )
+        active_tab = "bot" if bot_only else "tax"
     else:
         form = TaxConfigurationForm(instance=config)
         rates = TaxRateFormSet(queryset=schedule)
+
+    now = datetime.now()
 
     context = {
         "title": _("Settings"),
         "version": VERSION,
         "form": form,
         "rates": rates,
+        "active_tab": active_tab,
+        "corporations": EveCorporationInfo.objects.filter(
+            alliance__alliance_id__in=config.alliance_ids()
+        ).order_by("corporation_name"),
+        "recalculate_month": now.month,
+        "recalculate_year": now.year,
+        "js_config": {
+            "recalculateUrl": reverse("eos_tax:settings_recalculate"),
+            "loading": _("Calculating…"),
+            "error": _("Could not recalculate this month."),
+        },
     }
     return render(request, "eos_tax/settings.html", context)
+
+
+def _breakdown_for_display(breakdown):
+    """The recalculate log's ISK figures, grouped the way format_isk groups
+    them everywhere else in the app - the raw ints stay in update_corp's
+    return value for whatever else ends up testing or reading it."""
+    if not breakdown["ok"]:
+        return breakdown
+
+    return {
+        **breakdown,
+        "tax_value": format_isk(breakdown["tax_value"]),
+        "gross_income": format_isk(breakdown["gross_income"]),
+        "amount_to_pay": format_isk(breakdown["amount_to_pay"]),
+        "by_type": [
+            {**row, "sum": format_isk(row["sum"])}
+            for row in breakdown["by_type"]
+        ],
+    }
+
+
+@login_required
+@permission_required("eos_tax.admin_view")
+@require_POST
+def settings_recalculate(request):
+    """Recalculates one Corporation or every configured one, on demand.
+
+    The periodic task only ever touches the previous and the running month;
+    this is how any other month gets a second pass - a journal that just
+    finished importing, or a rate that was just corrected. One Corporation
+    runs synchronously and comes back with the arithmetic behind its figure;
+    every Corporation is queued the same way the periodic task queues them,
+    since running dozens synchronously would time the request out.
+    """
+    config = get_config()
+
+    try:
+        month = int(request.POST.get("month", ""))
+        year = int(request.POST.get("year", ""))
+    except ValueError:
+        return HttpResponseBadRequest("month and year must be integers")
+
+    if not 1 <= month <= 12:
+        return HttpResponseBadRequest("month must be between 1 and 12")
+
+    corp_id = request.POST.get("corp_id", "all")
+
+    if corp_id == "all":
+        corp_ids = list(
+            EveCorporationInfo.objects.filter(
+                alliance__alliance_id__in=config.alliance_ids()
+            ).values_list("corporation_id", flat=True)
+        )
+
+        for cid in corp_ids:
+            run_update_corporation.delay(corp_id=cid, month=month, year=year)
+
+        return render(request, "eos_tax/partials/recalculate-queued.html", {
+            "count": len(corp_ids),
+        })
+
+    try:
+        corp_id = int(corp_id)
+    except ValueError:
+        return HttpResponseBadRequest("corp_id must be an integer or 'all'")
+
+    breakdown = _breakdown_for_display(update_corp(corp_id=corp_id, month=month, year=year))
+
+    return render(request, "eos_tax/partials/recalculate-result.html", {
+        "breakdown": breakdown,
+    })
 
 
 def _selected_month(request):

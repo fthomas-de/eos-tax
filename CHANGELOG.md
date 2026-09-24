@@ -545,6 +545,71 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   a placeholder when Alliance Auth never had a birthday for a character at
   all, the same as an unregistered Main.
 
+## [0.3.5] - 2026-09-24
+
+### Added
+
+- `MonthlyTax.amount_to_pay`: the ISK figure a reader copies and pays ingame,
+  stored on the row next to the three values it is worked out from.
+  `set_corp_tax` works it out itself from the `tax_value`, `tax_percentage`
+  and `alliance_tax_rate` it writes anyway, so the four can never disagree -
+  taking it as an argument with a default of 0 meant a caller that forgot it
+  stored "nothing owed" for every Corporation, and no test noticed.
+- Migration `0019` works the figure out for every existing row. A row without
+  a stored rate gets the rate the overview used to fall back to - the
+  schedule for its month, else the base rate - so no amount owed changes. A
+  row with month or year 0, the model defaults, takes the base rate instead
+  of crashing: on MariaDB a crash there leaves the column added and the
+  migration unrecorded, and the next `migrate` fails on the duplicate column.
+- Restart the Celery workers together with the web process after migrating.
+  A worker still on the old code writes rows without the field.
+- The settings page splits Taxation and Bots into a Tax and a Bot tab. The two
+  used to share one long scroll with nothing between a taxed journal type and
+  a bot-detection threshold - the same problem the four bot readings already
+  solved for themselves with cards, just one level up. A field error reopens
+  the tab it belongs to; a tax error keeps the default Tax tab open even when
+  a bot field also failed, since the two forms ride in the same POST and
+  plain tabs cannot show both panes' errors at once.
+- A Recalculate control on the Tax tab, next to a Corporation picker and a
+  month and year: runs `update_corp` again outside the periodic task, for a
+  journal that just finished importing or a rate that was just corrected.
+  Picking one Corporation runs it immediately and shows the arithmetic behind
+  its figure - every tax type's own sum, the total, the corp's ingame rate,
+  the gross PvE income that rate is backed out of, the alliance rate applied,
+  and the amount owed. Picking "All" queues every configured Corporation the
+  same way the periodic task queues them, rather than running dozens
+  synchronously and timing the request out.
+- `update_corp` returns the steps its result is built from instead of nothing,
+  with `"ok": False` and a machine readable `"reason"` for the three cases it
+  already logged and gave up on - an unknown Corporation, one with no ingame
+  tax rate on file, or a month with no journal entries of the configured tax
+  types. The recalculate control is what reads this now; the periodic task,
+  its only other caller, still ignores the return value.
+- `set_corp_tax` returns the `amount_to_pay` it already works out, so a caller
+  that wants the figure - the recalculate control does - does not have to
+  work it out a second time and risk disagreeing with what was stored.
+
+### Changed
+
+- The overview, the yearly statistics chart and `corp_has_payed`'s payment
+  matching all read `amount_to_pay` straight off the row instead of calling
+  `get_amount_to_pay()` on every request, so the page, the chart and the
+  payment check cannot disagree by a rounding step. It is not frozen for good:
+  the task recalculates the previous and the running month on every run, the
+  way it always rewrote their `alliance_tax_rate`; a month is fixed once it
+  leaves that window.
+
+### Fixed
+
+- `test_should_keep_the_checkbox_lists_compact` failed on every run. The
+  widget now writes `class=""` before `id`, and the test looked for a literal
+  `<div id="...`; the id and the styling hooked onto it were fine all along.
+  It matches the id wherever it sits in the tag now. A suite that is always
+  red hides the one failure that matters.
+- `TestFormatAge` failed when it ran after a test that had requested a page
+  in German: the active language is per thread and nothing switched it back.
+  It pins English for itself.
+
 ## [0.2.6] - 2026-09-10
 
 ### Added
