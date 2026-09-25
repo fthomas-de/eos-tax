@@ -9,7 +9,7 @@
     <th scope="rowgroup" colspan="{{ columns }}">
         {{ group.main_name }}
         <span class="badge text-bg-secondary ms-2">
-            {% blocktranslate count counter=group.count %}{{ counter }} Character{% plural %}{{ counter }} Characters{% endblocktranslate %}
+            {% blocktranslate count counter=group.count %}{{ counter }} character{% plural %}{{ counter }} characters{% endblocktranslate %}
         </span>
         {% if not group.has_main %}
             <span class="text-body-secondary small ms-2">{% translate "no main known" %}</span>

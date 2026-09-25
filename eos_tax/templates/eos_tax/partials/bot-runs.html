@@ -9,7 +9,7 @@
             the setting under discussion.
         {% endcomment %}
         <div class="alert alert-info">
-            {% blocktranslate with value=stats.min_ticks %}No Character collected {{ value }} payouts in a row. The longest runs of the month are shown instead, so the threshold can be judged against real numbers.{% endblocktranslate %}
+            {% blocktranslate with value=stats.min_ticks %}No character collected {{ value }} payouts in a row. The longest runs of the month are shown instead, so the threshold can be judged against real numbers.{% endblocktranslate %}
         </div>
     {% endif %}
 
@@ -87,13 +87,7 @@
                                 so they order the list rather than decide anything, which is what the
                                 wording says. All three are on the settings page.
                             {% endcomment %}
-                            {% if row.level == "high" %}
-                                <span class="badge text-bg-danger">{% translate "strong" %}</span>
-                            {% elif row.level == "medium" %}
-                                <span class="badge text-bg-warning">{% translate "worth a look" %}</span>
-                            {% else %}
-                                <span class="badge text-bg-success">{% translate "unremarkable" %}</span>
-                            {% endif %}
+                            {% include "eos_tax/partials/bot-level-badge.html" with level=row.level %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -108,7 +102,7 @@
 {% endif %}
 
 <div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
-    <span>{% blocktranslate count counter=stats.characters %}{{ counter }} Character{% plural %}{{ counter }} Characters{% endblocktranslate %}</span>
+    <span>{% blocktranslate count counter=stats.characters %}{{ counter }} character{% plural %}{{ counter }} characters{% endblocktranslate %}</span>
     {% if stats.groups_total > stats.groups_shown %}
         <span>{% blocktranslate with shown=stats.groups_shown total=stats.groups_total %}{{ shown }} of {{ total }} groups shown{% endblocktranslate %}</span>
     {% endif %}

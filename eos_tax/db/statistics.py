@@ -16,6 +16,17 @@ from eos_tax.db.shared import _corporation_infos
 # corporations, so hue never has to do the job alone.
 CHART_DASHES = [[], [7, 4], [2, 3]]
 
+# How many colours a chart uses before the next corporation gets a line style
+# instead of yet another hue. Past about eight, colours stop being told apart
+# on a line; the palette only grows beyond this once every style is used up,
+# so no two corporations ever share both colour and style.
+CHART_COLOURS = 8
+
+
+def _colour_count(corporations: int) -> int:
+    """How many colours the palette needs for that many corporations."""
+    return max(CHART_COLOURS, -(-corporations // len(CHART_DASHES)))
+
 
 def get_statistics_years():
     """Years that carry data. There is no backfill, so this grows month by month."""
@@ -56,7 +67,9 @@ def get_statistics_series(year: int, alliance_id: int = None):
     )
     infos = _corporation_infos({row.corp_id for row in rows})
     slots = _colour_slots()
-    palette = _chart_palette(max(len(slots), 1))
+    # sized for every corporation with data, not the filtered few, for the
+    # same reason the slots are
+    palette = _chart_palette(_colour_count(len(slots)))
 
     corps = {}
     for row in rows:
@@ -90,9 +103,11 @@ def get_statistics_series(year: int, alliance_id: int = None):
         # the palette is built for every corporation that has data, so a
         # corporation keeps its colour when the filter changes and when the
         # display switches between the line chart and the pie
-        colour = palette[slot % len(palette)]
-        corp["color_light"] = colour
-        corp["color_dark"] = colour
+        #
+        # A palette of one colour per corporation used to make the dash index
+        # below always 0, so the line styles the README promises past eight
+        # corporations never appeared.
+        corp["color"] = palette[slot % len(palette)]
         corp["dash"] = CHART_DASHES[(slot // len(palette)) % len(CHART_DASHES)]
         corp["tax_total"] = round(sum(corp["tax"]))
         corp["income_total"] = round(sum(corp["income"]))

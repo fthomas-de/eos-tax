@@ -22,6 +22,12 @@ function eosTaxKeepTab(name) {
         url.searchParams.set("tab", name);
         link.href = url.pathname + url.search;
     });
+
+    // the month form reloads the page too, and used to drop the reader back
+    // on the first tab every time the month changed
+    document.querySelectorAll("[data-eos-keep-tab-field]").forEach(function (field) {
+        field.value = name;
+    });
 }
 
 /* Reopen the tab the url asks for, once, on load.
@@ -34,7 +40,10 @@ function eosTaxOpenRequestedTab() {
     /* global bootstrap */
     const wanted = new URLSearchParams(window.location.search).get("tab");
 
-    if (!wanted || typeof bootstrap === "undefined") {
+    // the name goes into a selector below: anything but a plain word - a
+    // quote from a hand edited url - would make querySelector throw and take
+    // the rest of the page's script with it
+    if (!wanted || !/^[a-z]+$/.test(wanted) || typeof bootstrap === "undefined") {
         return;
     }
 

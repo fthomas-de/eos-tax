@@ -86,6 +86,10 @@ classes, its bundles (`bundles/chart-js.html`, `datatables-2-js-bs5.html`),
 no overriding of AA's own look. Prefer an AA or corptools pattern over
 inventing one.
 
+CSS lives in `eos_tax/static/eos_tax/css/eos_tax.css`, loaded by `base.html`;
+a page adds its own bundle CSS in `{% block eos_tax_css %}`, never by
+overriding `extra_css`, which would drop the stylesheet. No `<style>` blocks.
+
 JavaScript lives in `eos_tax/static/eos_tax/js/`, never inline in a template -
 `sri_static` cannot hash inline code, and `collectstatic` has to see the file.
 Run `collectstatic` after every change to it.
@@ -98,13 +102,23 @@ and compare its checksum. A test that passes against the broken code tests
 nothing. Several tests in this suite only exist because that step caught them
 passing for the wrong reason.
 
-Fixtures live in `eos_tax/tests/factories.py`, not in another test module.
+Fixtures live in `eos_tax/tests/factories.py`, not in another test module;
+page helpers (`read_static`, `read_stylesheet`, `json_script`,
+`table_body`) in `eos_tax/tests/base.py`. Assert a Corporation name against
+`table_body(response)`, never the whole page: Alliance Auth's sidebar prints
+the logged in user's own Corporation before the content.
 `settings_numbers()` builds the numeric part of a settings POST from the model
 itself, so a new threshold does not silently invalidate every settings test.
 
 Private helpers with arithmetic in them (`_longest_run`, `_typical_hour`,
 `_purged_for`) are tested directly with hand-built values. A few numbers decide
 their behaviour, and a database round trip only obscures which.
+
+## Payments
+
+A row once marked paid is never unmarked - not by a recalculation, not by
+the task, not by any other write. `set_corp_tax` only ever adds the flag;
+keep it that way, `TestPaidIsNeverTakenBack` guards it.
 
 ## Translations
 
@@ -113,6 +127,9 @@ touched **at a commit** - see below. Everything else stays English.
 
 - EVE jargon stays English in every language: Corporation, Alliance, Character,
   Main, bounty, wallet, Reason, ratter, ESS. `test_translations` enforces it.
+  In the English source they are lower case in running text ("the rest of
+  their corporation") and capitalised in headings, tab names and column
+  titles.
 - A `#, fuzzy` entry is **not compiled by msgfmt**. gettext guesses a fuzzy
   translation from the nearest old entry and guesses wrong nearly every time,
   so an unreviewed fuzzy entry ships as English without a warning. Read every

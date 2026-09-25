@@ -1,11 +1,11 @@
 {% load navactive %}
-{# One entry of the app navbar: coloured while active, muted otherwise. #}
-{# The navbar is navbar-dark/text-bg-primary, so the accent has to work on blue. #}
+{# One entry of the app navbar, written the way Alliance Auth's own apps #}
+{# write theirs (groupmanagement/menu.html): the theme decides what active #}
+{# looks like, so every AA theme shows it the same way it shows its own. #}
 {% navactive request nav_view as active_class %}
 
 <li class="nav-item">
-    <a href="{{ nav_url }}"
-       class="nav-link {% if active_class %}{{ active_class }} fw-bold text-warning{% else %}text-white-50{% endif %}"
+    <a class="nav-link {{ active_class }}" href="{{ nav_url }}"
        {% if active_class %}aria-current="page"{% endif %}>
         {{ nav_title }}
     </a>

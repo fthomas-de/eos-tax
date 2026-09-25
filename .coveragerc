@@ -1,17 +1,16 @@
 [run]
 branch = True
-source = EOS_TAX_SETTING_ONE
+# the package this repo ships; the example plugin's placeholder stood here
+# before, and coverage measured nothing at all
+source = eos_tax
+omit =
+    eos_tax/migrations/*
+    eos_tax/tests/*
 
 [report]
+show_missing = True
+skip_covered = True
 exclude_lines =
-    if self.debug:
     pragma: no cover
     raise NotImplementedError
     if __name__ == .__main__.:
-ignore_errors = True
-omit =
-    setup.py
-    */test*.py
-    */tests/*.py
-    */migrations/*
-    doc/*

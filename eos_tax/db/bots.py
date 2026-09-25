@@ -5,9 +5,6 @@ from collections import defaultdict
 from datetime import date, timedelta, timezone
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
-from allianceauth.framework.api.evecharacter import (
-    get_main_character_from_evecharacter,
-)
 from corptools.models import CorporationWalletJournalEntry, EveName
 from django.db.models import Count, Sum
 from django.db.models.functions import ExtractHour, TruncDate
@@ -116,7 +113,8 @@ def get_bot_report(year: int, month: int):
 
     A day counts as suspicious once a character earned taxed income in more
     than bot_min_hours_per_day different hours of that day; the character is
-    listed once more than bot_min_days_per_month such days pile up.
+    listed once bot_min_days_per_month such days pile up - reaching the
+    threshold counts, the same line at which the row turns "high".
 
     When nothing crosses both thresholds the report falls back to the ten
     mains with the longest days of the month - an empty page says nothing
@@ -204,8 +202,11 @@ def get_bot_report(year: int, month: int):
         for character_id, days in hours_per_day.items()
     ]
 
+    # reaching the threshold lists a character, the same way reaching it
+    # makes the row "high": with > a character on exactly the threshold sat
+    # in the fallback list of those who did not make it, marked as strong
     candidates = [
-        row for row in rows if row["suspicious_days"] > config.bot_min_days_per_month
+        row for row in rows if row["suspicious_days"] >= config.bot_min_days_per_month
     ]
     candidates.sort(key=lambda entry: (-entry["suspicious_days"], -entry["max_hours"]))
 

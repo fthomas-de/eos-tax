@@ -1,7 +1,7 @@
 /* Corp Tax Changes: the sortable table and its quick filters.
  *
  * Loaded from tax-changes.html, which hands over the translated strings
- * through window.eosTax.taxChanges - a .js file cannot reach {% translate %}.
+ * as json_script "eos-tax-config" - a .js file cannot reach {% translate %}.
  */
 document.addEventListener("DOMContentLoaded", function () {
     /* global DataTable */

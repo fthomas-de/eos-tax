@@ -27,22 +27,6 @@ def _lightness(rgb):
     return (max(rgb) + min(rgb)) / 510
 
 
-def _hue(rgb):
-    red, green, blue = (channel / 255 for channel in rgb)
-    high, low = max(red, green, blue), min(red, green, blue)
-    span = high - low
-
-    if not span:
-        return 0.0
-
-    if high == red:
-        return ((green - blue) / span % 6) * 60
-    if high == green:
-        return ((blue - red) / span + 2) * 60
-
-    return ((red - green) / span + 4) * 60
-
-
 def _saturation(rgb):
     high, low = max(rgb) / 255, min(rgb) / 255
     span = high - low

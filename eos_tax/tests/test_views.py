@@ -7,11 +7,13 @@ from dateutil.relativedelta import relativedelta
 from django.test import RequestFactory
 
 from django.contrib.auth.models import Permission, User
-from eos_tax.tests.base import EosTaxTestCase, read_static
+from eos_tax.tests.base import EosTaxTestCase, json_script, read_static, table_body
 from django.urls import reverse
 
 from eos_tax.auth_hooks import EosTaxMenuItem
-from eos_tax.models import MonthlyTax, TaxConfiguration
+from decimal import Decimal
+
+from eos_tax.models import MonthlyTax, TaxConfiguration, TaxRate
 from eos_tax.util import get_amount_to_pay
 
 from .factories import (
@@ -90,12 +92,11 @@ class TestIndexContent(EosTaxTestCase):
         create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
 
         response = self.client.get(reverse("eos_tax:index"), {"paid": "1"})
-        self.assertContains(response, "Bravo Corp")
-        self.assertContains(response, "Alpha Corp")
+        rows = table_body(response)
 
-        body = response.content.decode()
-
-        self.assertLess(body.index("Bravo Corp"), body.index("Alpha Corp"))
+        self.assertIn("Bravo Corp", rows)
+        self.assertIn("Alpha Corp", rows)
+        self.assertLess(rows.index("Bravo Corp"), rows.index("Alpha Corp"))
 
     def test_should_hide_other_corporations_without_admin_view(self):
         create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
@@ -105,10 +106,10 @@ class TestIndexContent(EosTaxTestCase):
         )
         self.client.force_login(basic_user)
 
-        response = self.client.get(reverse("eos_tax:index"))
+        rows = table_body(self.client.get(reverse("eos_tax:index")))
 
-        self.assertContains(response, "Bravo Corp")
-        self.assertNotContains(response, "Alpha Corp")
+        self.assertIn("Bravo Corp", rows)
+        self.assertNotIn("Alpha Corp", rows)
 
 
 class TestOutstandingOnly(EosTaxTestCase):
@@ -131,19 +132,19 @@ class TestOutstandingOnly(EosTaxTestCase):
         create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
         create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
 
-        response = self.client.get(reverse("eos_tax:index"))
+        rows = table_body(self.client.get(reverse("eos_tax:index")))
 
-        self.assertContains(response, "Bravo Corp")
-        self.assertNotContains(response, "Alpha Corp")
+        self.assertIn("Bravo Corp", rows)
+        self.assertNotIn("Alpha Corp", rows)
 
     def test_should_show_paid_rows_on_request(self):
         create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
         create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
 
-        response = self.client.get(reverse("eos_tax:index"), {"paid": "1"})
+        rows = table_body(self.client.get(reverse("eos_tax:index"), {"paid": "1"}))
 
-        self.assertContains(response, "Bravo Corp")
-        self.assertContains(response, "Alpha Corp")
+        self.assertIn("Bravo Corp", rows)
+        self.assertIn("Alpha Corp", rows)
 
     def test_should_highlight_outstanding_only_by_default(self):
         response = self.client.get(reverse("eos_tax:index"))
@@ -178,7 +179,7 @@ class TestOutstandingOnly(EosTaxTestCase):
 
         response = self.client.get(reverse("eos_tax:index"), {"paid": "1"})
 
-        self.assertContains(response, "Bravo Corp")
+        self.assertIn("Bravo Corp", table_body(response))
         self.assertNotContains(response, "Nothing outstanding.")
 
 
@@ -518,9 +519,7 @@ class TestScriptConfiguration(EosTaxTestCase):
 
         self.assertIn(self.ELEMENT, body, f"{name} carries no configuration")
 
-        raw = body.split(self.ELEMENT, 1)[1].split(">", 1)[1].split("</script>", 1)[0]
-
-        return json.loads(html.unescape(raw))
+        return json_script(body, "eos-tax-config")
 
     def test_should_give_the_overview_its_search_labels(self):
         config = self.config("index")
@@ -594,8 +593,8 @@ class TestNarrowScreens(EosTaxTestCase):
     def test_should_keep_the_columns_the_page_is_for(self):
         body = self.overview().content.decode()
 
-        for label in ("Corporation", "Amount to pay in Isk", "Month", "Reason",
-                      "Payed"):
+        for label in ("Corporation", "Amount to pay in ISK", "Month", "Reason",
+                      "Paid"):
             with self.subTest(column=label):
                 self.assertIn(f'<th scope="col">{label}</th>', body)
 
@@ -609,6 +608,60 @@ class TestNarrowScreens(EosTaxTestCase):
 
         self.assertIn("fa-triangle-exclamation", body)
         self.assertIn('<th scope="row" class="text-danger">', body)
+
+
+class TestTitleRate(EosTaxTestCase):
+    """The rate in the page title belongs to the rows under it."""
+
+    def setUp(self):
+        today = datetime.date.today().replace(day=1)
+        previous = today - relativedelta(months=1)
+        TaxRate.objects.create(valid_from=previous, rate=Decimal("0.075"))
+        TaxRate.objects.create(valid_from=today, rate=Decimal("0.10"))
+
+        config = TaxConfiguration.get_solo()
+        config.last_month = True
+        config.current_month = False
+        config.save()
+        self.client.force_login(
+            create_user("titled", 91000031, BRAVO_CORP_ID, "Bravo Corp", ["basic_access"])
+        )
+
+    def test_should_show_the_rate_of_the_month_on_screen_with_its_decimal(self):
+        """7.5 % used to read as 8 %, and it was the running month's
+        10 % over a table of last month's rows."""
+        response = self.client.get(reverse("eos_tax:index"))
+
+        self.assertContains(response, "Taxes to pay: 7.5%")
+
+    def test_should_drop_the_decimal_of_a_whole_rate(self):
+        TaxRate.objects.all().update(rate=Decimal("0.10"))
+
+        self.assertContains(self.client.get(reverse("eos_tax:index")), "Taxes to pay: 10%")
+
+
+class TestYearsOutOfRange(EosTaxTestCase):
+    """A month range ends at the first of the following month, which
+    datetime refuses after 9999 - a hand written url must not reach it."""
+
+    def setUp(self):
+        self.client.force_login(
+            create_user("ranger", 91000032, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+        )
+
+    def test_should_refuse_to_recalculate_beyond_the_last_year(self):
+        response = self.client.post(
+            reverse("eos_tax:settings_recalculate"),
+            {"corp_id": "all", "month": 12, "year": 9999},
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_should_fall_back_to_the_running_month_for_a_month_beyond_it(self):
+        response = self.client.get(reverse("eos_tax:bots"), {"month": "9999-12"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, datetime.date.today().strftime("%Y-%m"))
 
 
 class TestNavigation(EosTaxTestCase):
@@ -654,19 +707,21 @@ class TestNavigation(EosTaxTestCase):
             with self.subTest(label=label):
                 self.assertIn(label, navbar)
 
-    def test_should_colour_only_the_current_entry(self):
+    def test_should_mark_only_the_current_entry_active(self):
+        """Alliance Auth's own pattern (groupmanagement/menu.html): the
+        theme decides what active looks like, the app adds no colours."""
         for page in self.PAGES:
             navbar = self.nav_bar(page)
 
             for entry in self.PAGES:
                 with self.subTest(page=page, entry=entry):
                     markup = self.nav_entry(navbar, entry)
-                    if entry == page:
-                        self.assertIn("text-warning", markup)
-                        self.assertNotIn("text-white-50", markup)
-                    else:
-                        self.assertIn("text-white-50", markup)
-                        self.assertNotIn("text-warning", markup)
+                    classes = re.search(r'class="([^"]*)"', markup.split("<a", 1)[1]).group(1).split()
+
+                    self.assertIn("nav-link", classes)
+                    self.assertEqual("active" in classes, entry == page)
+                    self.assertNotIn("text-warning", classes)
+                    self.assertNotIn("text-white-50", classes)
 
     def test_should_mark_the_current_entry_for_screen_readers(self):
         for page in self.PAGES:

@@ -87,9 +87,11 @@ CASUAL_ID = 2100000002
 YEAR = 2026
 MONTH = 5
 
-# small thresholds keep the fixtures readable: more than 2 hours on more than 1 day
+# small thresholds keep the fixtures readable: more than 2 hours on at least
+# 2 days - the day threshold counts once it is reached, the hour one only
+# once it is passed, the way the settings page words them
 MIN_HOURS = 2
-MIN_DAYS = 1
+MIN_DAYS = 2
 
 entry_ids = itertools.count(1)
 

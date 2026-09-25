@@ -1,0 +1,84 @@
+/* The little eos_tax needs on top of Alliance Auth's Bootstrap theme.
+ *
+ * One file instead of a <style> block per template: the chart frame used to be
+ * written out three times, at 360, 380 and 360 pixels, and every page drifted
+ * on its own. Colours stay out of here - they come from the theme's own
+ * custom properties, so every AA theme keeps working.
+ */
+
+/* A chart canvas needs a parent with a height, or Chart.js grows it without
+ * end. */
+.eos-tax-chart-frame {
+    position: relative;
+    height: 360px;
+}
+
+/* On a phone the chart keeps its height while losing most of its width, so it
+ * takes viewport height instead of a desktop pixel count. */
+@media (max-width: 767.98px) {
+    .eos-tax-chart-frame {
+        height: 55vh;
+        min-height: 280px;
+        max-height: 420px;
+    }
+}
+
+/* Statistics: only while the legend sits beside the chart does it have to
+ * match its height. The columns break at xl, so the cap belongs there. */
+@media (min-width: 1200px) {
+    .eos-tax-legend-frame {
+        max-height: 360px;
+        overflow-y: auto;
+    }
+}
+
+/* Statistics: the swatch repeats the line style, so hue is never the only
+ * cue. */
+.eos-tax-swatch {
+    display: inline-block;
+    width: 1.5rem;
+    border-top-width: 3px;
+    border-top-color: var(--eos-tax-swatch-color);
+    border-top-style: var(--eos-tax-swatch-style, solid);
+    vertical-align: middle;
+}
+
+/* Statistics: two columns of figures on a phone; from md up the element is a
+ * flex row and this has no effect. */
+.eos-tax-figures {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/* Character page: the calendar of active hours. Fixed layout keeps the seven
+ * weekday columns equal whatever their numbers; below the minimum width the
+ * surrounding table-responsive scrolls instead of squeezing the cells. */
+.eos-tax-matrix {
+    table-layout: fixed;
+    min-width: 34rem;
+}
+
+.eos-tax-matrix-week {
+    width: 4rem;
+}
+
+/* one step of the matrix legend; its shade is set per step in the template */
+.eos-tax-matrix-step {
+    width: 1.75rem;
+    height: 1rem;
+}
+
+/* Settings: one checkbox per corporation stacks into a very tall column once
+ * an alliance has more than a handful. The ids are Django auto_id values of
+ * the checkbox widgets. */
+#id_tax_alliances,
+#id_corporation_blacklist,
+#id_tax_types {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+    gap: 0 1rem;
+    max-height: 12rem;
+    overflow-y: auto;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+}

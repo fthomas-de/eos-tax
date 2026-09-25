@@ -4,12 +4,13 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.contrib import messages
 from django.shortcuts import redirect, render
+from django.template.defaultfilters import floatformat
 from django.urls import reverse
 from django.utils.dates import MONTHS_3, WEEKDAYS_ABBR
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
+from allianceauth.eveonline.models import EveCorporationInfo
 from allianceauth.services.hooks import get_extension_logger
 from allianceauth.framework.api.user import get_all_characters_from_user
 
@@ -44,7 +45,7 @@ from eos_tax.db.statistics import (
 )
 from eos_tax.db.tax_changes import get_corp_tax_changes, get_corp_tax_detail
 from eos_tax.tasks import run_update_corporation
-from eos_tax.util import get_dates, get_amount_to_pay, format_isk
+from eos_tax.util import get_dates, format_isk
 
 logger = get_extension_logger(__name__)
 
@@ -71,11 +72,20 @@ def index(request):
     if not include_paid:
         website_data = [row for row in website_data if not row["payed"]]
 
+    # the rate of the month the rows below are for - the first of the
+    # configured months, which is the payable one when both are shown - and
+    # not the running month's, which the table was not calculated with
     now = datetime.now()
-    # round, not int: 0.29 * 100 lands on 28.999... in binary floating point
-    current_rate = round(get_config().rate_for(now.year, now.month) * 100)
+    shown_month, shown_year = dates[0] if dates else (now.month, now.year)
+    # one decimal, because 7.5 % rounded to a whole number reads as 8 %;
+    # floatformat -1 drops the decimal when there is none and writes the
+    # separator the reader's language uses. Rounded first: 0.29 * 100 lands
+    # on 28.999... in binary floating point
+    shown_rate = floatformat(
+        round(get_config().rate_for(shown_year, shown_month) * 100, 1), -1
+    )
     context = {
-        "title": _("Taxes to pay: %(rate)s%%") % {"rate": current_rate},
+        "title": _("Taxes to pay: %(rate)s%%") % {"rate": shown_rate},
         "website_data": website_data,
         "include_paid": include_paid,
         "has_any_data": has_any_data,
@@ -109,7 +119,7 @@ def statistics(request):
                 "error": _("Could not load the statistics."),
                 "corporations": _("corporations"),
                 "other": _("Other"),
-                "shown": _("{shown} of {total} Corporations drawn"),
+                "shown": _("{shown} of {total} corporations drawn"),
                 "covered": _("{value} of the tax covered"),
                 "income": _("{value} ISK income"),
                 "tax": _("{value} ISK tax"),
@@ -326,6 +336,12 @@ def settings_recalculate(request):
     if not 1 <= month <= 12:
         return HttpResponseBadRequest("month must be between 1 and 12")
 
+    # the month range ends at the first of the following month, which
+    # datetime refuses past the year 9999 - a 500 here, and for "all" one
+    # failing Celery subtask per Corporation
+    if not MIN_YEAR <= year <= MAX_YEAR:
+        return HttpResponseBadRequest(f"year must be between {MIN_YEAR} and {MAX_YEAR}")
+
     corp_id = request.POST.get("corp_id", "all")
 
     if corp_id == "all":
@@ -355,11 +371,20 @@ def settings_recalculate(request):
 
 
 def _selected_month(request):
-    """Month from the picker, falling back to the running one."""
+    """Month from the picker, falling back to the running one.
+
+    Range checked for the same reason as _selected_year: strptime accepts
+    9999-12, and the month range built from it would not.
+    """
     try:
-        return datetime.strptime(request.GET.get("month", ""), "%Y-%m")
+        selected = datetime.strptime(request.GET.get("month", ""), "%Y-%m")
     except ValueError:
         return datetime.now()
+
+    if not MIN_YEAR <= selected.year <= MAX_YEAR:
+        return datetime.now()
+
+    return selected
 
 
 @login_required

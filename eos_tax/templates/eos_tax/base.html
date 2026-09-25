@@ -1,5 +1,6 @@
 {% extends "allianceauth/base-bs5.html" %}
 {% load i18n %}
+{% load sri %}
 
 {% block page_title %}{% translate "Alliance PvE Tax" %}{% endblock %}
 
@@ -28,9 +29,21 @@
     {% endif %}
 {% endblock %}
 
+{% comment %}
+    The stylesheet for every page of the app, and a block inside it for
+    what a single page adds - a page overriding extra_css itself would
+    drop the stylesheet without noticing.
+{% endcomment %}
+{% block extra_css %}
+    {% sri_static "eos_tax/css/eos_tax.css" %}
+    {% block eos_tax_css %}{% endblock %}
+{% endblock %}
+
 {% block content %}
     <div class="eos_tax">
-        <h1 class="text-center mb-3">{% translate "Alliance PvE Tax" %} ({{ version }})</h1>
+        {# Alliance Auth's own page header, the way corptools uses it #}
+        {% translate "Alliance PvE Tax" as app_title %}
+        {% include "framework/header/page-header.html" with title=app_title subtitle=version %}
 
         {% block app_help %}
             {% include "eos_tax/help.html" %}

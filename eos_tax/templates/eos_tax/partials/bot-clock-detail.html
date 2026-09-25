@@ -6,9 +6,17 @@
         somebody's day sits, and on a bar chart the hours either side of
         midnight land at opposite ends of the axis.
     {% endcomment %}
-    {% if detail.middle is None %}
+    {% if detail.flat == "character" %}
         <div class="alert alert-warning">
-            {% translate "Nothing is left of this Corporation once the Character's own payouts are taken out, so there is no clock to compare against and none is drawn. Only the Character's own day is shown. The threshold is on the settings page." %}
+            {% translate "This character's payouts are spread so evenly over the day that it has no middle to place, so there is no distance to measure. The threshold is on the settings page." %}
+        </div>
+    {% elif detail.flat == "corporation" %}
+        <div class="alert alert-warning">
+            {% translate "The rest of this corporation is spread so evenly over the day that it has no middle to place, so there is no distance to measure. The threshold is on the settings page." %}
+        </div>
+    {% elif detail.middle is None %}
+        <div class="alert alert-warning">
+            {% translate "Nothing is left of this corporation once the character's own payouts are taken out, so there is no clock to compare against and none is drawn. Only the character's own day is shown. The threshold is on the settings page." %}
         </div>
     {% else %}
         <p class="text-body-secondary small">

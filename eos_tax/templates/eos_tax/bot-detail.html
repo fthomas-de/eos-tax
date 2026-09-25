@@ -120,6 +120,8 @@
 
         <div class="card-body">
             <form role="form" method="get" class="row g-3 align-items-end mb-4">
+                {# bots.js keeps this on the open tab, so a new month reopens it #}
+                <input type="hidden" name="tab" value="" data-eos-keep-tab-field>
                 <div class="col-sm-4 col-lg-3">
                     <label for="eos-tax-month" class="form-label">{% translate "Month" %}</label>
                     <input type="month" class="form-control" id="eos-tax-month"
@@ -184,16 +186,14 @@
 
             {% if detail.active_days %}
                 <div class="table-responsive">
-                    <table class="table table-bordered align-middle text-center mb-0"
-                           style="table-layout: fixed; min-width: 34rem;">
+                    <table class="eos-tax-matrix table table-bordered align-middle text-center mb-0">
                         <caption class="visually-hidden">
                             {% translate "Active hours per day, calendar weeks as rows and weekdays as columns" %}
                         </caption>
 
                         <thead>
                             <tr>
-                                <th scope="col" class="text-body-secondary small fw-normal"
-                                    style="width: 4rem;">{% translate "Week" %}</th>
+                                <th scope="col" class="eos-tax-matrix-week text-body-secondary small fw-normal">{% translate "Week" %}</th>
                                 {% for weekday in weekdays %}
                                     <th scope="col">{{ weekday|capfirst }}</th>
                                 {% endfor %}
@@ -237,17 +237,17 @@
                 <div class="d-flex align-items-center gap-1 small text-body-secondary mt-3">
                     <span class="me-1">{% translate "quiet" %}</span>
                     {% for step in detail.legend %}
-                        <span class="d-inline-block border" style="width: 1.75rem; height: 1rem;
-                              background-color: rgba(var(--bs-primary-rgb), {{ step.alpha }});"></span>
+                        <span class="eos-tax-matrix-step d-inline-block border"
+                              style="background-color: rgba(var(--bs-primary-rgb), {{ step.alpha }});"></span>
                     {% endfor %}
-                    <span class="ms-1">{% blocktranslate with value=detail.busiest %}{{ value }} hours{% endblocktranslate %}</span>
+                    <span class="ms-1">{% blocktranslate count counter=detail.busiest %}{{ counter }} hour{% plural %}{{ counter }} hours{% endblocktranslate %}</span>
                 </div>
 
                 <div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
-                    <span>{% blocktranslate with value=detail.active_days %}{{ value }} active days{% endblocktranslate %}</span>
-                    <span>{% blocktranslate with value=detail.active_hours %}{{ value }} active hours{% endblocktranslate %}</span>
-                    <span>{% blocktranslate with value=detail.busiest %}busiest day {{ value }} hours{% endblocktranslate %}</span>
-                    <span>{% blocktranslate with value=detail.entries|intcomma %}{{ value }} journal entries{% endblocktranslate %}</span>
+                    <span>{% blocktranslate count counter=detail.active_days %}{{ counter }} active day{% plural %}{{ counter }} active days{% endblocktranslate %}</span>
+                    <span>{% blocktranslate count counter=detail.active_hours %}{{ counter }} active hour{% plural %}{{ counter }} active hours{% endblocktranslate %}</span>
+                    <span>{% blocktranslate count counter=detail.busiest %}busiest day {{ counter }} hour{% plural %}busiest day {{ counter }} hours{% endblocktranslate %}</span>
+                    <span>{% blocktranslate with value=detail.entries|intcomma count counter=detail.entries %}{{ value }} journal entry{% plural %}{{ value }} journal entries{% endblocktranslate %}</span>
 
                     <span class="ms-auto">
                         {% translate "total" %} <strong>{{ detail.seconds|floatformat:2 }}&nbsp;s</strong>
@@ -275,24 +275,6 @@
 
 {% endblock %}
 
-{% block extra_css %}
-    <style>
-        .eos-tax-chart-frame {
-            position: relative;
-            height: 380px;
-        }
-
-        /* On a phone the chart keeps its height while losing most of its
-           width, so it takes viewport height instead of a desktop count. */
-        @media (max-width: 767.98px) {
-            .eos-tax-chart-frame {
-                height: 60vh;
-                min-height: 300px;
-                max-height: 460px;
-            }
-        }
-    </style>
-{% endblock %}
 
 {% block extra_javascript %}
     {% include "bundles/chart-js.html" %}

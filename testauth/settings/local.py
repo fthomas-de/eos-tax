@@ -32,10 +32,14 @@ INSTALLED_APPS += [
     "eos_tax",
 ]
 
-# Enter credentials to use MySQL/MariaDB. Comment out to use sqlite3
+# A database of its own, never a real Alliance Auth one: this test project
+# used to name "aa_dev" here, the dev instance's database with corptools
+# data that cannot be fetched again - one "migrate" with these settings
+# would have gone there. The test runner creates test_eos_tax_testauth
+# and drops it again; the name itself never has to exist.
 DATABASES['default'] = {
     'ENGINE': 'django.db.backends.mysql',
-    'NAME': 'aa_dev',
+    'NAME': 'eos_tax_testauth',
     'USER': 'admin',
     'PASSWORD': 'YOUR-PASSWORD',
     'HOST': '127.0.0.1',

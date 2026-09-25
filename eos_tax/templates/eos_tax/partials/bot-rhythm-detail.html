@@ -10,11 +10,11 @@
     {% endcomment %}
     {% if detail.share is None %}
         <div class="alert alert-warning">
-            {% translate "Nothing is left of this Corporation once the Character's own payouts are taken out, so there is no rhythm to compare against and none is drawn. Only the Character's own day is shown. The threshold is on the settings page." %}
+            {% translate "Nothing is left of this corporation once the character's own payouts are taken out, so there is no rhythm to compare against and none is drawn. Only the character's own day is shown. The threshold is on the settings page." %}
         </div>
     {% else %}
         <p class="text-body-secondary small">
-            {% blocktranslate with hours=detail.window|length %}The Character's day against the rest of their Corporation's, hour by hour. Shares rather than counts, because one Character never has the volume of a Corporation. The shaded hours are the Corporation's busiest {{ hours }}.{% endblocktranslate %}
+            {% blocktranslate with hours=detail.window|length %}The character's day against the rest of their corporation's, hour by hour. Shares rather than counts, because one character never has the volume of a corporation. The shaded hours are the corporation's busiest {{ hours }}.{% endblocktranslate %}
         </p>
     {% endif %}
 

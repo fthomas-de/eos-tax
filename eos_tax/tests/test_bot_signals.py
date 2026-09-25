@@ -7,20 +7,22 @@ there, which is easier to pin down without a database round trip. The three
 way the rest of this app is.
 """
 
-import html
-import json
 from collections import Counter
 from datetime import date, datetime, timedelta, timezone
 
 from django.urls import reverse
 
-from corptools.models import EveName
-from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
+from corptools.models import CorporationAudit, CorporationWalletDivision, EveName
+from allianceauth.eveonline.models import (
+    EveAllianceInfo,
+    EveCharacter,
+    EveCorporationInfo,
+)
 
 from eos_tax.db.bot_signals import (
     _clock_distance,
-    _level,
     _longest_run,
+    _payouts,
     _purge_index,
     _purged_for,
     _typical_hour,
@@ -31,18 +33,21 @@ from eos_tax.db.bot_signals import (
 from eos_tax.db.shared import GROUP_LIMIT
 from eos_tax.util import format_clock, format_duration
 from eos_tax.models import TaxConfiguration
-from eos_tax.tests.base import EosTaxTestCase
+from eos_tax.tests.base import EosTaxTestCase, json_script
 from eos_tax.views import BOT_SIGNALS
 
 from .factories import (
+    ALPHA_CORP_ID,
     BRAVO_CORP_ID,
     CASUAL_ID,
     MONTH,
     RATTER_ID,
+    TAXED_ALLIANCE_ID,
     YEAR,
     add_entries,
     build_corporations,
     configure,
+    create_corporation,
     create_alt,
     create_user,
 )
@@ -136,17 +141,39 @@ class TestLongestRun(EosTaxTestCase):
         self.assertEqual(run["end"], BASE + timedelta(minutes=190))
 
     def test_should_report_the_gaps_of_the_reported_chain_only(self):
-        """A short chain earlier in the list used its one allowed gap; the
-        longer chain reported here has none of its own, and the number
-        returned must say so rather than carry the earlier chain's count."""
-        moments = _moments(0, 20, 62, 82, 112, 132, 152, 172, 192, 212)
+        """A short chain earlier in the list used its one allowed gap and
+        then ended past the ceiling; the longer chain reported here has none
+        of its own, and the number returned must say so rather than carry
+        the earlier chain's count."""
+        moments = _moments(0, 20, 50, 200, 220, 240, 260, 280, 300)
 
         run = _run(moments, max_gaps=1)
 
         self.assertEqual(run["ticks"], 6)
         self.assertEqual(run["gaps"], 0)
-        self.assertEqual(run["start"], BASE + timedelta(minutes=112))
-        self.assertEqual(run["end"], BASE + timedelta(minutes=212))
+        self.assertEqual(run["start"], BASE + timedelta(minutes=200))
+        self.assertEqual(run["end"], BASE + timedelta(minutes=300))
+
+    def test_should_give_up_the_oldest_interruption_rather_than_start_over(self):
+        """2 + 15 + 15 ticks with one interruption allowed: the last two
+        blocks make 30 together. Starting from scratch at the second
+        interruption threw away the middle block and reported 17."""
+        ticks = [0, 20]
+        ticks += [65 + 20 * index for index in range(15)]
+        ticks += [ticks[-1] + 45 + 20 * index for index in range(15)]
+
+        run = _run(_moments(*ticks), max_gaps=1)
+
+        self.assertEqual(run["ticks"], 30)
+        self.assertEqual(run["gaps"], 1)
+        self.assertEqual(run["start"], BASE + timedelta(minutes=65))
+
+    def test_should_slide_with_no_interruption_allowed_at_all(self):
+        """With an allowance of nothing an interruption is a plain end."""
+        run = _run(_moments(0, 20, 60, 80, 100), max_gaps=0)
+
+        self.assertEqual(run["ticks"], 3)
+        self.assertEqual(run["gaps"], 0)
 
 
 class TestPurgedBaseline(EosTaxTestCase):
@@ -547,17 +574,74 @@ class TestDailyProfile(EosTaxTestCase):
         self.assertTrue(report["groups"])
 
 
+class TestPayoutsPerCharacter(EosTaxTestCase):
+    """Who a payout belongs to, before any reading looks at it."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.divisions = build_corporations()
+
+    def setUp(self):
+        configure()
+
+    def test_should_count_a_character_who_moved_with_the_last_corporation(self):
+        """Whichever row the unordered query returned first used to decide,
+        so a character who moved could change Corporation between page
+        loads. Many early rows in the old one must not outvote the move."""
+        alpha = create_corporation(
+            ALPHA_CORP_ID, "Alpha Corp",
+            EveAllianceInfo.objects.get(alliance_id=TAXED_ALLIANCE_ID),
+        )
+        division = CorporationWalletDivision.objects.create(
+            corporation=CorporationAudit.objects.create(corporation=alpha),
+            balance=0, division=1,
+        )
+        add_entries(division, RATTER_ID, 1, (1, 2, 3), corp_id=ALPHA_CORP_ID, entries=5)
+        add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 20, (4,))
+
+        self.assertEqual(_payouts(YEAR, MONTH)[RATTER_ID]["corp_id"], BRAVO_CORP_ID)
+
+    def test_should_drop_a_payout_without_a_second_party(self):
+        add_entries(self.divisions[BRAVO_CORP_ID], None, 1, (4,))
+
+        self.assertNotIn(None, _payouts(YEAR, MONTH))
+
+
 class TestTypicalHourAndClockDistance(EosTaxTestCase):
-    def test_should_return_the_only_hour_for_activity_at_one_hour(self):
-        self.assertAlmostEqual(_typical_hour({12: 5}), 12, places=6)
+    def test_should_place_an_hour_at_its_middle(self):
+        """Payouts in the 12 o'clock bucket fall anywhere from 12:00 to
+        12:59, so the bucket stands for half past - reading it as its
+        start put every middle of a day half an hour early."""
+        self.assertAlmostEqual(_typical_hour({12: 5}), 12.5, places=6)
 
     def test_should_average_across_midnight_toward_zero_not_toward_noon(self):
         """The reason the circular mean exists: 23:00 and 01:00 average to
         a time near midnight, not to 12:00 as a plain mean would give."""
         middle = _typical_hour({23: 1, 1: 1})
 
-        self.assertLess(_clock_distance(middle, 0), 0.01)
+        self.assertLess(_clock_distance(middle, 0.5), 0.01)
         self.assertGreater(_clock_distance(middle, 12), 5)
+
+    def test_should_find_no_middle_in_a_day_spread_evenly_round_the_clock(self):
+        """24 equal hours have no middle; the angle of their average is
+        rounding noise, and a single extra payout used to drag it to
+        whichever hour it fell in."""
+        flat = {hour: 10 for hour in range(24)}
+        nudged = {**flat, 3: 11}
+
+        self.assertIsNone(_typical_hour(flat, 0.2))
+        self.assertIsNone(_typical_hour(nudged, 0.2))
+
+    def test_should_keep_a_middle_for_an_ordinary_evening(self):
+        """Six hours of an evening are concentrated far beyond the shipped
+        floor - the threshold only ever removes days that are nearly flat."""
+        evening = {hour: 10 for hour in range(18, 24)}
+
+        self.assertAlmostEqual(_typical_hour(evening, 0.2), 21, places=6)
+
+    def test_should_ignore_the_floor_when_none_is_given(self):
+        """The rhythm reading asks for a middle without a floor."""
+        self.assertIsNotNone(_typical_hour({hour: 10 for hour in range(24)}))
 
     def test_should_measure_the_short_way_round_the_clock(self):
         self.assertEqual(_clock_distance(23, 1), 2)
@@ -574,6 +658,12 @@ class TestClockOffset(EosTaxTestCase):
 
     def setUp(self):
         configure()
+        # the Crowd's own yardstick here is noon against midnight, which
+        # has no middle to speak of; these tests are about distance and
+        # order, and the floor gets its own tests below
+        config = TaxConfiguration.get_solo()
+        config.bot_clock_min_concentration = 0
+        config.save()
 
     def build_rows(self):
         """A Corporation anchored at noon and two characters twelve hours off.
@@ -598,8 +688,9 @@ class TestClockOffset(EosTaxTestCase):
     def test_should_report_the_distance_between_a_characters_middle_and_the_corps(self):
         rows = {row["character_name"]: row for row in self.build_rows()}
 
-        self.assertEqual(rows["Busy Ratter"]["middle"], 12.0)
-        self.assertEqual(rows["Busy Ratter"]["corp_middle"], 12.0)
+        # the noon bucket stands for half past twelve
+        self.assertEqual(rows["Busy Ratter"]["middle"], 12.5)
+        self.assertEqual(rows["Busy Ratter"]["corp_middle"], 12.5)
         self.assertEqual(rows["Busy Ratter"]["apart"], 0.0)
         self.assertEqual(rows["Casual Pilot"]["apart"], 12.0)
         self.assertEqual(rows["Wandering Pilot"]["apart"], 12.0)
@@ -663,6 +754,33 @@ class TestClockOffset(EosTaxTestCase):
         self.assertEqual(report["rows"], [])
         self.assertEqual(len(report["longest"]), 2)
         self.assertTrue(report["groups"])
+
+    def test_should_leave_out_a_character_whose_day_has_no_middle(self):
+        """A round the clock script gets no distance at all rather than
+        the random one the rounding of a flat day would give it."""
+        config = TaxConfiguration.get_solo()
+        config.bot_clock_min_concentration = 20
+        config.save()
+        add_entries(self.divisions[BRAVO_CORP_ID], CROWD_ID, 1, (12,), entries=60)
+        add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, range(24), entries=2)
+
+        names = [row["character_name"] for row in get_clock_offset(YEAR, MONTH)["measured"]]
+
+        self.assertNotIn("Busy Ratter", names)
+
+    def test_should_count_listed_characters_against_measured_ones(self):
+        """"9 of 40 measured" set mains against characters; both figures
+        are characters now. The two listed characters share one main here,
+        which is what tells the two counts apart."""
+        owner = create_user("clockmain", 94100060, BRAVO_CORP_ID, "Bravo Corp")
+        create_alt(owner, CASUAL_ID, "Casual Pilot")
+        create_alt(owner, WANDERER_ID, "Wandering Pilot")
+        self.build_rows()
+        stats = get_clock_offset(YEAR, MONTH)["stats"]
+
+        self.assertEqual(stats["groups_total"], 1)
+        self.assertEqual(stats["listed_characters"], 2)
+        self.assertEqual(stats["measured_characters"], 4)
 
 
 class TestBotSignalView(EosTaxTestCase):
@@ -753,6 +871,9 @@ class TestBotSignalView(EosTaxTestCase):
         config.bot_rhythm_corp_min_payouts = 1
         config.bot_clock_min_payouts = 1
         config.bot_clock_corp_min_payouts = 1
+        # four hours six apart are a perfectly flat day, which has no
+        # middle; the age column is what this is about
+        config.bot_clock_min_concentration = 0
         config.save()
         add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, (0, 6, 12, 18))
         add_entries(self.divisions[BRAVO_CORP_ID], CASUAL_ID, 2, (1, 7, 13, 19))
@@ -811,11 +932,7 @@ class TestBotsPageTabs(EosTaxTestCase):
         mentions the right characters somewhere is not the same as a tab
         that loads the right month."""
         response = self.page()
-        body = response.content.decode()
-        element = 'id="eos-tax-config"'
-        self.assertIn(element, body, "bots page carries no configuration")
-        raw = body.split(element, 1)[1].split(">", 1)[1].split("</script>", 1)[0]
-        config = json.loads(html.unescape(raw))
+        config = json_script(response.content.decode(), "eos-tax-config")
 
         month = f"{YEAR}-{MONTH:02d}"
         for name in BOT_SIGNALS:
@@ -831,7 +948,7 @@ class TestBotsPageTabs(EosTaxTestCase):
 
         hours = body.index('id="eos-tax-tab-hours"')
         runs = body.index('id="eos-tax-tab-runs"')
-        text = body.index("hours of a day, on more than")
+        text = body.index("hours of a day, on at least")
 
         self.assertGreater(text, hours)
         self.assertLess(text, runs)
@@ -865,22 +982,6 @@ class TestTimeFormatting(EosTaxTestCase):
     def test_should_drop_the_part_that_is_zero(self):
         self.assertEqual(format_duration(5.0), "5 h")
         self.assertEqual(format_duration(0.5), "30 min")
-
-
-class TestLevels(EosTaxTestCase):
-    """How alarming a row is said to be, and where the bands sit."""
-
-    def test_should_band_a_score_in_thirds(self):
-        self.assertEqual(_level(0.0), "low")
-        self.assertEqual(_level(0.34), "medium")
-        self.assertEqual(_level(0.67), "high")
-
-    def test_should_let_the_top_band_be_moved(self):
-        """A score measured against a configured threshold has to reach it,
-        not two thirds of it."""
-        self.assertEqual(_level(0.8), "high")
-        self.assertEqual(_level(0.8, top=1.0), "medium")
-        self.assertEqual(_level(1.0, top=1.0), "high")
 
 
 class TestRunPresentation(EosTaxTestCase):

@@ -41,21 +41,32 @@ function initEosTaxStatistics(config) {
         }
     };
 
-    // B for billions, untranslated on purpose - the same word in every
-    // language beats a locale specific abbreviation nobody recognises
-    function billions(value) {
-        return isk.format(value / 1e9) + " B";
+    // A figure in billions or millions, with as many decimals as it takes to
+    // tell neighbours apart. Whole billions printed 480 M as "0 B", and put
+    // "2 B" on the axis twice for the ticks at 1.5 B and 2 B. The decimal
+    // comma goes with the dots the overview groups thousands with.
+    function scaled(value, divisor, unit) {
+        const number = value / divisor;
+        const absolute = Math.abs(number);
+        const digits = absolute < 10 ? 2 : (absolute < 100 ? 1 : 0);
+        const parts = number.toFixed(digits).split(".");
+        const whole = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        const fraction = (parts[1] || "").replace(/0+$/, "");
+
+        return (fraction ? whole + "," + fraction : whole) + " " + unit;
     }
 
-    function axisTick(value) {
+    // B and M untranslated on purpose - the same letter in every language
+    // beats a locale specific abbreviation nobody recognises
+    function compact(value) {
         const absolute = Math.abs(value);
 
         if (absolute >= 1e9) {
-            return billions(value);
+            return scaled(value, 1e9, "B");
         }
 
         if (absolute >= 1e6) {
-            return isk.format(value / 1e6) + " M";
+            return scaled(value, 1e6, "M");
         }
 
         return isk.format(value);
@@ -122,7 +133,7 @@ function initEosTaxStatistics(config) {
                 monthTax: corp.tax[month],
                 monthIncome: corp.income[month],
                 members: corp.members || 0,
-                colour: dark ? corp.color_dark : corp.color_light,
+                colour: corp.color,
                 dash: corp.dash,
                 parts: []
             };
@@ -280,8 +291,8 @@ function initEosTaxStatistics(config) {
         const parts = [
             TEXT.shown.replace("{shown}", drawn.length).replace("{total}", all.length),
             TEXT.covered.replace("{value}", covered + " %"),
-            TEXT.income.replace("{value}", billions(totalIncome)),
-            TEXT.tax.replace("{value}", billions(totalTax))
+            TEXT.income.replace("{value}", compact(totalIncome)),
+            TEXT.tax.replace("{value}", compact(totalTax))
         ];
 
         figures.replaceChildren();
@@ -345,7 +356,7 @@ function initEosTaxStatistics(config) {
                         ticks: {
                             maxTicksLimit: narrow.matches ? 5 : 8,
                             callback: function (value) {
-                                return axisTick(value);
+                                return compact(value);
                             }
                         }
                     }

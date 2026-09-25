@@ -5,7 +5,7 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "eos_tax"
 dynamic = ["version"]
-description = "eos_tax plugin app for Alliance Auth"
+description = "Alliance PvE tax and bot detection for Alliance Auth, read from the corptools wallet journals"
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.10"
@@ -29,7 +29,11 @@ classifiers = [
 ]
 dependencies = [
     "allianceauth>=5.2",
-    "allianceauth-corptools>=3.5"
+    "allianceauth-corptools>=3.5",
+    # imported directly, so named directly rather than left to arrive
+    # through Alliance Auth
+    "django-solo",
+    "python-dateutil",
 ]
 
 
@@ -58,8 +62,8 @@ known_allianceauth = ["allianceauth", "app_utils"]
 known_django = ["django", "django_webtest", "esi", "eveuniverse"]
 
 [tool.pylint.'MASTER']
-ignore-patterns = ["test_.*.py,__init__.py", "generate_.*.py"]
-ignore-paths = ["^.*//migrations//.*$"]
+ignore-patterns = ["test_.*.py", "__init__.py", "generate_.*.py"]
+ignore-paths = ["^.*/migrations/.*$"]
 
 [tool.pylint.'BASIC']
 good-names = ["i", "j", "k", "x", "f", "ex"]

@@ -111,7 +111,7 @@ class TestCharacterJump(EosTaxTestCase):
         response = self.search("Nobody At All")
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Nobody At All")
+        self.assertContains(response, 'No character found for "Nobody At All".')
 
     def test_should_still_show_the_list_without_a_name(self):
         """An empty box is not a search: the list page renders instead of

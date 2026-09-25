@@ -19,7 +19,7 @@ from corptools.models import (
     CorporationWalletJournalEntry,
 )
 
-from eos_tax.tests.base import EosTaxTestCase
+from eos_tax.tests.base import EosTaxTestCase, read_stylesheet
 
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 
@@ -158,8 +158,15 @@ class TestSettingsForm(EosTaxTestCase):
         self.assertTrue(config.last_month)
         self.assertTrue(config.current_month)
         self.assertFalse(config.use_reason)
-        self.assertEqual(config.bot_min_hours_per_day, 20)
-        self.assertEqual(config.bot_min_days_per_month, 12)
+        # the model's own defaults, so changing one does not need this edited
+        self.assertEqual(
+            config.bot_min_hours_per_day,
+            TaxConfiguration._meta.get_field("bot_min_hours_per_day").default,
+        )
+        self.assertEqual(
+            config.bot_min_days_per_month,
+            TaxConfiguration._meta.get_field("bot_min_days_per_month").default,
+        )
 
     def test_should_reject_more_than_twentyfour_hours_per_day(self):
         response = self.post(bot_min_hours_per_day="30")
@@ -254,16 +261,22 @@ class TestSettingsForm(EosTaxTestCase):
         """The styling hooks onto Django auto_id values - if the widget ids ever
         change, the lists silently grow into one very tall column again."""
         body = self.client.get(reverse("eos_tax:settings")).content.decode()
+        stylesheet = read_stylesheet()
 
         for field in ("tax_alliances", "corporation_blacklist"):
             with self.subTest(field=field):
-                self.assertIn(f"#id_{field}", body)
+                self.assertIn(f"#id_{field}", stylesheet)
                 # the id, wherever it sits in the tag - a widget update began
                 # writing class="" first, and a literal '<div id=' then failed
                 # while the page and its styling were fine
                 self.assertRegex(body, rf'<div\b[^>]*\bid="id_{field}"')
 
-        self.assertIn("overflow-y: auto", body)
+        # the rule of these selectors, not the stylesheet as a whole: the
+        # legend frame on the statistics page scrolls the same way
+        rule = stylesheet.split("#id_tax_types {", 1)[1].split("}", 1)[0]
+        self.assertIn("overflow-y: auto", rule)
+        self.assertIn("max-height", rule)
+        self.assertIn("eos_tax/css/eos_tax", body)
 
     def test_should_allow_exactly_one_holding_corporation(self):
         """There is only ever one wallet the tax is paid into."""

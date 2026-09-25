@@ -14,6 +14,8 @@
 
         <div class="card-body">
             <form role="form" method="get" class="row g-3 align-items-end mb-4">
+                {# bots.js keeps this on the open tab, so a new month reopens it #}
+                <input type="hidden" name="tab" value="" data-eos-keep-tab-field>
                 <div class="col-sm-4 col-lg-3">
                     <label for="eos-tax-month" class="form-label">{% translate "Month" %}</label>
                     <input type="month" class="form-control" id="eos-tax-month"
@@ -80,7 +82,7 @@
             {% endcomment %}
             <p class="text-body-secondary small">
                 {% blocktranslate %}Characters that earned taxed income in more than {{ min_hours }} different
-                hours of a day, on more than {{ min_days }} days of the selected month. Both thresholds
+                hours of a day, on at least {{ min_days }} days of the selected month. Both thresholds
                 live on the settings page.{% endblocktranslate %}
             </p>
 
@@ -141,7 +143,7 @@
                 {% endif %}
                 <span>{% blocktranslate with value=stats.buckets|intcomma %}{{ value }} hour blocks{% endblocktranslate %}</span>
                 <span>{% blocktranslate with value=stats.characters|intcomma %}{{ value }} characters{% endblocktranslate %}</span>
-                <span>{% blocktranslate with value=stats.candidates %}{{ value }} hits{% endblocktranslate %}</span>
+                <span>{% blocktranslate with value=stats.candidates|intcomma count counter=stats.candidates %}{{ value }} hit{% plural %}{{ value }} hits{% endblocktranslate %}</span>
 
                 <span class="ms-auto">
                     {% translate "database" %} {{ stats.seconds_query|floatformat:2 }}&nbsp;s
@@ -162,14 +164,14 @@
             <div class="tab-pane fade" id="eos-tax-tab-rhythm" role="tabpanel"
                  data-eos-signal="rhythm">
                 <p class="text-body-secondary small">
-                    {% blocktranslate %}How much of a Character's income falls inside the hours their own Corporation is busy. The Corporation is the yardstick and not the alliance: the alliance spans several timezones at once, so its day is flat and a script would look ordinary against it. A ranking, not a verdict.{% endblocktranslate %}
+                    {% blocktranslate %}How much of a character's income falls inside the hours their own corporation is busy. The corporation is the yardstick and not the alliance: the alliance spans several timezones at once, so its day is flat and a script would look ordinary against it. A ranking, not a verdict.{% endblocktranslate %}
                 </p>
             </div>
 
             <div class="tab-pane fade" id="eos-tax-tab-clock" role="tabpanel"
                  data-eos-signal="clock">
                 <p class="text-body-secondary small">
-                    {% blocktranslate %}How far a Character's day sits from their Corporation's, averaged the way a clock wraps rather than read off the busiest hour, which out of a handful of payouts is wherever the noise landed. Somebody genuinely living elsewhere looks the same as an account played by somebody else - a hint, never an accusation.{% endblocktranslate %}
+                    {% blocktranslate %}How far a character's day sits from their corporation's, averaged the way a clock wraps rather than read off the busiest hour, which out of a handful of payouts is wherever the noise landed. Somebody genuinely living elsewhere looks the same as an account played by somebody else - a hint, never an accusation.{% endblocktranslate %}
                 </p>
             </div>
             </div>

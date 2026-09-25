@@ -8,8 +8,7 @@ list page draws rows.
 """
 
 import datetime
-import html
-import json
+import re
 
 from django.urls import reverse
 
@@ -23,7 +22,7 @@ from eos_tax.db.bot_signals import (
     get_run_detail,
 )
 from eos_tax.models import TaxConfiguration
-from eos_tax.tests.base import EosTaxTestCase, read_static
+from eos_tax.tests.base import EosTaxTestCase, json_script, read_static
 from eos_tax.util import format_duration
 
 from .factories import (
@@ -44,23 +43,6 @@ from .factories import (
 # never measured against a window their own payouts helped build, most of
 # these fixtures need somebody else to be "the Corporation".
 CROWD_ID = 2100000030
-
-
-def _parse_json_script(body, element_id):
-    """The value of a `{{ x|json_script:"..." }}` element, parsed as JSON.
-
-    Parsed rather than grepped: a chart's data attribute can hold the right
-    characters as a substring of something else entirely, and a `canvas`
-    with an empty script beside it is a chart that stays blank without the
-    server ever finding out.
-    """
-    marker = f'id="{element_id}"'
-    self_check = body.split(marker, 1)
-    assert len(self_check) == 2, f"no element with {marker} in the page"
-
-    raw = self_check[1].split(">", 1)[1].split("</script>", 1)[0]
-
-    return json.loads(html.unescape(raw))
 
 
 class TestRunDetail(EosTaxTestCase):
@@ -92,7 +74,8 @@ class TestRunDetail(EosTaxTestCase):
         may come back marked. This is the case a Corporation-wide unbroken
         run picks correctly already; the detail page draws it point by point
         and has its own chance to get it wrong."""
-        # two ticks a minute apart, then a gap past GAP_MAX_MINUTES, then five
+        # two ticks a minute apart, then a gap past the break ceiling
+        # (bot_run_gap_minutes), then five
         add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, (0,), entries=2)
         add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, (3,), entries=5)
 
@@ -114,7 +97,9 @@ class TestRunDetail(EosTaxTestCase):
         self.assertEqual(run["gaps"], 0)
         self.assertEqual(run["duration"], format_duration(5 / 60))
         self.assertTrue(run["same_day"])
-        self.assertIn(run["level"], ("low", "medium", "high"))
+        # six ticks against the shipped eighteen: a third of the way, which
+        # is where the middle band starts
+        self.assertEqual(run["level"], "medium")
 
     def test_should_not_call_a_run_high_before_it_reaches_the_configured_threshold(self):
         """The case the tab used to contradict itself on: a run short of the
@@ -213,7 +198,7 @@ class TestRhythmDetail(EosTaxTestCase):
                 self.assertGreater(series[hour]["corporation"], 0)
 
     def test_should_report_no_share_when_too_little_remains_after_exclusion(self):
-        """Below CORP_MIN_PAYOUTS once Ratter's own payouts come out, the rest
+        """Below bot_rhythm_corp_min_payouts once Ratter's own payouts come out, the rest
         of the Corporation is not a yardstick - the reading has to say so
         rather than invent a share from a handful of payouts."""
         add_entries(
@@ -282,7 +267,8 @@ class TestClockDetail(EosTaxTestCase):
 
         middle = get_clock_detail(RATTER_ID, YEAR, MONTH)["middle"]
 
-        self.assertLess(_clock_distance(middle, 0), 0.5)
+        # half past midnight: each hour bucket stands for its middle
+        self.assertLess(_clock_distance(middle, 0.5), 0.1)
         self.assertGreater(_clock_distance(middle, 12), 5)
 
     def test_should_exclude_the_measured_character_from_the_corp_baseline(self):
@@ -393,7 +379,7 @@ class TestBotSignalDetailView(EosTaxTestCase):
                 body = response.content.decode()
 
                 self.assertContains(response, f'data-eos-chart="{name}"')
-                data = _parse_json_script(body, "eos-tax-chart-data")
+                data = json_script(body, "eos-tax-chart-data")
                 self.assertIsInstance(data, list)
                 self.assertTrue(data)
 
@@ -407,7 +393,7 @@ class TestBotSignalDetailView(EosTaxTestCase):
         body = response.content.decode()
 
         self.assertIn('id="eos-tax-chart-window"', body)
-        self.assertIsInstance(_parse_json_script(body, "eos-tax-chart-window"), list)
+        self.assertIsInstance(json_script(body, "eos-tax-chart-window"), list)
 
     def test_should_say_the_corporation_is_too_small_instead_of_a_number(self):
         EveName.objects.create(eve_id=CROWD_ID, name="Crowd Pilot", category="character")
@@ -631,7 +617,8 @@ class TestBotDetailPageTabs(EosTaxTestCase):
         self.client.get(reverse("eos_tax:bots"), {"month": self.month})
 
         body = self.page().content.decode()
-        marked = body.count("data-eos-keep-tab")
+        # the attribute itself, not the month form's data-eos-keep-tab-field
+        marked = len(re.findall(r"data-eos-keep-tab(?![-\w])", body))
 
         # one alt in the dropdown, plus the way back to the list
         self.assertEqual(marked, 2)
@@ -671,7 +658,7 @@ class TestBotDetailPageTabs(EosTaxTestCase):
         mentions the right characters somewhere is not the same as a tab
         that loads the month shown on screen."""
         response = self.page()
-        config = _parse_json_script(response.content.decode(), "eos-tax-config")
+        config = json_script(response.content.decode(), "eos-tax-config")
 
         month = f"{YEAR}-{MONTH:02d}"
         for name in ("runs", "rhythm", "clock"):

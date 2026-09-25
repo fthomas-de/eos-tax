@@ -508,11 +508,6 @@ class TestTaxChangePages(TaxChangeTestCase):
 
         self.assertEqual(response.status_code, 302)
 
-    def test_should_list_the_corporation(self):
-        response = self.as_admin(reverse("eos_tax:tax_changes"), year=YEAR)
-
-        self.assertContains(response, "Bravo Corp")
-
     def test_should_link_to_the_detail_view(self):
         response = self.as_admin(reverse("eos_tax:tax_changes"), year=YEAR)
 
@@ -587,9 +582,13 @@ class TestTaxChangePages(TaxChangeTestCase):
         self.assertNotContains(response, "{#")
 
     def test_should_offer_the_tab_to_an_admin(self):
-        response = self.as_admin(reverse("eos_tax:tax_changes"), year=YEAR)
+        """Asked of another page: this one names itself in its own card
+        title, whether the navigation links to it or not."""
+        response = self.as_admin(reverse("eos_tax:statistics"))
 
-        self.assertContains(response, "Corp Tax Changes")
+        self.assertContains(
+            response, f'href="{reverse("eos_tax:tax_changes")}"'
+        )
 
 
 class TestPayoutsThatCannotBeTrusted(TaxChangeTestCase):

@@ -7,43 +7,40 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-24 11:41+0200\n"
+"POT-Creation-Date: 2026-09-25 09:00+0000\n"
 "Language: ko-KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: auth_hooks.py:19 templates/eos_tax/base.html:4
-#: templates/eos_tax/base.html:33
+#: auth_hooks.py:19 templates/eos_tax/base.html:5
+#: templates/eos_tax/base.html:45
 msgid "Alliance PvE Tax"
 msgstr "Alliance PvE Tax"
 
-#: forms.py:76 forms.py:246
+#: forms.py:76 forms.py:247
 msgid "Base tax rate (%)"
 msgstr "기본 세율 (%)"
 
-#: forms.py:128
+#: forms.py:129
 msgid ""
 "Corporations of the taxed alliances. Excluding any other corporation would "
 "change nothing."
 msgstr ""
-"과세 대상 Alliance의 Corporation만 표시됩니다. 다른 Corporation을 제외해도 달"
-"라지는 것은 없습니다."
+"과세 대상 Alliance의 Corporation만 표시됩니다. 다른 Corporation을 제외해도 달라지는 것은 없습니다."
 
-#: forms.py:135
+#: forms.py:136
 msgid "Base rate, used for months before the first scheduled change below."
 msgstr "기본 세율입니다. 아래의 첫 예약 변경 이전 달에 적용됩니다."
 
-#: forms.py:156
+#: forms.py:157
 msgid ""
 "Has to stay at or below the longest break a run can survive, otherwise that "
 "ceiling never applies."
-msgstr ""
-"연속 기록이 견딜 수 있는 최대 휴식 이하로 두어야 합니다. 그러지 않으면 그 상"
-"한이 결코 적용되지 않습니다."
+msgstr "연속 기록이 견딜 수 있는 최대 휴식 이하로 두어야 합니다. 그러지 않으면 그 상한이 결코 적용되지 않습니다."
 
-#: forms.py:227 forms.py:254
+#: forms.py:228 forms.py:255
 msgid "Rate (%)"
 msgstr "세율 (%)"
 
@@ -69,17 +66,16 @@ msgstr "제외할 Corporation"
 
 #: models.py:54
 msgid "Never taxed and never listed, even inside a taxed alliance."
-msgstr ""
-"과세 대상 Alliance 안에 있더라도 과세하지 않고 목록에도 표시하지 않습니다."
+msgstr "과세 대상 Alliance 안에 있더라도 과세하지 않고 목록에도 표시하지 않습니다."
 
-#: models.py:57 models.py:321
+#: models.py:57 models.py:335
 msgid "Alliance tax rate"
 msgstr "Alliance 세율"
 
 #: models.py:62
-msgid "Share of the gross PvE income a corporation owes. 0.1 means 10 percent."
-msgstr ""
-"Corporation이 납부할 PvE 총수입의 비율입니다. 0.1은 10퍼센트를 뜻합니다."
+msgid ""
+"Share of the gross PvE income a corporation owes. 0.1 means 10 percent."
+msgstr "Corporation이 납부할 PvE 총수입의 비율입니다. 0.1은 10퍼센트를 뜻합니다."
 
 #: models.py:65
 msgid "Taxed journal types"
@@ -88,8 +84,7 @@ msgstr "과세 대상 journal type"
 #: models.py:68
 msgid ""
 "Wallet journal ref_types counted as PvE income, for example bounty_prizes."
-msgstr ""
-"PvE 수입으로 계산할 Wallet Journal의 ref_type입니다. 예: bounty_prizes."
+msgstr "PvE 수입으로 계산할 Wallet Journal의 ref_type입니다. 예: bounty_prizes."
 
 #: models.py:72
 msgid "Include the previous month in calculations and on the overview."
@@ -101,13 +96,12 @@ msgstr "계산과 개요에 이번 달을 포함합니다."
 
 #: models.py:81
 msgid ""
-"Match payments by their reason code instead of by amount alone. Without it a "
-"payment is recognised by its amount only, so two Corporations owing the same "
-"sum, or one Corporation owing the same sum twice, cannot be told apart."
+"Match payments by their reason code instead of by amount alone. Without it a"
+" payment is recognised by its amount only, so two corporations owing the "
+"same sum, or one corporation owing the same sum twice, cannot be told apart."
 msgstr ""
-"금액만이 아니라 Reason 코드로 납부를 대조합니다. 이 설정이 없으면 납부는 금액"
-"으로만 인식되므로, 같은 금액을 내야 하는 두 Corporation이나 같은 금액을 두 "
-"번 내야 하는 한 Corporation을 구분할 수 없습니다."
+"금액만이 아니라 reason 코드로 결제를 매칭합니다. 이 옵션이 없으면 결제는 금액만으로 인식되므로, 같은 금액을 빚진 두 "
+"corporation이나 같은 금액을 두 번 빚진 하나의 corporation을 구분할 수 없습니다."
 
 #: models.py:88
 msgid "Smallest move worth listing"
@@ -119,9 +113,8 @@ msgid ""
 "corporation. A move smaller than this is not listed, and days within it "
 "count as one level. Nine percent to ten is one point."
 msgstr ""
-"Corporation에 도달하는 bounty 비율의 퍼센트포인트 단위입니다. 이보다 작은 변"
-"화는 표시하지 않으며, 그 범위 안의 날은 같은 수준으로 봅니다. 9퍼센트에서 10"
-"퍼센트는 1퍼센트포인트입니다."
+"Corporation에 도달하는 bounty 비율의 퍼센트포인트 단위입니다. 이보다 작은 변화는 표시하지 않으며, 그 범위 안의 날은 "
+"같은 수준으로 봅니다. 9퍼센트에서 10퍼센트는 1퍼센트포인트입니다."
 
 #: models.py:101
 msgid "Shortest run listed"
@@ -133,9 +126,8 @@ msgid ""
 "the run is listed. The game pays a ratter about every twenty minutes, so "
 "eighteen is roughly six hours."
 msgstr ""
-"캐릭터가 끊김 없이 연속으로 받아야 하는 지급 횟수이며, 이 값에 도달해야 연속 "
-"기록으로 표시됩니다. 게임은 NPC를 사냥하는 플레이어에게 약 20분마다 지급하므"
-"로, 18이면 대략 6시간에 해당합니다."
+"character가 끊김 없이 연속으로 받아야 하는 지급 횟수이며, 이 값에 도달해야 연속 기록으로 표시됩니다. 게임은 NPC를 사냥하는"
+" 플레이어에게 약 20분마다 지급하므로, 18이면 대략 6시간에 해당합니다."
 
 #: models.py:111
 msgid "Interruptions allowed"
@@ -147,9 +139,8 @@ msgid ""
 "would otherwise cut every long night in two. Only a break under an hour can "
 "be forgiven; a longer one always ends the run."
 msgstr ""
-"연속 기록이 몇 번의 중단을 포함하고도 하나로 인정될 수 있는지를 정합니다. 그"
-"렇지 않으면 매일의 서버 점검이 긴 밤마다 기록을 둘로 잘라 버립니다. 한 시간 "
-"미만의 중단만 허용되며, 그보다 길면 항상 연속 기록이 끊깁니다."
+"연속 기록이 몇 번의 중단을 포함하고도 하나로 인정될 수 있는지를 정합니다. 그렇지 않으면 매일의 서버 점검이 긴 밤마다 기록을 둘로 "
+"잘라 버립니다. 한 시간 미만의 중단만 허용되며, 그보다 길면 항상 연속 기록이 끊깁니다."
 
 #: models.py:122
 msgid "Longest gap that still counts as the same tick"
@@ -161,8 +152,8 @@ msgid ""
 "a little more than twenty leaves room for that without calling an unbroken "
 "stretch broken."
 msgstr ""
-"분 단위. 게임은 약 20분마다 지급하고 틱은 조금씩 밀리므로, 20분보다 조금 넉넉"
-"하게 잡으면 끊기지 않은 구간을 끊긴 것으로 세지 않습니다."
+"분 단위. 게임은 약 20분마다 지급하고 틱은 조금씩 밀리므로, 20분보다 조금 넉넉하게 잡으면 끊기지 않은 구간을 끊긴 것으로 세지 "
+"않습니다."
 
 #: models.py:132
 msgid "Longest break a run can survive"
@@ -174,9 +165,8 @@ msgid ""
 "above says. Without a ceiling one allowance would weld a morning and an "
 "evening into a single twelve hour run."
 msgstr ""
-"분 단위. 이보다 긴 휴식은 위의 허용 횟수와 상관없이 연속 기록을 끝냅니다. 상"
-"한이 없으면 허용된 휴식 한 번이 오전과 저녁을 열두 시간짜리 하나로 이어붙입니"
-"다."
+"분 단위. 이보다 긴 휴식은 위의 허용 횟수와 상관없이 연속 기록을 끝냅니다. 상한이 없으면 허용된 휴식 한 번이 오전과 저녁을 열두 "
+"시간짜리 하나로 이어붙입니다."
 
 #: models.py:142
 msgid "Length of the busy window"
@@ -184,13 +174,12 @@ msgstr "활동 구간의 길이"
 
 #: models.py:146
 msgid ""
-"How many hours of the day count as the Corporation's busy window. A "
+"How many hours of the day count as the corporation's busy window. A "
 "character spread evenly over the clock lands on this share of any window, "
 "which is the floor the score measures down to."
 msgstr ""
-"하루 중 몇 시간을 Corporation의 활동 구간으로 볼지. 하루 전체에 고르게 퍼진 "
-"character는 어떤 구간에서도 이 비율에 닿으며, 이것이 평가가 향하는 바닥값입니"
-"다."
+"하루 중 몇 시간이 corporation의 활동 창으로 집계되는지입니다. 시계 전체에 고르게 퍼진 character는 어느 창에서든 이 "
+"비율에 도달하며, 이것이 점수가 낮아지는 하한선입니다."
 
 #: models.py:152 models.py:226
 msgid "Smallest character worth reading"
@@ -200,9 +189,7 @@ msgstr "판독할 가치가 있는 최소 character"
 msgid ""
 "Below this many payouts in the month a character has too little of a day to "
 "describe, and is left out of this reading."
-msgstr ""
-"한 달에 이보다 적게 지급받은 character는 하루를 설명하기에 자료가 부족하여 "
-"이 판독에서 제외됩니다."
+msgstr "한 달에 이보다 적게 지급받은 character는 하루를 설명하기에 자료가 부족하여 이 판독에서 제외됩니다."
 
 #: models.py:161 models.py:235
 msgid "Smallest usable yardstick"
@@ -210,13 +197,12 @@ msgstr "쓸 수 있는 최소 기준"
 
 #: models.py:165
 msgid ""
-"How many payouts have to be left in the Corporation once the character's own "
-"are taken out. Below this there is no rhythm to compare against, only noise, "
-"and the character is not scored."
+"How many payouts have to be left in the corporation once the character's own"
+" are taken out. Below this there is no rhythm to compare against, only "
+"noise, and the character is not scored."
 msgstr ""
-"해당 character 본인의 지급을 뺀 뒤 Corporation에 남아 있어야 하는 지급 수. 이"
-"보다 적으면 비교할 리듬이 아니라 잡음뿐이며, 그 character는 평가되지 않습니"
-"다."
+"character 자신의 지급분을 제외하고 corporation에 얼마나 남아야 하는지입니다. 이보다 적으면 비교할 리듬이 없고 잡음만 "
+"있어 character를 평가하지 않습니다."
 
 #: models.py:171 models.py:205
 msgid "Leave flagged characters out of the yardstick"
@@ -224,17 +210,15 @@ msgstr "지목된 character를 기준에서 제외"
 
 #: models.py:174
 msgid ""
-"A character flat enough to be listed is also part of their Corporation's "
-"day, and drags it flat with them - which makes everybody else look ordinary. "
-"With this on the reading runs twice: once to find them, once with them taken "
-"out. A Corporation that would fall below the floor above keeps the plain "
-"figure."
+"A character flat enough to be listed is also part of their corporation's "
+"day, and drags it flat with them - which makes everybody else look ordinary."
+" With this on the reading runs twice: once to find them, once with them "
+"taken out. A corporation that would fall below the floor above keeps the "
+"plain figure."
 msgstr ""
-"목록에 오를 만큼 평탄한 character는 그 Corporation의 하루를 이루는 일부이기"
-"도 하여 기준을 함께 평탄하게 만들고, 그러면 나머지 모두가 평범해 보입니다. "
-"이 옵션을 켜면 판독이 두 번 돌아갑니다. 한 번은 그들을 찾기 위해, 한 번은 그"
-"들을 뺀 채로. 그 결과 위의 하한 아래로 떨어지는 Corporation은 원래 값을 그대"
-"로 씁니다."
+"목록에 오를 만큼 평탄한 character는 자신의 corporation의 하루에도 속하며, 함께 평탄하게 끌어내려 다른 모두를 평범해 "
+"보이게 만듭니다. 이 옵션을 켜면 지표를 두 번 계산합니다: 한 번은 그들을 찾기 위해, 한 번은 그들을 제외하고. 위의 하한선 아래로 "
+"떨어질 corporation은 단순 수치를 유지합니다."
 
 #: models.py:183
 msgid "Smallest difference listed"
@@ -242,14 +226,14 @@ msgstr "목록에 오르는 최소 차이"
 
 #: models.py:187
 msgid ""
-"In percentage points. How much flatter than the rest of their Corporation a "
+"In percentage points. How much flatter than the rest of their corporation a "
 "character has to be before the list mentions them. A negative difference "
-"means more concentrated than the Corporation, which is the opposite of what "
+"means more concentrated than the corporation, which is the opposite of what "
 "this looks for, so those are never listed whatever this says."
 msgstr ""
-"퍼센트포인트 단위. character가 자기 Corporation의 나머지보다 얼마나 더 평탄해"
-"야 목록에 오르는지. 음수 차이는 Corporation 보다 더 몰려 있다는 뜻으로, 여기"
-"서 찾는 것과 정반대이므로 이 값과 무관하게 결코 목록에 오르지 않습니다."
+"퍼센트 포인트 단위입니다. 목록에 언급되려면 character가 자신의 corporation 나머지보다 얼마나 더 평탄해야 하는지입니다."
+" 음수 차이는 corporation보다 더 집중되어 있다는 뜻으로, 이 지표가 찾는 것과 반대이므로 이 값과 관계없이 목록에 오르지 "
+"않습니다."
 
 #: models.py:195
 msgid "Distance counted as a full deviation"
@@ -261,18 +245,17 @@ msgid ""
 "treats the whole clock as the scale. A smaller value makes the colouring "
 "reach red sooner."
 msgstr ""
-"시간 단위. 열두 시간은 하루 중 두 시각이 떨어질 수 있는 최대 거리이므로 기본"
-"값은 하루 전체를 척도로 삼습니다. 값을 줄이면 색이 더 일찍 빨강에 닿습니다."
+"시간 단위. 열두 시간은 하루 중 두 시각이 떨어질 수 있는 최대 거리이므로 기본값은 하루 전체를 척도로 삼습니다. 값을 줄이면 색이 더"
+" 일찍 빨강에 닿습니다."
 
 #: models.py:208
 msgid ""
-"The same for this reading: a character far enough from their Corporation to "
-"be listed also pulls the Corporation's own middle of the day towards "
+"The same for this reading: a character far enough from their corporation to "
+"be listed also pulls the corporation's own middle of the day towards "
 "themselves, which shortens everybody else's distance."
 msgstr ""
-"이 판독에서도 마찬가지입니다. 목록에 오를 만큼 Corporation과 떨어져 있는 "
-"character는 Corporation 자체의 하루 중심도 자기 쪽으로 끌어당겨, 나머지 모두"
-"의 거리를 줄입니다."
+"이 지표도 마찬가지입니다: 목록에 오를 만큼 자신의 corporation에서 멀리 떨어진 character는 corporation 자체의"
+" 하루 중심도 자신 쪽으로 끌어당겨 다른 모두의 거리를 줄입니다."
 
 #: models.py:215
 msgid "Smallest distance listed"
@@ -280,166 +263,173 @@ msgstr "목록에 오르는 최소 거리"
 
 #: models.py:219
 msgid ""
-"In hours. How far from their Corporation a character's day has to sit before "
-"the list mentions them. A third of the scale above is where the colouring "
+"In hours. How far from their corporation a character's day has to sit before"
+" the list mentions them. A third of the scale above is where the colouring "
 "stops calling a distance unremarkable, so a threshold under that lets green "
 "rows into the list."
 msgstr ""
-"시간 단위. character의 하루가 Corporation에서 얼마나 떨어져 있어야 목록에 오"
-"르는지. 위 척도의 3분의 1 지점에서 색이 거리를 특이사항 없음이라고 부르기를 "
-"멈추므로, 그보다 낮은 기준은 초록 줄까지 목록에 들입니다."
+"시간 단위입니다. 목록에 언급되려면 character의 하루가 자신의 corporation에서 얼마나 떨어져 있어야 하는지입니다. 위 "
+"척도의 3분의 1이 색상이 거리를 평범하다고 부르지 않기 시작하는 지점이므로, 그보다 낮은 기준값은 녹색 행도 목록에 들어오게 합니다."
 
 #: models.py:230
 msgid ""
 "Below this many payouts in the month the middle of a character's day is "
 "wherever the noise landed, so they are left out."
-msgstr ""
-"한 달에 이보다 적게 지급받으면 character의 하루 중심은 잡음이 떨어진 자리일 "
-"뿐이므로 제외됩니다."
+msgstr "한 달에 이보다 적게 지급받으면 character의 하루 중심은 잡음이 떨어진 자리일 뿐이므로 제외됩니다."
 
 #: models.py:239
 msgid ""
-"How many payouts have to be left in the Corporation once the character's own "
-"are taken out, before its middle of the day is worth comparing against."
-msgstr ""
-"해당 character 본인의 지급을 뺀 뒤 Corporation에 남아 있어야 그 하루 중심을 "
-"비교 대상으로 삼을 만한 지급 수."
+"How many payouts have to be left in the corporation once the character's own"
+" are taken out, before its middle of the day is worth comparing against."
+msgstr "character 자신의 지급분을 제외하고 corporation에 얼마나 남아야 그 하루 중심을 비교할 가치가 있는지입니다."
 
 #: models.py:245
-msgid "Entries before an hour counts as active"
-msgstr "한 시간이 활동으로 인정되는 기록 수"
+msgid "Least concentrated day with a middle"
+msgstr "중심이 있다고 볼 수 있는 최소 집중도"
 
 #: models.py:249
 msgid ""
-"A single entry is noise - a stray bounty tick, one ESS payout. The game pays "
-"about every twenty minutes, so an hour of uninterrupted play holds three; "
+"In percent. How closely the payouts have to gather around one time of day "
+"before that day has a middle: 100 when all of them fall into one hour, 0 for"
+" a day spread perfectly evenly. A day spread evenly over twelve hours comes "
+"out at 64, over sixteen at 42, over twenty at 19. Below this - for the "
+"character or the rest of their corporation - the middle would be wherever "
+"the rounding put it, so the character is left out of this reading."
+msgstr ""
+"퍼센트 단위입니다. 하루가 중심을 가지려면 지급 내역이 하루 중 한 시점 주변에 얼마나 밀집해야 하는지입니다: 모두 한 시간에 몰리면 "
+"100, 완벽하게 고르게 퍼지면 0입니다. 12시간에 고르게 퍼진 하루는 64, 16시간이면 42, 20시간이면 19가 나옵니다. 이보다"
+" 낮으면 - character든 나머지 corporation이든 - 중심은 반올림이 우연히 정한 자리일 뿐이므로 이 character는 "
+"이 지표에서 제외됩니다."
+
+#: models.py:259
+msgid "Entries before an hour counts as active"
+msgstr "한 시간이 활동으로 인정되는 기록 수"
+
+#: models.py:263
+msgid ""
+"A single entry is noise - a stray bounty tick, one ESS payout. The game pays"
+" about every twenty minutes, so an hour of uninterrupted play holds three; "
 "two is deliberately tolerant, because play gets interrupted and a false "
 "negative costs less than accusing a player."
 msgstr ""
-"기록 하나는 잡음입니다 - 떠도는 bounty 틱 하나, ESS 지급 하나. 게임은 약 20분"
-"마다 지급하므로 끊김 없이 논 한 시간에는 셋이 담깁니다. 둘은 일부러 너그럽게 "
-"잡은 값으로, 플레이는 끊기기 마련이고 놓치는 쪽이 사람을 잘못 몰아세우는 쪽보"
-"다 낫기 때문입니다."
+"기록 하나는 잡음입니다 - 떠도는 bounty 틱 하나, ESS 지급 하나. 게임은 약 20분마다 지급하므로 끊김 없이 논 한 시간에는 "
+"셋이 담깁니다. 둘은 일부러 너그럽게 잡은 값으로, 플레이는 끊기기 마련이고 놓치는 쪽이 사람을 잘못 몰아세우는 쪽보다 낫기 때문입니다."
 
-#: models.py:257
+#: models.py:271
 msgid "Hours in a day before it counts"
 msgstr "하루가 집계되는 시간 수"
 
-#: models.py:261
+#: models.py:275
 msgid ""
-"A day counts as suspicious when a character earned taxed income in more than "
-"this many different hours of that day."
-msgstr ""
-"Character가 그날 이 값보다 많은 서로 다른 시간대에 과세 수입을 올린 경우 해"
-"당 일자를 의심스러운 날로 봅니다."
+"A day counts as suspicious when a character earned taxed income in more than"
+" this many different hours of that day."
+msgstr "Character가 그날 이 값보다 많은 서로 다른 시간대에 과세 수입을 올린 경우 해당 일자를 의심스러운 날로 봅니다."
 
-#: models.py:266
+#: models.py:280
 msgid "Days in a month before a character is listed"
 msgstr "character가 목록에 오르는 한 달 일수"
 
-#: models.py:270
+#: models.py:284
 msgid ""
-"A character is listed once it exceeds this many suspicious days within the "
+"A character is listed once it reaches this many suspicious days within the "
 "selected month."
-msgstr ""
-"선택한 달에 의심스러운 날이 이 값을 넘으면 해당 Character가 목록에 표시됩니"
-"다."
+msgstr "character가 선택한 달에 이만큼의 의심스러운 날을 채우면 목록에 표시됩니다."
 
-#: models.py:276
+#: models.py:290
 msgid "Tax configuration"
 msgstr "세금 설정"
 
-#: models.py:316 templates/eos_tax/settings.html:76
+#: models.py:330 templates/eos_tax/settings.html:112
 msgid "Valid from"
 msgstr "적용 시작"
 
-#: models.py:318
+#: models.py:332
 msgid "First month this rate applies to. Stored as the first of that month."
 msgstr "이 세율이 처음 적용되는 달입니다. 해당 월 1일로 저장됩니다."
 
-#: models.py:325
+#: models.py:339
 msgid "Share of the gross PvE income. 0.1 means 10 percent."
 msgstr "PvE 총수입의 비율입니다. 0.1은 10퍼센트를 뜻합니다."
 
-#: models.py:330
+#: models.py:344
 msgid "Tax rate"
 msgstr "세율"
 
-#: models.py:331 templates/eos_tax/settings.html:53
+#: models.py:345 templates/eos_tax/settings.html:89
 msgid "Tax rate schedule"
 msgstr "세율 일정"
 
-#: models.py:344
+#: models.py:358
 msgid "Corporation ID"
 msgstr "Corporation ID"
 
-#: models.py:345
+#: models.py:359
 msgid "Taxed month"
 msgstr "과세 월"
 
-#: models.py:346
+#: models.py:360
 msgid "Taxed year"
 msgstr "과세 연도"
 
-#: models.py:347
+#: models.py:361
 msgid "Corporation name"
 msgstr "Corporation 이름"
 
-#: models.py:348
+#: models.py:362
 msgid "Tax value"
 msgstr "세금 금액"
 
-#: models.py:349
+#: models.py:363
 msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
-#: models.py:350 templates/eos_tax/index.html:25
-#: templates/eos_tax/index.html:74
-msgid "Payed"
-msgstr "납부됨"
+#: models.py:364 templates/eos_tax/index.html:45
+#: templates/eos_tax/index.html:94
+msgid "Paid"
+msgstr "납부완료"
 
-#: models.py:367
+#: models.py:381
 msgid "Applied alliance tax rate"
 msgstr "적용된 Alliance 세율"
 
-#: models.py:370
+#: models.py:384
 msgid ""
 "Alliance rate in effect when this row was calculated. Stored per row so "
 "changing the rate does not rewrite what past months were owed."
 msgstr ""
-"이 행을 계산할 때 적용되던 Alliance 세율입니다. 행마다 저장하므로 세율을 바꾸"
-"어도 이미 지난 달들의 납부액은 바뀌지 않습니다."
+"이 행을 계산할 때 적용되던 Alliance 세율입니다. 행마다 저장하므로 세율을 바꾸어도 이미 지난 달들의 납부액은 바뀌지 않습니다."
 
-#: models.py:376
+#: models.py:390
 msgid "Amount to pay"
 msgstr "납부액"
 
-#: models.py:379
+#: models.py:393
 msgid ""
 "ISK owed to the alliance for this month, in whole ISK. Worked out from "
-"tax_value, tax_percentage and alliance_tax_rate whenever the row is written, "
-"and kept with them from then on - the page, the chart and the payment check "
-"read it rather than redoing the arithmetic."
-msgstr "이번 달 Alliance에 납부할 금액으로, 정수 ISK 단위입니다. 행을 기록할 때마다 tax_value, tax_percentage, alliance_tax_rate로 계산해 함께 보관하며, 페이지·차트·납부 확인은 다시 계산하지 않고 이 값을 읽습니다."
+"tax_value, tax_percentage and alliance_tax_rate whenever the row is written,"
+" and kept with them from then on - the page, the chart and the payment check"
+" read it rather than redoing the arithmetic."
+msgstr ""
+"이번 달 Alliance에 납부할 금액으로, 정수 ISK 단위입니다. 행을 기록할 때마다 tax_value, tax_percentage,"
+" alliance_tax_rate로 계산해 함께 보관하며, 페이지·차트·납부 확인은 다시 계산하지 않고 이 값을 읽습니다."
 
-#: templates/eos_tax/base.html:8
+#: templates/eos_tax/base.html:9
 msgid "Overview"
 msgstr "개요"
 
-#: templates/eos_tax/base.html:14 views.py:79
+#: templates/eos_tax/base.html:15 views.py:109
 msgid "Statistics"
 msgstr "통계"
 
-#: templates/eos_tax/base.html:18 templates/eos_tax/settings.html:116
-#: views.py:302
+#: templates/eos_tax/base.html:19 views.py:452
 msgid "Bots"
 msgstr "봇"
 
-#: templates/eos_tax/base.html:22 views.py:153
+#: templates/eos_tax/base.html:23 views.py:183
 msgid "Corp Tax Changes"
 msgstr "Corp Tax Changes"
 
-#: templates/eos_tax/base.html:26 views.py:224
+#: templates/eos_tax/base.html:27 views.py:277
 msgid "Settings"
 msgstr "설정"
 
@@ -466,49 +456,48 @@ msgstr "봇 목록 중 하나를 열면 각각이 어떻게 평가됐는지 볼 
 msgid "Back to the list"
 msgstr "목록으로 돌아가기"
 
-#: templates/eos_tax/bot-detail.html:130 templates/eos_tax/bots.html:18
-#: templates/eos_tax/index.html:23 templates/eos_tax/statistics.html:54
+#: templates/eos_tax/bot-detail.html:132 templates/eos_tax/bots.html:20
+#: templates/eos_tax/index.html:43 templates/eos_tax/settings.html:176
+#: templates/eos_tax/statistics.html:54
 msgid "Month"
 msgstr "월"
 
-#: templates/eos_tax/bot-detail.html:136 templates/eos_tax/bots.html:31
+#: templates/eos_tax/bot-detail.html:138 templates/eos_tax/bots.html:33
 #: templates/eos_tax/tax-changes.html:37
 msgid "Show"
 msgstr "표시"
 
-#: templates/eos_tax/bot-detail.html:152 templates/eos_tax/bots.html:48
-#: templates/eos_tax/settings.html:135 views.py:345
+#: templates/eos_tax/bot-detail.html:154 templates/eos_tax/bots.html:50
+#: templates/eos_tax/settings.html:219 views.py:495
 msgid "Hours per day"
 msgstr "하루 시간 수"
 
-#: templates/eos_tax/bot-detail.html:159 templates/eos_tax/bots.html:55
-#: templates/eos_tax/settings.html:150 views.py:346
+#: templates/eos_tax/bot-detail.html:161 templates/eos_tax/bots.html:57
+#: templates/eos_tax/settings.html:234 views.py:496
 msgid "Unbroken runs"
 msgstr "끊김 없는 연속 기록"
 
-#: templates/eos_tax/bot-detail.html:166 templates/eos_tax/bots.html:62
-#: templates/eos_tax/settings.html:167 views.py:347
+#: templates/eos_tax/bot-detail.html:168 templates/eos_tax/bots.html:64
+#: templates/eos_tax/settings.html:251 views.py:497
 msgid "Against the Corporation"
 msgstr "Corporation 리듬에 맞춰"
 
-#: templates/eos_tax/bot-detail.html:173 templates/eos_tax/bots.html:69
-#: templates/eos_tax/settings.html:185 views.py:348
+#: templates/eos_tax/bot-detail.html:175 templates/eos_tax/bots.html:71
+#: templates/eos_tax/settings.html:269 views.py:498
 msgid "Off the Corporation clock"
 msgstr "Corporation 시계 밖에서"
 
-#: templates/eos_tax/bot-detail.html:188
+#: templates/eos_tax/bot-detail.html:190
 #, python-format
 msgid ""
 "Active hours per day. An hour counts as active once the same taxed\n"
-"                journal type appears in it at least %(min_entries)s times, "
-"which is the same rule the\n"
+"                journal type appears in it at least %(min_entries)s times, which is the same rule the\n"
 "                list uses. Times are EVE time."
 msgstr ""
-"일별 활동 시간. 과세 대상 journal type이 한 시간 안에 %(min_entries)s회 이상 "
-"나타나면 활동 시간으로 계산하며, 목록과 동일한 기준입니다. 시각은 EVE 시간입"
-"니다."
+"일별 활동 시간. 과세 대상 journal type이 한 시간 안에 %(min_entries)s회 이상 나타나면 활동 시간으로 계산하며,"
+" 목록과 동일한 기준입니다. 시각은 EVE 시간입니다."
 
-#: templates/eos_tax/bot-detail.html:198
+#: templates/eos_tax/bot-detail.html:199
 msgid "Active hours per day, calendar weeks as rows and weekdays as columns"
 msgstr "일별 활동 시간, 행은 주차이고 열은 요일입니다"
 
@@ -527,41 +516,46 @@ msgstr "조용함"
 
 #: templates/eos_tax/bot-detail.html:254
 #, python-format
-msgid "%(value)s hours"
-msgstr "%(value)s시간"
+msgid "%(counter)s hour"
+msgid_plural "%(counter)s hours"
+msgstr[0] "%(counter)s시간"
 
 #: templates/eos_tax/bot-detail.html:258
 #, python-format
-msgid "%(value)s active days"
-msgstr "활동 %(value)s일"
+msgid "%(counter)s active day"
+msgid_plural "%(counter)s active days"
+msgstr[0] "활동일 %(counter)s일"
 
 #: templates/eos_tax/bot-detail.html:259
 #, python-format
-msgid "%(value)s active hours"
-msgstr "활동 %(value)s시간"
+msgid "%(counter)s active hour"
+msgid_plural "%(counter)s active hours"
+msgstr[0] "활동 시간 %(counter)s시간"
 
 #: templates/eos_tax/bot-detail.html:260
 #, python-format
-msgid "busiest day %(value)s hours"
-msgstr "가장 활발한 날 %(value)s시간"
+msgid "busiest day %(counter)s hour"
+msgid_plural "busiest day %(counter)s hours"
+msgstr[0] "가장 바쁜 날 %(counter)s시간"
 
 #: templates/eos_tax/bot-detail.html:261
 #, python-format
-msgid "%(value)s journal entries"
-msgstr "%(value)s journal entries"
+msgid "%(value)s journal entry"
+msgid_plural "%(value)s journal entries"
+msgstr[0] "journal 항목 %(value)s건"
 
-#: templates/eos_tax/bot-detail.html:264 templates/eos_tax/bots.html:153
+#: templates/eos_tax/bot-detail.html:264 templates/eos_tax/bots.html:155
 #: templates/eos_tax/tax-change-detail.html:75
-#: templates/eos_tax/tax-changes.html:136
+#: templates/eos_tax/tax-changes.html:137
 msgid "total"
 msgstr "합계"
 
 #: templates/eos_tax/bot-detail.html:269
 msgid "This character had no active hour in the selected month."
-msgstr "이 캐릭터는 선택한 달에 활동 시간이 없습니다."
+msgstr "이 character는 선택한 달에 활동 시간이 없습니다."
 
-#: templates/eos_tax/bots.html:24
-#: templates/eos_tax/partials/bot-clock-detail.html:24
+#: templates/eos_tax/bots.html:26
+#: templates/eos_tax/partials/bot-clock-detail.html:32
 #: templates/eos_tax/partials/bot-clock.html:21
 #: templates/eos_tax/partials/bot-rhythm-detail.html:27
 #: templates/eos_tax/partials/bot-rhythm.html:21
@@ -570,106 +564,102 @@ msgstr "이 캐릭터는 선택한 달에 활동 시간이 없습니다."
 msgid "Character"
 msgstr "Character"
 
-#: templates/eos_tax/bots.html:27
+#: templates/eos_tax/bots.html:29
 msgid "Open a character directly"
-msgstr "캐릭터 바로 열기"
+msgstr "character 바로 열기"
 
-#: templates/eos_tax/bots.html:84
+#: templates/eos_tax/bots.html:86
 #, python-format
 msgid ""
 "Characters that earned taxed income in more than %(min_hours)s different\n"
-"                hours of a day, on more than %(min_days)s days of the "
-"selected month. Both thresholds\n"
+"                hours of a day, on at least %(min_days)s days of the selected month. Both thresholds\n"
 "                live on the settings page."
 msgstr ""
-"선택한 달에 %(min_days)s일을 넘겨, 하루에 %(min_hours)s개를 넘는 서로 다른 시"
-"간대에 과세 수입을 올린 Character입니다. 두 기준값은 설정 페이지에 있습니다."
+"선택한 달의 최소 %(min_days)s일 동안 하루 중 %(min_hours)s시간을 초과하는 서로 다른 시간대에 과세 대상 수입을 "
+"얻은 character입니다. 두 기준값 모두 설정 페이지에 있습니다."
 
-#: templates/eos_tax/bots.html:92
+#: templates/eos_tax/bots.html:94
 msgid "Several characters match:"
-msgstr "여러 캐릭터가 일치합니다:"
+msgstr "여러 character가 일치합니다:"
 
-#: templates/eos_tax/bots.html:105
+#: templates/eos_tax/bots.html:107
 #, python-format
 msgid "No character found for \"%(wanted)s\"."
-msgstr "\"%(wanted)s\"에 해당하는 캐릭터가 없습니다."
+msgstr "\"%(wanted)s\"에 해당하는 character가 없습니다."
 
-#: templates/eos_tax/bots.html:114
+#: templates/eos_tax/bots.html:116
 msgid ""
-"No character crossed both thresholds. The ten mains with the longest days of "
-"the month are shown instead, so the thresholds can be judged against real "
+"No character crossed both thresholds. The ten mains with the longest days of"
+" the month are shown instead, so the thresholds can be judged against real "
 "numbers."
 msgstr ""
-"두 기준값을 모두 넘은 Character가 없습니다. 대신 선택한 달의 활동 일수가 가"
-"장 긴 Main 10개를 보여 줍니다. 실제 수치로 기준값을 판단할 수 있습니다."
+"두 기준값을 모두 넘은 Character가 없습니다. 대신 선택한 달의 활동 일수가 가장 긴 Main 10개를 보여 줍니다. 실제 수치로"
+" 기준값을 판단할 수 있습니다."
 
-#: templates/eos_tax/bots.html:120
+#: templates/eos_tax/bots.html:122
 msgid "No character crossed both thresholds in this month."
 msgstr "이번 달에 두 기준값을 모두 넘은 Character가 없습니다."
 
-#: templates/eos_tax/bots.html:143
+#: templates/eos_tax/bots.html:145
 msgid "slower than usual"
 msgstr "평소보다 느림"
 
-#: templates/eos_tax/bots.html:146
+#: templates/eos_tax/bots.html:148
 #, python-format
 msgid "%(value)s hour blocks"
 msgstr "시간 블록 %(value)s개"
 
-#: templates/eos_tax/bots.html:147
+#: templates/eos_tax/bots.html:149
 #, python-format
 msgid "%(value)s characters"
 msgstr "Character %(value)s명"
 
-#: templates/eos_tax/bots.html:148
+#: templates/eos_tax/bots.html:150
 #, python-format
-msgid "%(value)s hits"
-msgstr "결과 %(value)s건"
+msgid "%(value)s hit"
+msgid_plural "%(value)s hits"
+msgstr[0] "%(value)s건 일치"
 
-#: templates/eos_tax/bots.html:151
+#: templates/eos_tax/bots.html:153
 msgid "database"
 msgstr "데이터베이스"
 
-#: templates/eos_tax/bots.html:152
+#: templates/eos_tax/bots.html:154
 msgid "aggregation"
 msgstr "집계"
 
-#: templates/eos_tax/bots.html:162
+#: templates/eos_tax/bots.html:164
 msgid ""
 "The game pays a ratter about every twenty minutes, so an uninterrupted "
 "stretch shows up as a chain of payouts and nothing else does. This says "
 "nothing about when somebody plays, which makes it the one reading that "
 "treats every timezone of the alliance alike."
 msgstr ""
-"게임은 NPC를 사냥하는 플레이어에게 약 20분마다 지급하므로, 끊기지 않은 구간"
-"은 연속된 지급의 사슬로만 나타납니다. 이는 누가 언제 플레이하는지는 말해주지 "
-"않으므로, Alliance의 모든 시간대를 동일하게 다루는 유일한 지표가 됩니다."
+"게임은 NPC를 사냥하는 플레이어에게 약 20분마다 지급하므로, 끊기지 않은 구간은 연속된 지급의 사슬로만 나타납니다. 이는 누가 언제 "
+"플레이하는지는 말해주지 않으므로, Alliance의 모든 시간대를 동일하게 다루는 유일한 지표가 됩니다."
 
-#: templates/eos_tax/bots.html:169
+#: templates/eos_tax/bots.html:171
 msgid ""
-"How much of a Character's income falls inside the hours their own "
-"Corporation is busy. The Corporation is the yardstick and not the alliance: "
+"How much of a character's income falls inside the hours their own "
+"corporation is busy. The corporation is the yardstick and not the alliance: "
 "the alliance spans several timezones at once, so its day is flat and a "
 "script would look ordinary against it. A ranking, not a verdict."
 msgstr ""
-"캐릭터 소득 중 얼마나 많은 부분이 자신이 속한 Corporation이 활동하는 시간대"
-"에 들어오는지를 나타냅니다. 기준은 Corporation이지 Alliance가 아닙니다. "
-"Alliance는 여러 시간대에 걸쳐 있어 하루가 평평하게 나타나므로, 매크로도 그 앞"
-"에서는 평범해 보일 수 있습니다. 순위일 뿐, 판정이 아닙니다."
+"character 수입의 얼마만큼이 자신의 corporation이 활발한 시간대에 들어오는지입니다. 기준은 corporation이지 "
+"alliance가 아닙니다: alliance는 여러 시간대에 걸쳐 있어 하루가 평탄하므로 스크립트도 그에 비하면 평범해 보일 것입니다. "
+"판정이 아니라 순위입니다."
 
-#: templates/eos_tax/bots.html:176
+#: templates/eos_tax/bots.html:178
 msgid ""
-"How far a Character's day sits from their Corporation's, averaged the way a "
-"clock wraps rather than read off the busiest hour, which out of a handful of "
-"payouts is wherever the noise landed. Somebody genuinely living elsewhere "
+"How far a character's day sits from their corporation's, averaged the way a "
+"clock wraps rather than read off the busiest hour, which out of a handful of"
+" payouts is wherever the noise landed. Somebody genuinely living elsewhere "
 "looks the same as an account played by somebody else - a hint, never an "
 "accusation."
 msgstr ""
-"캐릭터의 하루가 자신이 속한 Corporation의 하루에서 얼마나 벗어나 있는지를, 시"
-"계가 한 바퀴 도는 방식으로 평균을 내어 나타냅니다. 가장 활발한 시간만 보는 대"
-"신입니다. 소수의 지급만으로는 노이즈가 어디에 떨어지느냐에 따라 결과가 갈리"
-"기 때문입니다. 실제로 다른 곳에 사는 사람은 다른 사람이 대신 플레이하는 계정"
-"과 똑같아 보입니다. 힌트일 뿐, 결코 비난이 아닙니다."
+"character의 하루가 자신의 corporation과 얼마나 떨어져 있는지, 시계처럼 순환하는 방식으로 평균을 냅니다. 몇 건 안 "
+"되는 지급 내역 중 잡음이 떨어진 자리일 뿐인 가장 활발한 시간을 읽는 대신 말입니다. 실제로 다른 곳에 사는 사람은 다른 사람이 "
+"플레이하는 계정과 똑같아 보입니다 - 단서일 뿐, 결코 고발이 아닙니다."
 
 #: templates/eos_tax/help.html:5
 msgid "How to pay taxes?"
@@ -686,10 +676,9 @@ msgstr "2. 마우스 오른쪽 버튼을 누르고 <u>\"Give Money\"</u>를 선�
 
 #: templates/eos_tax/help.html:10
 msgid ""
-"3. Copy the \"Amount to pay in Isk\" for the current month and paste it into "
+"3. Copy the \"Amount to pay in ISK\" for the last month and paste it into "
 "amount"
-msgstr ""
-"3. 이번 달의 \"Amount to pay in Isk\" 값을 복사해 금액란에 붙여넣으세요"
+msgstr "3. 지난달의 \"납부할 금액(ISK)\"을 복사해 amount에 붙여넣으세요"
 
 #: templates/eos_tax/help.html:11
 msgid "4. Copy the \"Reason\" into the corresponding field"
@@ -699,121 +688,146 @@ msgstr "4. \"Reason\"을 해당 입력란에 복사해 넣으세요"
 msgid ""
 "4a. A reason is only shown for the last month, starting on the 2nd of the "
 "current month, to avoid outdated payments."
-msgstr ""
-"4a. Reason은 지난달에 대해서만, 이번 달 2일부터 표시됩니다. 기한이 지난 납부"
-"를 막기 위해서입니다."
+msgstr "4a. Reason은 지난달에 대해서만, 이번 달 2일부터 표시됩니다. 기한이 지난 납부를 막기 위해서입니다."
 
-#: templates/eos_tax/index.html:19
-#: templates/eos_tax/partials/bot-clock-detail.html:25
+#: templates/eos_tax/index.html:26
+msgid "Outstanding only"
+msgstr "미납만"
+
+#: templates/eos_tax/index.html:29
+msgid "Including paid"
+msgstr "납부완료 포함"
+
+#: templates/eos_tax/index.html:39
+#: templates/eos_tax/partials/bot-clock-detail.html:33
 #: templates/eos_tax/partials/bot-clock.html:22
 #: templates/eos_tax/partials/bot-rhythm-detail.html:28
 #: templates/eos_tax/partials/bot-rhythm.html:22
 #: templates/eos_tax/partials/bot-runs.html:22
 #: templates/eos_tax/partials/bot-table.html:8
-#: templates/eos_tax/statistics.html:90 templates/eos_tax/tax-changes.html:71
+#: templates/eos_tax/settings.html:163 templates/eos_tax/statistics.html:90
+#: templates/eos_tax/tax-changes.html:71
 msgid "Corporation"
 msgstr "Corporation"
 
-#: templates/eos_tax/index.html:20
+#: templates/eos_tax/index.html:40
 msgid "Ingame Corp Tax"
 msgstr "Ingame Corp Tax"
 
-#: templates/eos_tax/index.html:21
+#: templates/eos_tax/index.html:41
 msgid "Alliance Tax"
 msgstr "Alliance Tax"
 
-#: templates/eos_tax/index.html:22
-msgid "Amount to pay in Isk"
-msgstr "납부액 (ISK)"
+#: templates/eos_tax/index.html:42
+msgid "Amount to pay in ISK"
+msgstr "납부할 금액(ISK)"
 
-#: templates/eos_tax/index.html:24
+#: templates/eos_tax/index.html:44
 msgid "Reason"
 msgstr "Reason"
 
-#: templates/eos_tax/index.html:42 templates/eos_tax/index.html:44
+#: templates/eos_tax/index.html:62 templates/eos_tax/index.html:64
 msgid "No ingame corp tax, so nothing reaches the corporation wallet to tax."
-msgstr ""
-"ingame corp tax가 없어 Corporation wallet에 과세할 금액이 들어오지 않습니다."
+msgstr "ingame corp tax가 없어 Corporation wallet에 과세할 금액이 들어오지 않습니다."
 
-#: templates/eos_tax/index.html:65 templates/eos_tax/index.html:66
+#: templates/eos_tax/index.html:85 templates/eos_tax/index.html:86
 msgid "Copy reason to clipboard"
 msgstr "Reason을 클립보드에 복사"
 
-#: templates/eos_tax/index.html:77
-msgid "Not payed"
+#: templates/eos_tax/index.html:97
+msgid "Not paid"
 msgstr "미납"
 
-#: templates/eos_tax/index.html:87
+#: templates/eos_tax/index.html:108
+msgid "Nothing outstanding."
+msgstr "미납 없음."
+
+#: templates/eos_tax/index.html:110
 msgid "No tax data for the selected months."
 msgstr "선택한 달에 대한 세금 데이터가 없습니다."
 
 #: templates/eos_tax/partials/bot-clock-detail.html:12
 msgid ""
-"Nothing is left of this Corporation once the Character's own payouts are "
-"taken out, so there is no clock to compare against and none is drawn. Only "
-"the Character's own day is shown. The threshold is on the settings page."
+"This character's payouts are spread so evenly over the day that it has no "
+"middle to place, so there is no distance to measure. The threshold is on the"
+" settings page."
 msgstr ""
-"이 Corporation은 해당 Character 본인의 지급을 빼고 나면 남는 것이 없어, 비교"
-"할 시계가 없고 그리지도 않습니다. Character 본인의 하루만 표시됩니다. 기준값"
-"은 설정 페이지에 있습니다."
+"이 character의 지급 내역은 하루 동안 너무 고르게 퍼져 있어 중심을 정할 수 없으므로 측정할 거리가 없습니다. 기준값은 설정 "
+"페이지에 있습니다."
 
 #: templates/eos_tax/partials/bot-clock-detail.html:16
 msgid ""
-"The same two days drawn round a clock face, because the hours either side of "
-"midnight are neighbours and a straight axis puts them at opposite ends. The "
-"markers are the middle of each day, averaged the way a clock wraps."
+"The rest of this corporation is spread so evenly over the day that it has no"
+" middle to place, so there is no distance to measure. The threshold is on "
+"the settings page."
 msgstr ""
-"같은 두 날을 시계 문자판 위에 그립니다. 자정 양쪽의 시각은 서로 이웃이지만 직"
-"선 축에서는 정반대 끝에 놓이기 때문입니다. 표시는 각 하루의 중심이며, 시계가 "
-"도는 방식으로 평균한 값입니다."
+"이 corporation의 나머지는 하루 동안 너무 고르게 퍼져 있어 중심을 정할 수 없으므로 측정할 거리가 없습니다. 기준값은 설정 "
+"페이지에 있습니다."
 
-#: templates/eos_tax/partials/bot-clock-detail.html:30
+#: templates/eos_tax/partials/bot-clock-detail.html:20
+msgid ""
+"Nothing is left of this corporation once the character's own payouts are "
+"taken out, so there is no clock to compare against and none is drawn. Only "
+"the character's own day is shown. The threshold is on the settings page."
+msgstr ""
+"character 자신의 지급분을 제외하면 이 corporation에는 아무것도 남지 않으므로 비교할 시계가 없고 그리지도 않습니다. "
+"character 자신의 하루만 표시됩니다. 기준값은 설정 페이지에 있습니다."
+
+#: templates/eos_tax/partials/bot-clock-detail.html:24
+msgid ""
+"The same two days drawn round a clock face, because the hours either side of"
+" midnight are neighbours and a straight axis puts them at opposite ends. The"
+" markers are the middle of each day, averaged the way a clock wraps."
+msgstr ""
+"같은 두 날을 시계 문자판 위에 그립니다. 자정 양쪽의 시각은 서로 이웃이지만 직선 축에서는 정반대 끝에 놓이기 때문입니다. 표시는 각 "
+"하루의 중심이며, 시계가 도는 방식으로 평균한 값입니다."
+
+#: templates/eos_tax/partials/bot-clock-detail.html:38
 #, python-format
 msgid "Character %(value)s"
 msgstr "Character %(value)s"
 
-#: templates/eos_tax/partials/bot-clock-detail.html:31
+#: templates/eos_tax/partials/bot-clock-detail.html:39
 #, python-format
 msgid "Corporation %(value)s"
 msgstr "Corporation %(value)s"
 
-#: templates/eos_tax/partials/bot-clock-detail.html:32
+#: templates/eos_tax/partials/bot-clock-detail.html:40
 #, python-format
 msgid "%(value)s apart"
 msgstr "%(value)s 차이"
 
-#: templates/eos_tax/partials/bot-clock-detail.html:33
-#: templates/eos_tax/partials/bot-clock.html:120
+#: templates/eos_tax/partials/bot-clock-detail.html:41
+#: templates/eos_tax/partials/bot-clock.html:114
 msgid "all times EVE time"
 msgstr "모든 시각은 EVE 시간"
 
-#: templates/eos_tax/partials/bot-clock-detail.html:36
+#: templates/eos_tax/partials/bot-clock-detail.html:44
 #: templates/eos_tax/partials/bot-rhythm-detail.html:39
 #, python-format
 msgid "%(value)s payouts, no yardstick"
 msgstr "지급 %(value)s건, 기준 없음"
 
-#: templates/eos_tax/partials/bot-clock-detail.html:41
+#: templates/eos_tax/partials/bot-clock-detail.html:49
 #: templates/eos_tax/partials/bot-rhythm-detail.html:44
 #: templates/eos_tax/partials/bot-run-detail.html:37
-#: templates/eos_tax/partials/bot-runs.html:111
+#: templates/eos_tax/partials/bot-runs.html:105
 msgid "No taxed income in this month."
 msgstr "이번 달에 과세 대상 소득이 없습니다."
 
 #: templates/eos_tax/partials/bot-clock.html:13
 #, python-format
 msgid ""
-"No Character sat %(counter)s hour or more from their Corporation. The "
+"No character sat %(counter)s hour or more from their corporation. The "
 "largest distances of the month are shown instead, so the threshold can be "
 "judged against real numbers."
 msgid_plural ""
-"No Character sat %(counter)s hours or more from their Corporation. The "
+"No character sat %(counter)s hours or more from their corporation. The "
 "largest distances of the month are shown instead, so the threshold can be "
 "judged against real numbers."
 msgstr[0] ""
-"자기 Corporation에서 %(counter)s시간 이상 떨어져 있는 Character는 없었습니"
-"다. 대신 그달의 가장 먼 거리들을 보여주어, 실제 수치로 기준을 가늠할 수 있게 "
-"합니다."
+"자신의 corporation에서 %(counter)s시간 이상 떨어진 character가 없습니다. 대신 이번 달 가장 큰 거리를 "
+"보여주므로 실제 숫자로 기준을 판단할 수 있습니다."
 
 #: templates/eos_tax/partials/bot-clock.html:23
 #: templates/eos_tax/partials/bot-rhythm.html:23
@@ -843,7 +857,7 @@ msgstr "차이"
 
 #: templates/eos_tax/partials/bot-clock.html:28
 #: templates/eos_tax/partials/bot-rhythm.html:28
-#: templates/eos_tax/tax-changes.html:75 views.py:191
+#: templates/eos_tax/tax-changes.html:75 views.py:221
 msgid "Payouts"
 msgstr "지급"
 
@@ -860,90 +874,66 @@ msgstr "평가"
 msgid "not registered"
 msgstr "미등록"
 
-#: templates/eos_tax/partials/bot-clock.html:82
-#: templates/eos_tax/partials/bot-level-badge.html:4
-#: templates/eos_tax/partials/bot-rhythm.html:82
-#: templates/eos_tax/partials/bot-runs.html:96
-#: templates/eos_tax/partials/bot-table.html:55
-msgid "strong"
-msgstr "뚜렷함"
-
-#: templates/eos_tax/partials/bot-clock.html:84
-#: templates/eos_tax/partials/bot-level-badge.html:6
-#: templates/eos_tax/partials/bot-rhythm.html:84
-#: templates/eos_tax/partials/bot-runs.html:98
-#: templates/eos_tax/partials/bot-table.html:57
-msgid "worth a look"
-msgstr "살펴볼 만함"
-
-#: templates/eos_tax/partials/bot-clock.html:86
-#: templates/eos_tax/partials/bot-level-badge.html:8
-#: templates/eos_tax/partials/bot-rhythm.html:86
-#: templates/eos_tax/partials/bot-runs.html:100
-#: templates/eos_tax/partials/bot-table.html:59
-msgid "unremarkable"
-msgstr "특이사항 없음"
-
-#: templates/eos_tax/partials/bot-clock.html:97
-#: templates/eos_tax/partials/bot-rhythm.html:97
+#: templates/eos_tax/partials/bot-clock.html:91
 #, python-format
 msgid ""
-"No Corporation has the %(value)s payouts this month that a rhythm of its own "
-"would need."
+"Nobody could be measured this month. A character needs %(own)s payouts of "
+"their own, the rest of their corporation %(rest)s, and both days a middle to"
+" place."
 msgstr ""
-"이번 달에 자체 리듬을 말할 수 있는 %(value)s건의 지급을 가진 Corporation이 없"
-"습니다."
+"이번 달에는 아무도 측정할 수 없었습니다. character는 자신의 지급 %(own)s건, 나머지 corporation은 "
+"%(rest)s이 필요하며, 두 하루 모두 중심을 정할 수 있어야 합니다."
 
-#: templates/eos_tax/partials/bot-clock.html:102
+#: templates/eos_tax/partials/bot-clock.html:96
 #: templates/eos_tax/partials/bot-group-header.html:12
-#: templates/eos_tax/partials/bot-rhythm.html:102
-#: templates/eos_tax/partials/bot-runs.html:116
+#: templates/eos_tax/partials/bot-rhythm.html:96
+#: templates/eos_tax/partials/bot-runs.html:110
 #, python-format
-msgid "%(counter)s Character"
-msgid_plural "%(counter)s Characters"
-msgstr[0] "Character %(counter)s명"
+msgid "%(counter)s character"
+msgid_plural "%(counter)s characters"
+msgstr[0] "character %(counter)s명"
 
-#: templates/eos_tax/partials/bot-clock.html:104
-#: templates/eos_tax/partials/bot-rhythm.html:104
-#: templates/eos_tax/partials/bot-runs.html:118
-#: templates/eos_tax/partials/bot-table.html:71
+#: templates/eos_tax/partials/bot-clock.html:98
+#: templates/eos_tax/partials/bot-rhythm.html:98
+#: templates/eos_tax/partials/bot-runs.html:112
+#: templates/eos_tax/partials/bot-table.html:65
 #, python-format
 msgid "%(shown)s of %(total)s groups shown"
 msgstr "%(total)s개 그룹 중 %(shown)s개 표시"
 
-#: templates/eos_tax/partials/bot-clock.html:106
-#: templates/eos_tax/partials/bot-rhythm.html:106
+#: templates/eos_tax/partials/bot-clock.html:100
+#: templates/eos_tax/partials/bot-rhythm.html:100
 #, python-format
-msgid "%(counter)s Corporation with a rhythm"
-msgid_plural "%(counter)s Corporations with a rhythm"
-msgstr[0] "자체 리듬이 있는 Corporation %(counter)s곳"
+msgid "%(counter)s corporation with a rhythm"
+msgid_plural "%(counter)s corporations with a rhythm"
+msgstr[0] "고유 리듬이 있는 Corporation %(counter)s개"
 
-#: templates/eos_tax/partials/bot-clock.html:107
-#: templates/eos_tax/partials/bot-rhythm.html:108
+#: templates/eos_tax/partials/bot-clock.html:101
+#: templates/eos_tax/partials/bot-rhythm.html:102
 #, python-format
 msgid "measured from %(value)s payouts"
 msgstr "지급 %(value)s건부터 측정"
 
-#: templates/eos_tax/partials/bot-clock.html:108
+#: templates/eos_tax/partials/bot-clock.html:102
 #, python-format
 msgid "listed from %(counter)s hour apart"
 msgid_plural "listed from %(counter)s hours apart"
 msgstr[0] "%(counter)s시간 차이부터 목록에 표시"
 
-#: templates/eos_tax/partials/bot-clock.html:109
+#: templates/eos_tax/partials/bot-clock.html:103
 #, python-format
 msgid "full deviation at %(counter)s hour"
 msgid_plural "full deviation at %(counter)s hours"
 msgstr[0] "%(counter)s시간에서 완전한 이탈"
 
-#: templates/eos_tax/partials/bot-clock.html:110
-#: templates/eos_tax/partials/bot-rhythm.html:110
+#: templates/eos_tax/partials/bot-clock.html:104
+#: templates/eos_tax/partials/bot-rhythm.html:104
 #, python-format
 msgid "%(shown)s of %(total)s measured"
 msgstr "측정 %(total)s명 중 %(shown)s명"
 
-#: templates/eos_tax/partials/bot-clock.html:118
-#: templates/eos_tax/partials/bot-rhythm.html:118
+#: templates/eos_tax/partials/bot-clock.html:112
+#: templates/eos_tax/partials/bot-rhythm.html:112
 #, python-format
 msgid "%(counter)s flagged character left out of the yardstick"
 msgid_plural "%(counter)s flagged characters left out of the yardstick"
@@ -953,26 +943,37 @@ msgstr[0] "지목된 character %(counter)s명을 기준에서 제외"
 msgid "no main known"
 msgstr "Main 미확인"
 
+#: templates/eos_tax/partials/bot-level-badge.html:4
+msgid "strong"
+msgstr "뚜렷함"
+
+#: templates/eos_tax/partials/bot-level-badge.html:6
+msgid "worth a look"
+msgstr "살펴볼 만함"
+
+#: templates/eos_tax/partials/bot-level-badge.html:8
+msgid "unremarkable"
+msgstr "특이사항 없음"
+
 #: templates/eos_tax/partials/bot-rhythm-detail.html:14
 msgid ""
-"Nothing is left of this Corporation once the Character's own payouts are "
+"Nothing is left of this corporation once the character's own payouts are "
 "taken out, so there is no rhythm to compare against and none is drawn. Only "
-"the Character's own day is shown. The threshold is on the settings page."
+"the character's own day is shown. The threshold is on the settings page."
 msgstr ""
-"이 Corporation은 해당 Character 본인의 지급을 빼고 나면 남는 것이 없어, 비교"
-"할 리듬이 없고 그리지도 않습니다. Character 본인의 하루만 표시됩니다. 기준값"
-"은 설정 페이지에 있습니다."
+"character 자신의 지급분을 제외하면 이 corporation에는 아무것도 남지 않으므로 비교할 리듬이 없고 그리지도 않습니다. "
+"character 자신의 하루만 표시됩니다. 기준값은 설정 페이지에 있습니다."
 
 #: templates/eos_tax/partials/bot-rhythm-detail.html:18
 #, python-format
 msgid ""
-"The Character's day against the rest of their Corporation's, hour by hour. "
-"Shares rather than counts, because one Character never has the volume of a "
-"Corporation. The shaded hours are the Corporation's busiest %(hours)s."
+"The character's day against the rest of their corporation's, hour by hour. "
+"Shares rather than counts, because one character never has the volume of a "
+"corporation. The shaded hours are the corporation's busiest %(hours)s."
 msgstr ""
-"Character의 하루를 나머지 Corporation의 하루와 시간별로 견줍니다. 횟수가 아니"
-"라 비율인 것은 Character 한 명이 Corporation만 한 양을 낼 수 없기 때문입니"
-"다. 음영이 깔린 시간대는 Corporation이 가장 활발한 %(hours)s시간입니다."
+"character의 하루를 자신의 corporation 나머지와 시간대별로 비교합니다. 개수가 아니라 비율입니다. character 한 "
+"명은 corporation만큼의 양을 가질 수 없기 때문입니다. 음영 처리된 시간대는 corporation에서 가장 활발한 "
+"%(hours)s입니다."
 
 #: templates/eos_tax/partials/bot-rhythm-detail.html:29
 msgid "Hour of the day (EVE time)"
@@ -996,13 +997,12 @@ msgstr "%(value)s pp 차이"
 #: templates/eos_tax/partials/bot-rhythm.html:13
 #, python-format
 msgid ""
-"No Character was %(value)s pp flatter than the rest of their Corporation. "
-"The largest differences of the month are shown instead, so the threshold can "
-"be judged against real numbers."
+"No character was %(value)s pp flatter than the rest of their corporation. "
+"The largest differences of the month are shown instead, so the threshold can"
+" be judged against real numbers."
 msgstr ""
-"자기 Corporation의 나머지보다 %(value)spp 더 평탄한 Character는 없었습니다. "
-"대신 그달의 가장 큰 차이들을 보여주어, 실제 수치로 기준을 가늠할 수 있게 합니"
-"다."
+"자신의 corporation 나머지보다 %(value)sp 더 평탄한 character가 없습니다. 대신 이번 달 가장 큰 차이를 "
+"보여주므로 실제 숫자로 기준을 판단할 수 있습니다."
 
 #: templates/eos_tax/partials/bot-rhythm.html:25
 msgid "Character in the busy hours"
@@ -1021,13 +1021,22 @@ msgstr "차이"
 msgid "pp"
 msgstr "%p"
 
-#: templates/eos_tax/partials/bot-rhythm.html:107
+#: templates/eos_tax/partials/bot-rhythm.html:91
+#, python-format
+msgid ""
+"Nobody could be measured this month. A character needs %(own)s payouts of "
+"their own, and the rest of their corporation %(rest)s."
+msgstr ""
+"이번 달에는 아무도 측정할 수 없었습니다. character는 자신의 지급 %(own)s건이 필요하고, 나머지 corporation은 "
+"%(rest)s이 필요합니다."
+
+#: templates/eos_tax/partials/bot-rhythm.html:101
 #, python-format
 msgid "busy window %(counter)s hour"
 msgid_plural "busy window %(counter)s hours"
 msgstr[0] "활발한 구간 %(counter)s시간"
 
-#: templates/eos_tax/partials/bot-rhythm.html:109
+#: templates/eos_tax/partials/bot-rhythm.html:103
 #, python-format
 msgid "listed from %(value)s pp"
 msgstr "%(value)spp부터 목록에 표시"
@@ -1039,8 +1048,8 @@ msgid ""
 "is picked out; a run counts once it reaches %(value)s payouts without a "
 "break."
 msgstr ""
-"이번 달의 모든 지급을 날짜와 시각으로 표시합니다. 가장 긴 연속 구간이 강조됩"
-"니다. 쉬지 않고 %(value)s건에 이르면 하나의 연속 구간으로 셉니다."
+"이번 달의 모든 지급을 날짜와 시각으로 표시합니다. 가장 긴 연속 구간이 강조됩니다. 쉬지 않고 %(value)s건에 이르면 하나의 연속"
+" 구간으로 셉니다."
 
 #: templates/eos_tax/partials/bot-run-detail.html:19
 msgid "Longest run"
@@ -1069,11 +1078,12 @@ msgstr[0] "중단 %(counter)s회"
 #: templates/eos_tax/partials/bot-runs.html:13
 #, python-format
 msgid ""
-"No Character collected %(value)s payouts in a row. The longest runs of the "
-"month are shown instead, so the threshold can be judged against real numbers."
+"No character collected %(value)s payouts in a row. The longest runs of the "
+"month are shown instead, so the threshold can be judged against real "
+"numbers."
 msgstr ""
-"%(value)s건을 연속으로 받은 Character가 없습니다. 대신 이번 달의 가장 긴 연"
-"속 구간을 보여 주어, 실제 수치로 기준값을 판단할 수 있게 합니다."
+"연속으로 지급 %(value)s건을 받은 character가 없습니다. 대신 이번 달 가장 긴 연속 구간을 보여주므로 실제 숫자로 기준을"
+" 판단할 수 있습니다."
 
 #: templates/eos_tax/partials/bot-runs.html:25
 msgid "Payouts in a row"
@@ -1091,23 +1101,23 @@ msgstr "지속 시간"
 msgid "Interruptions"
 msgstr "중단 횟수"
 
-#: templates/eos_tax/partials/bot-runs.html:120
+#: templates/eos_tax/partials/bot-runs.html:114
 #, python-format
 msgid "listed from %(value)s payouts in a row"
 msgstr "연속 %(value)s건 이상부터 표시"
 
-#: templates/eos_tax/partials/bot-runs.html:121
+#: templates/eos_tax/partials/bot-runs.html:115
 #, python-format
 msgid "%(counter)s interruption allowed"
 msgid_plural "%(counter)s interruptions allowed"
 msgstr[0] "중단 %(counter)s회 허용"
 
-#: templates/eos_tax/partials/bot-runs.html:122
+#: templates/eos_tax/partials/bot-runs.html:116
 #, python-format
 msgid "same tick up to %(value)s min"
 msgstr "%(value)s분까지 같은 틱"
 
-#: templates/eos_tax/partials/bot-runs.html:123
+#: templates/eos_tax/partials/bot-runs.html:117
 #, python-format
 msgid "run ends past %(value)s min"
 msgstr "%(value)s분을 넘으면 연속 기록 종료"
@@ -1128,124 +1138,223 @@ msgstr "가장 활발한 날 (시간)"
 msgid "Contributed tax"
 msgstr "기여한 세금"
 
-#: templates/eos_tax/settings.html:18
+#: templates/eos_tax/partials/recalculate-queued.html:4
+#, python-format
+msgid "Recalculation queued for %(counter)s corporation."
+msgid_plural "Recalculation queued for %(counter)s corporations."
+msgstr[0] "Corporation %(counter)s개에 대한 재계산이 대기열에 추가되었습니다."
+
+#: templates/eos_tax/partials/recalculate-result.html:6
+#, python-format
+msgid "%(corp)s — %(month)s/%(year)s"
+msgstr "%(corp)s — %(month)s/%(year)s"
+
+#: templates/eos_tax/partials/recalculate-result.html:11
+#, python-format
+msgid "Tax types considered: %(types)s"
+msgstr "고려한 세금 유형: %(types)s"
+
+#: templates/eos_tax/partials/recalculate-result.html:15
+#, python-format
+msgid "%(type)s: %(counter)s entry, %(sum)s ISK"
+msgid_plural "%(type)s: %(counter)s entries, %(sum)s ISK"
+msgstr[0] "%(type)s: %(counter)s건, %(sum)s ISK"
+
+#: templates/eos_tax/partials/recalculate-result.html:19
+#, python-format
+msgid "Sum of all tax types, %(counter)s entry: %(value)s ISK"
+msgid_plural "Sum of all tax types, %(counter)s entries: %(value)s ISK"
+msgstr[0] "모든 세금 유형 합계, %(counter)s건: %(value)s ISK"
+
+#: templates/eos_tax/partials/recalculate-result.html:22
+#, python-format
+msgid "Corporation's ingame tax rate: %(rate)s%%"
+msgstr "Corporation의 게임 내 세율: %(rate)s%%"
+
+#: templates/eos_tax/partials/recalculate-result.html:25
+#, python-format
+msgid "Gross PvE income, the corp tax backed out: %(value)s ISK"
+msgstr "PvE 총수입(corp tax 역산): %(value)s ISK"
+
+#: templates/eos_tax/partials/recalculate-result.html:28
+#, python-format
+msgid "Alliance tax rate applied: %(rate)s%%"
+msgstr "적용된 Alliance 세율: %(rate)s%%"
+
+#: templates/eos_tax/partials/recalculate-result.html:32
+#, python-format
+msgid "Amount owed to the alliance: %(value)s ISK"
+msgstr "Alliance에 납부할 금액: %(value)s ISK"
+
+#: templates/eos_tax/partials/recalculate-result.html:37
+msgid "Already marked as paid."
+msgstr "이미 납부완료로 표시됨."
+
+#: templates/eos_tax/partials/recalculate-result.html:39
+msgid "Not marked as paid yet."
+msgstr "아직 납부완료로 표시되지 않음."
+
+#: templates/eos_tax/partials/recalculate-result.html:47
+#, python-format
+msgid "Corporation %(corp_id)s is not known to Alliance Auth."
+msgstr "Alliance Auth에 Corporation %(corp_id)s 정보가 없습니다."
+
+#: templates/eos_tax/partials/recalculate-result.html:49
+#, python-format
+msgid ""
+"%(corp)s has no ingame tax rate on file yet - it has never been pulled from "
+"ESI."
+msgstr "%(corp)s의 게임 내 세율이 아직 없습니다 - ESI에서 가져온 적이 없습니다."
+
+#: templates/eos_tax/partials/recalculate-result.html:51
+#, python-format
+msgid ""
+"%(corp)s has no journal entries of the configured tax types for "
+"%(month)s/%(year)s."
+msgstr "%(corp)s에는 %(month)s/%(year)s에 설정된 세금 유형의 journal 항목이 없습니다."
+
+#: templates/eos_tax/partials/recalculate-result.html:53
+#, python-format
+msgid ""
+"The alliance tax rate for %(month)s/%(year)s is 0, so nothing is owed and no"
+" row is written."
+msgstr "%(month)s/%(year)s의 alliance 세율이 0이므로 납부할 금액이 없고 행도 기록되지 않습니다."
+
+#: templates/eos_tax/partials/recalculate-result.html:55
+msgid "Nothing could be calculated for this selection."
+msgstr "이 선택 항목에 대해 계산할 수 있는 것이 없습니다."
+
+#: templates/eos_tax/settings.html:19
 msgid ""
 "These values were taken over from local.py once. They are read from\n"
 "                here now, so editing local.py has no further effect."
 msgstr ""
-"이 값들은 local.py에서 한 번 가져온 것입니다. 이제부터는 여기에서 읽으므로 "
-"local.py를 수정해도 반영되지 않습니다."
+"이 값들은 local.py에서 한 번 가져온 것입니다. 이제부터는 여기에서 읽으므로 local.py를 수정해도 반영되지 않습니다."
 
-#: templates/eos_tax/settings.html:31
+#: templates/eos_tax/settings.html:49 templates/eos_tax/statistics.html:98
+msgid "Tax"
+msgstr "세금"
+
+#: templates/eos_tax/settings.html:58
+msgid "Bot"
+msgstr "봇"
+
+#: templates/eos_tax/settings.html:67
 msgid "Taxation"
 msgstr "과세"
 
-#: templates/eos_tax/settings.html:33
+#: templates/eos_tax/settings.html:69
 msgid ""
 "What is taxed, and what it costs. Everything the overview\n"
-"                            and the statistics are built from."
-msgstr ""
-"무엇에 세금을 매기고 얼마가 드는지. 개요와 통계가 세워지는 토대 전부입니다."
+"                                    and the statistics are built from."
+msgstr "무엇이 과세 대상이고 비용이 얼마인지입니다. 개요와 통계가 이를 바탕으로 만들어집니다."
 
-#: templates/eos_tax/settings.html:37
+#: templates/eos_tax/settings.html:73
 msgid "Scope"
 msgstr "적용 범위"
 
-#: templates/eos_tax/settings.html:43
+#: templates/eos_tax/settings.html:79
 msgid "Months"
 msgstr "대상 월"
 
-#: templates/eos_tax/settings.html:47
+#: templates/eos_tax/settings.html:83
 msgid "Payments"
 msgstr "납부"
 
-#: templates/eos_tax/settings.html:50 templates/eos_tax/settings.html:77
+#: templates/eos_tax/settings.html:86 templates/eos_tax/settings.html:113
 msgid "Rate"
 msgstr "세율"
 
-#: templates/eos_tax/settings.html:55
+#: templates/eos_tax/settings.html:91
 msgid ""
 "The newest entry that is not in the future applies, so a\n"
-"                            change can be entered months ahead. Months "
-"before the first entry use the base\n"
-"                            rate above. Already calculated months keep the "
-"rate they were charged with."
+"                                    change can be entered months ahead. Months before the first entry use the base\n"
+"                                    rate above. Already calculated months keep the rate they were charged with."
 msgstr ""
-"미래가 아닌 항목 중 가장 최근 것이 적용되므로 변경을 몇 달 앞서 입력할 수 있"
-"습니다. 첫 항목 이전의 달에는 위의 기본 세율이 적용됩니다. 이미 계산된 달은 "
-"계산 당시의 세율을 그대로 유지합니다."
+"미래가 아닌 가장 최근 항목이 적용되므로 변경 사항을 몇 달 전에 미리 입력할 수 있습니다. 첫 항목 이전 달은 위의 기본 세율을 "
+"사용합니다. 이미 계산된 달은 부과받은 세율을 그대로 유지합니다."
 
-#: templates/eos_tax/settings.html:78
+#: templates/eos_tax/settings.html:114
 msgid "Remove"
 msgstr "삭제"
 
-#: templates/eos_tax/settings.html:101
+#: templates/eos_tax/settings.html:137
 msgid "Corp tax changes"
 msgstr "Corp 세율 변동"
 
-#: templates/eos_tax/settings.html:103
-msgid ""
-"How large a move of a Corporation's own tax rate has to be\n"
-"                            before that page reports it."
-msgstr ""
-"Corporation 자체 세율의 변동이 얼마나 커야 그 페이지가 이를 보고하는지."
-
-#: templates/eos_tax/settings.html:118
-msgid ""
-"Four readings of the same month, each with its own\n"
-"                            thresholds. A Character at the top of one can be "
-"absent from the next, and\n"
-"                            that disagreement is the point."
-msgstr ""
-"같은 달을 네 가지로 읽으며, 각각 고유한 기준을 가집니다. 한 쪽 맨 위에 있는 "
-"Character가 다음 쪽에는 없을 수 있고, 그 어긋남이 바로 요점입니다."
-
 #: templates/eos_tax/settings.html:139
 msgid ""
-"Counts how many different hours of a day a Character\n"
-"                                    earned in, and on how many days."
-msgstr ""
-"Character가 하루 중 서로 다른 몇 시간에 벌었는지, 그리고 며칠 동안 그랬는지"
-"를 셉니다."
+"How large a move of a corporation's own tax rate has to be\n"
+"                                    before that page reports it."
+msgstr "이 페이지가 표시하려면 corporation 자체 세율이 얼마나 변해야 하는지입니다."
 
-#: templates/eos_tax/settings.html:154
+#: templates/eos_tax/settings.html:151 templates/eos_tax/settings.html:190
+msgid "Recalculate"
+msgstr "다시 계산"
+
+#: templates/eos_tax/settings.html:153
 msgid ""
-"Looks at the minute rather than the hour: the game pays a\n"
-"                                    ratter about every twenty minutes, so an "
-"uninterrupted stretch shows up as a\n"
-"                                    chain of payouts and nothing else does."
+"Runs the calculation again for one month, outside the\n"
+"                                    periodic task - useful right after a journal import finished or a rate was\n"
+"                                    corrected. One corporation runs immediately and shows the arithmetic behind its\n"
+"                                    figure; every corporation is queued the way the periodic task queues them,\n"
+"                                    without waiting for the result here."
 msgstr ""
-"시간이 아니라 분을 봅니다. 게임은 ratter에게 약 20분마다 지급하므로 끊기지 않"
-"은 구간은 지급이 사슬처럼 이어진 모습으로 나타나며, 그렇게 보이는 것은 그것뿐"
-"입니다."
+"주기적 task 밖에서 한 달치 계산을 다시 실행합니다 - journal 가져오기가 막 끝났거나 세율이 정정된 직후에 유용합니다. "
+"corporation 하나는 즉시 실행되어 결과값 뒤의 산술 과정을 보여줍니다; 모든 corporation은 주기적 task가 대기시키는"
+" 방식 그대로 대기시켜지며, 여기서 결과를 기다리지 않습니다."
 
-#: templates/eos_tax/settings.html:171
-msgid ""
-"How much of a Character's income falls inside the hours\n"
-"                                    their own Corporation is busy. The "
-"Corporation is the yardstick and not the\n"
-"                                    alliance, which spans several timezones "
-"at once."
-msgstr ""
-"Character의 수입 가운데 얼마나가 자기 Corporation이 활발한 시간대에 들어오는"
-"지. 기준은 Corporation이지 Alliance가 아닙니다. Alliance는 여러 시간대를 한꺼"
-"번에 아우릅니다."
+#: templates/eos_tax/settings.html:166
+msgid "All configured corporations"
+msgstr "설정된 모든 Corporation"
 
-#: templates/eos_tax/settings.html:189
-msgid ""
-"How far a Character's day sits from their Corporation's,\n"
-"                                    averaged the way a clock wraps."
-msgstr ""
-"Character의 하루가 Corporation의 하루에서 얼마나 떨어져 있는지를, 시계가 한 "
-"바퀴 도는 방식으로 평균 내어 봅니다."
-
-#: templates/eos_tax/settings.html:201
-msgid "Save settings"
-msgstr "설정 저장"
-
-#: templates/eos_tax/statistics.html:22 templates/eos_tax/tax-changes.html:28
+#: templates/eos_tax/settings.html:183 templates/eos_tax/statistics.html:22
+#: templates/eos_tax/tax-changes.html:28
 msgid "Year"
 msgstr "연도"
+
+#: templates/eos_tax/settings.html:202
+msgid ""
+"Four readings of the same month, each with its own\n"
+"                                    thresholds. A character at the top of one can be absent from the next, and\n"
+"                                    that disagreement is the point."
+msgstr ""
+"같은 달을 네 가지 방식으로 읽으며, 각각 고유한 기준값을 갖습니다. 한 방식에서 최상단에 있는 character가 다음 방식에서는 없을"
+" 수 있으며, 바로 그 불일치가 핵심입니다."
+
+#: templates/eos_tax/settings.html:223
+msgid ""
+"Counts how many different hours of a day a character\n"
+"                                            earned in, and on how many days."
+msgstr "character가 하루 중 몇 개의 서로 다른 시간대에, 며칠에 걸쳐 수익을 냈는지 셉니다."
+
+#: templates/eos_tax/settings.html:238
+msgid ""
+"Looks at the minute rather than the hour: the game pays a\n"
+"                                            ratter about every twenty minutes, so an uninterrupted stretch shows up as a\n"
+"                                            chain of payouts and nothing else does."
+msgstr ""
+"시간이 아니라 분 단위로 봅니다: 게임은 NPC를 사냥하는 플레이어에게 약 20분마다 지급하므로, 끊기지 않은 구간은 지급의 사슬로만 "
+"나타나고 다른 어떤 것도 그렇게 나타나지 않습니다."
+
+#: templates/eos_tax/settings.html:255
+msgid ""
+"How much of a character's income falls inside the hours\n"
+"                                            their own corporation is busy. The corporation is the yardstick and not the\n"
+"                                            alliance, which spans several timezones at once."
+msgstr ""
+"character 수입의 얼마만큼이 자신의 corporation이 활발한 시간대에 들어오는지입니다. 기준은 corporation이지 여러"
+" 시간대에 걸친 alliance가 아닙니다."
+
+#: templates/eos_tax/settings.html:273
+msgid ""
+"How far a character's day sits from their corporation's,\n"
+"                                            averaged the way a clock wraps."
+msgstr "character의 하루가 자신의 corporation과 얼마나 떨어져 있는지, 시계처럼 순환하는 방식으로 평균을 냅니다."
+
+#: templates/eos_tax/settings.html:288
+msgid "Save settings"
+msgstr "설정 저장"
 
 #: templates/eos_tax/statistics.html:31
 msgid "Alliance"
@@ -1275,24 +1384,18 @@ msgstr "최소 비중"
 msgid "PvE income"
 msgstr "PvE 수입"
 
-#: templates/eos_tax/statistics.html:98
-msgid "Tax"
-msgstr "세금"
-
-#: templates/eos_tax/statistics.html:123
+#: templates/eos_tax/statistics.html:122
 msgid "No tax data recorded yet."
 msgstr "아직 기록된 세금 데이터가 없습니다."
 
 #: templates/eos_tax/tax-change-detail.html:19
 msgid ""
 "The share of the full bounty that reached the corporation, per day.\n"
-"                The value carries the system's bounty modifier as well as "
-"the rate, so the level itself\n"
+"                The value carries the system's bounty modifier as well as the rate, so the level itself\n"
 "                means little - a step in it does not."
 msgstr ""
-"전체 bounty 중 Corporation에 들어온 비율을 일별로 표시합니다. 이 값에는 세율"
-"뿐 아니라 시스템의 bounty modifier도 포함되므로 절대값보다 계단 모양이 중요합"
-"니다."
+"전체 bounty 중 Corporation에 들어온 비율을 일별로 표시합니다. 이 값에는 세율뿐 아니라 시스템의 bounty "
+"modifier도 포함되므로 절대값보다 계단 모양이 중요합니다."
 
 #: templates/eos_tax/tax-change-detail.html:22
 #, python-format
@@ -1300,8 +1403,7 @@ msgid ""
 "A level counts once it held for at least two days, and a move of at least "
 "%(minimum)s percentage points separates one level from the next."
 msgstr ""
-"이틀 이상 유지된 수준부터 하나의 수준으로 세며, 수준 사이에는 최소 "
-"%(minimum)s 퍼센트포인트의 차이가 있어야 합니다."
+"이틀 이상 유지된 수준부터 하나의 수준으로 세며, 수준 사이에는 최소 %(minimum)s 퍼센트포인트의 차이가 있어야 합니다."
 
 #: templates/eos_tax/tax-change-detail.html:35
 msgid "The stretches of days the rate held, and the steps between them"
@@ -1326,14 +1428,15 @@ msgstr "일수"
 #: templates/eos_tax/tax-change-detail.html:63
 #, python-format
 msgid ""
+"On %(on)s the share moved from %(before)s percent to %(after)s percent, in "
+"%(counter)s system."
+msgid_plural ""
 "On %(on)s the share moved from %(before)s percent to %(after)s percent, "
-"across %(systems)s systems."
-msgstr ""
-"%(on)s에 비율이 %(before)s 퍼센트에서 %(after)s 퍼센트로 바뀌었습니다. "
-"%(systems)s개 시스템에서 나타났습니다."
+"across %(counter)s systems."
+msgstr[0] ""
+"%(on)s에 비율이 %(before)s퍼센트에서 %(after)s퍼센트로, %(counter)s개 시스템에서 바뀌었습니다."
 
 #: templates/eos_tax/tax-change-detail.html:71
-#: templates/eos_tax/tax-changes.html:133
 #, python-format
 msgid "%(value)s payouts"
 msgstr "지급 %(value)s건"
@@ -1351,21 +1454,16 @@ msgstr "이 해에는 세율을 측정할 만큼 지급 건수가 없습니다."
 #, python-format
 msgid ""
 "The corporation wallet only shows the corporation's own cut, so the ingame\n"
-"                rate is not in it directly. It is recovered from the kills "
-"behind each bounty: what the\n"
-"                NPCs were worth against what arrived. Every move of that "
-"share by at least\n"
-"                %(minimum)s percentage points is listed, as long as the new "
-"level held for two\n"
-"                days - a corporation that switched three times appears three "
-"times. The minimum\n"
+"                rate is not in it directly. It is recovered from the kills behind each bounty: what the\n"
+"                NPCs were worth against what arrived. Every move of that share by at least\n"
+"                %(minimum)s percentage points is listed, as long as the new level held for two\n"
+"                days - a corporation that switched three times appears three times. The minimum\n"
 "                is set on the settings page."
 msgstr ""
-"Corporation wallet에는 Corporation 몫만 남으므로 ingame rate는 직접 들어 있"
-"지 않습니다. 각 bounty 뒤의 킬 기록으로 되짚습니다. NPC의 가치와 실제로 들어"
-"온 금액의 비율입니다. 새 수준이 이틀 유지되었다면 그 비율이 %(minimum)s 퍼센"
-"트포인트 이상 움직인 경우를 모두 보여줍니다. 세 번 바꾼 Corporation은 세 번 "
-"나타납니다. 최솟값은 설정 페이지에서 정합니다."
+"Corporation wallet에는 Corporation 몫만 남으므로 ingame rate는 직접 들어 있지 않습니다. 각 "
+"bounty 뒤의 킬 기록으로 되짚습니다. NPC의 가치와 실제로 들어온 금액의 비율입니다. 새 수준이 이틀 유지되었다면 그 비율이 "
+"%(minimum)s 퍼센트포인트 이상 움직인 경우를 모두 보여줍니다. 세 번 바꾼 Corporation은 세 번 나타납니다. 최솟값은 "
+"설정 페이지에서 정합니다."
 
 #: templates/eos_tax/tax-changes.html:43
 msgid "Quick filters"
@@ -1381,7 +1479,8 @@ msgstr "다음만"
 
 #: templates/eos_tax/tax-changes.html:63
 msgid ""
-"The static data export is not available, so bounty values cannot be resolved."
+"The static data export is not available, so bounty values cannot be "
+"resolved."
 msgstr "static data export를 사용할 수 없어 bounty 값을 확인할 수 없습니다."
 
 #: templates/eos_tax/tax-changes.html:72
@@ -1392,7 +1491,7 @@ msgstr "비율의 변화"
 msgid "On"
 msgstr "일자"
 
-#: templates/eos_tax/tax-changes.html:74 views.py:192
+#: templates/eos_tax/tax-changes.html:74 views.py:222
 msgid "Systems"
 msgstr "시스템"
 
@@ -1402,13 +1501,27 @@ msgstr "이 해에 ingame tax rate를 바꾼 Corporation은 없습니다."
 
 #: templates/eos_tax/tax-changes.html:131
 #, python-format
-msgid "%(value)s corporations examined"
-msgstr "Corporation %(value)s곳 검사"
+msgid "%(counter)s corporation examined"
+msgid_plural "%(counter)s corporations examined"
+msgstr[0] "검토한 Corporation %(counter)s개"
 
 #: templates/eos_tax/tax-changes.html:132
 #, python-format
-msgid "%(changes)s changes in %(corporations)s corporations"
-msgstr "Corporation %(corporations)s곳에서 변화 %(changes)s건"
+msgid "%(counter)s change"
+msgid_plural "%(counter)s changes"
+msgstr[0] "%(counter)s건의 변경"
+
+#: templates/eos_tax/tax-changes.html:133
+#, python-format
+msgid "%(counter)s corporation that changed"
+msgid_plural "%(counter)s corporations that changed"
+msgstr[0] "변경된 Corporation %(counter)s개"
+
+#: templates/eos_tax/tax-changes.html:134
+#, python-format
+msgid "%(value)s payout"
+msgid_plural "%(value)s payouts"
+msgstr[0] "%(value)s건의 지급"
 
 #: util.py:84
 msgid "h"
@@ -1430,75 +1543,100 @@ msgstr "개월"
 msgid "y"
 msgstr "년"
 
-#: views.py:60
+#: views.py:88
 #, python-format
 msgid "Taxes to pay: %(rate)s%%"
 msgstr "납부할 세금: %(rate)s%%"
 
-#: views.py:67
+#: views.py:97
 msgid "Corporation:"
 msgstr "Corporation:"
 
-#: views.py:68
+#: views.py:98
 msgid "Filter by corporation name"
 msgstr "Corporation 이름으로 거르기"
 
-#: views.py:87 views.py:273 views.py:322
+#: views.py:117 views.py:423 views.py:472
 msgid "Loading…"
 msgstr "불러오는 중…"
 
-#: views.py:88
+#: views.py:118
 msgid "No data for this selection."
 msgstr "이 선택에 해당하는 데이터가 없습니다."
 
-#: views.py:89
+#: views.py:119
 msgid "Could not load the statistics."
 msgstr "통계를 불러오지 못했습니다."
 
-#: views.py:90
+#: views.py:120
 msgid "corporations"
 msgstr "Corporation"
 
-#: views.py:91
+#: views.py:121
 msgid "Other"
 msgstr "기타"
 
-#: views.py:92
+#: views.py:122
 #, python-brace-format
-msgid "{shown} of {total} Corporations drawn"
-msgstr "{total}곳 중 {shown}곳 Corporation 표시"
+msgid "{shown} of {total} corporations drawn"
+msgstr "{total}개 중 {shown}개 Corporation 표시"
 
-#: views.py:93
+#: views.py:123
 #, python-brace-format
 msgid "{value} of the tax covered"
 msgstr "전체 세금 중 {value} 차지"
 
-#: views.py:94
+#: views.py:124
 #, python-brace-format
 msgid "{value} ISK income"
 msgstr "수입 {value} ISK"
 
-#: views.py:95
+#: views.py:125
 #, python-brace-format
 msgid "{value} ISK tax"
 msgstr "세금 {value} ISK"
 
-#: views.py:160
+#: views.py:190
 msgid "Search:"
 msgstr "검색:"
 
-#: views.py:161
+#: views.py:191
 msgid "Corporation name, or a rate such as 0 or 100"
 msgstr "Corporation 이름 또는 0, 100 같은 비율"
 
-#: views.py:190
+#: views.py:220
 msgid "Share of the bounty in percent"
 msgstr "bounty 대비 비율(퍼센트)"
 
-#: views.py:216
+#: views.py:253
 msgid "Settings saved."
 msgstr "설정을 저장했습니다."
 
-#: views.py:274 views.py:323
+#: views.py:289
+msgid "Calculating…"
+msgstr "계산 중…"
+
+#: views.py:290
+msgid "Could not recalculate this month."
+msgstr "이번 달을 다시 계산할 수 없습니다."
+
+#: views.py:424 views.py:473
 msgid "Could not load this view."
 msgstr "이 화면을 불러오지 못했습니다."
+
+#~ msgid "Payed"
+#~ msgstr "납부됨"
+
+#, python-format
+#~ msgid "%(value)s hours"
+#~ msgstr "%(value)s시간"
+
+#, python-format
+#~ msgid ""
+#~ "No Corporation has the %(value)s payouts this month that a rhythm of its own"
+#~ " would need."
+#~ msgstr "이번 달에 자체 리듬을 말할 수 있는 %(value)s건의 지급을 가진 Corporation이 없습니다."
+
+#, python-format
+#~ msgid "%(changes)s changes in %(corporations)s corporations"
+#~ msgstr "Corporation %(corporations)s곳에서 변화 %(changes)s건"

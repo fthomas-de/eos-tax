@@ -9,7 +9,7 @@
             the setting under discussion.
         {% endcomment %}
         <div class="alert alert-info">
-            {% blocktranslate with value=stats.min_difference %}No Character was {{ value }} pp flatter than the rest of their Corporation. The largest differences of the month are shown instead, so the threshold can be judged against real numbers.{% endblocktranslate %}
+            {% blocktranslate with value=stats.min_difference %}No character was {{ value }} pp flatter than the rest of their corporation. The largest differences of the month are shown instead, so the threshold can be judged against real numbers.{% endblocktranslate %}
         </div>
     {% endif %}
 
@@ -74,13 +74,7 @@
                                 so they order the list rather than decide anything, which is what the
                                 wording says. All three are on the settings page.
                             {% endcomment %}
-                            {% if row.level == "high" %}
-                                <span class="badge text-bg-danger">{% translate "strong" %}</span>
-                            {% elif row.level == "medium" %}
-                                <span class="badge text-bg-warning">{% translate "worth a look" %}</span>
-                            {% else %}
-                                <span class="badge text-bg-success">{% translate "unremarkable" %}</span>
-                            {% endif %}
+                            {% include "eos_tax/partials/bot-level-badge.html" with level=row.level %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -90,20 +84,20 @@
     </div>
 {% else %}
     <div class="alert alert-info text-center">
-        {% blocktranslate with value=stats.corp_min_payouts %}No Corporation has the {{ value }} payouts this month that a rhythm of its own would need.{% endblocktranslate %}
+        {% blocktranslate with own=stats.min_payouts rest=stats.corp_min_payouts %}Nobody could be measured this month. A character needs {{ own }} payouts of their own, and the rest of their corporation {{ rest }}.{% endblocktranslate %}
     </div>
 {% endif %}
 
 <div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
-    <span>{% blocktranslate count counter=stats.characters %}{{ counter }} Character{% plural %}{{ counter }} Characters{% endblocktranslate %}</span>
+    <span>{% blocktranslate count counter=stats.characters %}{{ counter }} character{% plural %}{{ counter }} characters{% endblocktranslate %}</span>
     {% if stats.groups_total > stats.groups_shown %}
         <span>{% blocktranslate with shown=stats.groups_shown total=stats.groups_total %}{{ shown }} of {{ total }} groups shown{% endblocktranslate %}</span>
     {% endif %}
-    <span>{% blocktranslate count counter=stats.corporations %}{{ counter }} Corporation with a rhythm{% plural %}{{ counter }} Corporations with a rhythm{% endblocktranslate %}</span>
+    <span>{% blocktranslate count counter=stats.corporations %}{{ counter }} corporation with a rhythm{% plural %}{{ counter }} corporations with a rhythm{% endblocktranslate %}</span>
     <span>{% blocktranslate count counter=stats.busy_hours %}busy window {{ counter }} hour{% plural %}busy window {{ counter }} hours{% endblocktranslate %}</span>
     <span>{% blocktranslate with value=stats.min_payouts %}measured from {{ value }} payouts{% endblocktranslate %}</span>
     <span>{% blocktranslate with value=stats.min_difference %}listed from {{ value }} pp{% endblocktranslate %}</span>
-    <span>{% blocktranslate with shown=stats.groups_total total=stats.measured_characters %}{{ shown }} of {{ total }} measured{% endblocktranslate %}</span>
+    <span>{% blocktranslate with shown=stats.listed_characters total=stats.measured_characters %}{{ shown }} of {{ total }} measured{% endblocktranslate %}</span>
     {% comment %}
         Said out loud, because it changes every figure above it: the flagged
         characters are part of their Corporation's day too, and were taken out

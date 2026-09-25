@@ -20,6 +20,7 @@ from .factories import (
     ACTIVE_HOUR_MIN_ENTRIES,
     BRAVO_CORP_ID,
     CASUAL_ID,
+    MIN_DAYS,
     MONTH,
     OUTSIDER_CORP_ID,
     RATTER_ID,
@@ -57,10 +58,21 @@ class TestBotDetection(EosTaxTestCase):
         self.assertEqual(self.candidates(), [])
 
     def test_should_ignore_a_character_with_too_few_days(self):
-        # one suspicious day is not "more than 1"
+        # one suspicious day does not reach the two a character needs
         self.make_bot(days=(4,))
 
         self.assertEqual(self.candidates(), [])
+
+    def test_should_list_a_character_exactly_on_the_day_threshold(self):
+        """Reaching the threshold counts, the same line at which the row
+        turns strong - with > a character on exactly the threshold sat in
+        the fallback list, marked strong."""
+        self.make_bot(days=(1, 2))
+
+        candidates = self.candidates()
+
+        self.assertEqual([entry["suspicious_days"] for entry in candidates], [MIN_DAYS])
+        self.assertEqual(candidates[0]["level"], "high")
 
     def test_should_count_each_hour_only_once(self):
         """Repeated entries inside one hour are still one hour of activity.
@@ -545,17 +557,22 @@ class TestSlowRuntimeIsSaidInWords(EosTaxTestCase):
     def page(self):
         return self.client.get(reverse("eos_tax:bots"))
 
+    def slow_page(self):
+        report = get_bot_report(YEAR, MONTH)
+        report["stats"]["seconds_total"] = 3.0
+
+        with mock.patch("eos_tax.views.get_bot_report", return_value=report):
+            return self.page()
+
     def test_should_leave_the_line_in_the_ordinary_colour(self):
-        self.assertContains(self.page(), "border-top text-body-secondary")
+        """Also once the run is slow - the words carry it, not the line."""
+        response = self.slow_page()
+
+        self.assertContains(response, "border-top text-body-secondary")
+        self.assertNotContains(response, "border-top text-warning")
 
     def test_should_say_nothing_while_the_run_is_quick(self):
         self.assertNotContains(self.page(), "slower than usual")
 
     def test_should_say_it_in_words_once_the_run_is_slow(self):
-        report = get_bot_report(YEAR, MONTH)
-        report["stats"]["seconds_total"] = 3.0
-
-        with mock.patch("eos_tax.views.get_bot_report", return_value=report):
-            response = self.page()
-
-        self.assertContains(response, "slower than usual")
+        self.assertContains(self.slow_page(), "slower than usual")

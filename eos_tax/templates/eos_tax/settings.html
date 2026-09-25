@@ -134,7 +134,7 @@
 
                                 <h2 class="h5 border-bottom pb-2 mt-5">{% translate "Corp tax changes" %}</h2>
                                 <p class="text-body-secondary small">
-                                    {% blocktranslate %}How large a move of a Corporation's own tax rate has to be
+                                    {% blocktranslate %}How large a move of a corporation's own tax rate has to be
                                     before that page reports it.{% endblocktranslate %}
                                 </p>
                                 {% bootstrap_field form.tax_change_min_points %}
@@ -149,8 +149,8 @@
                                 <p class="text-body-secondary small">
                                     {% blocktranslate %}Runs the calculation again for one month, outside the
                                     periodic task - useful right after a journal import finished or a rate was
-                                    corrected. One Corporation runs immediately and shows the arithmetic behind its
-                                    figure; every Corporation is queued the way the periodic task queues them,
+                                    corrected. One corporation runs immediately and shows the arithmetic behind its
+                                    figure; every corporation is queued the way the periodic task queues them,
                                     without waiting for the result here.{% endblocktranslate %}
                                 </p>
 
@@ -160,7 +160,7 @@
                                             {% translate "Corporation" %}
                                         </label>
                                         <select class="form-select" id="eos-tax-recalc-corp">
-                                            <option value="all">{% translate "All configured Corporations" %}</option>
+                                            <option value="all">{% translate "All configured corporations" %}</option>
                                             {% for corporation in corporations %}
                                                 <option value="{{ corporation.corporation_id }}">
                                                     {{ corporation.corporation_name }}
@@ -197,7 +197,7 @@
 
                                 <p class="text-body-secondary small">
                                     {% blocktranslate %}Four readings of the same month, each with its own
-                                    thresholds. A Character at the top of one can be absent from the next, and
+                                    thresholds. A character at the top of one can be absent from the next, and
                                     that disagreement is the point.{% endblocktranslate %}
                                 </p>
 
@@ -216,7 +216,7 @@
                                     </div>
                                     <div class="card-body">
                                         <p class="text-body-secondary small">
-                                            {% blocktranslate %}Counts how many different hours of a day a Character
+                                            {% blocktranslate %}Counts how many different hours of a day a character
                                             earned in, and on how many days.{% endblocktranslate %}
                                         </p>
                                         {% bootstrap_field form.bot_hours_min_entries %}
@@ -248,8 +248,8 @@
                                     </div>
                                     <div class="card-body">
                                         <p class="text-body-secondary small">
-                                            {% blocktranslate %}How much of a Character's income falls inside the hours
-                                            their own Corporation is busy. The Corporation is the yardstick and not the
+                                            {% blocktranslate %}How much of a character's income falls inside the hours
+                                            their own corporation is busy. The corporation is the yardstick and not the
                                             alliance, which spans several timezones at once.{% endblocktranslate %}
                                         </p>
                                         {% bootstrap_field form.bot_rhythm_busy_hours %}
@@ -266,7 +266,7 @@
                                     </div>
                                     <div class="card-body">
                                         <p class="text-body-secondary small">
-                                            {% blocktranslate %}How far a Character's day sits from their Corporation's,
+                                            {% blocktranslate %}How far a character's day sits from their corporation's,
                                             averaged the way a clock wraps.{% endblocktranslate %}
                                         </p>
                                         {% bootstrap_field form.bot_clock_max_apart %}
@@ -274,6 +274,7 @@
                                         {% bootstrap_field form.bot_clock_corp_min_payouts %}
                                         {% bootstrap_field form.bot_clock_purge_strong %}
                                         {% bootstrap_field form.bot_clock_min_apart %}
+                                        {% bootstrap_field form.bot_clock_min_concentration %}
                                     </div>
                                 </div>
                             </div>
@@ -291,27 +292,6 @@
 
 {% endblock %}
 
-{% block extra_css %}
-    <style>
-        /*
-         * One checkbox per corporation stacks into a very tall column once an
-         * alliance has more than a handful. The ids are Django auto_id values
-         * of the checkbox widgets.
-         */
-        #id_tax_alliances,
-        #id_corporation_blacklist,
-        #id_tax_types {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-            gap: 0 1rem;
-            max-height: 12rem;
-            overflow-y: auto;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid var(--bs-border-color);
-            border-radius: var(--bs-border-radius);
-        }
-    </style>
-{% endblock %}
 
 {% block extra_javascript %}
     {{ js_config|json_script:"eos-tax-config" }}

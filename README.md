@@ -76,7 +76,7 @@ removed.
 | Taxed journal types | wallet journal `ref_type`s counted as PvE income |
 | Previous / running month | which months the task calculates |
 | Match by Reason | match payments by their Reason code, not by amount alone |
-| Bot detection thresholds | hours per day and days per month |
+| Bot detection thresholds | one set per reading of the Bots page - hours and days, unbroken runs, the two Corporation comparisons - each with its own chapter on the settings page |
 
 **Match by Reason is worth switching on.** Without it a payment is recognised
 by its amount and nothing else - not by who sent it, and not by which month it
@@ -122,7 +122,7 @@ switch Corporations on and off. Beyond eight Corporations the line style carries
 part of the identity, because colour alone stops being distinguishable.
 
 **Bots** - characters whose taxed income looks automated: more than *X*
-different hours of a day, on more than *Y* days of the month. Both thresholds
+different hours of a day, on at least *Y* days of the month. Both thresholds
 are configurable. When nothing crosses them, the ten longest days of the month
 are listed instead, so the thresholds can be judged against real numbers. Each
 character is listed with its main.
@@ -196,9 +196,8 @@ ordered and each row carries the Corporation's own figure beside it.
 
 Shipped in German, English, Spanish, French, Italian, Korean and Russian. EVE
 terms stay in English throughout - Corporation, Alliance, wallet, bounty, ISK,
-PvE, Reason, and the ingame names of the journal types. `Character` is the one
-exception: the column label stays English while the prose uses each language's
-own word, which all seven catalogues do consistently.
+PvE, Reason, Character, and the ingame names of the journal types - lower
+case in running text, capitalised in headings and column titles.
 
 The rule is enforced by a test that reads every entry of every catalogue rather
 than a few labels, because this is exactly the kind of thing that survives a

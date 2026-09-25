@@ -38,10 +38,10 @@
                                 <th scope="col">{% translate "Corporation" %}</th>
                                 <th scope="col" class="d-none d-md-table-cell">{% translate "Ingame Corp Tax" %}</th>
                                 <th scope="col" class="d-none d-md-table-cell">{% translate "Alliance Tax" %}</th>
-                                <th scope="col">{% translate "Amount to pay in Isk" %}</th>
+                                <th scope="col">{% translate "Amount to pay in ISK" %}</th>
                                 <th scope="col">{% translate "Month" %}</th>
                                 <th scope="col">{% translate "Reason" %}</th>
-                                <th scope="col">{% translate "Payed" %}</th>
+                                <th scope="col">{% translate "Paid" %}</th>
                             </tr>
                         </thead>
 
@@ -88,10 +88,10 @@
                                     <td data-order="{% if data.payed %}1{% else %}0{% endif %}">
                                         {% if data.payed %}
                                             <i class="fa-solid fa-check text-success"></i>
-                                            <span class="visually-hidden">{% translate "Payed" %}</span>
+                                            <span class="visually-hidden">{% translate "Paid" %}</span>
                                         {% else %}
                                             <i class="fa-solid fa-xmark text-danger"></i>
-                                            <span class="visually-hidden">{% translate "Not payed" %}</span>
+                                            <span class="visually-hidden">{% translate "Not paid" %}</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -127,9 +127,7 @@
     {% sri_static "eos_tax/js/overview.js" %}
 {% endblock %}
 
-{% block extra_css %}
+{% block eos_tax_css %}
     {% include "bundles/datatables-2-css-bs5.html" %}
 {% endblock %}
 
-{% block extra_script %}
-{% endblock %}

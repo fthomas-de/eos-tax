@@ -7,6 +7,12 @@ from django.urls import reverse
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 
 from eos_tax.db.palette import _chart_palette
+from eos_tax.db.statistics import (
+    CHART_COLOURS,
+    CHART_DASHES,
+    _colour_count,
+    get_statistics_series,
+)
 from eos_tax.models import MonthlyTax, TaxConfiguration
 from eos_tax.util import get_amount_to_pay
 
@@ -83,6 +89,35 @@ def configure(blacklist=()):
     )
 
     return config
+
+
+class TestLineStyles(EosTaxTestCase):
+    """Past eight corporations the line style carries part of the identity.
+
+    The palette used to hold one colour per corporation, so the style index
+    was always 0 and every line was solid however many there were.
+    """
+
+    def test_should_keep_to_eight_colours_while_the_styles_last(self):
+        self.assertEqual(_colour_count(1), CHART_COLOURS)
+        self.assertEqual(_colour_count(24), CHART_COLOURS)
+        # past three styles of eight, more colours rather than repeats
+        self.assertEqual(_colour_count(30), 10)
+
+    def test_should_dash_the_ninth_corporation(self):
+        taxed = create_alliance(TAXED_ALLIANCE_ID, "Taxed Alliance")
+        for index in range(9):
+            corp_id = 98100000 + index
+            create_corporation(corp_id, f"Corp {index}", taxed)
+            create_tax_row(corp_id, f"Corp {index}", month=1)
+        configure()
+
+        series = {corp["name"]: corp for corp in get_statistics_series(YEAR)}
+
+        self.assertEqual(series["Corp 0"]["dash"], CHART_DASHES[0])
+        self.assertEqual(series["Corp 8"]["dash"], CHART_DASHES[1])
+        # the same hue comes back, told apart by the style
+        self.assertEqual(series["Corp 8"]["color"], series["Corp 0"]["color"])
 
 
 class TestChartPalette(EosTaxTestCase):
@@ -222,18 +257,18 @@ class TestStatisticsData(EosTaxTestCase):
         into that slot, or every filter change would recolour the chart.
         """
         before = {
-            corp["name"]: corp["color_light"] for corp in self.payload()["series"]
+            corp["name"]: corp["color"] for corp in self.payload()["series"]
         }
 
         configure(blacklist=[BRAVO_CORP_ID])
-        after = {corp["name"]: corp["color_light"] for corp in self.payload()["series"]}
+        after = {corp["name"]: corp["color"] for corp in self.payload()["series"]}
 
         self.assertNotIn("Bravo Corp", after)
         self.assertEqual(after["Alpha Corp"], before["Alpha Corp"])
         self.assertNotEqual(after["Alpha Corp"], before["Bravo Corp"])
 
     def test_should_give_neighbouring_corporations_different_colours(self):
-        colours = [corp["color_light"] for corp in self.payload()["series"]]
+        colours = [corp["color"] for corp in self.payload()["series"]]
 
         self.assertEqual(len(colours), len(set(colours)))
 
@@ -335,7 +370,7 @@ class TestStatisticsPage(EosTaxTestCase):
         the viewer's locale and printed commas on an English browser."""
         source = read_statistics_js()
 
-        self.assertIn("function billions(", source)
+        self.assertIn("function compact(", source)
         self.assertNotIn("Intl.NumberFormat", source)
 
     def test_should_load_the_script_as_a_static_file(self):
@@ -358,7 +393,7 @@ class TestStatisticsPage(EosTaxTestCase):
         """A multi line {# #} is not a comment in Django - it renders as text."""
         response = self.client.get(reverse("eos_tax:statistics"))
 
-        self.assertNotContains(response, "the legend doubles as the table view")
+        self.assertNotContains(response, "The legend doubles as the table view")
         self.assertNotContains(response, "{#")
 
     def test_should_show_an_empty_state_without_any_data(self):

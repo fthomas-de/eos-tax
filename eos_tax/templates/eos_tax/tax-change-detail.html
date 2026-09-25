@@ -60,7 +60,7 @@
                         <ul class="mb-0">
                             {% for step in detail.steps %}
                                 <li>
-                                    {% blocktranslate with on=step.on before=step.from_percent|floatformat:"-2" after=step.to_percent|floatformat:"-2" systems=step.systems %}On {{ on }} the share moved from {{ before }} percent to {{ after }} percent, across {{ systems }} systems.{% endblocktranslate %}
+                                    {% blocktranslate with on=step.on before=step.from_percent|floatformat:"-2" after=step.to_percent|floatformat:"-2" count counter=step.systems %}On {{ on }} the share moved from {{ before }} percent to {{ after }} percent, in {{ counter }} system.{% plural %}On {{ on }} the share moved from {{ before }} percent to {{ after }} percent, across {{ counter }} systems.{% endblocktranslate %}
                                 </li>
                             {% endfor %}
                         </ul>
@@ -85,22 +85,6 @@
 
 {% endblock %}
 
-{% block extra_css %}
-    <style>
-        .eos-tax-chart-frame {
-            position: relative;
-            height: 360px;
-        }
-
-        @media (max-width: 767.98px) {
-            .eos-tax-chart-frame {
-                height: 55vh;
-                min-height: 280px;
-                max-height: 420px;
-            }
-        }
-    </style>
-{% endblock %}
 
 {% block extra_javascript %}
     {% include "bundles/chart-js.html" %}

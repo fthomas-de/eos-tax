@@ -80,7 +80,7 @@ class TaxConfiguration(SingletonModel):
         help_text=_(
             "Match payments by their reason code instead of by amount alone. "
             "Without it a payment is recognised by its amount only, so two "
-            "Corporations owing the same sum, or one Corporation owing the "
+            "corporations owing the same sum, or one corporation owing the "
             "same sum twice, cannot be told apart."
         ),
     )
@@ -143,7 +143,7 @@ class TaxConfiguration(SingletonModel):
         default=8,
         validators=[MinValueValidator(1), MaxValueValidator(23)],
         help_text=_(
-            "How many hours of the day count as the Corporation's busy window. "
+            "How many hours of the day count as the corporation's busy window. "
             "A character spread evenly over the clock lands on this share of "
             "any window, which is the floor the score measures down to."
         ),
@@ -162,7 +162,7 @@ class TaxConfiguration(SingletonModel):
         default=40,
         validators=[MinValueValidator(1), MaxValueValidator(10000)],
         help_text=_(
-            "How many payouts have to be left in the Corporation once the "
+            "How many payouts have to be left in the corporation once the "
             "character's own are taken out. Below this there is no rhythm to "
             "compare against, only noise, and the character is not scored."
         ),
@@ -172,10 +172,10 @@ class TaxConfiguration(SingletonModel):
         default=True,
         help_text=_(
             "A character flat enough to be listed is also part of their "
-            "Corporation's day, and drags it flat with them - which makes "
+            "corporation's day, and drags it flat with them - which makes "
             "everybody else look ordinary. With this on the reading runs "
             "twice: once to find them, once with them taken out. A "
-            "Corporation that would fall below the floor above keeps the "
+            "corporation that would fall below the floor above keeps the "
             "plain figure."
         ),
     )
@@ -185,9 +185,9 @@ class TaxConfiguration(SingletonModel):
         validators=[MinValueValidator(0), MaxValueValidator(100)],
         help_text=_(
             "In percentage points. How much flatter than the rest of their "
-            "Corporation a character has to be before the list mentions them. "
+            "corporation a character has to be before the list mentions them. "
             "A negative difference means more concentrated than the "
-            "Corporation, which is the opposite of what this looks for, so "
+            "corporation, which is the opposite of what this looks for, so "
             "those are never listed whatever this says."
         ),
     )
@@ -206,7 +206,7 @@ class TaxConfiguration(SingletonModel):
         default=True,
         help_text=_(
             "The same for this reading: a character far enough from their "
-            "Corporation to be listed also pulls the Corporation's own middle "
+            "corporation to be listed also pulls the corporation's own middle "
             "of the day towards themselves, which shortens everybody else's "
             "distance."
         ),
@@ -216,7 +216,7 @@ class TaxConfiguration(SingletonModel):
         default=3,
         validators=[MinValueValidator(0), MaxValueValidator(12)],
         help_text=_(
-            "In hours. How far from their Corporation a character's day has "
+            "In hours. How far from their corporation a character's day has "
             "to sit before the list mentions them. A third of the scale above "
             "is where the colouring stops calling a distance unremarkable, so "
             "a threshold under that lets green rows into the list."
@@ -236,9 +236,23 @@ class TaxConfiguration(SingletonModel):
         default=40,
         validators=[MinValueValidator(1), MaxValueValidator(10000)],
         help_text=_(
-            "How many payouts have to be left in the Corporation once the "
+            "How many payouts have to be left in the corporation once the "
             "character's own are taken out, before its middle of the day is "
             "worth comparing against."
+        ),
+    )
+    bot_clock_min_concentration = models.PositiveSmallIntegerField(
+        verbose_name=_("Least concentrated day with a middle"),
+        default=12,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text=_(
+            "In percent. How closely the payouts have to gather around one "
+            "time of day before that day has a middle: 100 when all of them "
+            "fall into one hour, 0 for a day spread perfectly evenly. A day "
+            "spread evenly over twelve hours comes out at 64, over sixteen at "
+            "42, over twenty at 19. Below this - for the character or the "
+            "rest of their corporation - the middle would be wherever the "
+            "rounding put it, so the character is left out of this reading."
         ),
     )
     bot_hours_min_entries = models.PositiveSmallIntegerField(
@@ -267,7 +281,7 @@ class TaxConfiguration(SingletonModel):
         default=12,
         validators=[MinValueValidator(1), MaxValueValidator(31)],
         help_text=_(
-            "A character is listed once it exceeds this many suspicious days "
+            "A character is listed once it reaches this many suspicious days "
             "within the selected month."
         ),
     )
@@ -347,7 +361,7 @@ class MonthlyTax(models.Model):
     corp_name = models.CharField(verbose_name=_("Corporation name"), max_length=254, blank=True, default='')
     tax_value = models.BigIntegerField(verbose_name=_("Tax value"), blank=False, default=0)
     tax_percentage = models.FloatField(verbose_name=_("Tax percentage"), blank=False, default=0)
-    payed = models.BooleanField(verbose_name=_("Payed"), default=False)
+    payed = models.BooleanField(verbose_name=_("Paid"), default=False)
     class Meta:
         constraints = [
             # set_corp_tax already assumes one row per corporation and month;

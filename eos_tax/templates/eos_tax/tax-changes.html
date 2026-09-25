@@ -124,9 +124,10 @@
             {% endif %}
 
             <div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
-                <span>{% blocktranslate with value=stats.corporations %}{{ value }} corporations examined{% endblocktranslate %}</span>
-                <span>{% blocktranslate with changes=stats.changes corporations=stats.flagged %}{{ changes }} changes in {{ corporations }} corporations{% endblocktranslate %}</span>
-                <span>{% blocktranslate with value=stats.payouts|intcomma %}{{ value }} payouts{% endblocktranslate %}</span>
+                <span>{% blocktranslate count counter=stats.corporations %}{{ counter }} corporation examined{% plural %}{{ counter }} corporations examined{% endblocktranslate %}</span>
+                <span>{% blocktranslate count counter=stats.changes %}{{ counter }} change{% plural %}{{ counter }} changes{% endblocktranslate %}</span>
+                <span>{% blocktranslate count counter=stats.flagged %}{{ counter }} corporation that changed{% plural %}{{ counter }} corporations that changed{% endblocktranslate %}</span>
+                <span>{% blocktranslate with value=stats.payouts|intcomma count counter=stats.payouts %}{{ value }} payout{% plural %}{{ value }} payouts{% endblocktranslate %}</span>
 
                 <span class="ms-auto">
                     {% translate "total" %} <strong>{{ stats.seconds|floatformat:2 }}&nbsp;s</strong>
@@ -145,6 +146,6 @@
     {% sri_static "eos_tax/js/tax-changes.js" %}
 {% endblock %}
 
-{% block extra_css %}
+{% block eos_tax_css %}
     {% include "bundles/datatables-2-css-bs5.html" %}
 {% endblock %}

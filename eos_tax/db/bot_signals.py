@@ -14,7 +14,7 @@ Corporation usually sits in one timezone, and in the journal one of them puts
 """
 
 import time
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 from math import atan2, cos, pi, sin
 
 from allianceauth.eveonline.models import EveCorporationInfo
@@ -29,11 +29,6 @@ from eos_tax.db.shared import (
     grouped,
     level_for,
 )
-
-# the two helpers live in shared now, because the hour thresholds group and
-# band their rows the same way; the local names stay so nothing else moves
-_grouped = grouped
-_level = level_for
 from eos_tax.util import format_clock, format_duration
 
 logger = get_extension_logger(__name__)
@@ -69,23 +64,35 @@ def _payouts(year: int, month: int):
         return {}
 
     start, end = _month_range(year, month)
+    # A row without a second party names nobody - the hour thresholds in
+    # bots.py drop it the same way, and a None key here would become a
+    # "character" holding every orphaned payout of the month.
     rows = CorporationWalletJournalEntry.objects.filter(
         ref_type__in=config.tax_types,
         tax_receiver_id__in=corp_ids,
         date__gte=start,
         date__lt=end,
+        second_party_id__isnull=False,
     ).values("second_party_id", "tax_receiver_id", "date")
 
     characters = {}
     for row in rows:
         character = characters.setdefault(
             row["second_party_id"],
-            {"corp_id": row["tax_receiver_id"], "moments": []},
+            {"corp_id": row["tax_receiver_id"], "moments": [], "latest": None},
         )
         character["moments"].append(row["date"])
 
+        # A character who moved Corporations during the month counts with the
+        # last one. Whichever row the unordered query happened to return first
+        # put them into a different Corporation from one page load to the next.
+        if character["latest"] is None or row["date"] > character["latest"]:
+            character["latest"] = row["date"]
+            character["corp_id"] = row["tax_receiver_id"]
+
     for character in characters.values():
         character["moments"].sort()
+        del character["latest"]
 
     return characters
 
@@ -112,13 +119,20 @@ def _longest_run(moments, max_gaps: int, tolerance: int, ceiling: int):
     ceiling - is an interruption the stretch survives while it has allowance
     left; that is what keeps a daily downtime from cutting a night in half.
     Anything past the ceiling ends it regardless.
+
+    An interruption beyond the allowance does not start from scratch: the
+    stretch gives up its oldest interruption and the ticks before it, and
+    keeps the rest. Starting over threw away the ticks between the last two
+    interruptions, so 2 + 15 + 15 ticks with one allowed came out as 17
+    rather than the 30 the last two blocks make together.
     """
     if not moments:
         return {"ticks": 0, "gaps": 0, "start": None, "end": None}
 
     best = {"ticks": 0, "gaps": 0, "start": None, "end": None}
     start = 0
-    gaps = 0
+    # the first tick after each interruption inside the current stretch
+    interruptions = deque()
 
     def remember(first, last, used):
         if last - first + 1 > best["ticks"]:
@@ -135,15 +149,25 @@ def _longest_run(moments, max_gaps: int, tolerance: int, ceiling: int):
         if minutes <= tolerance:
             continue
 
-        if minutes <= ceiling and gaps < max_gaps:
-            gaps += 1
+        if minutes <= ceiling:
+            if len(interruptions) < max_gaps:
+                interruptions.append(index)
+                continue
+
+            remember(start, index - 1, len(interruptions))
+
+            if interruptions:
+                start = interruptions.popleft()
+                interruptions.append(index)
+            else:
+                start = index
             continue
 
-        remember(start, index - 1, gaps)
+        remember(start, index - 1, len(interruptions))
         start = index
-        gaps = 0
+        interruptions.clear()
 
-    remember(start, len(moments) - 1, gaps)
+    remember(start, len(moments) - 1, len(interruptions))
 
     return best
 
@@ -351,8 +375,20 @@ def get_clock_detail(character_id: int, year: int, month: int):
             "payouts": len(entry["moments"]),
         }
 
-    middle = _typical_hour(own)
-    corp_middle = _typical_hour(rest)
+    concentration = config.bot_clock_min_concentration / 100
+    middle = _typical_hour(own, concentration)
+    corp_middle = _typical_hour(rest, concentration)
+
+    if middle is None or corp_middle is None:
+        return {
+            "series": _hour_series(own, rest),
+            "middle": None,
+            # which of the two days is too flat, so the page can say so
+            # instead of claiming the Corporation is missing
+            "flat": "character" if middle is None else "corporation",
+            "payouts": len(entry["moments"]),
+        }
+
     apart = _clock_distance(middle, corp_middle)
 
     return {
@@ -416,7 +452,7 @@ def get_unbroken_runs(year: int, month: int, min_ticks: int = None,
             # against the threshold rather than against a number I
             # invented, and only reaching it counts as strong - the fallback
             # list is made of runs that did not
-            "level": _level(
+            "level": level_for(
                 run["ticks"] / min_ticks if min_ticks else 0, top=1.0
             ),
         }
@@ -438,7 +474,7 @@ def get_unbroken_runs(year: int, month: int, min_ticks: int = None,
             longest, key=lambda row: (-row["ticks"], row["character_name"])
         ))
 
-    groups, total = _grouped(rows or fallback)
+    groups, total = grouped(rows or fallback)
 
     return {
         "rows": rows,
@@ -634,7 +670,7 @@ def _profile_rows(characters, corp_hours, names, corp_names, config,
             "difference": round((window["share"] - share) * 100),
             "payouts": len(entry["moments"]),
             "hours_used": len(hours),
-            "level": _level(max(0.0, min(1.0, score))),
+            "level": level_for(max(0.0, min(1.0, score))),
         })
 
     rows.sort(key=lambda row: (-row["difference"], row["character_name"]))
@@ -697,7 +733,7 @@ def get_daily_profile(year: int, month: int):
     # falls back. Cut to ten mains, not ten rows - see group_limited_rows
     fallback = group_limited_rows(rows) if not listed else []
 
-    groups, total = _grouped(listed or fallback)
+    groups, total = grouped(listed or fallback)
 
     return {
         "rows": listed,
@@ -713,6 +749,8 @@ def get_daily_profile(year: int, month: int):
             "characters": len(characters),
             "corporations": len(corporations),
             "measured_characters": len(rows),
+            # the rows on screen, in characters like the figure beside it
+            "listed_characters": len(listed or fallback),
             "busy_hours": config.bot_rhythm_busy_hours,
             "min_payouts": config.bot_rhythm_min_payouts,
             "corp_min_payouts": config.bot_rhythm_corp_min_payouts,
@@ -723,12 +761,23 @@ def get_daily_profile(year: int, month: int):
     }
 
 
-def _typical_hour(hours):
+def _typical_hour(hours, min_concentration: float = 0.0):
     """The middle of someone's day, averaged the way a clock wraps.
 
     Not the busiest hour: out of a dozen payouts the busiest hour is wherever
     the noise landed, and it flips on a single tick. This uses every payout,
     and it treats 23:00 and 01:00 as two hours apart rather than twenty-two.
+
+    An hour bucket stands for its middle, not its start: payouts at 14:05 and
+    14:55 average to half past, and reading the bucket as 14:00 put every
+    middle of a day half an hour early.
+
+    None as well when the day has no middle to speak of. The average of a day
+    spread evenly round the clock is a direction of length nearly zero, and
+    its angle is noise: 24 equal hours land on some hour or other from
+    rounding alone, and one extra payout at 03:00 drags it there.
+    `min_concentration` is that length as a share of the payouts - 1 when
+    every payout sits in one hour, 0 for a perfectly flat day.
     """
     total = sum(hours.values())
 
@@ -736,8 +785,11 @@ def _typical_hour(hours):
         return None
 
     angle = 2 * pi / 24
-    east = sum(count * cos(hour * angle) for hour, count in hours.items())
-    north = sum(count * sin(hour * angle) for hour, count in hours.items())
+    east = sum(count * cos((hour + 0.5) * angle) for hour, count in hours.items())
+    north = sum(count * sin((hour + 0.5) * angle) for hour, count in hours.items())
+
+    if (east ** 2 + north ** 2) ** 0.5 / total < min_concentration:
+        return None
 
     return (atan2(north, east) / angle) % 24
 
@@ -760,6 +812,7 @@ def _clock_rows(characters, corp_hours, names, corp_names, config,
     min_payouts = config.bot_clock_min_payouts
     corp_min = config.bot_clock_corp_min_payouts
     max_apart = config.bot_clock_max_apart
+    concentration = config.bot_clock_min_concentration / 100
 
     rows = []
     corporations = set()
@@ -787,10 +840,15 @@ def _clock_rows(characters, corp_hours, names, corp_names, config,
         if not rest:
             continue
 
-        corporations.add(corp_id)
-        middle = _typical_hour(hours)
-        corp_middle = _typical_hour(rest)
+        middle = _typical_hour(hours, concentration)
+        corp_middle = _typical_hour(rest, concentration)
 
+        # a day without a middle has no distance to anybody's; left out
+        # rather than given the random one its rounding would produce
+        if middle is None or corp_middle is None:
+            continue
+
+        corporations.add(corp_id)
         apart = _clock_distance(middle, corp_middle)
 
         rows.append({
@@ -807,7 +865,7 @@ def _clock_rows(characters, corp_hours, names, corp_names, config,
             "payouts": len(entry["moments"]),
             # a smaller scale than the full twelve hours makes the top of it
             # reachable, so the ratio is capped rather than allowed past one
-            "level": _level(min(1.0, apart / max_apart)),
+            "level": level_for(min(1.0, apart / max_apart)),
         })
 
     # a wider gap first, and among equal gaps the better evidenced row - the
@@ -870,7 +928,7 @@ def get_clock_offset(year: int, month: int):
     # cut to ten mains, not ten rows - see group_limited_rows
     fallback = group_limited_rows(rows) if not listed else []
 
-    groups, total = _grouped(listed or fallback)
+    groups, total = grouped(listed or fallback)
 
     return {
         "rows": listed,
@@ -886,6 +944,8 @@ def get_clock_offset(year: int, month: int):
             "characters": len(characters),
             "corporations": len(corporations),
             "measured_characters": len(rows),
+            # the rows on screen, in characters like the figure beside it
+            "listed_characters": len(listed or fallback),
             "min_payouts": config.bot_clock_min_payouts,
             "corp_min_payouts": config.bot_clock_corp_min_payouts,
             "max_apart": config.bot_clock_max_apart,

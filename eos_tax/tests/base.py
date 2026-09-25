@@ -11,6 +11,8 @@ harness rather than a defect in the app. The cache is switched off here instead
 of being cleared in every ``setUp``.
 """
 
+import html
+import json
 import pathlib
 
 from django.test import TestCase, override_settings
@@ -35,3 +37,43 @@ def read_static(name):
     path = pathlib.Path(eos_tax.__file__).parent / "static/eos_tax/js" / name
 
     return path.read_text(encoding="utf-8")
+
+
+def json_script(body, element_id):
+    """The value of a `{{ x|json_script:"..." }}` element, parsed as JSON.
+
+    Parsed rather than grepped: a chart's data attribute can hold the right
+    characters as a substring of something else entirely, and a `canvas`
+    with an empty script beside it is a chart that stays blank without the
+    server ever finding out. Three modules carried their own copy of this.
+    """
+    marker = f'id="{element_id}"'
+    parts = body.split(marker, 1)
+    assert len(parts) == 2, f"no element with {marker} in the page"
+
+    raw = parts[1].split(">", 1)[1].split("</script>", 1)[0]
+
+    return json.loads(html.unescape(raw))
+
+
+def read_stylesheet():
+    """The app's one stylesheet - the rules that used to sit in <style>
+    blocks of their own templates."""
+    path = pathlib.Path(eos_tax.__file__).parent / "static/eos_tax/css/eos_tax.css"
+
+    return path.read_text(encoding="utf-8")
+
+
+def table_body(response):
+    """The rows of the first table on a page, as markup.
+
+    Alliance Auth's sidebar prints the main's Corporation before the
+    content, so a name asserted against the whole page is found there
+    whatever the table holds - every test user sits in a Corporation.
+    """
+    body = response.content.decode()
+
+    if "<tbody>" not in body:
+        return ""
+
+    return body.split("<tbody>", 1)[1].split("</tbody>", 1)[0]

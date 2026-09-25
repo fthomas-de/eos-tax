@@ -126,25 +126,28 @@ class TestEveJargon(EosTaxTestCase):
     so Personnage legitimately appears on a French page and no assertion about
     the page can tell the two apart.
 
-    Character is not in the list: all six translate it in prose while the
-    column label stays English, which is consistent enough across the
-    catalogues to be a decision rather than a slip.
+    Character is in the list as well. It used to be left out on the claim
+    that all six catalogues translate it in prose; in fact about ninety
+    entries kept it English and seven used the local word, and the rule is
+    English in every language, lower case in running text.
     """
 
     # what each language reaches for when it forgets the rule
     FORBIDDEN = {
         "de": {"bounty": r"Kopfgeld\w*", "Corporation": r"Korporation\w*",
-               "Alliance": r"B[üu]ndnis\w*"},
+               "Alliance": r"B[üu]ndnis\w*", "Character": r"\bCharakter\w*"},
         "es": {"bounty": r"recompensa\w*", "Corporation": r"[Cc]orporaci[óo]n\w*",
                "Alliance": r"[Aa]lianza\w*", "kill": r"\bmuertes\b",
-               "wallet": r"\bcartera\b"},
-        "fr_FR": {"bounty": r"\bprimes?\b", "wallet": r"\bportefeuille\b"},
+               "wallet": r"\bcartera\b", "Character": r"\b[Pp]ersonaje\w*"},
+        "fr_FR": {"bounty": r"\bprimes?\b", "wallet": r"\bportefeuille\b",
+                  "Character": r"\b[Pp]ersonnage\w*"},
         "it_IT": {"bounty": r"\btaglie?\b", "Corporation": r"corporazion\w*",
-                  "Alliance": r"alleanz\w*"},
+                  "Alliance": r"alleanz\w*", "Character": r"\b[Pp]ersonagg\w*"},
         "ko_KR": {"bounty": r"현상금", "Corporation": r"코퍼레이션",
-                  "Reason": r"사유", "wallet": r"지갑"},
+                  "Reason": r"사유", "wallet": r"지갑", "Character": r"캐릭터"},
         "ru": {"bounty": r"наград\w*", "Corporation": r"корпораци\w*",
-               "Reason": r"назначение платежа", "wallet": r"кошел\w*"},
+               "Reason": r"назначение платежа", "wallet": r"кошел\w*",
+               "Character": r"[Пп]ерсонаж\w*"},
     }
 
     def test_should_never_translate_eve_jargon(self):

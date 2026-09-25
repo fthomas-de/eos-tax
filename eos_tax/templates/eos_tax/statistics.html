@@ -111,8 +111,7 @@
                     wrapped the four figures into ragged lines of one and three.
                 {% endcomment %}
                 <div id="eos-tax-figures"
-                     class="d-grid d-md-flex flex-md-wrap gap-2 gap-md-3 small mt-4 pt-3 border-top text-body-secondary"
-                     style="grid-template-columns: repeat(2, 1fr);"></div>
+                     class="eos-tax-figures d-grid d-md-flex flex-md-wrap gap-2 gap-md-3 small mt-4 pt-3 border-top text-body-secondary"></div>
             {% else %}
                 <div class="alert alert-warning text-center">
                     {% translate "No tax data recorded yet." %}
@@ -123,44 +122,6 @@
 
 {% endblock %}
 
-{% block extra_css %}
-    <style>
-        .eos-tax-chart-frame {
-            position: relative;
-            height: 360px;
-        }
-
-        /* Only while the legend sits beside the chart does it have to match
-           its height. The columns break at xl, so the cap belongs there. */
-        @media (min-width: 1200px) {
-            .eos-tax-legend-frame {
-                max-height: 360px;
-                overflow-y: auto;
-            }
-        }
-
-        /* On a phone the chart keeps its height while losing two thirds of
-           its width, so it takes viewport height instead of a desktop pixel
-           count. */
-        @media (max-width: 767.98px) {
-            .eos-tax-chart-frame {
-                height: 55vh;
-                min-height: 280px;
-                max-height: 420px;
-            }
-        }
-
-        /* the swatch repeats the line style, so hue is never the only cue */
-        .eos-tax-swatch {
-            display: inline-block;
-            width: 1.5rem;
-            border-top-width: 3px;
-            border-top-color: var(--eos-tax-swatch-color);
-            border-top-style: var(--eos-tax-swatch-style, solid);
-            vertical-align: middle;
-        }
-    </style>
-{% endblock %}
 
 {% block extra_javascript %}
     {% include "bundles/chart-js.html" %}
@@ -170,5 +131,3 @@
     {% sri_static "eos_tax/js/statistics.js" %}
 {% endblock %}
 
-{% block extra_script %}
-{% endblock %}

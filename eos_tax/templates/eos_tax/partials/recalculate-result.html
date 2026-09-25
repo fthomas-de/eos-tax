@@ -12,11 +12,11 @@
             </li>
             {% for row in breakdown.by_type %}
                 <li>
-                    {% blocktranslate with type=row.ref_type count=row.count sum=row.sum %}{{ type }}: {{ count }} entries, {{ sum }} ISK{% endblocktranslate %}
+                    {% blocktranslate with type=row.ref_type sum=row.sum count counter=row.count %}{{ type }}: {{ counter }} entry, {{ sum }} ISK{% plural %}{{ type }}: {{ counter }} entries, {{ sum }} ISK{% endblocktranslate %}
                 </li>
             {% endfor %}
             <li>
-                {% blocktranslate with count=breakdown.entries_considered value=breakdown.tax_value %}Sum of all tax types, {{ count }} entries: {{ value }} ISK{% endblocktranslate %}
+                {% blocktranslate with value=breakdown.tax_value count counter=breakdown.entries_considered %}Sum of all tax types, {{ counter }} entry: {{ value }} ISK{% plural %}Sum of all tax types, {{ counter }} entries: {{ value }} ISK{% endblocktranslate %}
             </li>
             <li>
                 {% blocktranslate with rate=breakdown.corp_tax_percent %}Corporation's ingame tax rate: {{ rate }}%{% endblocktranslate %}
@@ -49,6 +49,8 @@
             {% blocktranslate with corp=breakdown.corp_name %}{{ corp }} has no ingame tax rate on file yet - it has never been pulled from ESI.{% endblocktranslate %}
         {% elif breakdown.reason == "no_entries" %}
             {% blocktranslate with corp=breakdown.corp_name month=breakdown.month year=breakdown.year %}{{ corp }} has no journal entries of the configured tax types for {{ month }}/{{ year }}.{% endblocktranslate %}
+        {% elif breakdown.reason == "no_alliance_rate" %}
+            {% blocktranslate with month=breakdown.month year=breakdown.year %}The alliance tax rate for {{ month }}/{{ year }} is 0, so nothing is owed and no row is written.{% endblocktranslate %}
         {% else %}
             {% translate "Nothing could be calculated for this selection." %}
         {% endif %}

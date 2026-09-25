@@ -4,18 +4,39 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-09-14.
+Last updated 2026-09-25.
 
 ## Release
 
-- Version **0.3.1** in `eos_tax/__init__.py`; `[0.3.0]` is committed,
-  `[0.3.1]` is the running section
-- Migrations **0011-0018** are written and applied
-- Catalogues complete: six languages, nothing empty, nothing fuzzy
-- 406 tests green, `makemigrations --check` clean, `collectstatic` run
-- `CHANGELOG.md`: `[0.2.2]`-`[0.2.6]` were split out retroactively by diffing
-  each version's own changelog out of git; `[0.3.0]`/`[0.3.1]` were split at
-  the commit that actually raised the version in between
+- Version **0.3.7** in `eos_tax/__init__.py`, **not committed** - the review
+  and the translation round of 2026-09-25 sit in the working tree, under
+  `[0.3.7]` in `CHANGELOG.md`
+- Migrations **0001-0020** applied to `aa_dev`, including **0020**
+  (`bot_clock_min_concentration`, default 12, and the help text updates)
+- 463 tests, all green. `python runtests.py eos_tax` on testauth gives the
+  same result
+- All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
+  complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
+  `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
+  consistently in every place it occurs now, including `settings.html`
+- `CHANGELOG.md` is newest first; `[0.3.2]` and `[0.3.6]` were written from
+  the commits that raised those versions
+
+## Decisions of the 2026-09-25 review
+
+- **Paid is never taken back.** Once a row is marked paid no write may
+  clear it; `set_corp_tax` only ever adds the flag.
+- Recalculate keeps checking a payment against the stored amount before it
+  recalculates - not changed on purpose.
+- The DEBUG line in `help.html` ("This should say Invidia Administrative")
+  stays, on the user's call.
+- The blacklist is left as it is: corporations on it still get rows from
+  the task.
+- A month with alliance rate 0 gets no row.
+- The day threshold on "Hours per day" counts once reached (`>=`).
+- A character who moved counts with the last Corporation of the month.
+- `bot_clock_min_concentration` defaults to **12** (2026-09-25, the user's
+  own call, migration 0020 regenerated with it before it was ever applied).
 
 ## The bots page
 
@@ -55,7 +76,7 @@ alts from Alliance Auth, without assessments.
 
 ## Open
 
-1. Nothing is blocked. The four points that were open on 2026-09-14 are done:
+1. Before 2026-09-25: nothing was blocked. The four points that were open on 2026-09-14 are done:
    the two list thresholds were lowered to 0 pp and 3 h, the empty audit and
    division the seed left behind in corptools were removed, and the list links
    now keep the tab the reader is on.

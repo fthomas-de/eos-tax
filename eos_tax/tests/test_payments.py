@@ -22,6 +22,7 @@ from eos_tax.db.payments import (
     get_open_payment_count,
     get_website_data,
     is_payable,
+    set_corp_tax,
     update_corp,
 )
 from eos_tax.models import MonthlyTax, TaxConfiguration, TaxRate
@@ -240,6 +241,78 @@ class TestUpdateCorpRepeatedRuns(PaymentsTestCase):
         row = self.row()
         self.assertTrue(row.payed)
         self.assertEqual(row.tax_value, 700_000_000)
+
+
+class TestUpdateCorpRounding(PaymentsTestCase):
+    def test_should_round_the_amount_rather_than_cut_it_off(self):
+        """0.07 * 100 is 7.000000000000001 in floating point, and cutting
+        the result off made 7M ISK at 7 % corp tax and 10 % alliance tax
+        come out as 9,999,999 instead of 10,000,000."""
+        corporation = EveCorporationInfo.objects.get(corporation_id=CORP_ID)
+        corporation.tax_rate = 0.07
+        corporation.save()
+        self.config.tax_rate = Decimal("0.1")
+        self.config.save()
+        self.bounty(7_000_000, day=10)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(self.row().amount_to_pay, 10_000_000)
+        self.assertEqual(breakdown["gross_income"], 100_000_000)
+        # and the log shows the rate as it was set, without the float noise
+        self.assertEqual(breakdown["corp_tax_percent"], 7.0)
+
+
+class TestUpdateCorpWithoutAllianceTax(PaymentsTestCase):
+    def setUp(self):
+        super().setUp()
+        self.config.tax_rate = Decimal("0")
+        self.config.save()
+        self.bounty(500_000_000, day=10)
+
+    def test_should_not_write_a_row_for_a_month_that_owes_nothing(self):
+        """A 0 ISK row can never be matched by a payment, so it sat in the
+        menu badge as outstanding for good."""
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertFalse(
+            MonthlyTax.objects.filter(corp_id=CORP_ID, month=MONTH, year=YEAR).exists()
+        )
+        self.assertEqual(breakdown["reason"], "no_alliance_rate")
+
+    def test_should_leave_an_existing_row_alone(self):
+        """It may carry a payment already; deleting it would lose that."""
+        create_tax_row(
+            CORP_ID, "Bravo Corp", payed=True, tax_value=1, tax_percentage=10.0,
+            month=MONTH, year=YEAR, alliance_tax_rate=0.15,
+        )
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        row = self.row()
+        self.assertTrue(row.payed)
+        self.assertEqual(row.tax_value, 1)
+
+
+class TestPaidIsNeverTakenBack(PaymentsTestCase):
+    """Once a row is paid it stays paid, whatever a later run finds."""
+
+    def test_should_keep_paid_when_the_caller_says_otherwise(self):
+        """set_corp_tax is the one writer of the flag; asked to write
+        False over a paid row - a recalculation after a rate correction
+        finds no payment of the new amount - it keeps the payment."""
+        create_tax_row(
+            CORP_ID, "Bravo Corp", payed=True, tax_value=1, tax_percentage=10.0,
+            month=MONTH, year=YEAR, alliance_tax_rate=0.15,
+        )
+
+        set_corp_tax(
+            corp_id=CORP_ID, corp_name="Bravo Corp", tax_value=5_000_000,
+            tax_percentage=10.0, month=MONTH, year=YEAR, payed=False,
+            alliance_tax_rate=0.2,
+        )
+
+        self.assertTrue(self.row().payed)
 
 
 class TestUpdateCorpYearRollover(PaymentsTestCase):

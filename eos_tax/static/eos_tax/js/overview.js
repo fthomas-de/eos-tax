@@ -1,7 +1,7 @@
 /* The overview table: copy buttons and DataTables.
  *
- * Loaded from index.html, which hands over the translated strings through
- * window.eosTax.overview - a .js file cannot reach {% translate %}.
+ * Loaded from index.html, which hands over the translated strings as
+ * json_script "eos-tax-config" - a .js file cannot reach {% translate %}.
  */
 document.addEventListener("DOMContentLoaded", function () {
     /* global ClipboardJS, DataTable */

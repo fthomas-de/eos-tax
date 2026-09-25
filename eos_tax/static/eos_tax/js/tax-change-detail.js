@@ -1,8 +1,7 @@
 /* The daily curve behind one Corporation's ingame tax rate.
  *
  * Loaded from tax-change-detail.html, which hands over the translated strings
- * through window.eosTax.taxChangeDetail - a .js file cannot reach
- * {% translate %}.
+ * as json_script "eos-tax-config" - a .js file cannot reach {% translate %}.
  */
 document.addEventListener("DOMContentLoaded", function () {
     /* global Chart */
@@ -20,6 +19,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const series = JSON.parse(document.querySelector("#eos-tax-series").textContent);
     const narrow = window.matchMedia("(max-width: 767.98px)");
     const style = window.getComputedStyle(document.body);
+    // trimmed, with a fallback, the way bot-charts.js reads it: the raw
+    // custom property carries a leading space and is empty on a theme that
+    // does not set it, and Chart.js then draws the line in its default grey,
+    // which on Darkly all but vanishes against the card
+    const accent = style.getPropertyValue("--bs-primary").trim() || "#375a7f";
 
     new Chart(canvas, {
         type: "line",
@@ -29,8 +33,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 // one series, so no legend box - the card title names it
                 label: labels.axis,
                 data: series.map(function (point) { return point.rate; }),
-                borderColor: style.getPropertyValue("--bs-primary"),
-                backgroundColor: style.getPropertyValue("--bs-primary"),
+                borderColor: accent,
+                backgroundColor: accent,
                 borderWidth: 2,
                 pointRadius: 4,
                 pointHoverRadius: 8,

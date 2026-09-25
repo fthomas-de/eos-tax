@@ -110,6 +110,7 @@ class TaxConfigurationForm(forms.ModelForm):
             "bot_clock_corp_min_payouts",
             "bot_clock_purge_strong",
             "bot_clock_min_apart",
+            "bot_clock_min_concentration",
         ]
         # a native <select multiple> only takes a second entry - or gives one up -
         # on ctrl-click, which nobody discovers. Checkboxes say what they do.

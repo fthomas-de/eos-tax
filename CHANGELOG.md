@@ -5,6 +5,287 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.3.7] - 2026-09-25
+
+### Added
+
+- "Off the Corporation clock" has a new threshold, *Least concentrated day
+  with a middle* (migration 0020, default 12). A day spread evenly round the
+  clock has no middle: the average of 24 equal hours is a direction of
+  nearly zero length whose angle is rounding noise, and a single extra payout
+  at 03:00 dragged it there - so a round the clock script got a random
+  distance to its Corporation. Below the threshold, for the character or the
+  rest of their Corporation, the character is now left out of the reading,
+  and the character page says which of the two days had no middle. The help
+  text gives the reference values: a day spread evenly over twelve hours is
+  64, over sixteen 42, over twenty 19.
+- `eos_tax/static/eos_tax/css/eos_tax.css`, loaded on every page through
+  `sri_static`. The rules used to sit in `<style>` blocks of four templates,
+  the chart frame among them three times at 360, 380 and 360 pixels; it is
+  one height now.
+
+### Changed
+
+- The day threshold on "Hours per day" counts once it is reached, not only
+  once it is passed. A character on exactly the threshold was left out of the
+  list, then shown in the fallback of those who did not make it - marked
+  strong, because the colouring already counted the threshold itself. The
+  settings help text and the line above the list say "at least" now.
+- A character who moved Corporations during the month counts with the last
+  one, in all three Corporation readings. The Corporation used to be that of
+  whichever journal row the unordered query happened to return first, so it
+  could change from one page load to the next. Payouts without a second
+  party are dropped here as well, the way the hour thresholds already did.
+- The overview title shows the rate of the month its rows are for, with one
+  decimal where there is one: 7.5 % used to read as 8 %, and it was the
+  running month's rate over a table of the previous month.
+- Page header, navigation and badges use Alliance Auth's own parts: the page
+  title is `framework/header/page-header.html` with the version as its
+  subtitle, the navbar entries are `nav-link {% navactive %}` the way
+  groupmanagement writes them, without colours of our own, and the four bot
+  tables render their assessment through `partials/bot-level-badge.html`
+  instead of four inline copies of it.
+- Corporation and Character are lower case in running text - "the rest of
+  their corporation" - and keep their capital in headings, tab names and
+  column titles. EVE terms stay English in every language as before; the
+  README said Character was translated in running text, which was never true.
+- "Payed" reads "Paid", "Isk" reads "ISK", and the counts that had no
+  singular get one ("1 hits", "1 entries", "across 1 systems").
+- The empty state of the two Corporation readings no longer blames the
+  Corporations whatever the cause; it names both floors a character has to
+  pass, and on the clock reading the middle it needs.
+- "N of M measured" puts listed characters over measured characters. It
+  used to put mains over characters, so 14 listed characters in 9 mains read
+  "9 of 40".
+- The month form on the bots and character pages keeps the open tab; a new
+  month used to drop the reader back onto the first one.
+- `testauth` names a database of its own instead of `aa_dev`, whose
+  corptools data cannot be fetched again - one `migrate` with these settings
+  would have gone there. `runtests.py` hands over the actual command line
+  (it passed the `None` that `list.insert` returns and only worked because
+  Django then reads `sys.argv` itself), `tox.ini` installs the MySQL driver
+  testauth needs, and `.coveragerc` measures `eos_tax` instead of the
+  example plugin's placeholder, which measured nothing.
+- `pyproject.toml` names django-solo and python-dateutil, which the app
+  imports directly, has a description of its own, and pylint's ignore
+  patterns are a list and a working regex - both matched nothing before.
+
+### Fixed
+
+- Unbroken runs: an interruption beyond the allowance started the run from
+  scratch and threw away everything since the previous interruption. With one
+  interruption allowed, 2 + 15 + 15 ticks came out as 17 instead of 30. The
+  run now gives up its oldest interruption and keeps the rest, so the list
+  can show characters it missed before.
+- The amount owed is rounded instead of cut off. The percentages are floats,
+  0.07 * 100 is 7.000000000000001, and 7M ISK at 7 % corp tax and 10 %
+  alliance tax came out as 9,999,999 instead of 10,000,000. The corp rate in
+  the recalculate log is rounded to two decimals for the same reason. A row is
+  only rewritten on its next calculation; one already marked paid stays paid.
+- A month whose alliance tax rate is 0 no longer gets a row. A 0 ISK row can
+  never be matched by a payment, so it sat in the menu badge as outstanding
+  for good. An existing row is left alone - it may already carry a payment.
+- A row once marked paid can no longer be taken back by a later write.
+  `set_corp_tax` only ever adds the flag now; the recalculation already read
+  it back before writing, and the rule now holds for any caller.
+- The middle of a day was half an hour early: an hour bucket stood for its
+  start, so payouts between 14:00 and 14:59 averaged to 14:00. It stands for
+  its middle now. Distances between two days did not change.
+- The statistics chart printed 480 M as "0 B" and put "2 B" on the axis twice
+  for 1.5 B and 2 B. Figures get as many decimals as it takes to tell them
+  apart, and millions below a billion.
+- The line styles the README promises past eight Corporations never
+  appeared: the palette had one colour per Corporation, so the style index
+  was always 0. Eight colours, then the next line style; the palette only
+  grows once all three styles are used.
+- Recalculate refused nothing: year 10000 raised a 500, and "All" queued one
+  failing Celery subtask per Corporation. The month picker of the bot pages
+  took 9999-12 the same way. Both are range checked now.
+- The rate chart on a tax change used Darkly's `--bs-primary` untrimmed and
+  without a fallback, the contrast fault `bot-charts.js` had already fixed.
+- `?tab=` went into `querySelector` unchecked, so a quote in a hand edited
+  url threw and stopped the rest of the page's script.
+- The payment instructions said to copy the amount "for the current month";
+  it is the previous month that is paid, as step 4a says itself.
+
+### Removed
+
+- Dead code: two unused imports in `views.py`, one in `db/bots.py`,
+  `palette._hue`, the `_grouped`/`_level` aliases in `bot_signals.py`, a
+  commented out example in `payments.py`, the `color_light`/`color_dark` pair
+  that always held the same colour (now `color`), and two empty template
+  blocks.
+
+### Tests
+
+- Several assertions could not fail. The overview tests asserted a
+  Corporation name against the whole page, and Alliance Auth's sidebar prints
+  the user's own Corporation before the content, so the sort test passed in
+  any order; they read the table now. Others searched a sentence the template
+  writes differently, a word the input field repeats anyway, a level that is
+  always one of three, a class the fast case has as well, and the page's own
+  card title in place of the navigation.
+- New tests for every fix above, each checked against the broken code.
+- `TestLevels` moved to `test_shared.py`, next to what it tests; the empty
+  `test_module.py` from the example plugin is gone. The fixture threshold
+  `MIN_DAYS` is 2, so the fixtures keep meaning what they did under the new
+  "at least" rule.
+
+### Translations
+
+- All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) caught up
+  with every English change above: Payed/Isk, the plural forms, the lower
+  case corporation/character in running text, the new clock threshold and
+  its messages, the two empty states of the Corporation readings, and the
+  payment instructions. Nothing left fuzzy or empty, `msgfmt --check` clean,
+  `.mo` newer than `.po`.
+- Five older entries still used the local word for Character (`Charakter`,
+  `personaje`, `personnage`, `personaggio`, `캐릭터`, `персонаж`) instead of
+  the English EVE-jargon term the rest of the app settled on: the
+  character-jump search box and its two messages, and the run-length
+  threshold's help text. Fixed in all six languages; `TestEveJargon` now
+  checks Character alongside the other jargon terms.
+- German still said "in den Settings" in one place, and this round's new
+  strings repeated it five more times, although the Settings tab itself is
+  translated ("Einstellungen") in every catalogue. All six now name the tab
+  the way each language already names it (Einstellungen/Ajustes/Paramètres/
+  Impostazioni/설정/Настройки) instead of keeping the English word.
+
+## [0.3.6] - 2026-09-24
+
+### Added
+
+- The overview is Outstanding only by default now, modelled on the same
+  toggle in eos-invoices: a corp officer lands on what still needs
+  collecting, not a history of what already came in. "Including paid" brings
+  every row back with a link (`?paid=1`), not a client side DataTables
+  re-filter - a paid row the server never sent cannot be un-hidden without
+  asking it again anyway. The empty state now tells "nothing outstanding"
+  (every row is paid) apart from "no tax data" (nothing was calculated for
+  the selected months at all), which used to be the same message.
+
+## [0.3.5] - 2026-09-24
+
+### Added
+
+- `MonthlyTax.amount_to_pay`: the ISK figure a reader copies and pays ingame,
+  stored on the row next to the three values it is worked out from.
+  `set_corp_tax` works it out itself from the `tax_value`, `tax_percentage`
+  and `alliance_tax_rate` it writes anyway, so the four can never disagree -
+  taking it as an argument with a default of 0 meant a caller that forgot it
+  stored "nothing owed" for every Corporation, and no test noticed.
+- Migration `0019` works the figure out for every existing row. A row without
+  a stored rate gets the rate the overview used to fall back to - the
+  schedule for its month, else the base rate - so no amount owed changes. A
+  row with month or year 0, the model defaults, takes the base rate instead
+  of crashing: on MariaDB a crash there leaves the column added and the
+  migration unrecorded, and the next `migrate` fails on the duplicate column.
+- Restart the Celery workers together with the web process after migrating.
+  A worker still on the old code writes rows without the field.
+- The settings page splits Taxation and Bots into a Tax and a Bot tab. The two
+  used to share one long scroll with nothing between a taxed journal type and
+  a bot-detection threshold - the same problem the four bot readings already
+  solved for themselves with cards, just one level up. A field error reopens
+  the tab it belongs to; a tax error keeps the default Tax tab open even when
+  a bot field also failed, since the two forms ride in the same POST and
+  plain tabs cannot show both panes' errors at once.
+- A Recalculate control on the Tax tab, next to a Corporation picker and a
+  month and year: runs `update_corp` again outside the periodic task, for a
+  journal that just finished importing or a rate that was just corrected.
+  Picking one Corporation runs it immediately and shows the arithmetic behind
+  its figure - every tax type's own sum, the total, the corp's ingame rate,
+  the gross PvE income that rate is backed out of, the alliance rate applied,
+  and the amount owed. Picking "All" queues every configured Corporation the
+  same way the periodic task queues them, rather than running dozens
+  synchronously and timing the request out.
+- `update_corp` returns the steps its result is built from instead of nothing,
+  with `"ok": False` and a machine readable `"reason"` for the three cases it
+  already logged and gave up on - an unknown Corporation, one with no ingame
+  tax rate on file, or a month with no journal entries of the configured tax
+  types. The recalculate control is what reads this now; the periodic task,
+  its only other caller, still ignores the return value.
+- `set_corp_tax` returns the `amount_to_pay` it already works out, so a caller
+  that wants the figure - the recalculate control does - does not have to
+  work it out a second time and risk disagreeing with what was stored.
+
+### Changed
+
+- The overview, the yearly statistics chart and `corp_has_payed`'s payment
+  matching all read `amount_to_pay` straight off the row instead of calling
+  `get_amount_to_pay()` on every request, so the page, the chart and the
+  payment check cannot disagree by a rounding step. It is not frozen for good:
+  the task recalculates the previous and the running month on every run, the
+  way it always rewrote their `alliance_tax_rate`; a month is fixed once it
+  leaves that window.
+
+### Fixed
+
+- `test_should_keep_the_checkbox_lists_compact` failed on every run. The
+  widget now writes `class=""` before `id`, and the test looked for a literal
+  `<div id="...`; the id and the styling hooked onto it were fine all along.
+  It matches the id wherever it sits in the tag now. A suite that is always
+  red hides the one failure that matters.
+- `TestFormatAge` failed when it ran after a test that had requested a page
+  in German: the active language is per thread and nothing switched it back.
+  It pins English for itself.
+
+## [0.3.4] - 2026-09-14
+
+### Added
+
+- Every character list, and the Character page itself, now shows how old the
+  character is - Alliance Auth's own `birthday`, one unit rather than a
+  calendar (`format_age`). A character ratting round the clock a week after
+  creation is worth noticing on sight, not after a lookup. Empty rather than
+  a placeholder when Alliance Auth never had a birthday for a character at
+  all, the same as an unregistered Main.
+
+## [0.3.3] - 2026-09-14
+
+### Added
+
+- The Character page links to zKillboard and to corptools' own Character
+  Audit for the character on screen - kills and losses, and the account and
+  wallet data this whole page is built from, neither of which eos_tax shows
+  itself.
+
+### Changed
+
+- The four bot readings on the settings page now sit in their own card each,
+  rather than under a plain heading. Their field names alone do not say which
+  reading they belong to - `bot_run_min_ticks` a few lines above
+  `bot_rhythm_min_payouts` above `bot_clock_min_payouts` - and the thresholds
+  are deliberately not shared between readings, so a value meant for one
+  ending up under another by mistake is exactly the fault a heading alone
+  does not stop a reader from making.
+
+## [0.3.2] - 2026-09-14
+
+### Changed
+
+- The six catalogues carry the texts 0.3.1 added. No code changed in this
+  release; it was written down only now, from the commit that raised the
+  version, when the changelog was put back in order.
+
+## [0.3.1] - 2026-09-14
+
+### Fixed
+
+- The character switcher's cold fallback - opened from a bookmark or the
+  search box, without a list behind it - listed every character Alliance Auth
+  knows on the account, whether or not it ever ratted. `alts_of` now takes
+  the selected month and keeps only characters with a taxed transaction in
+  it, the same definition every other reading of the month uses. A main with
+  five alts and one ratter used to offer four names worth nothing to click.
+- All four fallback lists - the ten longest days, and the three signals'
+  "nothing crossed the threshold" lists - capped themselves to ten rows
+  before grouping by main, not ten mains. Two alts of one account near the
+  top of the ranking cost two of those ten slots for a single main, and
+  pushed an eleventh row - a main of its own - out before grouping ever saw
+  it; the page then showed nine mains where ten were possible. The new
+  `group_limited_rows` groups first and cuts the groups instead, the way the
+  primary, over-threshold lists already did.
+
 ## [0.3.0] - 2026-09-14
 
 ### Added
@@ -496,127 +777,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   borrows the page's own link colour, which every installed theme already
   picks to read against its card headers, rather than a fixed palette colour
   that happened to collide with one of them.
-## [0.3.1] - 2026-09-14
-
-### Fixed
-
-- The character switcher's cold fallback - opened from a bookmark or the
-  search box, without a list behind it - listed every character Alliance Auth
-  knows on the account, whether or not it ever ratted. `alts_of` now takes
-  the selected month and keeps only characters with a taxed transaction in
-  it, the same definition every other reading of the month uses. A main with
-  five alts and one ratter used to offer four names worth nothing to click.
-- All four fallback lists - the ten longest days, and the three signals'
-  "nothing crossed the threshold" lists - capped themselves to ten rows
-  before grouping by main, not ten mains. Two alts of one account near the
-  top of the ranking cost two of those ten slots for a single main, and
-  pushed an eleventh row - a main of its own - out before grouping ever saw
-  it; the page then showed nine mains where ten were possible. The new
-  `group_limited_rows` groups first and cuts the groups instead, the way the
-  primary, over-threshold lists already did.
-
-## [0.3.3] - 2026-09-14
-
-### Added
-
-- The Character page links to zKillboard and to corptools' own Character
-  Audit for the character on screen - kills and losses, and the account and
-  wallet data this whole page is built from, neither of which eos_tax shows
-  itself.
-
-### Changed
-
-- The four bot readings on the settings page now sit in their own card each,
-  rather than under a plain heading. Their field names alone do not say which
-  reading they belong to - `bot_run_min_ticks` a few lines above
-  `bot_rhythm_min_payouts` above `bot_clock_min_payouts` - and the thresholds
-  are deliberately not shared between readings, so a value meant for one
-  ending up under another by mistake is exactly the fault a heading alone
-  does not stop a reader from making.
-
-## [0.3.4] - 2026-09-14
-
-### Added
-
-- Every character list, and the Character page itself, now shows how old the
-  character is - Alliance Auth's own `birthday`, one unit rather than a
-  calendar (`format_age`). A character ratting round the clock a week after
-  creation is worth noticing on sight, not after a lookup. Empty rather than
-  a placeholder when Alliance Auth never had a birthday for a character at
-  all, the same as an unregistered Main.
-
-## [0.3.5] - 2026-09-24
-
-### Added
-
-- `MonthlyTax.amount_to_pay`: the ISK figure a reader copies and pays ingame,
-  stored on the row next to the three values it is worked out from.
-  `set_corp_tax` works it out itself from the `tax_value`, `tax_percentage`
-  and `alliance_tax_rate` it writes anyway, so the four can never disagree -
-  taking it as an argument with a default of 0 meant a caller that forgot it
-  stored "nothing owed" for every Corporation, and no test noticed.
-- Migration `0019` works the figure out for every existing row. A row without
-  a stored rate gets the rate the overview used to fall back to - the
-  schedule for its month, else the base rate - so no amount owed changes. A
-  row with month or year 0, the model defaults, takes the base rate instead
-  of crashing: on MariaDB a crash there leaves the column added and the
-  migration unrecorded, and the next `migrate` fails on the duplicate column.
-- Restart the Celery workers together with the web process after migrating.
-  A worker still on the old code writes rows without the field.
-- The settings page splits Taxation and Bots into a Tax and a Bot tab. The two
-  used to share one long scroll with nothing between a taxed journal type and
-  a bot-detection threshold - the same problem the four bot readings already
-  solved for themselves with cards, just one level up. A field error reopens
-  the tab it belongs to; a tax error keeps the default Tax tab open even when
-  a bot field also failed, since the two forms ride in the same POST and
-  plain tabs cannot show both panes' errors at once.
-- A Recalculate control on the Tax tab, next to a Corporation picker and a
-  month and year: runs `update_corp` again outside the periodic task, for a
-  journal that just finished importing or a rate that was just corrected.
-  Picking one Corporation runs it immediately and shows the arithmetic behind
-  its figure - every tax type's own sum, the total, the corp's ingame rate,
-  the gross PvE income that rate is backed out of, the alliance rate applied,
-  and the amount owed. Picking "All" queues every configured Corporation the
-  same way the periodic task queues them, rather than running dozens
-  synchronously and timing the request out.
-- `update_corp` returns the steps its result is built from instead of nothing,
-  with `"ok": False` and a machine readable `"reason"` for the three cases it
-  already logged and gave up on - an unknown Corporation, one with no ingame
-  tax rate on file, or a month with no journal entries of the configured tax
-  types. The recalculate control is what reads this now; the periodic task,
-  its only other caller, still ignores the return value.
-- `set_corp_tax` returns the `amount_to_pay` it already works out, so a caller
-  that wants the figure - the recalculate control does - does not have to
-  work it out a second time and risk disagreeing with what was stored.
-- The overview is Outstanding only by default now, modelled on the same
-  toggle in eos-invoices: a corp officer lands on what still needs
-  collecting, not a history of what already came in. "Including paid" brings
-  every row back with a link (`?paid=1`), not a client side DataTables
-  re-filter - a paid row the server never sent cannot be un-hidden without
-  asking it again anyway. The empty state now tells "nothing outstanding"
-  (every row is paid) apart from "no tax data" (nothing was calculated for
-  the selected months at all), which used to be the same message.
-
-### Changed
-
-- The overview, the yearly statistics chart and `corp_has_payed`'s payment
-  matching all read `amount_to_pay` straight off the row instead of calling
-  `get_amount_to_pay()` on every request, so the page, the chart and the
-  payment check cannot disagree by a rounding step. It is not frozen for good:
-  the task recalculates the previous and the running month on every run, the
-  way it always rewrote their `alliance_tax_rate`; a month is fixed once it
-  leaves that window.
-
-### Fixed
-
-- `test_should_keep_the_checkbox_lists_compact` failed on every run. The
-  widget now writes `class=""` before `id`, and the test looked for a literal
-  `<div id="...`; the id and the styling hooked onto it were fine all along.
-  It matches the id wherever it sits in the tag now. A suite that is always
-  red hides the one failure that matters.
-- `TestFormatAge` failed when it ran after a test that had requested a page
-  in German: the active language is per thread and nothing switched it back.
-  It pins English for itself.
 
 ## [0.2.6] - 2026-09-10
 

@@ -22,15 +22,15 @@ from eos_tax.db.shared import _month_range
 logger = get_extension_logger(__name__)
 
 
-    # examples: https://github.com/ppfeufer/allianceauth-afat/blob/master/afat/tasks.py   
-    # tax_data = CorporationWalletJournalEntry.objects.filter(tax_receiver_id__in=corporation_info.keys(), ref_type__in=TAX_TYPES, date__year=y, date__month=m).\
-    #       values('tax_receiver_id').annotate(sum=Sum('amount'))          
 def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False, alliance_tax_rate: float = 0):
     selected_corp = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).first()
     # worked out here from the three values this function writes anyway,
     # rather than handed in: a caller that forgot to pass it used to store a
     # silent 0 - every corporation "owing" nothing - and no test noticed
-    amount_to_pay = int(get_amount_to_pay(tax_value, tax_percentage, alliance_tax_rate))
+    # rounded, not cut off: the percentages are floats, 0.07 * 100 is
+    # 7.000000000000001, and 7M ISK at 7 % corp tax and 10 % alliance tax came
+    # out as 9,999,999 instead of the 10,000,000 anybody would work out
+    amount_to_pay = round(get_amount_to_pay(tax_value, tax_percentage, alliance_tax_rate))
     # corp_name is handed in by the caller; looking it up again cost a query
     # per corporation and month, for a log line
     logger.info(f"set_corp_tax: {corp_name or corp_id} ({corp_id}), tax_value: {format_isk(tax_value)} tax_percentage {tax_percentage} {month}/{year}")
@@ -39,7 +39,10 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
         selected_corp.corp_name=corp_name
         selected_corp.tax_value=tax_value
         selected_corp.tax_percentage=tax_percentage
-        selected_corp.payed=payed
+        # once paid, always paid: a recalculation after a rate correction
+        # finds no payment of the new amount, and must not take back a
+        # payment that was already recognised
+        selected_corp.payed=selected_corp.payed or payed
         selected_corp.alliance_tax_rate=alliance_tax_rate
         selected_corp.amount_to_pay=amount_to_pay
 
@@ -190,6 +193,22 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
     logger.info(f"dbcon update_corp1: {corp_info.corporation_name} ({corp_id}): tax_rate {corp_tax_rate} - {month}/{year}")
 
     config = get_config()
+    alliance_tax_rate = config.rate_for(year, month)
+
+    if not alliance_tax_rate:
+        # a month the alliance does not tax owes nothing, and a row of 0 ISK
+        # can never be matched by a payment - it sat in the menu badge as
+        # outstanding for good. An existing row is left alone rather than
+        # deleted: it may already carry a payment.
+        logger.info(
+            f"dbcon update_corp: {corp_info.corporation_name} ({corp_id}): "
+            f"alliance tax rate 0 - no row for {month}/{year}"
+        )
+        return {
+            "ok": False, "reason": "no_alliance_rate", "corp_id": corp_id,
+            "corp_name": corp_info.corporation_name, "month": month, "year": year,
+        }
+
     start, end = _month_range(year, month)
 
     # filter is on a single corp, so the whole month collapses into one sum
@@ -228,9 +247,10 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
     )
     logger.info(f"dbcon update_corp3: {corp_info.corporation_name} ({corp_id}): payed {payed} - {month}/{year}")
 
-    corp_tax_percent = corp_tax_rate * 100
-    alliance_tax_rate = config.rate_for(year, month)
-    gross_income = int(get_pve_income(overall_ratted, corp_tax_percent))
+    # rounded to the precision the rate is stored with, so the float noise of
+    # the multiplication neither reaches the amount nor the log
+    corp_tax_percent = round(corp_tax_rate * 100, 2)
+    gross_income = round(get_pve_income(overall_ratted, corp_tax_percent))
 
     amount_to_pay = set_corp_tax(
         corp_id=corp_id,
