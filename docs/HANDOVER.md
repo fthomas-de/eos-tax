@@ -8,13 +8,13 @@ Last updated 2026-09-25.
 
 ## Release
 
-- Version **0.3.7** in `eos_tax/__init__.py`, **not committed** - the review
-  and the translation round of 2026-09-25 sit in the working tree, under
-  `[0.3.7]` in `CHANGELOG.md`
+- Version **0.3.8** in `eos_tax/__init__.py`, released - `[0.3.8]` in
+  `CHANGELOG.md` holds the copyable holding-corporation name on the payment
+  help and the removal of the DEBUG line that used to check it by eye
 - Migrations **0001-0020** applied to `aa_dev`, including **0020**
   (`bot_clock_min_concentration`, default 12, and the help text updates)
-- 463 tests, all green. `python runtests.py eos_tax` on testauth gives the
-  same result
+- 465 tests, all green (450 without the translation tag, 15 with it).
+  `python runtests.py eos_tax` on testauth gives the same result
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
@@ -22,14 +22,18 @@ Last updated 2026-09-25.
 - `CHANGELOG.md` is newest first; `[0.3.2]` and `[0.3.6]` were written from
   the commits that raised those versions
 
-## Decisions of the 2026-09-25 review
+## Decisions of the 2026-09-25 session
 
+- **The DEBUG line in `help.html` is gone.** The 2026-09-25 review had kept
+  it on the user's call ("This should say Invidia Administrative - if not
+  tell Nah Vi in Discord"); later the same day the user asked for it to be
+  removed. The copy button added alongside it makes the eyeball check it
+  existed for redundant - the name now comes straight from
+  `get_tax_corp()`, never retyped.
 - **Paid is never taken back.** Once a row is marked paid no write may
   clear it; `set_corp_tax` only ever adds the flag.
 - Recalculate keeps checking a payment against the stored amount before it
   recalculates - not changed on purpose.
-- The DEBUG line in `help.html` ("This should say Invidia Administrative")
-  stays, on the user's call.
 - The blacklist is left as it is: corporations on it still get rows from
   the task.
 - A month with alliance rate 0 gets no row.
@@ -129,3 +133,10 @@ Three traps in that setup, each of which produced a wrong answer once:
   through it via the app's `UrlHook`) redirects there before the view ever
   runs. Use a seeded user that has one, e.g. `kaskade`. Also reverse the URL
   rather than guessing it: the app is mounted at `/eos_tax/`, not `/eos-tax/`.
+
+## Traps this session cost time on
+
+- **`compilemessages` has to run from `eos_tax/`, the same as
+  `makemessages`, not from `myauth/`.** Run from `myauth` it reported no
+  error and did nothing - all six `.mo` stayed at their old content,
+  silently. Only the `.mo`-newer-than-`.po` timestamp check caught it.

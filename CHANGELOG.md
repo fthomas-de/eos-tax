@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.8] - 2026-09-25
+
 ### Added
 
 - The holding corporation's name on the payment help ("Search for: ...")
