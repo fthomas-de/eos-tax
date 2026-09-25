@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The holding corporation's name on the payment help ("Search for: ...")
+  has a copy button now, next to the ones the overview table already offers
+  for the reason. It has to reach an ingame search box the same way the
+  reason and the ISK amount do.
+
+### Removed
+
+- The DEBUG line under "Search for" on the payment help ("This should say
+  Invidia Administrative - if not tell Nah Vi in Discord"). The name is now
+  copied straight from the app's own configuration instead of retyped, so
+  there is nothing left for that line to catch.
+
 ### Changed
 
 - The catalogue tests in `test_translations.py` carry the tag

@@ -19,6 +19,9 @@ from eos_tax.util import get_amount_to_pay
 from .factories import (
     ALPHA_CORP_ID,
     BRAVO_CORP_ID,
+    TAXED_ALLIANCE_ID,
+    create_alliance,
+    create_corporation,
     create_tax_row,
     create_user,
     enable_current_month,
@@ -444,6 +447,29 @@ class TestHelpBlock(EosTaxTestCase):
 
         self.assertContains(overview, "How to pay taxes?")
         self.assertNotContains(settings_page, "How to pay taxes?")
+
+    def test_should_offer_a_copy_button_for_the_holding_corporation(self):
+        """The name has to reach the ingame search box unretyped, same as the
+        reason on the overview table."""
+        alliance = create_alliance(TAXED_ALLIANCE_ID, "Taxed Alliance")
+        create_corporation(BRAVO_CORP_ID, "Bravo Corp", alliance)
+        holding = create_corporation(91000099, "Invidia Administrative", alliance)
+        config = TaxConfiguration.get_solo()
+        config.tax_corporation = holding
+        config.tax_alliances.set([alliance])
+        config.save()
+
+        response = self.client.get(reverse("eos_tax:index"))
+
+        self.assertContains(response, 'data-clipboard-text="Invidia Administrative"')
+
+    def test_should_not_offer_a_copy_button_without_a_holding_corporation(self):
+        """Nothing configured, nothing to copy - see
+        TestOverviewTable.test_should_not_offer_a_copy_button_without_a_reason
+        for why the class name itself is not the right thing to assert on."""
+        response = self.client.get(reverse("eos_tax:index"))
+
+        self.assertNotContains(response, "data-clipboard-text")
 
 
 class TestNavigationOnDetailPages(EosTaxTestCase):
