@@ -33,6 +33,12 @@
                 <i class="fa-solid fa-skull-crossbones me-1" aria-hidden="true"></i>zKillboard
             </a>
 
+            <a href="https://evewho.com/character/{{ detail.character_id }}/"
+               target="_blank" rel="noopener noreferrer"
+               class="btn btn-sm btn-link text-decoration-none">
+                <i class="fa-solid fa-user me-1" aria-hidden="true"></i>EveWho
+            </a>
+
             <a href="{% url 'corptools:reactmain' detail.character_id %}"
                class="btn btn-sm btn-link text-decoration-none">
                 <i class="fa-solid fa-id-badge me-1" aria-hidden="true"></i>{% translate "Character Audit" %}

@@ -61,6 +61,23 @@ environment is running it, not part of the app.
 a new migration it fails with an unpicklable traceback that says nothing -
 use `--noinput` once, then `--keepdb` again.
 
+## Release
+
+Read by the personal skills `/commit` and `/push`; the same shape in every
+app. Commands run from `~/aa-dev/working/myauth`. Translation tests carry
+`@tag("translations")`: between commits the catalogues describe the last
+commit, so the suite leaves them out.
+
+- App: `eos_tax`
+- Version file: `eos_tax/__init__.py`
+- Changelog section: `[Unreleased]`
+- Tests while working: `eos-test eos_tax.tests.<module>`
+- Suite without translation tests: `eos-test eos_tax --parallel 4 --exclude-tag translations`
+- Checks: `~/aa-dev/venv/bin/python manage.py makemigrations eos_tax --check --dry-run`
+- Translations: as in `## Translations` - makemessages, fill every `.po`,
+  `msgfmt --check`, compilemessages, `.mo` newer than `.po`
+- Translation tests: `eos-test eos_tax --tag translations`
+
 ## The database is irreplaceable
 
 `aa_dev` holds ESI-pulled corptools data that cannot be fetched again. There
@@ -158,22 +175,14 @@ touched **at a commit** - see below. Everything else stays English.
 
 ## Committing
 
-The user commits, always. Never run `git commit` or `git push`; leave the work
-in the working tree.
+Commits and pushes only go through the user's personal skills `/commit`
+and `/push`, never unasked; both read `## Release` above. While working on
+a feature, run only the affected test modules - the full suite runs at
+`/commit`.
 
 The `CHANGELOG.md` is written along with every change, unasked. An entry says
 what was wrong and why the fix is the fix, in the same voice as the rest of the
 file.
-
-When the user says they are about to commit:
-
-1. Check `eos_tax/__init__.py`: if the version was not already raised since
-   the last commit - by hand, or by a note the user gave - raise the patch
-   digit (0.3.0 → 0.3.1) without asking, and say which old and new version
-   that is. Only a version the user names themselves overrides this.
-2. Then, and only then, run the translations.
-3. Split the running section of `CHANGELOG.md` across the version numbers it
-   belongs to, at whichever commit actually raised the version in between.
 
 ## Editing files
 
@@ -195,7 +204,7 @@ times what the same work costs in a fresh one. Measured in this project: 72k
 tokens per request at the start of a session, 900k before compaction.
 
 - One session per topic. Start a new one when the subject changes.
-- Run the affected test module while iterating; run the full suite once at the
-  end.
+- Run the affected test module while iterating; the full suite runs at
+  `/commit`.
 - Bundle the sabotage checks into one run per feature rather than per line.
 - Take a browser screenshot only when something visible changed.

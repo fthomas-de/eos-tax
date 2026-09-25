@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- The catalogue tests in `test_translations.py` carry the tag
+  `translations`, so the suite runs without them (`--exclude-tag
+  translations`) and they run on their own (`--tag translations`). Between
+  commits the catalogues describe the last commit, not the code, and the full
+  run was red for that reason alone - a known red that only teaches everybody
+  to ignore the suite.
+
 ## [0.3.7] - 2026-09-25
 
 ### Added

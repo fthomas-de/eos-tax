@@ -3,6 +3,7 @@ import pathlib
 import re
 
 from eos_tax.tests.base import EosTaxTestCase
+from django.test import tag
 from django.urls import reverse
 
 import eos_tax
@@ -55,6 +56,10 @@ def read_po(path):
     return entries
 
 
+# Tagged so a commit can run the rest of the suite before the catalogues are
+# rebuilt: between commits they describe the last commit, not the code, and
+# would fail for that reason alone.
+@tag("translations")
 class TestCatalogueIntegrity(EosTaxTestCase):
     """The compiled catalogues are committed, the way Alliance Auth and
     corptools do it - their wheels ship the .mo, there is no build hook and no
@@ -112,6 +117,7 @@ class TestCatalogueIntegrity(EosTaxTestCase):
                     )
 
 
+@tag("translations")
 class TestEveJargon(EosTaxTestCase):
     """EVE terms stay English in every entry of every catalogue.
 
@@ -176,6 +182,7 @@ class TestEveJargon(EosTaxTestCase):
                 self.assertIn("Reason", catalogue["Copy reason to clipboard"])
 
 
+@tag("translations")
 class TestGermanCatalogue(EosTaxTestCase):
     """Without a compiled catalogue every translate tag silently falls back to
     English, which looks exactly like a missing translation."""
