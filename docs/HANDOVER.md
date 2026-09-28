@@ -4,12 +4,15 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-09-25.
+Last updated 2026-09-28.
 
 ## Release
 
-- Version **0.3.8** in `eos_tax/__init__.py`, released - `[0.3.8]` in
-  `CHANGELOG.md` holds the copyable holding-corporation name on the payment
+- Version **0.3.9** in `eos_tax/__init__.py`, released - `[0.3.9]` in
+  `CHANGELOG.md` is empty on purpose: the only change was `LICENSE`'s
+  copyright holder (was "Erik Kalkoken", a leftover from the plugin template
+  this app was started from), not worth a changelog line
+- `[0.3.8]` holds the copyable holding-corporation name on the payment
   help and the removal of the DEBUG line that used to check it by eye
 - Migrations **0001-0020** applied to `aa_dev`, including **0020**
   (`bot_clock_min_concentration`, default 12, and the help text updates)
