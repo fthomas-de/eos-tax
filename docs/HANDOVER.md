@@ -4,26 +4,39 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-09-28.
+Last updated 2026-10-01.
 
 ## Release
 
-- Version **0.3.9** in `eos_tax/__init__.py`, released - `[0.3.9]` in
-  `CHANGELOG.md` is empty on purpose: the only change was `LICENSE`'s
-  copyright holder (was "Erik Kalkoken", a leftover from the plugin template
-  this app was started from), not worth a changelog line
-- `[0.3.8]` holds the copyable holding-corporation name on the payment
-  help and the removal of the DEBUG line that used to check it by eye
-- Migrations **0001-0020** applied to `aa_dev`, including **0020**
-  (`bot_clock_min_concentration`, default 12, and the help text updates)
-- 465 tests, all green (450 without the translation tag, 15 with it).
-  `python runtests.py eos_tax` on testauth gives the same result
+- Version **0.3.10** in `eos_tax/__init__.py`, released 2026-10-01 and
+  pushed together with 0.3.9, which had been committed on 2026-09-28 but
+  never pushed
+- `[0.3.10]` in `CHANGELOG.md`: "Average day (hours)" column on "Hours per
+  day", a heading row for groups of one on all four bots tabs, the overview
+  sorted by Month then Corporation only, and the payment tests that failed on
+  the first of every month (`mid_month()` in `factories.py`)
+- `[0.3.9]` is empty on purpose: the only change was `LICENSE`'s copyright
+  holder (a leftover from the plugin template), not worth a changelog line
+- Migrations **0001-0020** applied to `aa_dev`; 0.3.10 brings none
+- 471 tests, all green (456 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
   consistently in every place it occurs now, including `settings.html`
 - `CHANGELOG.md` is newest first; `[0.3.2]` and `[0.3.6]` were written from
   the commits that raised those versions
+
+## Decisions of the 2026-10-01 session
+
+- **The overview sorts by Month, then Corporation - nothing else.** The
+  user's explicit wording ("nichts anderes"): Reason and Paid no longer take
+  part in the default order, they stay sortable by click. The server side
+  order in `db/payments.py` was left as it is.
+- **Every group on the bots page has a heading, a group of one too**, on all
+  four tabs. The user chose this over a separator line with a badge.
+- **The average day divides by active days**, not by the days of the month.
+- Version **0.3.10** rather than folding the new work into the unpushed
+  0.3.9.
 
 ## Decisions of the 2026-09-25 session
 
@@ -83,10 +96,11 @@ alts from Alliance Auth, without assessments.
 
 ## Open
 
-1. Before 2026-09-25: nothing was blocked. The four points that were open on 2026-09-14 are done:
-   the two list thresholds were lowered to 0 pp and 3 h, the empty audit and
-   division the seed left behind in corptools were removed, and the list links
-   now keep the tab the reader is on.
+1. Nothing is blocked.
+2. The new "Average day (hours)" column and the heading rows for groups of
+   one have not been looked at in a browser yet - only through the tests.
+   Worth one render with the seeded data (see below) before tuning anything
+   on top of them.
 
 ## Seeded test data
 
@@ -143,3 +157,16 @@ Three traps in that setup, each of which produced a wrong answer once:
   `makemessages`, not from `myauth/`.** Run from `myauth` it reported no
   error and did nothing - all six `.mo` stayed at their old content,
   silently. Only the `.mo`-newer-than-`.po` timestamp check caught it.
+- **`makemessages -a` from `eos_tax/` did nothing on 2026-10-01** - exit
+  code 0, no "processing locale" line, all six `.po` untouched. Naming the
+  locales works: `makemessages -l de -l es -l fr_FR -l it_IT -l ko_KR -l ru`.
+  It then put the translation of "Busiest day (hours)" onto the new "Average
+  day (hours)" as a fuzzy guess in all six - the trap `CLAUDE.md` warns about.
+- **Two sessions share `test_aa_dev`.** With another session running tests
+  in the same instance, `--parallel 4` failed with "Can't create database
+  'test_aa_dev'; database exists" and a missing `esi_token` table. Both
+  sessions also edit the same working tree - the date fix of the other one
+  turned up uncommitted in `git status` at `/commit`. A serial run with
+  `EOS_TEST_DB=<own name>` was clean.
+- **Release 0.3.9 sat unpushed** from 2026-09-28 until this push - `git log
+  @{u}..HEAD` at the start of `/push` is what showed it.

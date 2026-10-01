@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.10] - 2026-10-01
+
 ### Added
 
 - "Hours per day" on the bots page has an "Average day (hours)" column next
