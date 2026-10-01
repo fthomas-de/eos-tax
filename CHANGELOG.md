@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Test users are created without a password. Every test logs in with
+  `force_login`, so the password was never checked, but hashing it with
+  Django's PBKDF2 cost about 0.2 seconds per user - roughly 70 of the 88
+  seconds the suite spent running its tests. It now runs them in about 20.
+
 ## [0.3.10] - 2026-10-01
 
 ### Added

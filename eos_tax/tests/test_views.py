@@ -36,7 +36,7 @@ class TestIndexAccess(EosTaxTestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_should_redirect_user_without_main_character(self):
-        user = User.objects.create_user("nomain", "nomain@example.com", "password")
+        user = User.objects.create_user("nomain", "nomain@example.com")
         user.user_permissions.add(
             Permission.objects.get(
                 content_type__app_label="eos_tax", codename="basic_access"

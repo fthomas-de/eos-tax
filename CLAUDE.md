@@ -25,7 +25,7 @@ cd ~/aa-dev/working/myauth
 ## Commands
 
 ```bash
-~/aa-dev/venv/bin/python manage.py test eos_tax --parallel 4 --noinput
+~/aa-dev/venv/bin/python manage.py test eos_tax --keepdb --noinput
 ```
 
 `myauth`'s own console log handler is set to `DEBUG` (useful for watching the
@@ -39,11 +39,23 @@ comes through:
 ```bash
 eos-test                          # eos_tax, whole suite, quiet
 eos-test eos_tax.tests.test_bots  # one module
-eos-test eos_tax --parallel 4     # extra args pass straight through
+eos-test eos_tax --fresh          # rebuild the test database first
 ```
 
 It lives in `~/bin`, not in this repo - personal tooling for whichever
 environment is running it, not part of the app.
+
+`eos-test` keeps the test database between runs (`--keepdb`). Building it
+runs every migration of the instance on MySQL - 70 to 100 seconds, against
+about 20 for this whole suite - and every app of the instance shares that
+schema. Django still applies a new migration to the kept database; a
+migration rewritten after it was applied, or another branch's schema, needs
+`--fresh`. The suite at `/commit` always runs fresh.
+
+The suite runs serially. `--parallel 4` saved only seven of 26 seconds,
+does not migrate its kept clone databases (after a new migration it fails
+with an unpicklable traceback that says nothing), and hangs on a failing
+subtest.
 
 ```bash
 ~/aa-dev/venv/bin/python manage.py makemigrations eos_tax
@@ -57,10 +69,6 @@ environment is running it, not part of the app.
 ~/aa-dev/venv/bin/python manage.py collectstatic --noinput
 ```
 
-`--keepdb` is faster but does not migrate the parallel clone databases. After
-a new migration it fails with an unpicklable traceback that says nothing -
-use `--noinput` once, then `--keepdb` again.
-
 ## Release
 
 Read by the personal skills `/commit` and `/push`; the same shape in every
@@ -72,7 +80,7 @@ commit, so the suite leaves them out.
 - Version file: `eos_tax/__init__.py`
 - Changelog section: `[Unreleased]`
 - Tests while working: `eos-test eos_tax.tests.<module>`
-- Suite without translation tests: `eos-test eos_tax --parallel 4 --exclude-tag translations`
+- Suite without translation tests: `eos-test eos_tax --fresh --exclude-tag translations`
 - Checks: `~/aa-dev/venv/bin/python manage.py makemigrations eos_tax --check --dry-run`
 - Translations: as in `## Translations` - makemessages, fill every `.po`,
   `msgfmt --check`, compilemessages, `.mo` newer than `.po`
@@ -126,6 +134,10 @@ page helpers (`read_static`, `read_stylesheet`, `json_script`,
 the logged in user's own Corporation before the content.
 `settings_numbers()` builds the numeric part of a settings POST from the model
 itself, so a new threshold does not silently invalidate every settings test.
+
+Test users get no password, and tests log in with `force_login`. Django
+hashes a password with PBKDF2 at about 0.2 seconds a user, which once made
+up most of this suite's run time.
 
 Private helpers with arithmetic in them (`_longest_run`, `_typical_hour`,
 `_purged_for`) are tested directly with hand-built values. A few numbers decide

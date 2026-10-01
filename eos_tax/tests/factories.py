@@ -105,7 +105,9 @@ def create_user(username, character_id, corporation_id, corporation_name,
     ``main_character_required``, so a user without an owned main character is
     redirected to the dashboard regardless of their permissions.
     """
-    user = User.objects.create_user(username, f"{username}@example.com", "password")
+    # no password: every test logs in with force_login, and hashing one with
+    # Django's PBKDF2 costs ~0.2s - most of the suite's run time once.
+    user = User.objects.create_user(username, f"{username}@example.com")
 
     character = EveCharacter.objects.create(
         character_id=character_id,
