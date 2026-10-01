@@ -8,16 +8,15 @@ Last updated 2026-10-01.
 
 ## Release
 
-- Version **0.3.10** in `eos_tax/__init__.py`, released 2026-10-01 and
-  pushed together with 0.3.9, which had been committed on 2026-09-28 but
-  never pushed
-- `[0.3.10]` in `CHANGELOG.md`: "Average day (hours)" column on "Hours per
-  day", a heading row for groups of one on all four bots tabs, the overview
-  sorted by Month then Corporation only, and the payment tests that failed on
-  the first of every month (`mid_month()` in `factories.py`)
-- `[0.3.9]` is empty on purpose: the only change was `LICENSE`'s copyright
-  holder (a leftover from the plugin template), not worth a changelog line
-- Migrations **0001-0020** applied to `aa_dev`; 0.3.10 brings none
+- Version **0.3.11** in `eos_tax/__init__.py`, released 2026-10-01
+- `[0.3.11]` in `CHANGELOG.md`: test users are created without a password -
+  hashing it cost ~0.2 s a user, most of the suite's run time. The suite now
+  runs its tests in ~20 s instead of 88 s
+- `[0.3.10]`: "Average day (hours)" column on "Hours per day", a heading row
+  for groups of one on all four bots tabs, the overview sorted by Month then
+  Corporation only, the payment tests that failed on the first of every
+  month (`mid_month()` in `factories.py`)
+- Migrations **0001-0020** applied to `aa_dev`; 0.3.11 brings none
 - 471 tests, all green (456 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
@@ -26,8 +25,17 @@ Last updated 2026-10-01.
 - `CHANGELOG.md` is newest first; `[0.3.2]` and `[0.3.6]` were written from
   the commits that raised those versions
 
-## Decisions of the 2026-10-01 session
+## Decisions of the 2026-10-01 sessions
 
+- **Tests keep their database while working, `/commit` builds it fresh.**
+  `~/bin/eos-test` passes `--keepdb` unless given `--fresh`; the `## Release`
+  suite line carries `--fresh`. Building the database ran every migration of
+  the instance - 70-100 s of a 174 s run. One kept `test_aa_dev` serves all
+  apps of the instance (same schema). The same change went into
+  eos-auth-monitor, eos-invoices and discord_announcer.
+- **The suite runs serially.** `--parallel 4` saved 7 of 26 s with a kept
+  database, against clones that miss new migrations and a hang on a failing
+  subtest.
 - **The overview sorts by Month, then Corporation - nothing else.** The
   user's explicit wording ("nichts anderes"): Reason and Paid no longer take
   part in the default order, they stay sortable by click. The server side
@@ -35,8 +43,6 @@ Last updated 2026-10-01.
 - **Every group on the bots page has a heading, a group of one too**, on all
   four tabs. The user chose this over a separator line with a badge.
 - **The average day divides by active days**, not by the days of the month.
-- Version **0.3.10** rather than folding the new work into the unpushed
-  0.3.9.
 
 ## Decisions of the 2026-09-25 session
 
@@ -162,11 +168,16 @@ Three traps in that setup, each of which produced a wrong answer once:
   locales works: `makemessages -l de -l es -l fr_FR -l it_IT -l ko_KR -l ru`.
   It then put the translation of "Busiest day (hours)" onto the new "Average
   day (hours)" as a fuzzy guess in all six - the trap `CLAUDE.md` warns about.
-- **Two sessions share `test_aa_dev`.** With another session running tests
-  in the same instance, `--parallel 4` failed with "Can't create database
-  'test_aa_dev'; database exists" and a missing `esi_token` table. Both
-  sessions also edit the same working tree - the date fix of the other one
-  turned up uncommitted in `git status` at `/commit`. A serial run with
-  `EOS_TEST_DB=<own name>` was clean.
-- **Release 0.3.9 sat unpushed** from 2026-09-28 until this push - `git log
-  @{u}..HEAD` at the start of `/push` is what showed it.
+- **Two sessions share `test_aa_dev`** - all the more now that it is kept.
+  With another session running tests in the same instance, `--parallel 4`
+  failed with "Can't create database 'test_aa_dev'; database exists" and a
+  missing `esi_token` table. Both sessions also edit the same working tree.
+  A second session runs with `EOS_TEST_DB=<own name>`.
+- **Editing `~/bin/eos-test` through `\\wsl.localhost` dropped its execute
+  bit** - `chmod +x` afterwards.
+- **Old test databases are lying around** in MySQL: `test_aa_dev_5` to `_8`,
+  `_a1`, `_fix`, `_lang`, `_pay`, `test_main_session_4` - clones and
+  `EOS_TEST_DB` names of earlier sessions. Not touched; dropping them needs
+  the user's yes.
+- **A kept `test_aa_dev` is new**: a migration rewritten after it was
+  applied there, or another branch's schema, needs `eos-test ... --fresh`.

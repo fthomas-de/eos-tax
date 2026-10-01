@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.11] - 2026-10-01
+
 ### Changed
 
 - Test users are created without a password. Every test logs in with
