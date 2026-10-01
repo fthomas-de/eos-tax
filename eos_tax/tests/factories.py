@@ -12,6 +12,7 @@ another was talking about the same corporation without saying so.
 
 import datetime
 import itertools
+from unittest import mock
 
 from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import (
@@ -177,6 +178,26 @@ def enable_current_month():
     config.save()
 
     return config
+
+
+class _MidMonth(datetime.datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return datetime.datetime.now(tz).replace(day=15)
+
+
+def mid_month():
+    """Moves the payable rule's clock to the 15th of the running month.
+
+    is_payable() makes nothing due on the first, on purpose - the closed
+    month's last journal entries are still arriving. A test that needs last
+    month to be due failed on the first of every month; one that needs it
+    not to be shown passed there for the wrong reason. Only the day moves:
+    the month stays the real one, so get_dates(), create_tax_row() and a
+    test's own "previous month" keep agreeing with it, and is_payable() is
+    the only code that reads the day.
+    """
+    return mock.patch("eos_tax.db.payments.datetime", _MidMonth)
 
 
 def create_tax_row(corp_id, corp_name, payed=False, tax_value=1_000_000_000,

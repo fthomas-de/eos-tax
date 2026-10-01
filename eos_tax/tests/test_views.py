@@ -25,6 +25,7 @@ from .factories import (
     create_tax_row,
     create_user,
     enable_current_month,
+    mid_month,
 )
 
 
@@ -330,6 +331,7 @@ class TestOverviewTable(EosTaxTestCase):
 
     def test_should_offer_a_copy_button_for_the_reason(self):
         """The reason has to reach the ingame transfer character for character."""
+        self.enterContext(mid_month())
         previous = datetime.datetime.now() - relativedelta(months=1)
         config = TaxConfiguration.get_solo()
         config.last_month = True
@@ -389,6 +391,7 @@ class TestMenuBadge(EosTaxTestCase):
     """The badge is Alliance Auth's own `count` on the menu item."""
 
     def setUp(self):
+        self.enterContext(mid_month())
         previous = datetime.datetime.now() - relativedelta(months=1)
         config = TaxConfiguration.get_solo()
         config.last_month = True

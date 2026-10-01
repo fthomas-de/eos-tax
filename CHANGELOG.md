@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Five tests about last month's payment failed on the first of every
+  month: the menu badge count, the reason's copy button, two counts of open
+  payments and the overview's sort order. Nothing is payable on the first,
+  on purpose - the closed month's last journal entries are still arriving -
+  but these tests took last month from the real date and expected it to be
+  due. They now move the payable rule's clock to the 15th of the running
+  month. Only the day moves, so the month the tests build their rows for is
+  still the one the app reads. The test that hides the badge once everything
+  is paid had passed on the first for the wrong reason: nothing was due that
+  day anyway.
+
 ## [0.3.9] - 2026-09-28
 
 ## [0.3.8] - 2026-09-25

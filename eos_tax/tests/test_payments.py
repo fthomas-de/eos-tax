@@ -36,6 +36,7 @@ from .factories import (
     create_alliance,
     create_corporation,
     create_tax_row,
+    mid_month,
 )
 
 ALLIANCE_ID = 99000001
@@ -585,6 +586,7 @@ class TestOpenPaymentCount(EosTaxTestCase):
     """What the number on the menu entry counts."""
 
     def setUp(self):
+        self.enterContext(mid_month())
         previous = datetime.datetime.now() - relativedelta(months=1)
         self.period = (previous.month, previous.year)
 
@@ -655,6 +657,7 @@ class TestWebsiteDataOrder(EosTaxTestCase):
         then its paid rows, then the not yet payable follow-up month -
         corporation name ascending breaks every tie, so a group never
         reorders itself by date."""
+        self.enterContext(mid_month())
         now = datetime.datetime.now()
         previous = now - relativedelta(months=1)
 
