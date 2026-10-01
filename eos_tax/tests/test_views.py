@@ -296,6 +296,11 @@ class TestOverviewTable(EosTaxTestCase):
 
         self.assertNotContains(self.overview(), 'id="table-eos-tax"')
 
+    def test_should_sort_by_month_then_corporation(self):
+        """Shallow guard on the config in the source: column 4 is Month,
+        column 0 Corporation, and nothing else takes part."""
+        self.assertIn('order: [[4, "asc"], [0, "asc"]],', read_static("overview.js"))
+
     def test_should_make_exactly_the_corporation_column_searchable(self):
         """Shallow guard: overlapping columnDefs once made every column
         unsearchable, which emptied the table on any keystroke. This only

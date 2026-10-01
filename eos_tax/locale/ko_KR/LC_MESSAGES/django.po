@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-25 13:11+0000\n"
+"POT-Creation-Date: 2026-10-01 08:26+0000\n"
 "Language: ko-KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -844,7 +844,7 @@ msgid "%(value)s apart"
 msgstr "%(value)s 차이"
 
 #: templates/eos_tax/partials/bot-clock-detail.html:41
-#: templates/eos_tax/partials/bot-clock.html:114
+#: templates/eos_tax/partials/bot-clock.html:106
 msgid "all times EVE time"
 msgstr "모든 시각은 EVE 시간"
 
@@ -857,7 +857,7 @@ msgstr "지급 %(value)s건, 기준 없음"
 #: templates/eos_tax/partials/bot-clock-detail.html:49
 #: templates/eos_tax/partials/bot-rhythm-detail.html:44
 #: templates/eos_tax/partials/bot-run-detail.html:37
-#: templates/eos_tax/partials/bot-runs.html:105
+#: templates/eos_tax/partials/bot-runs.html:97
 msgid "No taxed income in this month."
 msgstr "이번 달에 과세 대상 소득이 없습니다."
 
@@ -910,17 +910,17 @@ msgstr "지급"
 #: templates/eos_tax/partials/bot-clock.html:29
 #: templates/eos_tax/partials/bot-rhythm.html:29
 #: templates/eos_tax/partials/bot-runs.html:29
-#: templates/eos_tax/partials/bot-table.html:15
+#: templates/eos_tax/partials/bot-table.html:16
 msgid "Assessment"
 msgstr "평가"
 
-#: templates/eos_tax/partials/bot-clock.html:65
-#: templates/eos_tax/partials/bot-rhythm.html:65
-#: templates/eos_tax/partials/bot-runs.html:65
+#: templates/eos_tax/partials/bot-clock.html:57
+#: templates/eos_tax/partials/bot-rhythm.html:57
+#: templates/eos_tax/partials/bot-runs.html:57
 msgid "not registered"
 msgstr "미등록"
 
-#: templates/eos_tax/partials/bot-clock.html:91
+#: templates/eos_tax/partials/bot-clock.html:83
 #, python-format
 msgid ""
 "Nobody could be measured this month. A character needs %(own)s payouts of "
@@ -931,62 +931,62 @@ msgstr ""
 "나머지 corporation은 %(rest)s이 필요하며, 두 하루 모두 중심을 정할 수 있어야 "
 "합니다."
 
-#: templates/eos_tax/partials/bot-clock.html:96
-#: templates/eos_tax/partials/bot-group-header.html:12
-#: templates/eos_tax/partials/bot-rhythm.html:96
-#: templates/eos_tax/partials/bot-runs.html:110
+#: templates/eos_tax/partials/bot-clock.html:88
+#: templates/eos_tax/partials/bot-group-header.html:14
+#: templates/eos_tax/partials/bot-rhythm.html:88
+#: templates/eos_tax/partials/bot-runs.html:102
 #, python-format
 msgid "%(counter)s character"
 msgid_plural "%(counter)s characters"
 msgstr[0] "character %(counter)s명"
 
-#: templates/eos_tax/partials/bot-clock.html:98
-#: templates/eos_tax/partials/bot-rhythm.html:98
-#: templates/eos_tax/partials/bot-runs.html:112
-#: templates/eos_tax/partials/bot-table.html:65
+#: templates/eos_tax/partials/bot-clock.html:90
+#: templates/eos_tax/partials/bot-rhythm.html:90
+#: templates/eos_tax/partials/bot-runs.html:104
+#: templates/eos_tax/partials/bot-table.html:59
 #, python-format
 msgid "%(shown)s of %(total)s groups shown"
 msgstr "%(total)s개 그룹 중 %(shown)s개 표시"
 
-#: templates/eos_tax/partials/bot-clock.html:100
-#: templates/eos_tax/partials/bot-rhythm.html:100
+#: templates/eos_tax/partials/bot-clock.html:92
+#: templates/eos_tax/partials/bot-rhythm.html:92
 #, python-format
 msgid "%(counter)s corporation with a rhythm"
 msgid_plural "%(counter)s corporations with a rhythm"
 msgstr[0] "고유 리듬이 있는 Corporation %(counter)s개"
 
-#: templates/eos_tax/partials/bot-clock.html:101
-#: templates/eos_tax/partials/bot-rhythm.html:102
+#: templates/eos_tax/partials/bot-clock.html:93
+#: templates/eos_tax/partials/bot-rhythm.html:94
 #, python-format
 msgid "measured from %(value)s payouts"
 msgstr "지급 %(value)s건부터 측정"
 
-#: templates/eos_tax/partials/bot-clock.html:102
+#: templates/eos_tax/partials/bot-clock.html:94
 #, python-format
 msgid "listed from %(counter)s hour apart"
 msgid_plural "listed from %(counter)s hours apart"
 msgstr[0] "%(counter)s시간 차이부터 목록에 표시"
 
-#: templates/eos_tax/partials/bot-clock.html:103
+#: templates/eos_tax/partials/bot-clock.html:95
 #, python-format
 msgid "full deviation at %(counter)s hour"
 msgid_plural "full deviation at %(counter)s hours"
 msgstr[0] "%(counter)s시간에서 완전한 이탈"
 
-#: templates/eos_tax/partials/bot-clock.html:104
-#: templates/eos_tax/partials/bot-rhythm.html:104
+#: templates/eos_tax/partials/bot-clock.html:96
+#: templates/eos_tax/partials/bot-rhythm.html:96
 #, python-format
 msgid "%(shown)s of %(total)s measured"
 msgstr "측정 %(total)s명 중 %(shown)s명"
 
-#: templates/eos_tax/partials/bot-clock.html:112
-#: templates/eos_tax/partials/bot-rhythm.html:112
+#: templates/eos_tax/partials/bot-clock.html:104
+#: templates/eos_tax/partials/bot-rhythm.html:104
 #, python-format
 msgid "%(counter)s flagged character left out of the yardstick"
 msgid_plural "%(counter)s flagged characters left out of the yardstick"
 msgstr[0] "지목된 character %(counter)s명을 기준에서 제외"
 
-#: templates/eos_tax/partials/bot-group-header.html:15
+#: templates/eos_tax/partials/bot-group-header.html:17
 msgid "no main known"
 msgstr "Main 미확인"
 
@@ -1064,12 +1064,12 @@ msgstr "활발한 시간대의 Corporation"
 msgid "Difference"
 msgstr "차이"
 
-#: templates/eos_tax/partials/bot-rhythm.html:71
+#: templates/eos_tax/partials/bot-rhythm.html:63
 #: templates/eos_tax/tax-changes.html:107
 msgid "pp"
 msgstr "%p"
 
-#: templates/eos_tax/partials/bot-rhythm.html:91
+#: templates/eos_tax/partials/bot-rhythm.html:83
 #, python-format
 msgid ""
 "Nobody could be measured this month. A character needs %(own)s payouts of "
@@ -1078,13 +1078,13 @@ msgstr ""
 "이번 달에는 아무도 측정할 수 없었습니다. character는 자신의 지급 %(own)s건이 "
 "필요하고, 나머지 corporation은 %(rest)s이 필요합니다."
 
-#: templates/eos_tax/partials/bot-rhythm.html:101
+#: templates/eos_tax/partials/bot-rhythm.html:93
 #, python-format
 msgid "busy window %(counter)s hour"
 msgid_plural "busy window %(counter)s hours"
 msgstr[0] "활발한 구간 %(counter)s시간"
 
-#: templates/eos_tax/partials/bot-rhythm.html:103
+#: templates/eos_tax/partials/bot-rhythm.html:95
 #, python-format
 msgid "listed from %(value)s pp"
 msgstr "%(value)spp부터 목록에 표시"
@@ -1148,23 +1148,23 @@ msgstr "지속 시간"
 msgid "Interruptions"
 msgstr "중단 횟수"
 
-#: templates/eos_tax/partials/bot-runs.html:114
+#: templates/eos_tax/partials/bot-runs.html:106
 #, python-format
 msgid "listed from %(value)s payouts in a row"
 msgstr "연속 %(value)s건 이상부터 표시"
 
-#: templates/eos_tax/partials/bot-runs.html:115
+#: templates/eos_tax/partials/bot-runs.html:107
 #, python-format
 msgid "%(counter)s interruption allowed"
 msgid_plural "%(counter)s interruptions allowed"
 msgstr[0] "중단 %(counter)s회 허용"
 
-#: templates/eos_tax/partials/bot-runs.html:116
+#: templates/eos_tax/partials/bot-runs.html:108
 #, python-format
 msgid "same tick up to %(value)s min"
 msgstr "%(value)s분까지 같은 틱"
 
-#: templates/eos_tax/partials/bot-runs.html:117
+#: templates/eos_tax/partials/bot-runs.html:109
 #, python-format
 msgid "run ends past %(value)s min"
 msgstr "%(value)s분을 넘으면 연속 기록 종료"
@@ -1182,6 +1182,10 @@ msgid "Busiest day (hours)"
 msgstr "가장 활발한 날 (시간)"
 
 #: templates/eos_tax/partials/bot-table.html:14
+msgid "Average day (hours)"
+msgstr "하루 평균 (시간)"
+
+#: templates/eos_tax/partials/bot-table.html:15
 msgid "Contributed tax"
 msgstr "기여한 세금"
 

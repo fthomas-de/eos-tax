@@ -103,6 +103,12 @@ def _row(character_id, days, contributed, config):
         "suspicious_days": len(suspicious),
         "active_days": len(days),
         "max_hours": max(len(hours) for hours in days.values()),
+        # over the active days only: a month has thirty days whether or not
+        # anybody played, and dividing by those would make a daily bot look
+        # like a casual who logs in once a week
+        "average_hours": round(
+            sum(len(hours) for hours in days.values()) / len(days), 1
+        ),
         "contributed": int(contributed or 0),
         "contributed_isk": format_isk(contributed or 0),
     }

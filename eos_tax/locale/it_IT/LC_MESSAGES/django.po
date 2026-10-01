@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-25 13:11+0000\n"
+"POT-Creation-Date: 2026-10-01 08:26+0000\n"
 "Language: it-IT\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -882,7 +882,7 @@ msgid "%(value)s apart"
 msgstr "%(value)s di distanza"
 
 #: templates/eos_tax/partials/bot-clock-detail.html:41
-#: templates/eos_tax/partials/bot-clock.html:114
+#: templates/eos_tax/partials/bot-clock.html:106
 msgid "all times EVE time"
 msgstr "tutti gli orari in ora EVE"
 
@@ -895,7 +895,7 @@ msgstr "%(value)s pagamenti, nessun riferimento"
 #: templates/eos_tax/partials/bot-clock-detail.html:49
 #: templates/eos_tax/partials/bot-rhythm-detail.html:44
 #: templates/eos_tax/partials/bot-run-detail.html:37
-#: templates/eos_tax/partials/bot-runs.html:105
+#: templates/eos_tax/partials/bot-runs.html:97
 msgid "No taxed income in this month."
 msgstr "Nessun reddito tassato questo mese."
 
@@ -953,17 +953,17 @@ msgstr "Pagamenti"
 #: templates/eos_tax/partials/bot-clock.html:29
 #: templates/eos_tax/partials/bot-rhythm.html:29
 #: templates/eos_tax/partials/bot-runs.html:29
-#: templates/eos_tax/partials/bot-table.html:15
+#: templates/eos_tax/partials/bot-table.html:16
 msgid "Assessment"
 msgstr "Valutazione"
 
-#: templates/eos_tax/partials/bot-clock.html:65
-#: templates/eos_tax/partials/bot-rhythm.html:65
-#: templates/eos_tax/partials/bot-runs.html:65
+#: templates/eos_tax/partials/bot-clock.html:57
+#: templates/eos_tax/partials/bot-rhythm.html:57
+#: templates/eos_tax/partials/bot-runs.html:57
 msgid "not registered"
 msgstr "non registrato"
 
-#: templates/eos_tax/partials/bot-clock.html:91
+#: templates/eos_tax/partials/bot-clock.html:83
 #, python-format
 msgid ""
 "Nobody could be measured this month. A character needs %(own)s payouts of "
@@ -974,67 +974,67 @@ msgstr ""
 "%(own)s pagamenti propri, il resto della sua corporation %(rest)s, ed "
 "entrambe le giornate hanno bisogno di un centro da collocare."
 
-#: templates/eos_tax/partials/bot-clock.html:96
-#: templates/eos_tax/partials/bot-group-header.html:12
-#: templates/eos_tax/partials/bot-rhythm.html:96
-#: templates/eos_tax/partials/bot-runs.html:110
+#: templates/eos_tax/partials/bot-clock.html:88
+#: templates/eos_tax/partials/bot-group-header.html:14
+#: templates/eos_tax/partials/bot-rhythm.html:88
+#: templates/eos_tax/partials/bot-runs.html:102
 #, python-format
 msgid "%(counter)s character"
 msgid_plural "%(counter)s characters"
 msgstr[0] "%(counter)s character"
 msgstr[1] "%(counter)s character"
 
-#: templates/eos_tax/partials/bot-clock.html:98
-#: templates/eos_tax/partials/bot-rhythm.html:98
-#: templates/eos_tax/partials/bot-runs.html:112
-#: templates/eos_tax/partials/bot-table.html:65
+#: templates/eos_tax/partials/bot-clock.html:90
+#: templates/eos_tax/partials/bot-rhythm.html:90
+#: templates/eos_tax/partials/bot-runs.html:104
+#: templates/eos_tax/partials/bot-table.html:59
 #, python-format
 msgid "%(shown)s of %(total)s groups shown"
 msgstr "%(shown)s di %(total)s gruppi mostrati"
 
-#: templates/eos_tax/partials/bot-clock.html:100
-#: templates/eos_tax/partials/bot-rhythm.html:100
+#: templates/eos_tax/partials/bot-clock.html:92
+#: templates/eos_tax/partials/bot-rhythm.html:92
 #, python-format
 msgid "%(counter)s corporation with a rhythm"
 msgid_plural "%(counter)s corporations with a rhythm"
 msgstr[0] "%(counter)s corporation con un ritmo"
 msgstr[1] "%(counter)s corporation con un ritmo"
 
-#: templates/eos_tax/partials/bot-clock.html:101
-#: templates/eos_tax/partials/bot-rhythm.html:102
+#: templates/eos_tax/partials/bot-clock.html:93
+#: templates/eos_tax/partials/bot-rhythm.html:94
 #, python-format
 msgid "measured from %(value)s payouts"
 msgstr "misurato da %(value)s pagamenti"
 
-#: templates/eos_tax/partials/bot-clock.html:102
+#: templates/eos_tax/partials/bot-clock.html:94
 #, python-format
 msgid "listed from %(counter)s hour apart"
 msgid_plural "listed from %(counter)s hours apart"
 msgstr[0] "elencato da %(counter)s ora di distanza"
 msgstr[1] "elencato da %(counter)s ore di distanza"
 
-#: templates/eos_tax/partials/bot-clock.html:103
+#: templates/eos_tax/partials/bot-clock.html:95
 #, python-format
 msgid "full deviation at %(counter)s hour"
 msgid_plural "full deviation at %(counter)s hours"
 msgstr[0] "deviazione piena a %(counter)s ora"
 msgstr[1] "deviazione piena a %(counter)s ore"
 
-#: templates/eos_tax/partials/bot-clock.html:104
-#: templates/eos_tax/partials/bot-rhythm.html:104
+#: templates/eos_tax/partials/bot-clock.html:96
+#: templates/eos_tax/partials/bot-rhythm.html:96
 #, python-format
 msgid "%(shown)s of %(total)s measured"
 msgstr "%(shown)s di %(total)s misurati"
 
-#: templates/eos_tax/partials/bot-clock.html:112
-#: templates/eos_tax/partials/bot-rhythm.html:112
+#: templates/eos_tax/partials/bot-clock.html:104
+#: templates/eos_tax/partials/bot-rhythm.html:104
 #, python-format
 msgid "%(counter)s flagged character left out of the yardstick"
 msgid_plural "%(counter)s flagged characters left out of the yardstick"
 msgstr[0] "%(counter)s character segnalato escluso dal riferimento"
 msgstr[1] "%(counter)s characters segnalati esclusi dal riferimento"
 
-#: templates/eos_tax/partials/bot-group-header.html:15
+#: templates/eos_tax/partials/bot-group-header.html:17
 msgid "no main known"
 msgstr "nessun Main noto"
 
@@ -1115,12 +1115,12 @@ msgstr "Corporation nelle ore attive"
 msgid "Difference"
 msgstr "Differenza"
 
-#: templates/eos_tax/partials/bot-rhythm.html:71
+#: templates/eos_tax/partials/bot-rhythm.html:63
 #: templates/eos_tax/tax-changes.html:107
 msgid "pp"
 msgstr "p.p."
 
-#: templates/eos_tax/partials/bot-rhythm.html:91
+#: templates/eos_tax/partials/bot-rhythm.html:83
 #, python-format
 msgid ""
 "Nobody could be measured this month. A character needs %(own)s payouts of "
@@ -1129,14 +1129,14 @@ msgstr ""
 "Nessuno ha potuto essere misurato questo mese. Un character ha bisogno di "
 "%(own)s pagamenti propri, e il resto della sua corporation %(rest)s."
 
-#: templates/eos_tax/partials/bot-rhythm.html:101
+#: templates/eos_tax/partials/bot-rhythm.html:93
 #, python-format
 msgid "busy window %(counter)s hour"
 msgid_plural "busy window %(counter)s hours"
 msgstr[0] "finestra attiva %(counter)s ora"
 msgstr[1] "finestra attiva %(counter)s ore"
 
-#: templates/eos_tax/partials/bot-rhythm.html:103
+#: templates/eos_tax/partials/bot-rhythm.html:95
 #, python-format
 msgid "listed from %(value)s pp"
 msgstr "elencato da %(value)s punti percentuali"
@@ -1204,24 +1204,24 @@ msgstr "Durata"
 msgid "Interruptions"
 msgstr "Interruzioni"
 
-#: templates/eos_tax/partials/bot-runs.html:114
+#: templates/eos_tax/partials/bot-runs.html:106
 #, python-format
 msgid "listed from %(value)s payouts in a row"
 msgstr "elencato da %(value)s pagamenti di fila"
 
-#: templates/eos_tax/partials/bot-runs.html:115
+#: templates/eos_tax/partials/bot-runs.html:107
 #, python-format
 msgid "%(counter)s interruption allowed"
 msgid_plural "%(counter)s interruptions allowed"
 msgstr[0] "%(counter)s interruzione consentita"
 msgstr[1] "%(counter)s interruzioni consentite"
 
-#: templates/eos_tax/partials/bot-runs.html:116
+#: templates/eos_tax/partials/bot-runs.html:108
 #, python-format
 msgid "same tick up to %(value)s min"
 msgstr "stesso tick fino a %(value)s min"
 
-#: templates/eos_tax/partials/bot-runs.html:117
+#: templates/eos_tax/partials/bot-runs.html:109
 #, python-format
 msgid "run ends past %(value)s min"
 msgstr "la serie finisce oltre %(value)s min"
@@ -1239,6 +1239,10 @@ msgid "Busiest day (hours)"
 msgstr "Giorno più attivo (ore)"
 
 #: templates/eos_tax/partials/bot-table.html:14
+msgid "Average day (hours)"
+msgstr "Giorno medio (ore)"
+
+#: templates/eos_tax/partials/bot-table.html:15
 msgid "Contributed tax"
 msgstr "Tassa versata"
 

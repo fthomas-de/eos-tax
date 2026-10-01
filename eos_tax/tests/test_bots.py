@@ -1,7 +1,8 @@
 from datetime import date, datetime
+from types import SimpleNamespace
 from unittest import mock
 
-from eos_tax.tests.base import EosTaxTestCase
+from eos_tax.tests.base import EosTaxTestCase, table_body
 from django.urls import reverse
 
 from allianceauth.eveonline.models import (
@@ -12,7 +13,7 @@ from allianceauth.eveonline.models import (
 
 from corptools.models import CorporationAudit, CorporationWalletDivision, EveName
 
-from eos_tax.db.bots import get_bot_report
+from eos_tax.db.bots import _row, get_bot_report
 from eos_tax.db.shared import GROUP_LIMIT
 from eos_tax.models import TaxConfiguration
 
@@ -142,6 +143,30 @@ class TestBotDetection(EosTaxTestCase):
         TaxConfiguration.get_solo().tax_alliances.clear()
 
         self.assertEqual(self.candidates(), [])
+
+
+class TestAverageDay(EosTaxTestCase):
+    """`_row` with hand-built days - only the division decides this."""
+
+    config = SimpleNamespace(bot_min_hours_per_day=20, bot_min_days_per_month=5)
+
+    def average(self, days):
+        return _row(RATTER_ID, days, 0, self.config)["average_hours"]
+
+    def test_should_divide_by_the_active_days_only(self):
+        """Two days of the month, not thirty: 6 hours over 2 days is 3."""
+        days = {date(YEAR, MONTH, 1): {0, 1, 2, 3, 4}, date(YEAR, MONTH, 9): {5}}
+
+        self.assertEqual(self.average(days), 3.0)
+
+    def test_should_round_to_one_decimal(self):
+        days = {
+            date(YEAR, MONTH, 1): {0, 1},
+            date(YEAR, MONTH, 2): {0},
+            date(YEAR, MONTH, 3): {0},
+        }
+
+        self.assertEqual(self.average(days), 1.3)
 
 
 class TestBotRuntimeStats(EosTaxTestCase):
@@ -456,6 +481,40 @@ class TestBotsPage(EosTaxTestCase):
         )
 
         self.assertContains(response, "Busy Ratter")
+
+    def test_should_show_the_average_day(self):
+        """Hours 0, 6, 12, 18 on day 1 and 0, 6 on day 2: 6 over 2 days."""
+        add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, (0, 6, 12, 18))
+        add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 2, (0, 6))
+        self.client.force_login(
+            create_user("boss", 94000009, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+        )
+
+        response = self.client.get(
+            reverse("eos_tax:bots"), {"month": f"{YEAR}-{MONTH:02d}"}
+        )
+
+        self.assertContains(response, "Average day (hours)")
+        self.assertIn('<td class="text-end">3.0</td>', table_body(response))
+
+    def test_should_give_a_group_of_one_its_heading(self):
+        """Busy Ratter is unknown to Alliance Auth, so she is a group of one.
+        Without a heading her row read as one more member of the group
+        printed above it."""
+        for day in (1, 2):
+            add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, day, (0, 6, 12, 18))
+        self.client.force_login(
+            create_user("boss", 94000010, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+        )
+
+        response = self.client.get(
+            reverse("eos_tax:bots"), {"month": f"{YEAR}-{MONTH:02d}"}
+        )
+        body = table_body(response)
+
+        self.assertIn('scope="rowgroup"', body)
+        self.assertIn("1 character", body)
+        self.assertIn('<th scope="row" class="ps-4">', body)
 
     def test_should_show_the_characters_age(self):
         """The character list and the character page read the same

@@ -31,18 +31,11 @@
 
             {% for group in groups %}
                 <tbody>
-                    {% if group.count > 1 %}
-                        {% include "eos_tax/partials/bot-group-header.html" with group=group columns=9 %}
-                    {% endif %}
-            
+                    {% include "eos_tax/partials/bot-group-header.html" with group=group columns=9 %}
+
                     {% for row in group.characters %}
                     <tr>
-                        {% comment %}
-                            Indented only inside a group that has a heading:
-                            a group of one has none, and its row belongs at
-                            the left edge with everything else.
-                        {% endcomment %}
-                        <th scope="row" class="{% if group.count > 1 %}ps-4{% endif %}">
+                        <th scope="row" class="ps-4">
                             {# opens on the tab being read, the way the dropdown does #}
                             <a data-eos-keep-tab
                                href="{% url 'eos_tax:bot_detail' row.character_id %}?month={{ selected_month }}">

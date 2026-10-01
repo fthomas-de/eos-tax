@@ -70,8 +70,8 @@
                                     <td data-order="{{ data.period|unlocalize }}">{{ data.month }}/{{ data.year }}</td>
                                     {% comment %}
                                         The payable month carries a reason code, the follow-up
-                                        month never does - this doubles as the group the table
-                                        sorts on, mirroring the server side order.
+                                        month never does - this is what a click on the column
+                                        sorts by.
                                     {% endcomment %}
                                     <td data-order="{% if data.reason %}0{% else %}1{% endif %}">
                                         {% if data.reason %}

@@ -890,6 +890,35 @@ class TestBotSignalView(EosTaxTestCase):
 
                 self.assertContains(response, "1 y")
 
+    def test_should_give_a_group_of_one_its_heading_in_every_reading(self):
+        """Neither character is known to Alliance Auth, so each is a group of
+        one - the case that used to print without a heading and read as one
+        more member of the group above. Thresholds lowered for the same
+        reason as in the age test."""
+        config = TaxConfiguration.get_solo()
+        config.bot_rhythm_min_payouts = 1
+        config.bot_rhythm_corp_min_payouts = 1
+        config.bot_clock_min_payouts = 1
+        config.bot_clock_corp_min_payouts = 1
+        config.bot_clock_min_concentration = 0
+        config.save()
+        add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, 1, (0, 6, 12, 18))
+        add_entries(self.divisions[BRAVO_CORP_ID], CASUAL_ID, 2, (1, 7, 13, 19))
+        self.client.force_login(
+            create_user("boss", 94100006, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+        )
+
+        for name in ("runs", "rhythm", "clock"):
+            with self.subTest(name=name):
+                response = self.client.get(
+                    reverse("eos_tax:bot_signal", args=[name]),
+                    {"month": f"{YEAR}-{MONTH:02d}"},
+                )
+
+                self.assertContains(response, 'scope="rowgroup"')
+                self.assertContains(response, "1 character")
+                self.assertContains(response, '<th scope="row" class="ps-4">')
+
 
 class TestBotsPageTabs(EosTaxTestCase):
     @classmethod

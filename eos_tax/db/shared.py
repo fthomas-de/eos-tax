@@ -217,8 +217,9 @@ def grouped(rows, limit: int = GROUP_LIMIT):
             "has_main": bool(main),
             "characters": [],
         })
-        # on the row as well, because a group of one is printed without a
-        # heading and still belongs to somebody
+        # on the row as well, for the Main column: the heading's name is the
+        # character's own when Alliance Auth knows no main, and the column
+        # must not claim one
         row["main_name"] = main[1] if main else ""
         row["age"] = format_age(ages.get(row["character_id"]))
         group["characters"].append(row)

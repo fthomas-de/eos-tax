@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- "Hours per day" on the bots page has an "Average day (hours)" column next
+  to the busiest day: the active hours of the month divided by the days the
+  character was active at all, not by the days of the month. One long day
+  and a month of long days had the same busiest day; the average tells them
+  apart.
+
+### Changed
+
+- On all four tabs of the bots page a main with a single character on the
+  list gets the same heading row as a main with several. Without it the row
+  sat at the left edge directly under the indented characters of the group
+  above and read as one more of them.
+- The overview table opens sorted by Month, then Corporation, and by nothing
+  else. It used to sort on Reason and Paid first, which grouped the rows by
+  payment state instead of by month.
+
 ### Fixed
 
 - Five tests about last month's payment failed on the first of every
