@@ -77,19 +77,23 @@
                                     {% comment %}
                                         What came in next to what was owed, so a transfer of
                                         more - or a second one - does not pass as settled and
-                                        nothing else. Empty until a payment was seen.
+                                        nothing else. Empty until a payment was seen. The
+                                        difference badges are for whoever collects: a
+                                        member reads the paid column, not the arithmetic.
                                     {% endcomment %}
                                     <td class="d-none d-md-table-cell{% if data.paid_exactly %} text-success{% endif %}" data-order="{{ data.isk_paid_value|unlocalize }}">
                                         {% if data.isk_paid %}
                                             {{ data.isk_paid }}
-                                            {% if data.paid_difference > 0 %}
-                                                {% blocktranslate with value=data.isk_paid_difference asvar overpaid %}Paid {{ value }} ISK more than owed.{% endblocktranslate %}
-                                                <span class="badge text-bg-warning ms-1" title="{{ overpaid }}" aria-hidden="true">+{{ data.isk_paid_difference }}</span>
-                                                <span class="visually-hidden">{{ overpaid }}</span>
-                                            {% elif data.paid_difference < 0 %}
-                                                {% blocktranslate with value=data.isk_paid_difference asvar short %}{{ value }} ISK short of the amount owed.{% endblocktranslate %}
-                                                <span class="badge text-bg-danger ms-1" title="{{ short }}" aria-hidden="true">-{{ data.isk_paid_difference }}</span>
-                                                <span class="visually-hidden">{{ short }}</span>
+                                            {% if perms.eos_tax.admin_view %}
+                                                {% if data.paid_difference > 0 %}
+                                                    {% blocktranslate with value=data.isk_paid_difference asvar overpaid %}Paid {{ value }} ISK more than owed.{% endblocktranslate %}
+                                                    <span class="badge text-bg-warning ms-1" title="{{ overpaid }}" aria-hidden="true">+{{ data.isk_paid_difference }}</span>
+                                                    <span class="visually-hidden">{{ overpaid }}</span>
+                                                {% elif data.paid_difference < 0 %}
+                                                    {% blocktranslate with value=data.isk_paid_difference asvar short %}{{ value }} ISK short of the amount owed.{% endblocktranslate %}
+                                                    <span class="badge text-bg-danger ms-1" title="{{ short }}" aria-hidden="true">-{{ data.isk_paid_difference }}</span>
+                                                    <span class="visually-hidden">{{ short }}</span>
+                                                {% endif %}
                                             {% endif %}
                                             {% if data.payment_count > 1 %}
                                                 <div class="small text-body-secondary">
@@ -129,15 +133,20 @@
                                         Characters whose bounties reach the corporation wallet
                                         but no member wallet: a stretch at 0% ingame tax would
                                         not show for them at all, so their wallet audit has to
-                                        be added. Kept per month, as calculated then.
+                                        be added. Kept per month, as calculated then. One
+                                        badge with the names in its tooltip: a list of
+                                        names made every affected row several lines tall.
                                     {% endcomment %}
                                     <td class="d-none d-md-table-cell" data-order="{{ data.unaudited_characters|length }}">
-                                        {% for character in data.unaudited_characters %}
-                                            <div class="text-danger text-nowrap">
-                                                {{ character.name }}
-                                                <span class="small">({{ character.isk }} ISK)</span>
-                                            </div>
-                                        {% endfor %}
+                                        {% if data.unaudited_characters %}
+                                            <span class="badge text-bg-danger" aria-hidden="true"
+                                                  title="{% for character in data.unaudited_characters %}{{ character.name }} ({{ character.isk }} ISK){% if not forloop.last %}&#10;{% endif %}{% endfor %}">
+                                                <i class="fa-solid fa-user-secret me-1"></i>{{ data.unaudited_characters|length }}
+                                            </span>
+                                            <span class="visually-hidden">
+                                                {% for character in data.unaudited_characters %}{{ character.name }} ({{ character.isk }} ISK){% if not forloop.last %}, {% endif %}{% endfor %}
+                                            </span>
+                                        {% endif %}
                                     </td>
                                     {% comment %}
                                         How long the last calculation of this month took;

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- The over- and underpayment badges in "Amount paid in ISK" only show with
+  `admin_view`. They are the collector's question; a member reads whether a
+  month is settled from the Paid column and saw a red minus figure next to
+  their own transfer without anything they could do about it.
+- "Characters without wallet audit" is one badge per row - the number of
+  characters - with their names and gross in its tooltip. A name per line
+  made every affected row several lines tall and pushed the table wide.
+
 ## [0.3.15] - 2026-10-08
 
 ### Fixed

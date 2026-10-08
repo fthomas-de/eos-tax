@@ -483,6 +483,25 @@ class TestOverviewTable(EosTaxTestCase):
         self.assertIn("Hidden Ratter", body)
         self.assertIn("(250.000.000 ISK)", body)
 
+    def test_should_fold_characters_without_wallet_audit_into_one_badge(self):
+        """One badge per row with the names in its tooltip - a name per line
+        made every affected row several lines tall."""
+        self.row.unaudited_characters = [
+            {"id": 1, "name": "Hidden Ratter", "gross": 250_000_000},
+            {"id": 2, "name": "Quiet Ratter", "gross": 120_000_000},
+        ]
+        self.row.save()
+
+        body = self.overview().content.decode()
+
+        self.assertIn(
+            'title="Hidden Ratter (250.000.000 ISK)&#10;'
+            'Quiet Ratter (120.000.000 ISK)"',
+            body,
+        )
+        self.assertIn('<i class="fa-solid fa-user-secret me-1"></i>2', body)
+        self.assertNotIn('<div class="text-danger text-nowrap">', body)
+
     def test_should_configure_the_new_column_in_datatables(self):
         """DataTables refuses a table whose columns list is one short."""
         self.assertIn("// Characters without wallet audit", read_static("overview.js"))
@@ -743,6 +762,22 @@ class TestNarrowScreens(EosTaxTestCase):
                     f'<th scope="col" class="d-none d-md-table-cell">{label}</th>',
                     body,
                 )
+
+    def test_should_show_a_member_no_payment_difference(self):
+        """Over- and underpayment are for whoever collects; a member sees the
+        amount that came in, not the arithmetic on it."""
+        for amount in (self.row.amount_to_pay + 1_000, self.row.amount_to_pay - 1_000):
+            with self.subTest(amount=amount):
+                self.row.amount_paid = amount
+                self.row.save()
+
+                body = table_body(self.overview())
+
+                # the row is there, only its difference is not
+                self.assertIn(f'data-order="{amount}"', body)
+                self.assertNotIn("more than owed", body)
+                self.assertNotIn("short of the amount owed", body)
+                self.assertNotIn('class="badge', body)
 
     def test_should_keep_the_columns_the_page_is_for(self):
         body = self.overview().content.decode()
