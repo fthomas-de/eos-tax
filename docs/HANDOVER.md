@@ -8,8 +8,13 @@ Last updated 2026-10-08.
 
 ## Release
 
-- Version **0.3.16** in `eos_tax/__init__.py`, released 2026-10-08
-- `[0.3.16]` in `CHANGELOG.md`: the over-/underpayment badges in "Amount
+- Version **0.3.17** in `eos_tax/__init__.py`, released 2026-10-08
+- `[0.3.17]` in `CHANGELOG.md`: tooltip on the Paid tick with the
+  transfer date (`MonthlyTax.paid_at`, the transfer that settled the
+  month) and the moment the row was first marked paid
+  (`MonthlyTax.paid_recorded_at`), migration 0025; without reason codes
+  the earliest exact transfer counts
+- `[0.3.16]`: the over-/underpayment badges in "Amount
   paid in ISK" only with `admin_view`; "Characters without wallet audit"
   is one badge per row (count, names and gross in its `title` tooltip)
   (no migration, no new strings)
@@ -25,11 +30,8 @@ Last updated 2026-10-08.
   `MonthlyTax.calculation_seconds`)
 - `[0.3.13]`: a missing ingame rate is asked from ESI; `[0.3.12]`: what was
   paid is recorded ("Amount paid in ISK", payments added up by reason)
-- `[Unreleased]`: tooltip on the Paid tick with transfer date and
-  "recorded as paid" time (migration 0025, `MonthlyTax.paid_at`,
-  `paid_recorded_at`); new strings not translated yet (at `/commit`)
 - Migrations **0001-0025** applied to `aa_dev`
-- 550 tests, all green (535 without the translation tag, 15 with it)
+- 565 tests, all green (550 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
@@ -212,8 +214,12 @@ alts from Alliance Auth, without assessments.
    that "added" holds only untaxed payouts - the matching key has never
    seen real member wallet data.
 2. Rows written before 0023/0024 show no characters and no calculation
-   time until they are recalculated.
-3. Not looked at in a browser yet, only through the tests: the overview
+   time until they are recalculated. Rows paid before 0025 get their
+   transfer date on the next run, but never a "recorded as paid" time.
+   A running Celery worker needs a restart to store either - it was not
+   restarted in the 0.3.17 session (may belong to someone's terminal).
+3. Not looked at in a browser yet, only through the tests: the Paid
+   tooltip, the overview
    columns "Characters without wallet audit" (now a badge), "Calculation time", the
    green amounts, "Amount paid in ISK" with its badges, "Average day
    (hours)" and the heading rows for groups of one on the bots page. The
@@ -277,6 +283,12 @@ Three traps in that setup, each of which produced a wrong answer once:
   rather than guessing it: the app is mounted at `/eos_tax/`, not `/eos-tax/`.
 
 ## Traps recent sessions cost time on
+
+- **The overview hides paid rows by default.** A view test on a paid row
+  finds "Nothing outstanding" unless it requests `?paid=1`.
+- **A Python patch script inside a bash heredoc broke in Git Bash** on its
+  quotes (unexpected EOF) - write the script with the Write tool, as
+  `CLAUDE.md` says.
 
 - **A `%` in a translatable text breaks every catalogue.** "0% ingame" is
   read by xgettext as the format directive `% i`, and msgfmt then rejects

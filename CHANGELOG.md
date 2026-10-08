@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.17] - 2026-10-08
+
 ### Added
 
 - The Paid tick in the overview has a tooltip with when the payment was
