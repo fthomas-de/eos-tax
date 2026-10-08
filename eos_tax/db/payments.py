@@ -148,6 +148,7 @@ def get_open_payment_count(dates: list, admin: bool = False, corps=None) -> int:
 def get_website_data(dates: list = [], admin: bool = False, corps=[]):
     config = get_config()
     blacklist = config.blacklisted_corporation_ids()
+    difference_min = config.paid_difference_min_millions * 1_000_000
     website_data = []
     for month, year in dates:
         # resolved once per month; the per row fallback used to read the
@@ -195,6 +196,10 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
                 "isk_paid_value": amount_paid if amount_paid is not None else -1,
                 "paid_difference": paid_difference,
                 "isk_paid_difference": format_isk(abs(paid_difference)),
+                # a few ISK off is a rounding on the payer's side, not
+                # something to chase; at 0 every difference is flagged - an
+                # exact payment still is not, the template only badges a sign
+                "flag_paid_difference": abs(paid_difference) >= difference_min,
                 "payment_count": selected_corp.payment_count,
                 # settled to the ISK - neither more nor less than owed
                 "paid_exactly": amount_paid is not None and paid_difference == 0,

@@ -139,6 +139,13 @@
                                 </p>
                                 {% bootstrap_field form.unaudited_min_millions %}
 
+                                <h2 class="h5 border-bottom pb-2 mt-5">{% translate "Payment differences" %}</h2>
+                                <p class="text-body-secondary small">
+                                    {% blocktranslate %}How far a payment has to be off the amount owed
+                                    before the overview flags it.{% endblocktranslate %}
+                                </p>
+                                {% bootstrap_field form.paid_difference_min_millions %}
+
                                 <h2 class="h5 border-bottom pb-2 mt-5">{% translate "Corp tax changes" %}</h2>
                                 <p class="text-body-secondary small">
                                     {% blocktranslate %}How large a move of a corporation's own tax rate has to be

@@ -98,6 +98,16 @@ class TaxConfiguration(SingletonModel):
             "seen for that character."
         ),
     )
+    paid_difference_min_millions = models.PositiveSmallIntegerField(
+        verbose_name=_("Smallest payment difference worth flagging (million ISK)"),
+        default=10,
+        validators=[MinValueValidator(0), MaxValueValidator(30000)],
+        help_text=_(
+            "A payment at least this much above or below the amount owed gets "
+            "a badge next to the amount paid on the overview; a smaller "
+            "difference is shown without one. 0 flags every difference."
+        ),
+    )
     tax_change_min_points = models.DecimalField(
         verbose_name=_("Smallest move worth listing"),
         max_digits=5,

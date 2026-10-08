@@ -406,22 +406,69 @@ class TestOverviewTable(EosTaxTestCase):
         self.row.payment_count = count
         self.row.save()
 
+    def flag_from(self, millions):
+        config = TaxConfiguration.get_solo()
+        config.paid_difference_min_millions = millions
+        config.save()
+
     def test_should_mark_a_payment_of_more_than_was_owed(self):
-        self.paid(self.row.amount_to_pay + 1_234_567)
+        self.paid(self.row.amount_to_pay + 12_345_678)
 
         body = self.overview().content.decode()
 
-        self.assertIn(">+1.234.567</span>", body)
-        self.assertIn("Paid 1.234.567 ISK more than owed.", body)
+        self.assertIn(">+12.345.678</span>", body)
+        self.assertIn("Paid 12.345.678 ISK more than owed.", body)
         self.assertIn("text-bg-warning", body)
 
     def test_should_mark_a_payment_short_of_what_was_owed(self):
-        self.paid(self.row.amount_to_pay - 1_000)
+        self.paid(self.row.amount_to_pay - 11_000_000)
 
         body = self.overview().content.decode()
 
-        self.assertIn(">-1.000</span>", body)
-        self.assertIn("1.000 ISK short of the amount owed.", body)
+        self.assertIn(">-11.000.000</span>", body)
+        self.assertIn("11.000.000 ISK short of the amount owed.", body)
+
+    def test_should_leave_a_difference_below_ten_million_unmarked(self):
+        """The default: a few million either way is rounding or a tip, not
+        something to chase."""
+        for amount in (self.row.amount_to_pay + 9_999_999,
+                       self.row.amount_to_pay - 9_999_999):
+            with self.subTest(amount=amount):
+                self.paid(amount)
+
+                body = table_body(self.overview())
+
+                self.assertIn(f'data-order="{amount}"', body)
+                self.assertNotIn("more than owed", body)
+                self.assertNotIn("short of the amount owed", body)
+
+    def test_should_mark_a_difference_of_exactly_the_minimum(self):
+        self.paid(self.row.amount_to_pay - 10_000_000)
+
+        self.assertContains(self.overview(), ">-10.000.000</span>")
+
+    def test_should_follow_the_configured_minimum(self):
+        self.flag_from(2)
+        self.paid(self.row.amount_to_pay + 1_999_999)
+        self.assertNotContains(self.overview(), "more than owed")
+
+        self.paid(self.row.amount_to_pay + 2_000_000)
+        self.assertContains(self.overview(), ">+2.000.000</span>")
+
+    def test_should_mark_every_difference_at_a_minimum_of_zero(self):
+        self.flag_from(0)
+        self.paid(self.row.amount_to_pay - 1)
+
+        self.assertContains(self.overview(), ">-1</span>")
+
+    def test_should_leave_an_exact_payment_unmarked_at_a_minimum_of_zero(self):
+        self.flag_from(0)
+        self.paid(self.row.amount_to_pay)
+
+        body = self.overview().content.decode()
+
+        self.assertNotIn("more than owed", body)
+        self.assertNotIn("short of the amount owed", body)
 
     def test_should_leave_an_exact_payment_unmarked(self):
         self.paid(self.row.amount_to_pay)

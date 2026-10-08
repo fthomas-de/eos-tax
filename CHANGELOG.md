@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Setting "Smallest payment difference worth flagging", 10 million ISK by
+  default. The `+`/`-` badges next to "Amount paid in ISK" flagged every
+  difference down to a single ISK, so a payment a few ISK off for rounding
+  looked as much like a problem as one short by a hundred million. A
+  difference below the setting now shows the amount without a badge; at 0
+  every difference is flagged as before, an exact payment never is.
+  Migration 0026 (`TaxConfiguration.paid_difference_min_millions`).
+
 ## [0.3.17] - 2026-10-08
 
 ### Added

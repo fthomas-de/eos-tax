@@ -80,12 +80,14 @@
                                         more - or a second one - does not pass as settled and
                                         nothing else. Empty until a payment was seen. The
                                         difference badges are for whoever collects: a
-                                        member reads the paid column, not the arithmetic.
+                                        member reads the paid column, not the arithmetic. Only
+                                        from the configured difference on, so a few ISK of
+                                        rounding do not hang a badge on half the rows.
                                     {% endcomment %}
                                     <td class="d-none d-md-table-cell{% if data.paid_exactly %} text-success{% endif %}" data-order="{{ data.isk_paid_value|unlocalize }}">
                                         {% if data.isk_paid %}
                                             {{ data.isk_paid }}
-                                            {% if perms.eos_tax.admin_view %}
+                                            {% if perms.eos_tax.admin_view and data.flag_paid_difference %}
                                                 {% if data.paid_difference > 0 %}
                                                     {% blocktranslate with value=data.isk_paid_difference asvar overpaid %}Paid {{ value }} ISK more than owed.{% endblocktranslate %}
                                                     <span class="badge text-bg-warning ms-1" title="{{ overpaid }}" aria-hidden="true">+{{ data.isk_paid_difference }}</span>
