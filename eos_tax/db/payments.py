@@ -105,6 +105,12 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
     return amount_to_pay
 
 
+# a row's state on the overview, also the values of its ?show= filter
+STATE_OPEN = "open"
+STATE_PAID = "paid"
+STATE_PROGRESS = "progress"
+
+
 def is_payable(month: int, year: int, today=None) -> bool:
     """Whether that month is over far enough to be transferred.
 
@@ -165,9 +171,10 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
             if selected_corp.corp_id in blacklist:
                 continue
 
+            payable = is_payable(selected_corp.month, selected_corp.year)
             reason_code = (
                 f"{selected_corp.corp_id}/{selected_corp.month}/{selected_corp.year}"
-                if is_payable(selected_corp.month, selected_corp.year)
+                if payable
                 else ""
             )
         
@@ -218,6 +225,14 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
                 "alliance_tax_rate":float("%.2f" % (applied_rate * 100)),
                 "payed":selected_corp.payed,
                 "reason":reason_code,
+                # what the overview filters on. Paid wins over in progress:
+                # money that already came in is not still pending, whatever
+                # the month. Outstanding is only what can be transferred now
+                "state": (
+                    STATE_PAID if selected_corp.payed
+                    else STATE_OPEN if payable
+                    else STATE_PROGRESS
+                ),
             })
     # the payable month first (it carries a reason code) - unpaid rows of it
     # ahead of paid ones - then the not yet payable follow-up month; corp

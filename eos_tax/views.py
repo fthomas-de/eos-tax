@@ -33,6 +33,9 @@ from eos_tax.db.bot_signals import (
     get_unbroken_runs,
 )
 from eos_tax.db.payments import (
+    STATE_OPEN,
+    STATE_PAID,
+    STATE_PROGRESS,
     get_all_corps_for_user,
     get_tax_corp,
     get_website_data,
@@ -51,6 +54,9 @@ from eos_tax.util import get_dates, format_isk
 
 logger = get_extension_logger(__name__)
 
+# the overview's ?show= values; "all" applies no filter
+OVERVIEW_FILTERS = (STATE_OPEN, STATE_PAID, STATE_PROGRESS, "all")
+
 # what datetime() accepts, minus one at the top because the year filters are
 # built as a half open range up to January of the following year
 MIN_YEAR = 1
@@ -62,17 +68,21 @@ def index(request):
     dates = get_dates()
     characters = get_all_characters_from_user(user=request.user)
     corps = get_all_corps_for_user(characters)
-    # outstanding only by default, like eos-invoices' overview - ?paid=1
-    # brings the paid rows back rather than needing a second page
-    include_paid = request.GET.get("paid") == "1"
+    # outstanding only by default, like eos-invoices' overview: a corp
+    # officer lands here to see what can be collected now. ?paid=1 is the
+    # link of the old two-button toggle, kept so a bookmark still shows
+    # everything it showed before
+    show = request.GET.get("show")
+    if show not in OVERVIEW_FILTERS:
+        show = "all" if request.GET.get("paid") == "1" else STATE_OPEN
 
     website_data = get_website_data(dates=dates, admin=request.user.has_perm('eos_tax.admin_view'), corps=corps)
     # told apart from "nothing owed at all" before the filter narrows it,
     # so the empty state can say which of the two it is
     has_any_data = bool(website_data)
 
-    if not include_paid:
-        website_data = [row for row in website_data if not row["payed"]]
+    if show != "all":
+        website_data = [row for row in website_data if row["state"] == show]
 
     # the rate of the month the rows below are for - the first of the
     # configured months, which is the payable one when both are shown - and
@@ -89,7 +99,7 @@ def index(request):
     context = {
         "title": _("Taxes to pay: %(rate)s%%") % {"rate": shown_rate},
         "website_data": website_data,
-        "include_paid": include_paid,
+        "show": show,
         "has_any_data": has_any_data,
         "version": VERSION,
         "tax_corp": get_tax_corp(corps),

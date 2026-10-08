@@ -50,6 +50,17 @@ Last updated 2026-10-08.
 
 ## Decisions of the 2026-10-08 sessions
 
+- **Overview filter by state** (unreleased), the user's request: see open,
+  paid and in progress (running month) separately. Four links
+  Outstanding / Paid / In progress / All as `?show=open|paid|progress|all`,
+  **Outstanding the default** (the user's choice). In progress means "not
+  payable yet" by `is_payable`, so last month stays in progress on the
+  1st; paid wins over both (Claude's calls). `?paid=1` maps to All for old
+  bookmarks, an unknown value to Outstanding. The empty Reason of a month
+  in progress reads "Not shown while in progress", eos-invoices' wording -
+  the user's request. Translated in all six; "In progress" and the Reason
+  note take eos-invoices' de/ru wording. Not looked at in a browser yet.
+
 - **Progress bar for every recalculation**, the user's request: "like
   eos-invoices" turned out to mean eos-auth-monitor's bar (eos-invoices
   has none). It shows every run of eos-tax, automatic or manual, with bar,
@@ -327,8 +338,10 @@ Three traps in that setup, each of which produced a wrong answer once:
   keyword on a task fails in a worker started before the change - restart
   it (on 2026-10-08 the user did, in the VS Code terminal).
 
-- **The overview hides paid rows by default.** A view test on a paid row
-  finds "Nothing outstanding" unless it requests `?paid=1`.
+- **The overview shows only outstanding rows by default** - unpaid and
+  payable. `create_tax_row()` builds a running-month row, which is "in
+  progress": a view test about a row's markup requests `{"show": "all"}`,
+  or it finds "Nothing outstanding".
 - **A Python patch script inside a bash heredoc broke in Git Bash** on its
   quotes (unexpected EOF) - write the script with the Write tool, as
   `CLAUDE.md` says.

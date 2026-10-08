@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- The overview filters by state: Outstanding, Paid, In progress or All,
+  in place of "Outstanding only" and "Including paid". Outstanding used to
+  mean every unpaid row, the running month included, so a month that
+  cannot be transferred yet and whose amount still grows sat between the
+  ones that can be collected now. Outstanding is now unpaid and payable,
+  In progress the month before its reason code appears (the second of the
+  following month, the same rule as the reason code), and a paid row
+  counts as paid whatever its month. The page still opens on
+  Outstanding; each filter asks the server for its rows (`?show=`), and the
+  old `?paid=1` link still shows everything, so a bookmark of it keeps
+  working.
+- The Reason of a month in progress says "Not shown while in progress",
+  the words eos-invoices uses, instead of an empty cell that read like a
+  missing code.
+
 ## [0.4.0] - 2026-10-08
 
 ### Added

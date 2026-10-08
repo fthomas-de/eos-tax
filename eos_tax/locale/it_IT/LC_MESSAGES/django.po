@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-08 14:38+0000\n"
+"POT-Creation-Date: 2026-10-08 15:13+0000\n"
 "Language: it-IT\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -463,8 +463,8 @@ msgstr "Importo della tassa"
 msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
-#: models.py:388 templates/eos_tax/index.html:47
-#: templates/eos_tax/index.html:143
+#: models.py:388 templates/eos_tax/index.html:32
+#: templates/eos_tax/index.html:55 templates/eos_tax/index.html:154
 msgid "Paid"
 msgstr "Pagato"
 
@@ -538,7 +538,7 @@ msgstr ""
 "anche un periodo senza ingame tax. Da qui si calcola l'importo da pagare. "
 "Vuoto nelle righe scritte prima che venisse salvato."
 
-#: models.py:455 templates/eos_tax/index.html:48
+#: models.py:455 templates/eos_tax/index.html:56
 msgid "Characters without wallet audit"
 msgstr "Characters senza audit del wallet"
 
@@ -552,7 +552,7 @@ msgstr ""
 "della corporation, a partire dal reddito impostato, come [{id, name, "
 "gross}], il più alto per primo."
 
-#: models.py:466 templates/eos_tax/index.html:49
+#: models.py:466 templates/eos_tax/index.html:57
 msgid "Calculation time"
 msgstr "Durata del calcolo"
 
@@ -597,19 +597,19 @@ msgstr ""
 msgid "Overview"
 msgstr "Panoramica"
 
-#: templates/eos_tax/base.html:15 views.py:111
+#: templates/eos_tax/base.html:15 views.py:121
 msgid "Statistics"
 msgstr "Statistiche"
 
-#: templates/eos_tax/base.html:19 views.py:507
+#: templates/eos_tax/base.html:19 views.py:517
 msgid "Bots"
 msgstr "Bots"
 
-#: templates/eos_tax/base.html:23 views.py:185
+#: templates/eos_tax/base.html:23 views.py:195
 msgid "Corp Tax Changes"
 msgstr "Corp Tax Changes"
 
-#: templates/eos_tax/base.html:27 views.py:279
+#: templates/eos_tax/base.html:27 views.py:289
 msgid "Settings"
 msgstr "Impostazioni"
 
@@ -638,33 +638,33 @@ msgid "Back to the list"
 msgstr "Torna all'elenco"
 
 #: templates/eos_tax/bot-detail.html:138 templates/eos_tax/bots.html:20
-#: templates/eos_tax/index.html:45 templates/eos_tax/settings.html:190
+#: templates/eos_tax/index.html:53 templates/eos_tax/settings.html:190
 #: templates/eos_tax/statistics.html:54
 msgid "Month"
 msgstr "Mese"
 
 #: templates/eos_tax/bot-detail.html:144 templates/eos_tax/bots.html:33
-#: templates/eos_tax/tax-changes.html:37
+#: templates/eos_tax/index.html:27 templates/eos_tax/tax-changes.html:37
 msgid "Show"
 msgstr "Mostra"
 
 #: templates/eos_tax/bot-detail.html:160 templates/eos_tax/bots.html:50
-#: templates/eos_tax/settings.html:233 views.py:550
+#: templates/eos_tax/settings.html:233 views.py:560
 msgid "Hours per day"
 msgstr "Ore al giorno"
 
 #: templates/eos_tax/bot-detail.html:167 templates/eos_tax/bots.html:57
-#: templates/eos_tax/settings.html:248 views.py:551
+#: templates/eos_tax/settings.html:248 views.py:561
 msgid "Unbroken runs"
 msgstr "Serie ininterrotte"
 
 #: templates/eos_tax/bot-detail.html:174 templates/eos_tax/bots.html:64
-#: templates/eos_tax/settings.html:265 views.py:552
+#: templates/eos_tax/settings.html:265 views.py:562
 msgid "Against the Corporation"
 msgstr "Al ritmo della Corporation"
 
 #: templates/eos_tax/bot-detail.html:181 templates/eos_tax/bots.html:71
-#: templates/eos_tax/settings.html:283 views.py:553
+#: templates/eos_tax/settings.html:283 views.py:563
 msgid "Off the Corporation clock"
 msgstr "Fuori dall'orario della Corporation"
 
@@ -897,15 +897,19 @@ msgstr ""
 "4a. Un Reason viene mostrato solo per il mese precedente, a partire dal 2 "
 "del mese in corso, per evitare pagamenti non più validi."
 
-#: templates/eos_tax/index.html:27
-msgid "Outstanding only"
-msgstr "Solo in sospeso"
+#: templates/eos_tax/index.html:29
+msgid "Outstanding"
+msgstr "In sospeso"
 
-#: templates/eos_tax/index.html:30
-msgid "Including paid"
-msgstr "Incluso pagato"
+#: templates/eos_tax/index.html:35
+msgid "In progress"
+msgstr "In corso"
 
-#: templates/eos_tax/index.html:40
+#: templates/eos_tax/index.html:38 templates/eos_tax/tax-changes.html:46
+msgid "All"
+msgstr "Tutti"
+
+#: templates/eos_tax/index.html:48
 #: templates/eos_tax/partials/bot-clock-detail.html:33
 #: templates/eos_tax/partials/bot-clock.html:22
 #: templates/eos_tax/partials/bot-rhythm-detail.html:28
@@ -917,81 +921,93 @@ msgstr "Incluso pagato"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: templates/eos_tax/index.html:41
+#: templates/eos_tax/index.html:49
 msgid "Ingame Corp Tax"
 msgstr "Ingame Corp Tax"
 
-#: templates/eos_tax/index.html:42
+#: templates/eos_tax/index.html:50
 msgid "Alliance Tax"
 msgstr "Alliance Tax"
 
-#: templates/eos_tax/index.html:43
+#: templates/eos_tax/index.html:51
 msgid "Amount to pay in ISK"
 msgstr "Importo da pagare in ISK"
 
-#: templates/eos_tax/index.html:44
+#: templates/eos_tax/index.html:52
 msgid "Amount paid in ISK"
 msgstr "Importo pagato in ISK"
 
-#: templates/eos_tax/index.html:46
+#: templates/eos_tax/index.html:54
 msgid "Reason"
 msgstr "Reason"
 
-#: templates/eos_tax/index.html:66 templates/eos_tax/index.html:68
+#: templates/eos_tax/index.html:74 templates/eos_tax/index.html:76
 msgid "No ingame corp tax, so nothing reaches the corporation wallet to tax."
 msgstr ""
 "Nessuna ingame corp tax, quindi non arriva nulla nel wallet della "
 "corporation da tassare."
 
-#: templates/eos_tax/index.html:96
+#: templates/eos_tax/index.html:104
 #: templates/eos_tax/partials/recalculate-result.html:108
 #, python-format
 msgid "Paid %(value)s ISK more than owed."
 msgstr "Pagati %(value)s ISK in più del dovuto."
 
-#: templates/eos_tax/index.html:100
+#: templates/eos_tax/index.html:108
 #: templates/eos_tax/partials/recalculate-result.html:113
 #, python-format
 msgid "%(value)s ISK short of the amount owed."
 msgstr "Mancano %(value)s ISK all'importo dovuto."
 
-#: templates/eos_tax/index.html:107
+#: templates/eos_tax/index.html:115
 #, python-format
 msgid "in %(counter)s payment"
 msgid_plural "in %(counter)s payments"
 msgstr[0] "in %(counter)s pagamento"
 msgstr[1] "in %(counter)s pagamenti"
 
-#: templates/eos_tax/index.html:125 templates/eos_tax/index.html:126
+#: templates/eos_tax/index.html:130
+msgid "Not shown while in progress"
+msgstr "Non mostrato finché il mese è in corso"
+
+#: templates/eos_tax/index.html:136 templates/eos_tax/index.html:137
 msgid "Copy reason to clipboard"
 msgstr "Copia il Reason negli appunti"
 
-#: templates/eos_tax/index.html:142 templates/eos_tax/index.html:143
+#: templates/eos_tax/index.html:153 templates/eos_tax/index.html:154
 #, python-format
 msgid "Transferred %(date)s EVE"
 msgstr "Trasferito il %(date)s EVE"
 
-#: templates/eos_tax/index.html:142 templates/eos_tax/index.html:143
+#: templates/eos_tax/index.html:153 templates/eos_tax/index.html:154
 #, python-format
 msgid "Recorded as paid %(date)s EVE"
 msgstr "Registrato come pagato il %(date)s EVE"
 
-#: templates/eos_tax/index.html:146
+#: templates/eos_tax/index.html:157
 msgid "Not paid"
 msgstr "Non pagato"
 
-#: templates/eos_tax/index.html:177
+#: templates/eos_tax/index.html:188
 #, python-format
 msgid "%(seconds)s s"
 msgstr "%(seconds)s s"
 
-#: templates/eos_tax/index.html:188
+#: templates/eos_tax/index.html:199
+msgid "No tax data for the selected months."
+msgstr "Nessun dato sulla tassa per i mesi selezionati."
+
+#: templates/eos_tax/index.html:201
 msgid "Nothing outstanding."
 msgstr "Nulla in sospeso."
 
-#: templates/eos_tax/index.html:190
-msgid "No tax data for the selected months."
-msgstr "Nessun dato sulla tassa per i mesi selezionati."
+#: templates/eos_tax/index.html:203
+msgid "Nothing paid yet."
+msgstr "Ancora nulla di pagato."
+
+#: templates/eos_tax/index.html:205
+msgid "Nothing in progress."
+msgstr "Nulla in corso."
 
 #: templates/eos_tax/partials/bot-clock-detail.html:12
 msgid ""
@@ -1115,7 +1131,7 @@ msgstr "Distanza"
 
 #: templates/eos_tax/partials/bot-clock.html:28
 #: templates/eos_tax/partials/bot-rhythm.html:28
-#: templates/eos_tax/tax-changes.html:75 views.py:223
+#: templates/eos_tax/tax-changes.html:75 views.py:233
 msgid "Payouts"
 msgstr "Pagamenti"
 
@@ -2006,10 +2022,6 @@ msgstr ""
 msgid "Quick filters"
 msgstr "Filtri rapidi"
 
-#: templates/eos_tax/tax-changes.html:46
-msgid "All"
-msgstr "Tutti"
-
 #: templates/eos_tax/tax-changes.html:54 templates/eos_tax/tax-changes.html:57
 msgid "Only"
 msgstr "Solo"
@@ -2029,7 +2041,7 @@ msgstr "Cambiamento nella quota"
 msgid "On"
 msgstr "Il"
 
-#: templates/eos_tax/tax-changes.html:74 views.py:224
+#: templates/eos_tax/tax-changes.html:74 views.py:234
 msgid "Systems"
 msgstr "Sistemi"
 
@@ -2085,86 +2097,89 @@ msgstr "m"
 msgid "y"
 msgstr "a"
 
-#: views.py:90
+#: views.py:100
 #, python-format
 msgid "Taxes to pay: %(rate)s%%"
 msgstr "Tassa da pagare: %(rate)s%%"
 
-#: views.py:99
+#: views.py:109
 msgid "Corporation:"
 msgstr "Corporation:"
 
-#: views.py:100
+#: views.py:110
 msgid "Filter by corporation name"
 msgstr "Filtra per nome della Corporation"
 
-#: views.py:119 views.py:478 views.py:527
+#: views.py:129 views.py:488 views.py:537
 msgid "Loading…"
 msgstr "Caricamento…"
 
-#: views.py:120
+#: views.py:130
 msgid "No data for this selection."
 msgstr "Nessun dato per questa selezione."
 
-#: views.py:121
+#: views.py:131
 msgid "Could not load the statistics."
 msgstr "Impossibile caricare le statistiche."
 
-#: views.py:122
+#: views.py:132
 msgid "corporations"
 msgstr "Corporation"
 
-#: views.py:123
+#: views.py:133
 msgid "Other"
 msgstr "Altre"
 
-#: views.py:124
+#: views.py:134
 #, python-brace-format
 msgid "{shown} of {total} corporations drawn"
 msgstr "{shown} di {total} Corporation disegnate"
 
-#: views.py:125
+#: views.py:135
 #, python-brace-format
 msgid "{value} of the tax covered"
 msgstr "{value} della tassa coperta"
 
-#: views.py:126
+#: views.py:136
 #, python-brace-format
 msgid "{value} ISK income"
 msgstr "{value} ISK di reddito"
 
-#: views.py:127
+#: views.py:137
 #, python-brace-format
 msgid "{value} ISK tax"
 msgstr "{value} ISK di tassa"
 
-#: views.py:192
+#: views.py:202
 msgid "Search:"
 msgstr "Cerca:"
 
-#: views.py:193
+#: views.py:203
 msgid "Corporation name, or a rate such as 0 or 100"
 msgstr "Nome della corporation o un tasso come 0 o 100"
 
-#: views.py:222
+#: views.py:232
 msgid "Share of the bounty in percent"
 msgstr "Quota della bounty in percentuale"
 
-#: views.py:255
+#: views.py:265
 msgid "Settings saved."
 msgstr "Impostazioni salvate."
 
-#: views.py:291
+#: views.py:301
 msgid "Calculating…"
 msgstr "Calcolo in corso…"
 
-#: views.py:292
+#: views.py:302
 msgid "Could not recalculate this month."
 msgstr "Impossibile ricalcolare questo mese."
 
-#: views.py:479 views.py:528
+#: views.py:489 views.py:538
 msgid "Could not load this view."
 msgstr "Impossibile caricare questa vista."
+
+#~ msgid "Including paid"
+#~ msgstr "Incluso pagato"
 
 #, python-format
 #~ msgid ""

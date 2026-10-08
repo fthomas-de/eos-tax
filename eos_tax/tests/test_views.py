@@ -1,4 +1,5 @@
 import datetime
+from unittest import mock
 import html
 import json
 import re
@@ -90,12 +91,12 @@ class TestIndexContent(EosTaxTestCase):
     def test_should_sort_unpaid_before_paid(self):
         """Which also covers both being listed at all - index() would raise
         rather than report a missing Corporation. Fetched with paid rows
-        included: Outstanding only, the default, would leave Alpha Corp with
+        included: Outstanding, the default, would leave Alpha Corp with
         nothing to be sorted against."""
         create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
         create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
 
-        response = self.client.get(reverse("eos_tax:index"), {"paid": "1"})
+        response = self.client.get(reverse("eos_tax:index"), {"show": "all"})
         rows = table_body(response)
 
         self.assertIn("Bravo Corp", rows)
@@ -110,19 +111,27 @@ class TestIndexContent(EosTaxTestCase):
         )
         self.client.force_login(basic_user)
 
-        rows = table_body(self.client.get(reverse("eos_tax:index")))
+        rows = table_body(self.client.get(reverse("eos_tax:index"), {"show": "all"}))
 
         self.assertIn("Bravo Corp", rows)
         self.assertNotIn("Alpha Corp", rows)
 
 
-class TestOutstandingOnly(EosTaxTestCase):
-    """The overview's paid/unpaid toggle - modelled on the one in
-    eos-invoices: outstanding only by default, a link brings paid rows
-    back rather than a client side re-filter of rows never sent."""
+class TestOverviewFilter(EosTaxTestCase):
+    """The overview's Outstanding / Paid / In progress / All links, modelled
+    on eos-invoices: Outstanding by default, each link asks the server for
+    its rows rather than re-filtering client side rows never sent.
+
+    Outstanding is unpaid and payable, In progress the month that cannot be
+    transferred yet, Paid wins over both. Last month is due from the second
+    on - mid_month() keeps that true on the first of the month too.
+    """
 
     def setUp(self):
-        enable_current_month()
+        self.enterContext(mid_month())
+        config = enable_current_month()
+        config.last_month = True
+        config.save()
         self.user = create_user(
             "toggle",
             91000006,
@@ -131,60 +140,154 @@ class TestOutstandingOnly(EosTaxTestCase):
             ["basic_access", "admin_view"],
         )
         self.client.force_login(self.user)
+        previous = datetime.datetime.now() - relativedelta(months=1)
+        self.last = {"month": previous.month, "year": previous.year}
 
-    def test_should_hide_paid_rows_by_default(self):
-        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
-        create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
+    def rows(self, **params):
+        return table_body(self.client.get(reverse("eos_tax:index"), params))
 
-        rows = table_body(self.client.get(reverse("eos_tax:index")))
+    def three_states(self):
+        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False, **self.last)
+        create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True, **self.last)
+        create_tax_row(91000077, "Charlie Corp", payed=False)
+
+    def test_should_show_only_outstanding_rows_by_default(self):
+        self.three_states()
+
+        rows = self.rows()
 
         self.assertIn("Bravo Corp", rows)
         self.assertNotIn("Alpha Corp", rows)
+        self.assertNotIn("Charlie Corp", rows)
 
-    def test_should_show_paid_rows_on_request(self):
-        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
-        create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
+    def test_should_show_only_paid_rows(self):
+        self.three_states()
 
-        rows = table_body(self.client.get(reverse("eos_tax:index"), {"paid": "1"}))
+        rows = self.rows(show="paid")
 
-        self.assertIn("Bravo Corp", rows)
+        self.assertNotIn("Bravo Corp", rows)
         self.assertIn("Alpha Corp", rows)
+        self.assertNotIn("Charlie Corp", rows)
 
-    def test_should_highlight_outstanding_only_by_default(self):
-        response = self.client.get(reverse("eos_tax:index"))
+    def test_should_show_only_the_running_month_in_progress(self):
+        self.three_states()
 
-        self.assertContains(response, '<a href="?" class="btn btn-primary">')
-        self.assertContains(response, '<a href="?paid=1" class="btn btn-outline-primary">')
+        rows = self.rows(show="progress")
 
-    def test_should_highlight_including_paid_on_request(self):
-        response = self.client.get(reverse("eos_tax:index"), {"paid": "1"})
+        self.assertNotIn("Bravo Corp", rows)
+        self.assertNotIn("Alpha Corp", rows)
+        self.assertIn("Charlie Corp", rows)
 
-        self.assertContains(response, '<a href="?" class="btn btn-outline-primary">')
-        self.assertContains(response, '<a href="?paid=1" class="btn btn-primary">')
+    def test_should_show_every_row_for_all(self):
+        self.three_states()
 
-    def test_should_explain_nothing_outstanding_when_everything_is_paid(self):
+        rows = self.rows(show="all")
+
+        for name in ("Bravo Corp", "Alpha Corp", "Charlie Corp"):
+            self.assertIn(name, rows)
+
+    def test_should_count_a_paid_running_month_as_paid(self):
+        """Money that came in is not pending any more, whatever the month."""
         create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=True)
 
+        self.assertIn("Bravo Corp", self.rows(show="paid"))
+        self.assertNotIn("Bravo Corp", self.rows(show="progress"))
+
+    def test_should_keep_last_month_in_progress_on_the_first(self):
+        """Not due before the second - the same rule as the reason code."""
+        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False, **self.last)
+        first = datetime.datetime.now().replace(day=1)
+
+        with mock.patch("eos_tax.db.payments.datetime") as clock:
+            clock.now.return_value = first
+            outstanding = self.rows()
+            in_progress = self.rows(show="progress")
+
+        self.assertNotIn("Bravo Corp", outstanding)
+        self.assertIn("Bravo Corp", in_progress)
+
+    def test_should_fall_back_to_outstanding_for_an_unknown_filter(self):
+        self.three_states()
+
+        rows = self.rows(show="everything")
+
+        self.assertIn("Bravo Corp", rows)
+        self.assertNotIn("Charlie Corp", rows)
+
+    def test_should_still_show_everything_for_an_old_paid_link(self):
+        """?paid=1 was the old toggle's link - a bookmark of it keeps
+        showing what it showed."""
+        self.three_states()
+
+        rows = self.rows(paid="1")
+
+        for name in ("Bravo Corp", "Alpha Corp", "Charlie Corp"):
+            self.assertIn(name, rows)
+
+    def test_should_highlight_the_chosen_filter_only(self):
+        for show in ("open", "paid", "progress", "all"):
+            with self.subTest(show=show):
+                response = self.client.get(reverse("eos_tax:index"), {"show": show})
+
+                self.assertContains(
+                    response,
+                    f'<a href="?show={show}" class="btn btn-primary" aria-current="page">',
+                )
+                for other in {"open", "paid", "progress", "all"} - {show}:
+                    self.assertContains(
+                        response, f'<a href="?show={other}" class="btn btn-outline-primary">'
+                    )
+
+    def test_should_highlight_outstanding_by_default(self):
         response = self.client.get(reverse("eos_tax:index"))
 
-        self.assertContains(response, "Nothing outstanding.")
+        self.assertContains(
+            response, '<a href="?show=open" class="btn btn-primary" aria-current="page">'
+        )
+
+    def test_should_say_which_filter_came_up_empty(self):
+        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=True, **self.last)
+        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=True)
+
+        self.assertContains(self.client.get(reverse("eos_tax:index")), "Nothing outstanding.")
+        self.assertContains(
+            self.client.get(reverse("eos_tax:index"), {"show": "progress"}),
+            "Nothing in progress.",
+        )
+
+    def test_should_say_nothing_paid_yet(self):
+        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False, **self.last)
+
+        response = self.client.get(reverse("eos_tax:index"), {"show": "paid"})
+
+        self.assertContains(response, "Nothing paid yet.")
         self.assertNotContains(response, "No tax data for the selected months.")
 
     def test_should_explain_no_data_when_nothing_was_calculated_at_all(self):
-        """Distinct from "nothing outstanding" - there is nothing to filter
-        in the first place, calculated or not."""
-        response = self.client.get(reverse("eos_tax:index"))
+        """Distinct from an empty filter - there is nothing to filter in
+        the first place, calculated or not."""
+        for show in ("open", "paid", "progress", "all"):
+            with self.subTest(show=show):
+                response = self.client.get(reverse("eos_tax:index"), {"show": show})
 
-        self.assertContains(response, "No tax data for the selected months.")
-        self.assertNotContains(response, "Nothing outstanding.")
+                self.assertContains(response, "No tax data for the selected months.")
+                self.assertNotContains(response, "Nothing outstanding.")
 
-    def test_should_keep_showing_everything_paid_when_requested(self):
-        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=True)
+    def test_should_say_why_the_running_month_has_no_reason(self):
+        """An empty cell read like a missing code - eos-invoices' words."""
+        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
 
-        response = self.client.get(reverse("eos_tax:index"), {"paid": "1"})
+        response = self.client.get(reverse("eos_tax:index"), {"show": "progress"})
 
-        self.assertIn("Bravo Corp", table_body(response))
-        self.assertNotContains(response, "Nothing outstanding.")
+        self.assertIn("Not shown while in progress", table_body(response))
+
+    def test_should_not_hide_a_payable_reason_behind_the_note(self):
+        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False, **self.last)
+
+        rows = self.rows()
+
+        self.assertIn(f"{BRAVO_CORP_ID}/{self.last['month']}/{self.last['year']}", rows)
+        self.assertNotIn("Not shown while in progress", rows)
 
 
 class TestIndexMarkup(EosTaxTestCase):
@@ -206,7 +309,7 @@ class TestIndexMarkup(EosTaxTestCase):
         create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
 
     def render_page(self):
-        return self.client.get(reverse("eos_tax:index")).content.decode()
+        return self.client.get(reverse("eos_tax:index"), {"show": "all"}).content.decode()
 
     def test_should_use_bootstrap5_classes(self):
         body = self.render_page()
@@ -250,7 +353,7 @@ class TestOverviewTable(EosTaxTestCase):
         self.row = create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
 
     def overview(self):
-        return self.client.get(reverse("eos_tax:index"))
+        return self.client.get(reverse("eos_tax:index"), {"show": "all"})
 
     def test_should_give_the_table_an_id(self):
         self.assertContains(self.overview(), 'id="table-eos-tax"')
@@ -287,7 +390,9 @@ class TestOverviewTable(EosTaxTestCase):
 
     def test_should_not_localize_sort_values(self):
         """A German locale would otherwise render the tax rate as "10,0"."""
-        response = self.client.get(reverse("eos_tax:index"), headers={"accept-language": "de"})
+        response = self.client.get(
+            reverse("eos_tax:index"), {"show": "all"}, headers={"accept-language": "de"}
+        )
 
         self.assertNotContains(response, 'data-order="10,0"')
 
@@ -557,7 +662,7 @@ class TestOverviewTable(EosTaxTestCase):
 
     def paid_overview(self):
         # paid rows only show with the filter that includes them
-        return self.client.get(reverse("eos_tax:index") + "?paid=1").content.decode()
+        return self.client.get(reverse("eos_tax:index"), {"show": "all"}).content.decode()
 
     def test_should_tell_when_a_paid_row_was_transferred_and_recorded(self):
         utc = datetime.timezone.utc
@@ -852,7 +957,7 @@ class TestNarrowScreens(EosTaxTestCase):
         self.client.force_login(self.user)
 
     def overview(self):
-        return self.client.get(reverse("eos_tax:index"))
+        return self.client.get(reverse("eos_tax:index"), {"show": "all"})
 
     def test_should_hide_the_two_rate_columns_and_the_amount_paid(self):
         """The amount paid is the treasurer's question, not the one a member

@@ -13,20 +13,28 @@
 
         <div class="card-body">
             {% comment %}
-                Outstanding only by default: a corp officer lands here to see
-                what still needs collecting, not a history of what already
-                came in. Two plain links rather than a DataTables column
-                filter - the table sorts and searches client side already
-                loaded rows, and a paid row dropped from the page cannot be
-                brought back without asking the server for it anyway.
+                Outstanding by default: a corp officer lands here to see
+                what can be collected now - not what already came in, and
+                not the running month, whose amount still grows. Plain
+                links in the same order as eos-invoices' rather than a
+                DataTables column filter - the table sorts and searches
+                client side already loaded rows, and a row dropped from the
+                page cannot be brought back without asking the server for
+                it anyway.
             {% endcomment %}
             <div class="d-flex flex-wrap justify-content-end mb-3">
-                <div class="btn-group btn-group-sm" role="group">
-                    <a href="?" class="btn {% if include_paid %}btn-outline-primary{% else %}btn-primary{% endif %}">
-                        {% translate "Outstanding only" %}
+                <div class="btn-group btn-group-sm" role="group" aria-label="{% translate "Show" %}">
+                    <a href="?show=open" class="btn {% if show == "open" %}btn-primary{% else %}btn-outline-primary{% endif %}"{% if show == "open" %} aria-current="page"{% endif %}>
+                        {% translate "Outstanding" %}
                     </a>
-                    <a href="?paid=1" class="btn {% if include_paid %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                        {% translate "Including paid" %}
+                    <a href="?show=paid" class="btn {% if show == "paid" %}btn-primary{% else %}btn-outline-primary{% endif %}"{% if show == "paid" %} aria-current="page"{% endif %}>
+                        {% translate "Paid" %}
+                    </a>
+                    <a href="?show=progress" class="btn {% if show == "progress" %}btn-primary{% else %}btn-outline-primary{% endif %}"{% if show == "progress" %} aria-current="page"{% endif %}>
+                        {% translate "In progress" %}
+                    </a>
+                    <a href="?show=all" class="btn {% if show == "all" %}btn-primary{% else %}btn-outline-primary{% endif %}"{% if show == "all" %} aria-current="page"{% endif %}>
+                        {% translate "All" %}
                     </a>
                 </div>
             </div>
@@ -109,10 +117,13 @@
                                     {% comment %}
                                         The payable month carries a reason code, the follow-up
                                         month never does - this is what a click on the column
-                                        sorts by.
+                                        sorts by. An empty cell there read like a missing code;
+                                        the same words as eos-invoices say it is withheld.
                                     {% endcomment %}
                                     <td data-order="{% if data.reason %}0{% else %}1{% endif %}">
-                                        {% if data.reason %}
+                                        {% if not data.reason and data.state == "progress" %}
+                                            <span class="text-body-secondary small">{% translate "Not shown while in progress" %}</span>
+                                        {% elif data.reason %}
                                             {{ data.reason }}
                                             <button type="button"
                                                     class="btn btn-link btn-sm p-0 ms-2 align-baseline eos-tax-copy"
@@ -176,10 +187,14 @@
                 </div>
             {% else %}
                 <div class="alert alert-warning text-center">
-                    {% if not include_paid and has_any_data %}
-                        {% translate "Nothing outstanding." %}
-                    {% else %}
+                    {% if not has_any_data or show == "all" %}
                         {% translate "No tax data for the selected months." %}
+                    {% elif show == "open" %}
+                        {% translate "Nothing outstanding." %}
+                    {% elif show == "paid" %}
+                        {% translate "Nothing paid yet." %}
+                    {% else %}
+                        {% translate "Nothing in progress." %}
                     {% endif %}
                 </div>
             {% endif %}
