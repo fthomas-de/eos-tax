@@ -8,9 +8,12 @@ Last updated 2026-10-08.
 
 ## Release
 
-- Version **0.4.0** in `eos_tax/__init__.py`, released 2026-10-08 (the
-  user chose a minor step for it)
-- `[0.4.0]` in `CHANGELOG.md`: progress bar of every recalculation run above
+- Version **0.4.1** in `eos_tax/__init__.py`, released 2026-10-08
+- `[0.4.1]` in `CHANGELOG.md`: the overview filters by state -
+  Outstanding / Paid / In progress / All (`?show=`), Outstanding the
+  default and now without the running month; "Not shown while in
+  progress" in the Reason of a month in progress (no migration)
+- `[0.4.0]` (a minor step, the user's choice): progress bar of every recalculation run above
   each page, admins only (`eos_tax/progress.py`, cache only, no migration);
   `run_update_corporation` takes an optional `run_id`; pages put their
   scripts in `{% block eos_tax_javascript %}`; tests run on a local memory
@@ -40,7 +43,7 @@ Last updated 2026-10-08.
 - `[0.3.13]`: a missing ingame rate is asked from ESI; `[0.3.12]`: what was
   paid is recorded ("Amount paid in ISK", payments added up by reason)
 - Migrations **0001-0026** applied to `aa_dev`
-- 594 tests, all green (579 without the translation tag, 15 with it)
+- 602 tests, all green (587 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
@@ -50,7 +53,7 @@ Last updated 2026-10-08.
 
 ## Decisions of the 2026-10-08 sessions
 
-- **Overview filter by state** (unreleased), the user's request: see open,
+- **Overview filter by state** (0.4.1), the user's request: see open,
   paid and in progress (running month) separately. Four links
   Outstanding / Paid / In progress / All as `?show=open|paid|progress|all`,
   **Outstanding the default** (the user's choice). In progress means "not
@@ -259,7 +262,8 @@ alts from Alliance Auth, without assessments.
    transfer date on the next run, but never a "recorded as paid" time.
    A running Celery worker needs a restart to store either - it was not
    restarted in the 0.3.17 session (may belong to someone's terminal).
-3. Not looked at in a browser yet, only through the tests: the Paid
+3. Not looked at in a browser yet, only through the tests: the overview's
+   four state links and the "Not shown while in progress" note, the Paid
    tooltip, the overview
    columns "Characters without wallet audit" (now a badge), "Calculation time", the
    green amounts, "Amount paid in ISK" with its badges, "Average day

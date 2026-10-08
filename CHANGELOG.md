@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-08
+
 ### Changed
 
 - The overview filters by state: Outstanding, Paid, In progress or All,
