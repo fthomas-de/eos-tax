@@ -8,6 +8,8 @@ else only displays or sums - it had no coverage before this file.
 import datetime
 from decimal import Decimal
 from importlib import import_module
+from types import SimpleNamespace
+from unittest import mock
 
 from allianceauth.eveonline.models import EveCorporationInfo
 from django.apps import apps as installed_apps
@@ -108,24 +110,6 @@ class TestUpdateCorpUnknownCorporation(PaymentsTestCase):
         update_corp(UNKNOWN_CORP_ID, MONTH, YEAR)
 
         self.assertFalse(MonthlyTax.objects.filter(corp_id=UNKNOWN_CORP_ID).exists())
-
-
-class TestUpdateCorpWithoutARate(PaymentsTestCase):
-    def test_should_skip_a_corporation_without_an_ingame_rate(self):
-        """Alliance Auth leaves tax_rate empty for a corporation it never
-        pulled from ESI - a holding imported by hand is the usual one. The
-        task runs one subtask per corporation, so formatting None would take
-        that subtask down without anything showing on the page."""
-        corporation = EveCorporationInfo.objects.get(corporation_id=CORP_ID)
-        corporation.tax_rate = None
-        corporation.save()
-        self.bounty(1_000_000_000, day=15)
-
-        update_corp(CORP_ID, MONTH, YEAR)
-
-        self.assertFalse(
-            MonthlyTax.objects.filter(corp_id=CORP_ID, month=MONTH, year=YEAR).exists()
-        )
 
 
 class TestUpdateCorpNoEntries(PaymentsTestCase):
@@ -415,21 +399,75 @@ class TestUpdateCorpBreakdown(PaymentsTestCase):
         self.assertFalse(breakdown["ok"])
         self.assertEqual(breakdown["reason"], "unknown_corp")
 
-    def test_should_explain_a_missing_ingame_rate(self):
-        corporation = EveCorporationInfo.objects.get(corporation_id=CORP_ID)
-        corporation.tax_rate = None
-        corporation.save()
-
-        breakdown = update_corp(CORP_ID, MONTH, YEAR)
-
-        self.assertFalse(breakdown["ok"])
-        self.assertEqual(breakdown["reason"], "no_tax_rate")
-
     def test_should_explain_a_month_without_entries(self):
         breakdown = update_corp(CORP_ID, MONTH, YEAR)
 
         self.assertFalse(breakdown["ok"])
         self.assertEqual(breakdown["reason"], "no_entries")
+
+
+def esi_answers(tax_rate):
+    """Patch ESI's corporation endpoint to report this ingame tax rate."""
+    provider = mock.Mock()
+    provider.get_corporation.return_value = (SimpleNamespace(tax_rate=tax_rate), None)
+    return mock.patch("eos_tax.db.payments.open_api_provider", provider)
+
+
+def esi_unreachable():
+    provider = mock.Mock()
+    provider.get_corporation.side_effect = OSError("ESI down")
+    return mock.patch("eos_tax.db.payments.open_api_provider", provider)
+
+
+class TestUpdateCorpWithoutStoredRate(PaymentsTestCase):
+    """Alliance Auth stores `tax_rate if tax_rate else None`, so every
+    corporation at 0% ingame tax loses its rate on the next refresh - the
+    recalculation refused such a corporation as never pulled from ESI."""
+
+    def setUp(self):
+        super().setUp()
+        EveCorporationInfo.objects.filter(corporation_id=CORP_ID).update(tax_rate=None)
+
+    def test_should_take_a_zero_rate_from_esi(self):
+        self.bounty(100_000_000, day=10)
+
+        with esi_answers(0.0):
+            breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertTrue(breakdown["ok"])
+        self.assertEqual(breakdown["corp_tax_percent"], 0.0)
+        self.assertTrue(breakdown["corp_tax_from_esi"])
+        self.assertEqual(self.row().tax_percentage, 0.0)
+
+    def test_should_take_a_real_rate_from_esi(self):
+        self.bounty(100_000_000, day=10)
+
+        with esi_answers(0.1):
+            breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["corp_tax_percent"], 10.0)
+        self.assertEqual(breakdown["gross_income"], 1_000_000_000)
+
+    def test_should_skip_when_esi_is_unreachable(self):
+        """The task runs one subtask per corporation, so formatting None
+        would take that subtask down without anything showing on the page."""
+        self.bounty(100_000_000, day=10)
+
+        with esi_unreachable():
+            breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertFalse(breakdown["ok"])
+        self.assertEqual(breakdown["reason"], "no_tax_rate")
+        self.assertFalse(MonthlyTax.objects.exists())
+
+    def test_should_not_ask_esi_when_auth_has_a_rate(self):
+        EveCorporationInfo.objects.filter(corporation_id=CORP_ID).update(tax_rate=0.1)
+
+        with esi_answers(0.5) as provider:
+            breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        provider.get_corporation.assert_not_called()
+        self.assertFalse(breakdown["corp_tax_from_esi"])
 
 
 # --- find_payment -------------------------------------------------------

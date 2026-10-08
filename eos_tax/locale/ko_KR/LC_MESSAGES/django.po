@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-08 10:13+0000\n"
+"POT-Creation-Date: 2026-10-08 11:25+0000\n"
 "Language: ko-KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -109,9 +109,9 @@ msgid ""
 msgstr ""
 "금액만이 아니라 reason 코드로 결제를 매칭합니다. 이 옵션을 켜면 코드가 붙은 "
 "모든 결제가 합산되므로 corporation이 나누어 낼 수 있고, 빚진 것보다 많이 낸 "
-"금액도 기록됩니다. 이 옵션이 없으면 결제는 정확한 금액만으로 인식되므로, 같은 "
-"금액을 빚진 두 corporation이나 같은 금액을 두 번 빚진 하나의 corporation을 "
-"구분할 수 없습니다."
+"금액도 기록됩니다. 이 옵션이 없으면 결제는 정확한 금액만으로 인식되므로, 같"
+"은 금액을 빚진 두 corporation이나 같은 금액을 두 번 빚진 하나의 corporation"
+"을 구분할 수 없습니다."
 
 #: models.py:90
 msgid "Smallest move worth listing"
@@ -458,9 +458,9 @@ msgid ""
 "owed once a payment of exactly that turned up. Empty until a payment was "
 "seen."
 msgstr ""
-"결제 확인이 이번 달에 찾은 ISK(정수 ISK 단위)입니다. reason 코드를 쓰면 이 "
-"행의 코드가 붙은 모든 결제의 합계이고, 쓰지 않으면 정확히 그 금액의 결제가 "
-"나타난 시점의 납부할 금액입니다. 결제가 확인되기 전까지는 비어 있습니다."
+"결제 확인이 이번 달에 찾은 ISK(정수 ISK 단위)입니다. reason 코드를 쓰면 이 행"
+"의 코드가 붙은 모든 결제의 합계이고, 쓰지 않으면 정확히 그 금액의 결제가 나타"
+"난 시점의 납부할 금액입니다. 결제가 확인되기 전까지는 비어 있습니다."
 
 #: models.py:415 templates/eos_tax/settings.html:83
 msgid "Payments"
@@ -806,13 +806,13 @@ msgstr ""
 "ingame corp tax가 없어 Corporation wallet에 과세할 금액이 들어오지 않습니다."
 
 #: templates/eos_tax/index.html:83
-#: templates/eos_tax/partials/recalculate-result.html:65
+#: templates/eos_tax/partials/recalculate-result.html:68
 #, python-format
 msgid "Paid %(value)s ISK more than owed."
 msgstr "납부할 금액보다 %(value)s ISK를 더 냈습니다."
 
 #: templates/eos_tax/index.html:87
-#: templates/eos_tax/partials/recalculate-result.html:70
+#: templates/eos_tax/partials/recalculate-result.html:73
 #, python-format
 msgid "%(value)s ISK short of the amount owed."
 msgstr "납부할 금액에 %(value)s ISK가 모자랍니다."
@@ -1271,26 +1271,30 @@ msgstr[0] "모든 세금 유형 합계, %(counter)s건: %(value)s ISK"
 msgid "Corporation's ingame tax rate: %(rate)s%%"
 msgstr "Corporation의 게임 내 세율: %(rate)s%%"
 
-#: templates/eos_tax/partials/recalculate-result.html:25
+#: templates/eos_tax/partials/recalculate-result.html:24
+msgid "(read from ESI - Alliance Auth has no rate on file)"
+msgstr "(ESI에서 읽음 - Alliance Auth에 저장된 세율 없음)"
+
+#: templates/eos_tax/partials/recalculate-result.html:28
 #, python-format
 msgid "Gross PvE income, the corp tax backed out: %(value)s ISK"
 msgstr "PvE 총수입(corp tax 역산): %(value)s ISK"
 
-#: templates/eos_tax/partials/recalculate-result.html:28
+#: templates/eos_tax/partials/recalculate-result.html:31
 #, python-format
 msgid "Alliance tax rate applied: %(rate)s%%"
 msgstr "적용된 Alliance 세율: %(rate)s%%"
 
-#: templates/eos_tax/partials/recalculate-result.html:32
+#: templates/eos_tax/partials/recalculate-result.html:35
 #, python-format
 msgid "Amount owed to the alliance: %(value)s ISK"
 msgstr "Alliance에 납부할 금액: %(value)s ISK"
 
-#: templates/eos_tax/partials/recalculate-result.html:43
+#: templates/eos_tax/partials/recalculate-result.html:46
 msgid "A payment of exactly the amount owed was found."
 msgstr "납부할 금액과 정확히 같은 결제를 찾았습니다."
 
-#: templates/eos_tax/partials/recalculate-result.html:45
+#: templates/eos_tax/partials/recalculate-result.html:48
 #, python-format
 msgid ""
 "No payment of exactly the amount owed. %(counter)s payment with this reason "
@@ -1299,14 +1303,14 @@ msgid_plural ""
 "No payment of exactly the amount owed. The %(counter)s payments with this "
 "reason add up to %(total)s ISK."
 msgstr[0] ""
-"납부할 금액과 정확히 같은 결제가 없습니다. 이 reason이 붙은 결제 "
-"%(counter)s건의 합계는 %(total)s ISK입니다."
+"납부할 금액과 정확히 같은 결제가 없습니다. 이 reason이 붙은 결제 %(counter)s"
+"건의 합계는 %(total)s ISK입니다."
 
-#: templates/eos_tax/partials/recalculate-result.html:47
+#: templates/eos_tax/partials/recalculate-result.html:50
 msgid "No payment with this reason found."
 msgstr "이 reason이 붙은 결제를 찾지 못했습니다."
 
-#: templates/eos_tax/partials/recalculate-result.html:49
+#: templates/eos_tax/partials/recalculate-result.html:52
 msgid ""
 "No payment of exactly the amount owed found. Without matching by reason only "
 "that amount can be told to belong to this corporation."
@@ -1314,32 +1318,33 @@ msgstr ""
 "납부할 금액과 정확히 같은 결제를 찾지 못했습니다. reason으로 매칭하지 않으면 "
 "그 금액만 이 corporation의 것으로 판단할 수 있습니다."
 
-#: templates/eos_tax/partials/recalculate-result.html:54
+#: templates/eos_tax/partials/recalculate-result.html:57
 msgid "Payments:"
 msgstr "결제:"
 
-#: templates/eos_tax/partials/recalculate-result.html:75
+#: templates/eos_tax/partials/recalculate-result.html:78
 msgid "Already marked as paid."
 msgstr "이미 납부완료로 표시됨."
 
-#: templates/eos_tax/partials/recalculate-result.html:77
+#: templates/eos_tax/partials/recalculate-result.html:80
 msgid "Not marked as paid yet."
 msgstr "아직 납부완료로 표시되지 않음."
 
-#: templates/eos_tax/partials/recalculate-result.html:85
+#: templates/eos_tax/partials/recalculate-result.html:88
 #, python-format
 msgid "Corporation %(corp_id)s is not known to Alliance Auth."
 msgstr "Alliance Auth에 Corporation %(corp_id)s 정보가 없습니다."
 
-#: templates/eos_tax/partials/recalculate-result.html:87
+#: templates/eos_tax/partials/recalculate-result.html:90
 #, python-format
 msgid ""
-"%(corp)s has no ingame tax rate on file yet - it has never been pulled from "
-"ESI."
+"%(corp)s has no ingame tax rate in Alliance Auth, and ESI could not be "
+"reached to ask for it. Try again later."
 msgstr ""
-"%(corp)s의 게임 내 세율이 아직 없습니다 - ESI에서 가져온 적이 없습니다."
+"%(corp)s은(는) Alliance Auth에 게임 내 세율이 없으며, ESI에 연결할 수 없어 "
+"조회하지 못했습니다. 나중에 다시 시도하세요."
 
-#: templates/eos_tax/partials/recalculate-result.html:89
+#: templates/eos_tax/partials/recalculate-result.html:92
 #, python-format
 msgid ""
 "%(corp)s has no journal entries of the configured tax types for %(month)s/"
@@ -1347,7 +1352,7 @@ msgid ""
 msgstr ""
 "%(corp)s에는 %(month)s/%(year)s에 설정된 세금 유형의 journal 항목이 없습니다."
 
-#: templates/eos_tax/partials/recalculate-result.html:91
+#: templates/eos_tax/partials/recalculate-result.html:94
 #, python-format
 msgid ""
 "The alliance tax rate for %(month)s/%(year)s is 0, so nothing is owed and no "
@@ -1356,7 +1361,7 @@ msgstr ""
 "%(month)s/%(year)s의 alliance 세율이 0이므로 납부할 금액이 없고 행도 기록되"
 "지 않습니다."
 
-#: templates/eos_tax/partials/recalculate-result.html:93
+#: templates/eos_tax/partials/recalculate-result.html:96
 msgid "Nothing could be calculated for this selection."
 msgstr "이 선택 항목에 대해 계산할 수 있는 것이 없습니다."
 
@@ -1785,6 +1790,13 @@ msgstr "이번 달을 다시 계산할 수 없습니다."
 #: views.py:435 views.py:484
 msgid "Could not load this view."
 msgstr "이 화면을 불러오지 못했습니다."
+
+#, python-format
+#~ msgid ""
+#~ "%(corp)s has no ingame tax rate on file yet - it has never been pulled "
+#~ "from ESI."
+#~ msgstr ""
+#~ "%(corp)s의 게임 내 세율이 아직 없습니다 - ESI에서 가져온 적이 없습니다."
 
 #~ msgid "Payed"
 #~ msgstr "납부됨"

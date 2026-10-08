@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- A Corporation at 0% ingame tax was refused by the recalculation as "no
+  ingame tax rate on file yet - it has never been pulled from ESI". It had
+  been pulled; Alliance Auth stores `tax_rate if tax_rate else None` on every
+  refresh, so 0% becomes no rate at all the first time it updates. When
+  Alliance Auth has no rate, `update_corp` now asks ESI itself, which always
+  sends the field, and the recalculate log marks a rate read that way. The
+  answer is not written back to `EveCorporationInfo` - that row belongs to
+  Alliance Auth, and its next refresh would empty it again. Only when ESI
+  cannot be reached is the Corporation still skipped, and the message now
+  says that instead of claiming it was never pulled.
+
 ## [0.3.12] - 2026-10-08
 
 ### Added

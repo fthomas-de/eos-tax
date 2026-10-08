@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-08 10:13+0000\n"
+"POT-Creation-Date: 2026-10-08 11:25+0000\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -841,13 +841,13 @@ msgstr ""
 "besteuert werden könnte."
 
 #: templates/eos_tax/index.html:83
-#: templates/eos_tax/partials/recalculate-result.html:65
+#: templates/eos_tax/partials/recalculate-result.html:68
 #, python-format
 msgid "Paid %(value)s ISK more than owed."
 msgstr "%(value)s ISK mehr gezahlt als geschuldet."
 
 #: templates/eos_tax/index.html:87
-#: templates/eos_tax/partials/recalculate-result.html:70
+#: templates/eos_tax/partials/recalculate-result.html:73
 #, python-format
 msgid "%(value)s ISK short of the amount owed."
 msgstr "%(value)s ISK fehlen zum geschuldeten Betrag."
@@ -1332,26 +1332,30 @@ msgstr[1] "Summe aller Steuerarten, %(counter)s Einträge: %(value)s ISK"
 msgid "Corporation's ingame tax rate: %(rate)s%%"
 msgstr "Ingame-Steuersatz der Corporation: %(rate)s %%"
 
-#: templates/eos_tax/partials/recalculate-result.html:25
+#: templates/eos_tax/partials/recalculate-result.html:24
+msgid "(read from ESI - Alliance Auth has no rate on file)"
+msgstr "(aus ESI gelesen - Alliance Auth hat keinen Satz gespeichert)"
+
+#: templates/eos_tax/partials/recalculate-result.html:28
 #, python-format
 msgid "Gross PvE income, the corp tax backed out: %(value)s ISK"
 msgstr "PvE-Bruttoertrag, die Corp-Steuer herausgerechnet: %(value)s ISK"
 
-#: templates/eos_tax/partials/recalculate-result.html:28
+#: templates/eos_tax/partials/recalculate-result.html:31
 #, python-format
 msgid "Alliance tax rate applied: %(rate)s%%"
 msgstr "Angewendeter Alliance-Steuersatz: %(rate)s %%"
 
-#: templates/eos_tax/partials/recalculate-result.html:32
+#: templates/eos_tax/partials/recalculate-result.html:35
 #, python-format
 msgid "Amount owed to the alliance: %(value)s ISK"
 msgstr "An die Alliance geschuldeter Betrag: %(value)s ISK"
 
-#: templates/eos_tax/partials/recalculate-result.html:43
+#: templates/eos_tax/partials/recalculate-result.html:46
 msgid "A payment of exactly the amount owed was found."
 msgstr "Eine Zahlung über genau den geschuldeten Betrag wurde gefunden."
 
-#: templates/eos_tax/partials/recalculate-result.html:45
+#: templates/eos_tax/partials/recalculate-result.html:48
 #, python-format
 msgid ""
 "No payment of exactly the amount owed. %(counter)s payment with this reason "
@@ -1366,45 +1370,45 @@ msgstr[1] ""
 "Keine Zahlung über genau den geschuldeten Betrag. Die %(counter)s Zahlungen "
 "mit diesem Reason ergeben zusammen %(total)s ISK."
 
-#: templates/eos_tax/partials/recalculate-result.html:47
+#: templates/eos_tax/partials/recalculate-result.html:50
 msgid "No payment with this reason found."
 msgstr "Keine Zahlung mit diesem Reason gefunden."
 
-#: templates/eos_tax/partials/recalculate-result.html:49
+#: templates/eos_tax/partials/recalculate-result.html:52
 msgid ""
 "No payment of exactly the amount owed found. Without matching by reason only "
 "that amount can be told to belong to this corporation."
 msgstr ""
-"Keine Zahlung über genau den geschuldeten Betrag gefunden. Ohne Abgleich "
-"per Reason lässt sich nur dieser Betrag dieser Corporation zuordnen."
+"Keine Zahlung über genau den geschuldeten Betrag gefunden. Ohne Abgleich per "
+"Reason lässt sich nur dieser Betrag dieser Corporation zuordnen."
 
-#: templates/eos_tax/partials/recalculate-result.html:54
+#: templates/eos_tax/partials/recalculate-result.html:57
 msgid "Payments:"
 msgstr "Zahlungen:"
 
-#: templates/eos_tax/partials/recalculate-result.html:75
+#: templates/eos_tax/partials/recalculate-result.html:78
 msgid "Already marked as paid."
 msgstr "Bereits als bezahlt markiert."
 
-#: templates/eos_tax/partials/recalculate-result.html:77
+#: templates/eos_tax/partials/recalculate-result.html:80
 msgid "Not marked as paid yet."
 msgstr "Noch nicht als bezahlt markiert."
 
-#: templates/eos_tax/partials/recalculate-result.html:85
+#: templates/eos_tax/partials/recalculate-result.html:88
 #, python-format
 msgid "Corporation %(corp_id)s is not known to Alliance Auth."
 msgstr "Corporation %(corp_id)s ist Alliance Auth nicht bekannt."
 
-#: templates/eos_tax/partials/recalculate-result.html:87
+#: templates/eos_tax/partials/recalculate-result.html:90
 #, python-format
 msgid ""
-"%(corp)s has no ingame tax rate on file yet - it has never been pulled from "
-"ESI."
+"%(corp)s has no ingame tax rate in Alliance Auth, and ESI could not be "
+"reached to ask for it. Try again later."
 msgstr ""
-"Für %(corp)s liegt noch kein Ingame-Steuersatz vor - er wurde noch nie von "
-"ESI abgerufen."
+"%(corp)s hat in Alliance Auth keinen Ingame-Steuersatz, und ESI war nicht "
+"erreichbar, um ihn abzufragen. Bitte später erneut versuchen."
 
-#: templates/eos_tax/partials/recalculate-result.html:89
+#: templates/eos_tax/partials/recalculate-result.html:92
 #, python-format
 msgid ""
 "%(corp)s has no journal entries of the configured tax types for %(month)s/"
@@ -1413,7 +1417,7 @@ msgstr ""
 "%(corp)s hat für %(month)s/%(year)s keine Journaleinträge der konfigurierten "
 "Steuerarten."
 
-#: templates/eos_tax/partials/recalculate-result.html:91
+#: templates/eos_tax/partials/recalculate-result.html:94
 #, python-format
 msgid ""
 "The alliance tax rate for %(month)s/%(year)s is 0, so nothing is owed and no "
@@ -1422,7 +1426,7 @@ msgstr ""
 "Der Alliance-Steuersatz für %(month)s/%(year)s ist 0, daher wird nichts "
 "geschuldet und keine Zeile geschrieben."
 
-#: templates/eos_tax/partials/recalculate-result.html:93
+#: templates/eos_tax/partials/recalculate-result.html:96
 msgid "Nothing could be calculated for this selection."
 msgstr "Für diese Auswahl konnte nichts berechnet werden."
 
@@ -1865,6 +1869,14 @@ msgstr "Dieser Monat konnte nicht neu berechnet werden."
 #: views.py:435 views.py:484
 msgid "Could not load this view."
 msgstr "Diese Ansicht konnte nicht geladen werden."
+
+#, python-format
+#~ msgid ""
+#~ "%(corp)s has no ingame tax rate on file yet - it has never been pulled "
+#~ "from ESI."
+#~ msgstr ""
+#~ "Für %(corp)s liegt noch kein Ingame-Steuersatz vor - er wurde noch nie "
+#~ "von ESI abgerufen."
 
 #~ msgid "Payed"
 #~ msgstr "Bezahlt"

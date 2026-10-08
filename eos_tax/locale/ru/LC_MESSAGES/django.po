@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-08 10:13+0000\n"
+"POT-Creation-Date: 2026-10-08 11:25+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -112,11 +112,11 @@ msgid ""
 "by its exact amount only, so two corporations owing the same sum, or one "
 "corporation owing the same sum twice, cannot be told apart."
 msgstr ""
-"Сопоставлять платежи по коду reason, а не только по сумме. С этим учитывается "
-"каждый платёж с этим кодом, так что corporation может платить частями, а "
-"переплата фиксируется. Без этого платёж распознаётся только по точной сумме, "
-"поэтому две corporation, должные одну и ту же сумму, или одна corporation, "
-"должная её дважды, неразличимы."
+"Сопоставлять платежи по коду reason, а не только по сумме. С этим "
+"учитывается каждый платёж с этим кодом, так что corporation может платить "
+"частями, а переплата фиксируется. Без этого платёж распознаётся только по "
+"точной сумме, поэтому две corporation, должные одну и ту же сумму, или одна "
+"corporation, должная её дважды, неразличимы."
 
 #: models.py:90
 msgid "Smallest move worth listing"
@@ -475,8 +475,7 @@ msgid ""
 msgstr ""
 "ISK, найденные проверкой платежей за этот месяц, в целых ISK: с кодами "
 "reason — сумма всех платежей с кодом этой строки, без них — сумма к оплате, "
-"как только появился платёж ровно на эту сумму. Пусто, пока платёж не "
-"замечен."
+"как только появился платёж ровно на эту сумму. Пусто, пока платёж не замечен."
 
 #: models.py:415 templates/eos_tax/settings.html:83
 msgid "Payments"
@@ -842,13 +841,13 @@ msgstr ""
 "можно было бы обложить налогом."
 
 #: templates/eos_tax/index.html:83
-#: templates/eos_tax/partials/recalculate-result.html:65
+#: templates/eos_tax/partials/recalculate-result.html:68
 #, python-format
 msgid "Paid %(value)s ISK more than owed."
 msgstr "Оплачено на %(value)s ISK больше, чем причиталось."
 
 #: templates/eos_tax/index.html:87
-#: templates/eos_tax/partials/recalculate-result.html:70
+#: templates/eos_tax/partials/recalculate-result.html:73
 #, python-format
 msgid "%(value)s ISK short of the amount owed."
 msgstr "До суммы к оплате не хватает %(value)s ISK."
@@ -1347,26 +1346,30 @@ msgstr[2] "Сумма всех типов налога, %(counter)s записе
 msgid "Corporation's ingame tax rate: %(rate)s%%"
 msgstr "Внутриигровая ставка налога Corporation: %(rate)s %%"
 
-#: templates/eos_tax/partials/recalculate-result.html:25
+#: templates/eos_tax/partials/recalculate-result.html:24
+msgid "(read from ESI - Alliance Auth has no rate on file)"
+msgstr "(получено из ESI - в Alliance Auth ставка не сохранена)"
+
+#: templates/eos_tax/partials/recalculate-result.html:28
 #, python-format
 msgid "Gross PvE income, the corp tax backed out: %(value)s ISK"
 msgstr "Валовый доход PvE, без учёта corp tax: %(value)s ISK"
 
-#: templates/eos_tax/partials/recalculate-result.html:28
+#: templates/eos_tax/partials/recalculate-result.html:31
 #, python-format
 msgid "Alliance tax rate applied: %(rate)s%%"
 msgstr "Применённая ставка Alliance: %(rate)s %%"
 
-#: templates/eos_tax/partials/recalculate-result.html:32
+#: templates/eos_tax/partials/recalculate-result.html:35
 #, python-format
 msgid "Amount owed to the alliance: %(value)s ISK"
 msgstr "Сумма, причитающаяся Alliance: %(value)s ISK"
 
-#: templates/eos_tax/partials/recalculate-result.html:43
+#: templates/eos_tax/partials/recalculate-result.html:46
 msgid "A payment of exactly the amount owed was found."
 msgstr "Найден платёж ровно на сумму к оплате."
 
-#: templates/eos_tax/partials/recalculate-result.html:45
+#: templates/eos_tax/partials/recalculate-result.html:48
 #, python-format
 msgid ""
 "No payment of exactly the amount owed. %(counter)s payment with this reason "
@@ -1384,11 +1387,11 @@ msgstr[2] ""
 "Нет платежа ровно на сумму к оплате. %(counter)s платежей с этим reason "
 "составляют в сумме %(total)s ISK."
 
-#: templates/eos_tax/partials/recalculate-result.html:47
+#: templates/eos_tax/partials/recalculate-result.html:50
 msgid "No payment with this reason found."
 msgstr "Платёж с этим reason не найден."
 
-#: templates/eos_tax/partials/recalculate-result.html:49
+#: templates/eos_tax/partials/recalculate-result.html:52
 msgid ""
 "No payment of exactly the amount owed found. Without matching by reason only "
 "that amount can be told to belong to this corporation."
@@ -1396,33 +1399,33 @@ msgstr ""
 "Платёж ровно на сумму к оплате не найден. Без сопоставления по reason только "
 "эту сумму можно отнести к этой corporation."
 
-#: templates/eos_tax/partials/recalculate-result.html:54
+#: templates/eos_tax/partials/recalculate-result.html:57
 msgid "Payments:"
 msgstr "Платежи:"
 
-#: templates/eos_tax/partials/recalculate-result.html:75
+#: templates/eos_tax/partials/recalculate-result.html:78
 msgid "Already marked as paid."
 msgstr "Уже отмечено как оплаченное."
 
-#: templates/eos_tax/partials/recalculate-result.html:77
+#: templates/eos_tax/partials/recalculate-result.html:80
 msgid "Not marked as paid yet."
 msgstr "Пока не отмечено как оплаченное."
 
-#: templates/eos_tax/partials/recalculate-result.html:85
+#: templates/eos_tax/partials/recalculate-result.html:88
 #, python-format
 msgid "Corporation %(corp_id)s is not known to Alliance Auth."
 msgstr "Alliance Auth не знает Corporation %(corp_id)s."
 
-#: templates/eos_tax/partials/recalculate-result.html:87
+#: templates/eos_tax/partials/recalculate-result.html:90
 #, python-format
 msgid ""
-"%(corp)s has no ingame tax rate on file yet - it has never been pulled from "
-"ESI."
+"%(corp)s has no ingame tax rate in Alliance Auth, and ESI could not be "
+"reached to ask for it. Try again later."
 msgstr ""
-"Для %(corp)s ещё нет внутриигровой ставки налога - она ни разу не была "
-"получена из ESI."
+"У %(corp)s нет внутриигровой ставки налога в Alliance Auth, а ESI был "
+"недоступен для запроса. Попробуйте позже."
 
-#: templates/eos_tax/partials/recalculate-result.html:89
+#: templates/eos_tax/partials/recalculate-result.html:92
 #, python-format
 msgid ""
 "%(corp)s has no journal entries of the configured tax types for %(month)s/"
@@ -1431,7 +1434,7 @@ msgstr ""
 "У %(corp)s нет записей journal настроенных типов налога за %(month)s/"
 "%(year)s."
 
-#: templates/eos_tax/partials/recalculate-result.html:91
+#: templates/eos_tax/partials/recalculate-result.html:94
 #, python-format
 msgid ""
 "The alliance tax rate for %(month)s/%(year)s is 0, so nothing is owed and no "
@@ -1440,7 +1443,7 @@ msgstr ""
 "Ставка alliance за %(month)s/%(year)s равна 0, поэтому ничего не причитается "
 "и строка не записывается."
 
-#: templates/eos_tax/partials/recalculate-result.html:93
+#: templates/eos_tax/partials/recalculate-result.html:96
 msgid "Nothing could be calculated for this selection."
 msgstr "Для этого выбора ничего не удалось рассчитать."
 
@@ -1889,6 +1892,14 @@ msgstr "Не удалось пересчитать этот месяц."
 #: views.py:435 views.py:484
 msgid "Could not load this view."
 msgstr "Не удалось загрузить этот раздел."
+
+#, python-format
+#~ msgid ""
+#~ "%(corp)s has no ingame tax rate on file yet - it has never been pulled "
+#~ "from ESI."
+#~ msgstr ""
+#~ "Для %(corp)s ещё нет внутриигровой ставки налога - она ни разу не была "
+#~ "получена из ESI."
 
 #~ msgid "Payed"
 #~ msgstr "Оплачено"

@@ -20,6 +20,9 @@
             </li>
             <li>
                 {% blocktranslate with rate=breakdown.corp_tax_percent %}Corporation's ingame tax rate: {{ rate }}%{% endblocktranslate %}
+                {% if breakdown.corp_tax_from_esi %}
+                    <span class="text-body-secondary">{% translate "(read from ESI - Alliance Auth has no rate on file)" %}</span>
+                {% endif %}
             </li>
             <li>
                 {% blocktranslate with value=breakdown.gross_income %}Gross PvE income, the corp tax backed out: {{ value }} ISK{% endblocktranslate %}
@@ -83,7 +86,7 @@
         {% if breakdown.reason == "unknown_corp" %}
             {% blocktranslate with corp_id=breakdown.corp_id %}Corporation {{ corp_id }} is not known to Alliance Auth.{% endblocktranslate %}
         {% elif breakdown.reason == "no_tax_rate" %}
-            {% blocktranslate with corp=breakdown.corp_name %}{{ corp }} has no ingame tax rate on file yet - it has never been pulled from ESI.{% endblocktranslate %}
+            {% blocktranslate with corp=breakdown.corp_name %}{{ corp }} has no ingame tax rate in Alliance Auth, and ESI could not be reached to ask for it. Try again later.{% endblocktranslate %}
         {% elif breakdown.reason == "no_entries" %}
             {% blocktranslate with corp=breakdown.corp_name month=breakdown.month year=breakdown.year %}{{ corp }} has no journal entries of the configured tax types for {{ month }}/{{ year }}.{% endblocktranslate %}
         {% elif breakdown.reason == "no_alliance_rate" %}

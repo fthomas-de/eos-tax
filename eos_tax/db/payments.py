@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from allianceauth.eveonline.models import EveCorporationInfo
+from allianceauth.eveonline.providers import open_api_provider
 from corptools.models import CorporationWalletJournalEntry
 from django.db.models import Count, Q, Sum
 from allianceauth.services.hooks import get_extension_logger
@@ -181,6 +182,28 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
     return website_data
 
 
+def _tax_rate_from_esi(corp_id: int) -> float | None:
+    """The corporation's ingame tax rate straight from ESI, None if unreachable.
+
+    Alliance Auth stores `tax_rate if tax_rate else None` on every refresh, so
+    a corporation at 0% ends up with no rate at all - indistinguishable from
+    one it never pulled. ESI always sends the field, so asking it tells the
+    two apart. The answer is not written back: EveCorporationInfo belongs to
+    Alliance Auth, and its next refresh would empty it again anyway.
+    """
+    try:
+        corporation, _response = open_api_provider.get_corporation(
+            corporation_id=corp_id, use_etag=False,
+        )
+    except Exception as exc:
+        # the task must not die on an ESI outage - the corporation is
+        # skipped as before and picked up again on the next run
+        logger.warning(f"dbcon update_corp: ESI lookup of {corp_id} failed: {exc}")
+        return None
+
+    return corporation.tax_rate
+
+
 def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
     """Recalculate one Corporation's month and persist it.
 
@@ -197,9 +220,13 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
             "corp_id": corp_id, "month": month, "year": year,
         }
 
-    if corp_info.tax_rate is None:
-        # Alliance Auth leaves the rate empty for a corporation it never
-        # pulled from ESI - a holding imported by hand is the usual one.
+    corp_tax_from_esi = False
+    stored_rate = corp_info.tax_rate
+    if stored_rate is None:
+        stored_rate = _tax_rate_from_esi(corp_id)
+        corp_tax_from_esi = stored_rate is not None
+
+    if stored_rate is None:
         # Formatting None raises, and the task runs one subtask per
         # corporation, so this would take that subtask down silently while
         # the page kept showing the month as uncalculated.
@@ -212,7 +239,7 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
             "corp_name": corp_info.corporation_name, "month": month, "year": year,
         }
 
-    corp_tax_rate = float("%.4f" % corp_info.tax_rate)
+    corp_tax_rate = float("%.4f" % stored_rate)
     logger.info(f"dbcon update_corp1: {corp_info.corporation_name} ({corp_id}): tax_rate {corp_tax_rate} - {month}/{year}")
 
     config = get_config()
@@ -257,6 +284,7 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
         return {
             "ok": False, "reason": "no_entries", "corp_id": corp_id,
             "corp_name": corp_info.corporation_name, "corp_tax_percent": corp_tax_rate * 100,
+            "corp_tax_from_esi": corp_tax_from_esi,
             "tax_types": config.tax_types, "month": month, "year": year,
         }
 
@@ -301,6 +329,7 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
         "entries_considered": sum(row["count"] for row in by_type),
         "tax_value": overall_ratted,
         "corp_tax_percent": corp_tax_percent,
+        "corp_tax_from_esi": corp_tax_from_esi,
         "gross_income": gross_income,
         "alliance_tax_rate": alliance_tax_rate,
         "alliance_tax_percent": float("%.2f" % (alliance_tax_rate * 100)),
