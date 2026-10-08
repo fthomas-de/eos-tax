@@ -8,8 +8,12 @@ Last updated 2026-10-08.
 
 ## Release
 
-- Version **0.4.1** in `eos_tax/__init__.py`, released 2026-10-08
-- `[0.4.1]` in `CHANGELOG.md`: the overview filters by state -
+- Version **0.4.2** in `eos_tax/__init__.py`, released 2026-10-08
+- `[0.4.2]` in `CHANGELOG.md`: tooltip "Earned in total" (the stored
+  `gross_income`) on "Amount to pay in ISK"; a sum of several payments in
+  "Amount paid in ISK" is a badge instead of the grey "in N payments" line
+  (no migration)
+- `[0.4.1]`: the overview filters by state -
   Outstanding / Paid / In progress / All (`?show=`), Outstanding the
   default and now without the running month; "Not shown while in
   progress" in the Reason of a month in progress (no migration)
@@ -43,7 +47,7 @@ Last updated 2026-10-08.
 - `[0.3.13]`: a missing ingame rate is asked from ESI; `[0.3.12]`: what was
   paid is recorded ("Amount paid in ISK", payments added up by reason)
 - Migrations **0001-0026** applied to `aa_dev`
-- 602 tests, all green (587 without the translation tag, 15 with it)
+- 604 tests, all green (589 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
@@ -53,14 +57,13 @@ Last updated 2026-10-08.
 
 ## Decisions of the 2026-10-08 sessions
 
-- **Gross income as tooltip on "Amount to pay in ISK"**, the user's
-  request; `gross_income` is the figure ("Earned in total: N ISK", the
-  user's choice over adding the arithmetic). Native `title` on a span,
+- **Gross income as tooltip on "Amount to pay in ISK"** (0.4.2), the
+  user's request; `gross_income` is the figure ("Earned in total: N ISK",
+  the user's choice over adding the arithmetic). Native `title` on a span,
   rows without a gross keep the bare amount. **A sum of payments is a
   badge** (`fa-layer-group` + count, "Sum of N payments" as tooltip) in
   place of the grey "in N payments" line - the user had no preference,
-  Claude's call. Not translated yet (at `/commit`); not looked at in a
-  browser.
+  Claude's call. Translated in all six; not looked at in a browser.
 
 - **Overview filter by state** (0.4.1), the user's request: see open,
   paid and in progress (running month) separately. Four links
@@ -272,7 +275,8 @@ alts from Alliance Auth, without assessments.
    A running Celery worker needs a restart to store either - it was not
    restarted in the 0.3.17 session (may belong to someone's terminal).
 3. Not looked at in a browser yet, only through the tests: the overview's
-   four state links and the "Not shown while in progress" note, the Paid
+   four state links and the "Not shown while in progress" note, the
+   "Earned in total" tooltip and the sum badge (0.4.2), the Paid
    tooltip, the overview
    columns "Characters without wallet audit" (now a badge), "Calculation time", the
    green amounts, "Amount paid in ISK" with its badges, "Average day

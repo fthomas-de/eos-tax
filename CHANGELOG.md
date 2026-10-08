@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-10-08
+
 ### Changed
 
 - "Amount to pay in ISK" names what it is a share of: its tooltip shows
