@@ -8,24 +8,18 @@ Last updated 2026-10-08.
 
 ## Release
 
-- Version **0.3.13** in `eos_tax/__init__.py`, released 2026-10-08
-- `[0.3.13]` in `CHANGELOG.md`: a Corporation at 0% ingame tax is no
-  longer refused as "never pulled from ESI" - `update_corp` asks ESI when
-  Alliance Auth has no rate
-- `[0.3.12]`: what was paid is recorded - "Amount paid in ISK" column on
-  the overview with +/- badges, payments listed in the recalculate log,
-  payments with a reason code added up (exact amount first), paid rows
-  looked up again for their amount
-- `[Unreleased]`: member wallets reconciled with the corporation wallet, so
-  0% ingame tax is taxed (migration 0022, `MonthlyTax.gross_income`) - not
-  committed yet, translations of the new log lines still open. Also in it:
-  overview column "Characters without wallet audit" (migration 0023,
-  `MonthlyTax.unaudited_characters`, threshold `unaudited_min_millions`,
-  default 100), green amounts when paid to the ISK, and an own column
-  "Calculation time" (migration 0024, `MonthlyTax.calculation_seconds`,
-  the user's choice of duration over timestamp, own column over a note)
+- Version **0.3.14** in `eos_tax/__init__.py`, released 2026-10-08
+- `[0.3.14]` in `CHANGELOG.md`: member wallets reconciled with the
+  corporation wallet, so 0% ingame tax is taxed (migration 0022,
+  `MonthlyTax.gross_income`); overview column "Characters without wallet
+  audit" (migration 0023, `MonthlyTax.unaudited_characters`, threshold
+  `unaudited_min_millions`, default 100); green amounts when paid to the
+  ISK; own column "Calculation time" (migration 0024,
+  `MonthlyTax.calculation_seconds`)
+- `[0.3.13]`: a missing ingame rate is asked from ESI; `[0.3.12]`: what was
+  paid is recorded ("Amount paid in ISK", payments added up by reason)
 - Migrations **0001-0024** applied to `aa_dev`
-- 508 tests, all green (493 without the translation tag, 15 with it)
+- 544 tests, all green (529 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
@@ -46,10 +40,11 @@ Last updated 2026-10-08.
   misses falls back to the nearest slice of the same character, type and
   amount within an hour (`LOOSE_MATCH_WINDOW`), so a key that does not
   line up cannot double a taxed payout. Still worth a look at the
-  recalculate log after deploying: "added" should only be untaxed payouts. A lone slice is backed out with the
-  rate of the nearest matched pair (Claude's call, the user rejected the
-  question about it without answering), a slice with no rate anywhere
-  counts at its own value and is flagged red in the log.
+  recalculate log after deploying: "added" should only be untaxed payouts.
+  A lone slice is backed out with the rate of the nearest matched pair
+  (Claude's call, the user rejected the question about it without
+  answering), a slice with no rate anywhere counts at its own value and is
+  flagged red in the log.
 - **Characters without a member wallet are listed per month.** The user's
   choices: "without wallet audit" means slices without a member
   counterpart (covers an audit lacking the wallet token too), threshold
@@ -57,7 +52,11 @@ Last updated 2026-10-08.
   with the same permissions as the row. Placed as the last column so the
   DataTables indices in `overview.js` stay put. Rows written before 0023
   show an empty list until recalculated.
-
+- **Calculation time is a duration in an own column**, the user's choice
+  over a timestamp and over a note in another column. Measured over all of
+  `update_corp` up to the write.
+- **Green when paid to the ISK** on both amounts; nothing paid is not a
+  match even though the difference is 0.
 - **A missing ingame rate is asked from ESI.** Production reported "no
   ingame tax rate on file yet" for a Corporation whose `tax_rate` was
   `None` with `last_updated` 2026-10-02. Cause is Alliance Auth itself
@@ -168,18 +167,21 @@ alts from Alliance Auth, without assessments.
 
 ## Open
 
-1. Nothing is blocked. After deploying the member wallet reconciliation,
+1. Nothing is blocked. After deploying 0.3.14 (migrations 0022-0024),
    recalculate urex (your ex's) for every month it ran at 0% (settings
    page). The log shows member entries, matched and added; it only works
    for members whose characters have a corptools audit with wallet access.
-   A paid row keeps its flag even when the new amount is higher.
-2. The new "Average day (hours)" column and the heading rows for groups of
-   one have not been looked at in a browser yet - only through the tests.
-   Worth one render with the seeded data (see below) before tuning anything
-   on top of them.
-3. The same for the "Amount paid in ISK" column, its badges and the new
-   lines of the recalculate log: tested, not looked at in a browser. The
-   Ether Element September row (see below) shows the `-` badge.
+   A paid row keeps its flag even when the new amount is higher. Check
+   that "added" holds only untaxed payouts - the matching key has never
+   seen real member wallet data.
+2. Rows written before 0023/0024 show no characters and no calculation
+   time until they are recalculated.
+3. Not looked at in a browser yet, only through the tests: the overview
+   columns "Characters without wallet audit", "Calculation time", the
+   green amounts, "Amount paid in ISK" with its badges, "Average day
+   (hours)" and the heading rows for groups of one on the bots page. The
+   Ether Element September row (see below) shows the `-` badge. Worth one
+   render with the seeded data before building on any of them.
 
 ## Seeded test data
 
@@ -238,6 +240,18 @@ Three traps in that setup, each of which produced a wrong answer once:
   rather than guessing it: the app is mounted at `/eos_tax/`, not `/eos-tax/`.
 
 ## Traps recent sessions cost time on
+
+- **A `%` in a translatable text breaks every catalogue.** "0% ingame" is
+  read by xgettext as the format directive `% i`, and msgfmt then rejects
+  any translation that does not repeat it. Write "without ingame tax" or
+  "zero percent" in model help texts and templates.
+- **A stale `.git/CLAUDE_COMMIT_MSG` gets committed.** The Write tool
+  refuses to overwrite it unless it was read in the session; `git commit
+  -F` then silently used the previous release message. Read the file
+  first, and check `git log -1` before anything is pushed.
+- **A sabotage check that does not compile proves nothing.** Deleting a
+  line inside a call left a syntax error, the module never imported, and
+  the run reported no failing test. Replace with valid code instead.
 
 - **`eos-test` takes one test label.** A second module after the first is
   passed through as an option and `manage.py test` refuses it - run one

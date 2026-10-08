@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.14] - 2026-10-08
+
 ### Added
 
 - The overview has a column "Characters without wallet audit" (migration
