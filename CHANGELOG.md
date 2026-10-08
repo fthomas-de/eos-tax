@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.18] - 2026-10-08
+
 ### Added
 
 - Setting "Smallest payment difference worth flagging", 10 million ISK by

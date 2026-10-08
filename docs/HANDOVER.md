@@ -8,8 +8,11 @@ Last updated 2026-10-08.
 
 ## Release
 
-- Version **0.3.17** in `eos_tax/__init__.py`, released 2026-10-08
-- `[0.3.17]` in `CHANGELOG.md`: tooltip on the Paid tick with the
+- Version **0.3.18** in `eos_tax/__init__.py`, released 2026-10-08
+- `[0.3.18]` in `CHANGELOG.md`: setting `paid_difference_min_millions`
+  (default 10, migration 0026) - the `+`/`-` badges in "Amount paid in ISK"
+  only from that difference on, 0 flags every difference
+- `[0.3.17]`: tooltip on the Paid tick with the
   transfer date (`MonthlyTax.paid_at`, the transfer that settled the
   month) and the moment the row was first marked paid
   (`MonthlyTax.paid_recorded_at`), migration 0025; without reason codes
@@ -30,8 +33,8 @@ Last updated 2026-10-08.
   `MonthlyTax.calculation_seconds`)
 - `[0.3.13]`: a missing ingame rate is asked from ESI; `[0.3.12]`: what was
   paid is recorded ("Amount paid in ISK", payments added up by reason)
-- Migrations **0001-0025** applied to `aa_dev`
-- 565 tests, all green (550 without the translation tag, 15 with it)
+- Migrations **0001-0026** applied to `aa_dev`
+- 570 tests, all green (555 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
@@ -40,6 +43,13 @@ Last updated 2026-10-08.
   the commits that raised those versions
 
 ## Decisions of the 2026-10-08 sessions
+
+- **Payment differences flagged from 10M on**, the user's request: small
+  differences need no extra hint, the threshold is a setting with 10M as
+  default. Integer millions like `unaudited_min_millions`; `>=` the
+  threshold is flagged, 0 flags every difference (Claude's calls). Only the
+  overview badges follow it - the recalculate log still states every
+  difference. The amount itself stays green only when paid to the ISK.
 
 - **Paid tooltip shows both times**, the user's choice over only the
   transfer date or only the moment of recognition. Native `title` like the
@@ -222,9 +232,11 @@ alts from Alliance Auth, without assessments.
    tooltip, the overview
    columns "Characters without wallet audit" (now a badge), "Calculation time", the
    green amounts, "Amount paid in ISK" with its badges, "Average day
-   (hours)" and the heading rows for groups of one on the bots page. The
-   Ether Element September row (see below) shows the `-` badge. Worth one
-   render with the seeded data before building on any of them.
+   (hours)" and the heading rows for groups of one on the bots page, and
+   the new "Payment differences" block on the settings page. The Ether
+   Element September row (see below) showed the `-` badge; since 0.3.18
+   only if it is 10M or more off. Worth one render with the seeded data
+   before building on any of them.
 
 ## Seeded test data
 
