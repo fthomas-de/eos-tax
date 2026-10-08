@@ -1,6 +1,7 @@
 {% extends "eos_tax/base.html" %}
 {% load i18n %}
 {% load l10n %}
+{% load tz %}
 {% load sri %}
 
 {% block details %}
@@ -121,9 +122,17 @@
                                         {% endif %}
                                     </td>
                                     <td data-order="{% if data.payed %}1{% else %}0{% endif %}">
+                                        {% comment %}
+                                            When the money came in and when the check noticed
+                                            it - written out in place rather than through
+                                            asvar, which would leak a date into the next row of
+                                            the loop. A row paid before either was stored has
+                                            neither and keeps the bare tick.
+                                        {% endcomment %}
                                         {% if data.payed %}
-                                            <i class="fa-solid fa-check text-success"></i>
-                                            <span class="visually-hidden">{% translate "Paid" %}</span>
+                                            <i class="fa-solid fa-check text-success" aria-hidden="true"{% if data.paid_at or data.paid_recorded_at %}
+                                               title="{% if data.paid_at %}{% blocktranslate with date=data.paid_at|utc|date:'Y-m-d H:i' %}Transferred {{ date }} EVE{% endblocktranslate %}{% endif %}{% if data.paid_at and data.paid_recorded_at %}&#10;{% endif %}{% if data.paid_recorded_at %}{% blocktranslate with date=data.paid_recorded_at|utc|date:'Y-m-d H:i' %}Recorded as paid {{ date }} EVE{% endblocktranslate %}{% endif %}"{% endif %}></i>
+                                            <span class="visually-hidden">{% translate "Paid" %}{% if data.paid_at %}, {% blocktranslate with date=data.paid_at|utc|date:'Y-m-d H:i' %}Transferred {{ date }} EVE{% endblocktranslate %}{% endif %}{% if data.paid_recorded_at %}, {% blocktranslate with date=data.paid_recorded_at|utc|date:'Y-m-d H:i' %}Recorded as paid {{ date }} EVE{% endblocktranslate %}{% endif %}</span>
                                         {% else %}
                                             <i class="fa-solid fa-xmark text-danger"></i>
                                             <span class="visually-hidden">{% translate "Not paid" %}</span>

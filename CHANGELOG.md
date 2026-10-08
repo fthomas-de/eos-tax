@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The Paid tick in the overview has a tooltip with when the payment was
+  made and when eos-tax recorded it. The transfer date is the journal date of
+  the transfer that settled the month - the one of exactly the amount owed,
+  or the one that brought the payments up to it, not a later one that only
+  paid too much. "Recorded as paid" is stamped by the run that first marks
+  the row paid and never moved after that. Both are kept like the amount
+  paid: a later check that finds nothing does not take them back. Migration
+  0025 (`MonthlyTax.paid_at`, `paid_recorded_at`). Rows paid before it get
+  their transfer date on the next run - paid rows are looked up again
+  anyway - but no recorded time, which cannot be reconstructed.
+
+### Changed
+
+- Without reason codes the earliest transfer of the exact amount now counts.
+  The lookup took whichever the database returned first, which did not
+  matter while only the amount was kept.
+
 ## [0.3.16] - 2026-10-08
 
 ### Changed

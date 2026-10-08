@@ -20,6 +20,7 @@ from corptools.models import (
     EveName,
 )
 from dateutil.relativedelta import relativedelta
+from django.utils import timezone
 
 from eos_tax.db.payments import (
     get_open_payment_count,
@@ -1517,3 +1518,139 @@ class TestAmountToPayBackfill(EosTaxTestCase):
         row.refresh_from_db()
 
         self.assertEqual(row.amount_to_pay, 2_000_000_000)
+
+
+def _utc(day, hour=12):
+    return datetime.datetime(YEAR, MONTH, day, hour, tzinfo=datetime.timezone.utc)
+
+
+class TestFindPaymentDate(CorpHasPayedTestCase):
+    """paid_at: the journal date of the transfer that settled the row, for
+    the tooltip on the Paid tick."""
+
+    def setUp(self):
+        super().setUp()
+        self.owe()
+        self.configure_holding()
+
+    def use_reason(self):
+        self.config.use_reason = True
+        self.config.save()
+
+    def test_should_date_an_exact_payment(self):
+        self.use_reason()
+        self.pay(OWED // 3, reason=REASON, when=_utc(2))
+        self.pay(OWED, reason=REASON, when=_utc(4))
+
+        self.assertEqual(self.found()["paid_at"], _utc(4))
+
+    def test_should_date_parts_by_the_one_that_reached_the_amount(self):
+        """A transfer after the row was settled is paid too much, not the
+        payment - dating by the last one would move the moment forward."""
+        self.use_reason()
+        self.pay(OWED // 2, reason=REASON, when=_utc(2))
+        self.pay(OWED - OWED // 2, reason=REASON, when=_utc(3))
+        self.pay(1_000, reason=REASON, when=_utc(9))
+
+        found = self.found()
+
+        self.assertEqual(found["match"], "sum")
+        self.assertEqual(found["paid_at"], _utc(3))
+
+    def test_should_date_the_earliest_exact_payment_without_reason(self):
+        self.pay(OWED, when=_utc(7))
+        self.pay(OWED, when=_utc(3))
+
+        self.assertEqual(self.found()["paid_at"], _utc(3))
+
+    def test_should_not_date_a_row_that_is_not_settled(self):
+        self.use_reason()
+        self.pay(OWED // 2, reason=REASON, when=_utc(2))
+
+        self.assertIsNone(self.found()["paid_at"])
+
+
+class TestPaymentTimesOnTheRow(PaymentsTestCase):
+    """set_corp_tax stamps the moment a row is first seen paid and keeps
+    the transfer date the way it keeps the amount."""
+
+    def write(self, payed, paid_at=None):
+        set_corp_tax(
+            corp_id=CORP_ID, corp_name="Bravo Corp", tax_value=5_000_000,
+            tax_percentage=10.0, month=MONTH, year=YEAR, payed=payed,
+            alliance_tax_rate=0.15, paid_at=paid_at,
+        )
+
+    def test_should_stamp_a_row_created_paid(self):
+        before = timezone.now()
+
+        self.write(payed=True, paid_at=_utc(2))
+
+        row = self.row()
+        self.assertEqual(row.paid_at, _utc(2))
+        self.assertGreaterEqual(row.paid_recorded_at, before)
+
+    def test_should_leave_an_unpaid_row_unstamped(self):
+        self.write(payed=False)
+        self.write(payed=False)
+
+        self.assertIsNone(self.row().paid_recorded_at)
+
+    def test_should_stamp_the_run_that_first_sees_it_paid(self):
+        self.write(payed=False)
+        before = timezone.now()
+
+        self.write(payed=True, paid_at=_utc(2))
+
+        self.assertGreaterEqual(self.row().paid_recorded_at, before)
+
+    def test_should_not_move_the_stamp_on_a_later_run(self):
+        self.write(payed=True, paid_at=_utc(2))
+        row = self.row()
+        row.paid_recorded_at = _utc(3)
+        row.save()
+
+        self.write(payed=True, paid_at=_utc(2))
+
+        self.assertEqual(self.row().paid_recorded_at, _utc(3))
+
+    def test_should_keep_the_payment_date_when_a_later_check_finds_nothing(self):
+        """A rate correction changes the amount; the transfer still happened."""
+        self.write(payed=True, paid_at=_utc(2))
+
+        self.write(payed=False, paid_at=None)
+
+        self.assertEqual(self.row().paid_at, _utc(2))
+
+    def test_should_store_the_date_update_corp_found(self):
+        self.config.tax_rate = Decimal("0.15")
+        self.config.use_reason = True
+        self.config.tax_corporation = create_corporation(HOLDING_CORP_ID, "Holding Corp", None)
+        self.config.save()
+        self.bounty(500_000_000, day=10)
+        update_corp(CORP_ID, MONTH, YEAR)
+        self.entry_id += 1
+        CorporationWalletJournalEntry.objects.create(
+            division=self.division, date=_utc(12), description="tax payment",
+            entry_id=self.entry_id, ref_type="player_donation",
+            first_party_id=RATTER_ID, second_party_id=HOLDING_CORP_ID,
+            reason=REASON, amount=-self.row().amount_to_pay,
+        )
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        row = self.row()
+        self.assertEqual(row.paid_at, _utc(12))
+        self.assertIsNotNone(row.paid_recorded_at)
+
+    def test_should_hand_both_times_to_the_overview(self):
+        now = datetime.datetime.now()
+        row = create_tax_row(CORP_ID, "Bravo Corp", payed=True, alliance_tax_rate=0.15)
+        row.paid_at = _utc(2)
+        row.paid_recorded_at = _utc(3)
+        row.save()
+
+        data = get_website_data(dates=[(now.month, now.year)], admin=True)[0]
+
+        self.assertEqual(data["paid_at"], _utc(2))
+        self.assertEqual(data["paid_recorded_at"], _utc(3))

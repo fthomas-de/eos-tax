@@ -25,7 +25,10 @@ Last updated 2026-10-08.
   `MonthlyTax.calculation_seconds`)
 - `[0.3.13]`: a missing ingame rate is asked from ESI; `[0.3.12]`: what was
   paid is recorded ("Amount paid in ISK", payments added up by reason)
-- Migrations **0001-0024** applied to `aa_dev`
+- `[Unreleased]`: tooltip on the Paid tick with transfer date and
+  "recorded as paid" time (migration 0025, `MonthlyTax.paid_at`,
+  `paid_recorded_at`); new strings not translated yet (at `/commit`)
+- Migrations **0001-0025** applied to `aa_dev`
 - 550 tests, all green (535 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
@@ -35,6 +38,12 @@ Last updated 2026-10-08.
   the commits that raised those versions
 
 ## Decisions of the 2026-10-08 sessions
+
+- **Paid tooltip shows both times**, the user's choice over only the
+  transfer date or only the moment of recognition. Native `title` like the
+  other badges, times in UTC as "EVE". Written out in place, not through
+  `asvar` - that would leak a date into the next row of the loop. Rows paid
+  before 0025 get the transfer date on the next run, never a recorded time.
 
 - **Payment differences are for admins.** The user's request: the `+`/`-`
   badges next to "Amount paid in ISK" only for admins

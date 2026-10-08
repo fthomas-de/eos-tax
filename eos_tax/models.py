@@ -462,3 +462,24 @@ class MonthlyTax(models.Model):
             "Empty on rows written before it was stored."
         ),
     )
+
+    paid_at = models.DateTimeField(
+        verbose_name=_("Payment date"),
+        null=True,
+        blank=True,
+        help_text=_(
+            "Journal date of the transfer that settled this month: the one of "
+            "exactly the amount owed, or the one that brought the payments up "
+            "to it. Empty until a payment settled the row."
+        ),
+    )
+
+    paid_recorded_at = models.DateTimeField(
+        verbose_name=_("Recorded as paid"),
+        null=True,
+        blank=True,
+        help_text=_(
+            "When the payment check first marked this month as paid. Empty on "
+            "rows marked paid before it was stored."
+        ),
+    )

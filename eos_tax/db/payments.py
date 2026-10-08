@@ -14,6 +14,7 @@ from corptools.models import (
     EveName,
 )
 from django.db.models import Q
+from django.utils import timezone
 from allianceauth.services.hooks import get_extension_logger
 
 from eos_tax.app_settings import get_config
@@ -30,7 +31,7 @@ from eos_tax.db.shared import _month_range
 logger = get_extension_logger(__name__)
 
 
-def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False, alliance_tax_rate: float = 0, amount_paid: int = None, payment_count: int = 0, gross_income: int = None, unaudited_characters: list = None, calculation_seconds: float = None):
+def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False, alliance_tax_rate: float = 0, amount_paid: int = None, payment_count: int = 0, gross_income: int = None, unaudited_characters: list = None, calculation_seconds: float = None, paid_at: datetime = None):
     selected_corp = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).first()
     # worked out here from the values this function writes anyway,
     # rather than handed in: a caller that forgot to pass it used to store a
@@ -55,6 +56,10 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
         # once paid, always paid: a recalculation after a rate correction
         # finds no payment of the new amount, and must not take back a
         # payment that was already recognised
+        # the first run that sees it paid stamps it; a later one, which
+        # finds the flag already set, must not move the moment forward
+        if payed and not selected_corp.payed:
+            selected_corp.paid_recorded_at=timezone.now()
         selected_corp.payed=selected_corp.payed or payed
         selected_corp.alliance_tax_rate=alliance_tax_rate
         selected_corp.amount_to_pay=amount_to_pay
@@ -72,6 +77,8 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
         if amount_paid is not None:
             selected_corp.amount_paid=amount_paid
             selected_corp.payment_count=payment_count
+        if paid_at is not None:
+            selected_corp.paid_at=paid_at
 
         selected_corp.save()
 
@@ -91,6 +98,8 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
             calculation_seconds=calculation_seconds,
             amount_paid=amount_paid,
             payment_count=payment_count if amount_paid is not None else 0,
+            paid_at=paid_at,
+            paid_recorded_at=timezone.now() if payed else None,
         )
 
     return amount_to_pay
@@ -194,6 +203,8 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
                     for character in selected_corp.unaudited_characters or []
                 ],
                 "calculation_seconds": selected_corp.calculation_seconds,
+                "paid_at": selected_corp.paid_at,
+                "paid_recorded_at": selected_corp.paid_recorded_at,
                 "month":selected_corp.month,
                 "year":selected_corp.year,
                 "period": selected_corp.year * 100 + selected_corp.month,
@@ -589,6 +600,7 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
         alliance_tax_rate=alliance_tax_rate,
         amount_paid=payment["amount_paid"],
         payment_count=len(payment["payments"]),
+        paid_at=payment["paid_at"],
         gross_income=gross_income,
         unaudited_characters=unaudited_characters,
         # everything up to the write - the member wallets made this month the

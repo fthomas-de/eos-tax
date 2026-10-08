@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-08 12:50+0000\n"
+"POT-Creation-Date: 2026-10-08 13:31+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -445,8 +445,8 @@ msgstr "Сумма налога"
 msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
-#: models.py:378 templates/eos_tax/index.html:46
-#: templates/eos_tax/index.html:127
+#: models.py:378 templates/eos_tax/index.html:47
+#: templates/eos_tax/index.html:141
 msgid "Paid"
 msgstr "Оплачено"
 
@@ -517,7 +517,7 @@ msgstr ""
 "ingame tax. Из него рассчитывается сумма к оплате. Пусто в строках, "
 "записанных до того, как он сохранялся."
 
-#: models.py:445 templates/eos_tax/index.html:47
+#: models.py:445 templates/eos_tax/index.html:48
 msgid "Characters without wallet audit"
 msgstr "Characters без аудита wallet"
 
@@ -531,7 +531,7 @@ msgstr ""
 "начиная с заданного дохода, в виде [{id, name, gross}], сначала самый "
 "высокий."
 
-#: models.py:456 templates/eos_tax/index.html:48
+#: models.py:456 templates/eos_tax/index.html:49
 msgid "Calculation time"
 msgstr "Время расчёта"
 
@@ -544,6 +544,32 @@ msgstr ""
 "Сколько длился последний расчёт этого месяца, в секундах - чтение обоих "
 "journal, сверка и проверка платежей. Пусто в строках, записанных до того, "
 "как оно сохранялось."
+
+#: models.py:467
+msgid "Payment date"
+msgstr "Дата платежа"
+
+#: models.py:471
+msgid ""
+"Journal date of the transfer that settled this month: the one of exactly the "
+"amount owed, or the one that brought the payments up to it. Empty until a "
+"payment settled the row."
+msgstr ""
+"Дата в журнале перевода, которым оплачен этот месяц: перевода ровно на "
+"причитающуюся сумму или того, с которым платежи её достигли. Пусто, пока "
+"строка не оплачена."
+
+#: models.py:478
+msgid "Recorded as paid"
+msgstr "Записано как оплаченное"
+
+#: models.py:482
+msgid ""
+"When the payment check first marked this month as paid. Empty on rows marked "
+"paid before it was stored."
+msgstr ""
+"Когда проверка платежей впервые отметила этот месяц как оплаченный. Пусто "
+"для строк, отмеченных оплаченными до того, как это стало сохраняться."
 
 #: templates/eos_tax/base.html:9
 msgid "Overview"
@@ -591,7 +617,7 @@ msgid "Back to the list"
 msgstr "Назад к списку"
 
 #: templates/eos_tax/bot-detail.html:138 templates/eos_tax/bots.html:20
-#: templates/eos_tax/index.html:44 templates/eos_tax/settings.html:183
+#: templates/eos_tax/index.html:45 templates/eos_tax/settings.html:183
 #: templates/eos_tax/statistics.html:54
 msgid "Month"
 msgstr "Месяц"
@@ -854,15 +880,15 @@ msgstr ""
 "4a. Reason показывается только для прошлого месяца, начиная со 2 числа "
 "текущего месяца, чтобы избежать устаревших платежей."
 
-#: templates/eos_tax/index.html:26
+#: templates/eos_tax/index.html:27
 msgid "Outstanding only"
 msgstr "Только неоплаченные"
 
-#: templates/eos_tax/index.html:29
+#: templates/eos_tax/index.html:30
 msgid "Including paid"
 msgstr "Включая оплаченные"
 
-#: templates/eos_tax/index.html:39
+#: templates/eos_tax/index.html:40
 #: templates/eos_tax/partials/bot-clock-detail.html:33
 #: templates/eos_tax/partials/bot-clock.html:22
 #: templates/eos_tax/partials/bot-rhythm-detail.html:28
@@ -874,45 +900,45 @@ msgstr "Включая оплаченные"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: templates/eos_tax/index.html:40
+#: templates/eos_tax/index.html:41
 msgid "Ingame Corp Tax"
 msgstr "Ingame Corp Tax"
 
-#: templates/eos_tax/index.html:41
+#: templates/eos_tax/index.html:42
 msgid "Alliance Tax"
 msgstr "Alliance Tax"
 
-#: templates/eos_tax/index.html:42
+#: templates/eos_tax/index.html:43
 msgid "Amount to pay in ISK"
 msgstr "Сумма к оплате в ISK"
 
-#: templates/eos_tax/index.html:43
+#: templates/eos_tax/index.html:44
 msgid "Amount paid in ISK"
 msgstr "Оплачено в ISK"
 
-#: templates/eos_tax/index.html:45
+#: templates/eos_tax/index.html:46
 msgid "Reason"
 msgstr "Reason"
 
-#: templates/eos_tax/index.html:65 templates/eos_tax/index.html:67
+#: templates/eos_tax/index.html:66 templates/eos_tax/index.html:68
 msgid "No ingame corp tax, so nothing reaches the corporation wallet to tax."
 msgstr ""
 "Нет ingame corp tax, поэтому в wallet Corporation не поступает ничего, что "
 "можно было бы обложить налогом."
 
-#: templates/eos_tax/index.html:90
+#: templates/eos_tax/index.html:94
 #: templates/eos_tax/partials/recalculate-result.html:108
 #, python-format
 msgid "Paid %(value)s ISK more than owed."
 msgstr "Оплачено на %(value)s ISK больше, чем причиталось."
 
-#: templates/eos_tax/index.html:94
+#: templates/eos_tax/index.html:98
 #: templates/eos_tax/partials/recalculate-result.html:113
 #, python-format
 msgid "%(value)s ISK short of the amount owed."
 msgstr "До суммы к оплате не хватает %(value)s ISK."
 
-#: templates/eos_tax/index.html:100
+#: templates/eos_tax/index.html:105
 #, python-format
 msgid "in %(counter)s payment"
 msgid_plural "in %(counter)s payments"
@@ -920,24 +946,34 @@ msgstr[0] "в %(counter)s платеже"
 msgstr[1] "в %(counter)s платежах"
 msgstr[2] "в %(counter)s платежах"
 
-#: templates/eos_tax/index.html:118 templates/eos_tax/index.html:119
+#: templates/eos_tax/index.html:123 templates/eos_tax/index.html:124
 msgid "Copy reason to clipboard"
 msgstr "Скопировать Reason в буфер обмена"
 
-#: templates/eos_tax/index.html:130
+#: templates/eos_tax/index.html:140 templates/eos_tax/index.html:141
+#, python-format
+msgid "Transferred %(date)s EVE"
+msgstr "Переведено %(date)s EVE"
+
+#: templates/eos_tax/index.html:140 templates/eos_tax/index.html:141
+#, python-format
+msgid "Recorded as paid %(date)s EVE"
+msgstr "Записано как оплаченное %(date)s EVE"
+
+#: templates/eos_tax/index.html:144
 msgid "Not paid"
 msgstr "Не оплачено"
 
-#: templates/eos_tax/index.html:156
+#: templates/eos_tax/index.html:175
 #, python-format
 msgid "%(seconds)s s"
 msgstr "%(seconds)s с"
 
-#: templates/eos_tax/index.html:167
+#: templates/eos_tax/index.html:186
 msgid "Nothing outstanding."
 msgstr "Ничего не должны."
 
-#: templates/eos_tax/index.html:169
+#: templates/eos_tax/index.html:188
 msgid "No tax data for the selected months."
 msgstr "Нет данных по налогу за выбранные месяцы."
 
@@ -1432,14 +1468,14 @@ msgid_plural ""
 "%(counter)s untaxed entries from outside the character's time in this "
 "corporation (or without a corporation history), not counted"
 msgstr[0] ""
-"%(counter)s запись без налога вне времени Character в этой Corporation "
-"(или без истории Corporation), не учтена"
+"%(counter)s запись без налога вне времени Character в этой Corporation (или "
+"без истории Corporation), не учтена"
 msgstr[1] ""
-"%(counter)s записи без налога вне времени Character в этой Corporation "
-"(или без истории Corporation), не учтены"
+"%(counter)s записи без налога вне времени Character в этой Corporation (или "
+"без истории Corporation), не учтены"
 msgstr[2] ""
-"%(counter)s записей без налога вне времени Character в этой Corporation "
-"(или без истории Corporation), не учтены"
+"%(counter)s записей без налога вне времени Character в этой Corporation (или "
+"без истории Corporation), не учтены"
 
 #: templates/eos_tax/partials/recalculate-result.html:36
 #, python-format

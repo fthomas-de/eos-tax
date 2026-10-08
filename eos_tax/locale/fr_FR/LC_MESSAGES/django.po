@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-08 12:50+0000\n"
+"POT-Creation-Date: 2026-10-08 13:31+0000\n"
 "Language: fr-FR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -448,8 +448,8 @@ msgstr "Montant de la taxe"
 msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
-#: models.py:378 templates/eos_tax/index.html:46
-#: templates/eos_tax/index.html:127
+#: models.py:378 templates/eos_tax/index.html:47
+#: templates/eos_tax/index.html:141
 msgid "Paid"
 msgstr "Payé"
 
@@ -522,7 +522,7 @@ msgstr ""
 "sans ingame tax compte aussi. Le montant à payer en est calculé. Vide pour "
 "les lignes écrites avant qu'il soit enregistré."
 
-#: models.py:445 templates/eos_tax/index.html:47
+#: models.py:445 templates/eos_tax/index.html:48
 msgid "Characters without wallet audit"
 msgstr "Characters sans audit du wallet"
 
@@ -536,7 +536,7 @@ msgstr ""
 "la corporation, à partir du revenu configuré, sous la forme [{id, name, "
 "gross}], le plus élevé d'abord."
 
-#: models.py:456 templates/eos_tax/index.html:48
+#: models.py:456 templates/eos_tax/index.html:49
 msgid "Calculation time"
 msgstr "Durée du calcul"
 
@@ -549,6 +549,33 @@ msgstr ""
 "Durée du dernier calcul de ce mois, en secondes - lecture des deux journaux, "
 "rapprochement et vérification des paiements. Vide pour les lignes écrites "
 "avant qu'elle soit enregistrée."
+
+#: models.py:467
+msgid "Payment date"
+msgstr "Date de paiement"
+
+#: models.py:471
+msgid ""
+"Journal date of the transfer that settled this month: the one of exactly the "
+"amount owed, or the one that brought the payments up to it. Empty until a "
+"payment settled the row."
+msgstr ""
+"Date dans le journal du virement qui a réglé ce mois : celui du montant exact "
+"dû, ou celui avec lequel les paiements l'ont atteint. Vide tant qu'aucun "
+"paiement n'a réglé la ligne."
+
+#: models.py:478
+msgid "Recorded as paid"
+msgstr "Enregistré comme payé"
+
+#: models.py:482
+msgid ""
+"When the payment check first marked this month as paid. Empty on rows marked "
+"paid before it was stored."
+msgstr ""
+"Moment où la vérification des paiements a marqué ce mois comme payé pour la "
+"première fois. Vide pour les lignes marquées payées avant que ce moment soit "
+"enregistré."
 
 #: templates/eos_tax/base.html:9
 msgid "Overview"
@@ -595,7 +622,7 @@ msgid "Back to the list"
 msgstr "Retour à la liste"
 
 #: templates/eos_tax/bot-detail.html:138 templates/eos_tax/bots.html:20
-#: templates/eos_tax/index.html:44 templates/eos_tax/settings.html:183
+#: templates/eos_tax/index.html:45 templates/eos_tax/settings.html:183
 #: templates/eos_tax/statistics.html:54
 msgid "Month"
 msgstr "Mois"
@@ -856,15 +883,15 @@ msgstr ""
 "4a. Un Reason n'est affiché que pour le mois précédent, à partir du 2 du "
 "mois en cours, afin d'éviter les paiements obsolètes."
 
-#: templates/eos_tax/index.html:26
+#: templates/eos_tax/index.html:27
 msgid "Outstanding only"
 msgstr "Non payé uniquement"
 
-#: templates/eos_tax/index.html:29
+#: templates/eos_tax/index.html:30
 msgid "Including paid"
 msgstr "Y compris payé"
 
-#: templates/eos_tax/index.html:39
+#: templates/eos_tax/index.html:40
 #: templates/eos_tax/partials/bot-clock-detail.html:33
 #: templates/eos_tax/partials/bot-clock.html:22
 #: templates/eos_tax/partials/bot-rhythm-detail.html:28
@@ -876,69 +903,79 @@ msgstr "Y compris payé"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: templates/eos_tax/index.html:40
+#: templates/eos_tax/index.html:41
 msgid "Ingame Corp Tax"
 msgstr "Ingame Corp Tax"
 
-#: templates/eos_tax/index.html:41
+#: templates/eos_tax/index.html:42
 msgid "Alliance Tax"
 msgstr "Alliance Tax"
 
-#: templates/eos_tax/index.html:42
+#: templates/eos_tax/index.html:43
 msgid "Amount to pay in ISK"
 msgstr "Montant à payer en ISK"
 
-#: templates/eos_tax/index.html:43
+#: templates/eos_tax/index.html:44
 msgid "Amount paid in ISK"
 msgstr "Montant payé en ISK"
 
-#: templates/eos_tax/index.html:45
+#: templates/eos_tax/index.html:46
 msgid "Reason"
 msgstr "Reason"
 
-#: templates/eos_tax/index.html:65 templates/eos_tax/index.html:67
+#: templates/eos_tax/index.html:66 templates/eos_tax/index.html:68
 msgid "No ingame corp tax, so nothing reaches the corporation wallet to tax."
 msgstr ""
 "Aucune ingame corp tax, donc rien n'arrive dans le wallet de la corporation "
 "qui puisse être taxé."
 
-#: templates/eos_tax/index.html:90
+#: templates/eos_tax/index.html:94
 #: templates/eos_tax/partials/recalculate-result.html:108
 #, python-format
 msgid "Paid %(value)s ISK more than owed."
 msgstr "%(value)s ISK payés en plus du montant dû."
 
-#: templates/eos_tax/index.html:94
+#: templates/eos_tax/index.html:98
 #: templates/eos_tax/partials/recalculate-result.html:113
 #, python-format
 msgid "%(value)s ISK short of the amount owed."
 msgstr "Il manque %(value)s ISK au montant dû."
 
-#: templates/eos_tax/index.html:100
+#: templates/eos_tax/index.html:105
 #, python-format
 msgid "in %(counter)s payment"
 msgid_plural "in %(counter)s payments"
 msgstr[0] "en %(counter)s paiement"
 msgstr[1] "en %(counter)s paiements"
 
-#: templates/eos_tax/index.html:118 templates/eos_tax/index.html:119
+#: templates/eos_tax/index.html:123 templates/eos_tax/index.html:124
 msgid "Copy reason to clipboard"
 msgstr "Copier le Reason dans le presse-papiers"
 
-#: templates/eos_tax/index.html:130
+#: templates/eos_tax/index.html:140 templates/eos_tax/index.html:141
+#, python-format
+msgid "Transferred %(date)s EVE"
+msgstr "Viré le %(date)s EVE"
+
+#: templates/eos_tax/index.html:140 templates/eos_tax/index.html:141
+#, python-format
+msgid "Recorded as paid %(date)s EVE"
+msgstr "Enregistré comme payé le %(date)s EVE"
+
+#: templates/eos_tax/index.html:144
 msgid "Not paid"
 msgstr "Non payé"
 
-#: templates/eos_tax/index.html:156
+#: templates/eos_tax/index.html:175
 #, python-format
 msgid "%(seconds)s s"
 msgstr "%(seconds)s s"
 
-#: templates/eos_tax/index.html:167
+#: templates/eos_tax/index.html:186
 msgid "Nothing outstanding."
 msgstr "Rien à payer."
 
-#: templates/eos_tax/index.html:169
+#: templates/eos_tax/index.html:188
 msgid "No tax data for the selected months."
 msgstr "Aucune donnée de taxe pour les mois sélectionnés."
 

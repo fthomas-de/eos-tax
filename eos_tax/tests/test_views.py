@@ -502,6 +502,63 @@ class TestOverviewTable(EosTaxTestCase):
         self.assertIn('<i class="fa-solid fa-user-secret me-1"></i>2', body)
         self.assertNotIn('<div class="text-danger text-nowrap">', body)
 
+    def paid_on(self, paid_at=None, recorded_at=None):
+        self.row.payed = True
+        self.row.paid_at = paid_at
+        self.row.paid_recorded_at = recorded_at
+        self.row.save()
+
+    def paid_overview(self):
+        # paid rows only show with the filter that includes them
+        return self.client.get(reverse("eos_tax:index") + "?paid=1").content.decode()
+
+    def test_should_tell_when_a_paid_row_was_transferred_and_recorded(self):
+        utc = datetime.timezone.utc
+        self.paid_on(
+            datetime.datetime(2026, 10, 2, 14, 31, tzinfo=utc),
+            datetime.datetime(2026, 10, 3, 6, 5, tzinfo=utc),
+        )
+
+        body = self.paid_overview()
+
+        self.assertIn(
+            'title="Transferred 2026-10-02 14:31 EVE&#10;'
+            'Recorded as paid 2026-10-03 06:05 EVE"',
+            body,
+        )
+        self.assertIn(
+            "Paid, Transferred 2026-10-02 14:31 EVE, "
+            "Recorded as paid 2026-10-03 06:05 EVE</span>",
+            body,
+        )
+
+    def test_should_show_the_transfer_alone_for_a_row_paid_before_the_stamp(self):
+        self.paid_on(datetime.datetime(2026, 10, 2, 14, 31, tzinfo=datetime.timezone.utc))
+
+        body = self.paid_overview()
+
+        self.assertIn('title="Transferred 2026-10-02 14:31 EVE"', body)
+        self.assertNotIn("Recorded as paid", body)
+
+    def test_should_leave_the_tick_bare_without_any_time(self):
+        self.paid_on()
+
+        body = self.paid_overview()
+
+        self.assertIn('<i class="fa-solid fa-check text-success" aria-hidden="true"></i>', body)
+        self.assertNotIn("Transferred", body)
+
+    def test_should_not_carry_a_date_into_the_next_row(self):
+        """The rows share one loop context - a date set for one must not
+        turn up on the tick of the next."""
+        self.paid_on(datetime.datetime(2026, 10, 2, 14, 31, tzinfo=datetime.timezone.utc))
+        create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=True)
+
+        body = self.paid_overview()
+
+        self.assertEqual(body.count("Transferred 2026-10-02 14:31 EVE"), 2)
+        self.assertIn('<i class="fa-solid fa-check text-success" aria-hidden="true"></i>', body)
+
     def test_should_configure_the_new_column_in_datatables(self):
         """DataTables refuses a table whose columns list is one short."""
         self.assertIn("// Characters without wallet audit", read_static("overview.js"))

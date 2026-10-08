@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-08 12:50+0000\n"
+"POT-Creation-Date: 2026-10-08 13:31+0000\n"
 "Language: ko-KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -431,8 +431,8 @@ msgstr "세금 금액"
 msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
-#: models.py:378 templates/eos_tax/index.html:46
-#: templates/eos_tax/index.html:127
+#: models.py:378 templates/eos_tax/index.html:47
+#: templates/eos_tax/index.html:141
 msgid "Paid"
 msgstr "납부완료"
 
@@ -501,7 +501,7 @@ msgstr ""
 "wallet과 대조한 값이므로 ingame tax가 없는 기간도 포함됩니다. 납부할 금액은 "
 "이 값으로 계산됩니다. 저장되기 전에 기록된 행에서는 비어 있습니다."
 
-#: models.py:445 templates/eos_tax/index.html:47
+#: models.py:445 templates/eos_tax/index.html:48
 msgid "Characters without wallet audit"
 msgstr "wallet 감사가 없는 Character"
 
@@ -514,7 +514,7 @@ msgstr ""
 "이번 달 bounty가 Corporation wallet에만 나타난 Character 중 설정된 수입 이상"
 "인 Character, [{id, name, gross}] 형식, 높은 순."
 
-#: models.py:456 templates/eos_tax/index.html:48
+#: models.py:456 templates/eos_tax/index.html:49
 msgid "Calculation time"
 msgstr "계산 시간"
 
@@ -526,6 +526,32 @@ msgid ""
 msgstr ""
 "이번 달 마지막 계산에 걸린 시간(초) - 두 journal 읽기, 대조, 결제 확인 포함. "
 "저장되기 전에 기록된 행에서는 비어 있습니다."
+
+#: models.py:467
+msgid "Payment date"
+msgstr "납부일"
+
+#: models.py:471
+msgid ""
+"Journal date of the transfer that settled this month: the one of exactly the "
+"amount owed, or the one that brought the payments up to it. Empty until a "
+"payment settled the row."
+msgstr ""
+"이번 달을 정산한 송금의 저널 날짜: 납부액과 정확히 일치하는 송금, 또는 납부 "
+"합계를 그 금액에 도달시킨 송금입니다. 납부로 행이 정산되기 전까지는 비어 "
+"있습니다."
+
+#: models.py:478
+msgid "Recorded as paid"
+msgstr "납부완료로 기록됨"
+
+#: models.py:482
+msgid ""
+"When the payment check first marked this month as paid. Empty on rows marked "
+"paid before it was stored."
+msgstr ""
+"납부 확인이 이번 달을 처음으로 납부완료로 표시한 시점입니다. 이 값이 저장되기 "
+"전에 납부완료로 표시된 행은 비어 있습니다."
 
 #: templates/eos_tax/base.html:9
 msgid "Overview"
@@ -571,7 +597,7 @@ msgid "Back to the list"
 msgstr "목록으로 돌아가기"
 
 #: templates/eos_tax/bot-detail.html:138 templates/eos_tax/bots.html:20
-#: templates/eos_tax/index.html:44 templates/eos_tax/settings.html:183
+#: templates/eos_tax/index.html:45 templates/eos_tax/settings.html:183
 #: templates/eos_tax/statistics.html:54
 msgid "Month"
 msgstr "월"
@@ -817,15 +843,15 @@ msgstr ""
 "4a. Reason은 지난달에 대해서만, 이번 달 2일부터 표시됩니다. 기한이 지난 납부"
 "를 막기 위해서입니다."
 
-#: templates/eos_tax/index.html:26
+#: templates/eos_tax/index.html:27
 msgid "Outstanding only"
 msgstr "미납만"
 
-#: templates/eos_tax/index.html:29
+#: templates/eos_tax/index.html:30
 msgid "Including paid"
 msgstr "납부완료 포함"
 
-#: templates/eos_tax/index.html:39
+#: templates/eos_tax/index.html:40
 #: templates/eos_tax/partials/bot-clock-detail.html:33
 #: templates/eos_tax/partials/bot-clock.html:22
 #: templates/eos_tax/partials/bot-rhythm-detail.html:28
@@ -837,67 +863,77 @@ msgstr "납부완료 포함"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: templates/eos_tax/index.html:40
+#: templates/eos_tax/index.html:41
 msgid "Ingame Corp Tax"
 msgstr "Ingame Corp Tax"
 
-#: templates/eos_tax/index.html:41
+#: templates/eos_tax/index.html:42
 msgid "Alliance Tax"
 msgstr "Alliance Tax"
 
-#: templates/eos_tax/index.html:42
+#: templates/eos_tax/index.html:43
 msgid "Amount to pay in ISK"
 msgstr "납부할 금액(ISK)"
 
-#: templates/eos_tax/index.html:43
+#: templates/eos_tax/index.html:44
 msgid "Amount paid in ISK"
 msgstr "납부된 금액(ISK)"
 
-#: templates/eos_tax/index.html:45
+#: templates/eos_tax/index.html:46
 msgid "Reason"
 msgstr "Reason"
 
-#: templates/eos_tax/index.html:65 templates/eos_tax/index.html:67
+#: templates/eos_tax/index.html:66 templates/eos_tax/index.html:68
 msgid "No ingame corp tax, so nothing reaches the corporation wallet to tax."
 msgstr ""
 "ingame corp tax가 없어 Corporation wallet에 과세할 금액이 들어오지 않습니다."
 
-#: templates/eos_tax/index.html:90
+#: templates/eos_tax/index.html:94
 #: templates/eos_tax/partials/recalculate-result.html:108
 #, python-format
 msgid "Paid %(value)s ISK more than owed."
 msgstr "납부할 금액보다 %(value)s ISK를 더 냈습니다."
 
-#: templates/eos_tax/index.html:94
+#: templates/eos_tax/index.html:98
 #: templates/eos_tax/partials/recalculate-result.html:113
 #, python-format
 msgid "%(value)s ISK short of the amount owed."
 msgstr "납부할 금액에 %(value)s ISK가 모자랍니다."
 
-#: templates/eos_tax/index.html:100
+#: templates/eos_tax/index.html:105
 #, python-format
 msgid "in %(counter)s payment"
 msgid_plural "in %(counter)s payments"
 msgstr[0] "%(counter)s건의 결제로"
 
-#: templates/eos_tax/index.html:118 templates/eos_tax/index.html:119
+#: templates/eos_tax/index.html:123 templates/eos_tax/index.html:124
 msgid "Copy reason to clipboard"
 msgstr "Reason을 클립보드에 복사"
 
-#: templates/eos_tax/index.html:130
+#: templates/eos_tax/index.html:140 templates/eos_tax/index.html:141
+#, python-format
+msgid "Transferred %(date)s EVE"
+msgstr "송금 %(date)s EVE"
+
+#: templates/eos_tax/index.html:140 templates/eos_tax/index.html:141
+#, python-format
+msgid "Recorded as paid %(date)s EVE"
+msgstr "납부완료 기록 %(date)s EVE"
+
+#: templates/eos_tax/index.html:144
 msgid "Not paid"
 msgstr "미납"
 
-#: templates/eos_tax/index.html:156
+#: templates/eos_tax/index.html:175
 #, python-format
 msgid "%(seconds)s s"
 msgstr "%(seconds)s초"
 
-#: templates/eos_tax/index.html:167
+#: templates/eos_tax/index.html:186
 msgid "Nothing outstanding."
 msgstr "미납 없음."
 
-#: templates/eos_tax/index.html:169
+#: templates/eos_tax/index.html:188
 msgid "No tax data for the selected months."
 msgstr "선택한 달에 대한 세금 데이터가 없습니다."
 
@@ -1352,8 +1388,8 @@ msgid_plural ""
 "%(counter)s untaxed entries from outside the character's time in this "
 "corporation (or without a corporation history), not counted"
 msgstr[0] ""
-"Character가 이 Corporation에 소속되지 않았던 기간(또는 Corporation 이력 "
-"없음)의 비과세 항목 %(counter)s개, 집계하지 않음"
+"Character가 이 Corporation에 소속되지 않았던 기간(또는 Corporation 이력 없음)"
+"의 비과세 항목 %(counter)s개, 집계하지 않음"
 
 #: templates/eos_tax/partials/recalculate-result.html:36
 #, python-format

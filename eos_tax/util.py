@@ -180,7 +180,7 @@ def find_payment(corp_id:int, month:int, year:int, config=None, corp_name:str = 
     Pass config and corp_name when the caller already holds them: both used to
     cost their own query, once per corporation and month.
     """
-    nothing = {"payed": False, "match": None, "amount_paid": None, "payments": []}
+    nothing = {"payed": False, "match": None, "amount_paid": None, "payments": [], "paid_at": None}
 
     tax_data = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).first()
     if not tax_data:
@@ -219,12 +219,23 @@ def find_payment(corp_id:int, month:int, year:int, config=None, corp_name:str = 
         # the exact amount first, the sum only when no single payment fits:
         # either way the row is settled, but the log can then tell a transfer
         # of the right amount from several that only add up to it
-        if any(payment["amount"] == amount_to_pay for payment in payments):
+        exact = next((payment for payment in payments if payment["amount"] == amount_to_pay), None)
+        if exact:
             match = "exact"
+            paid_at = exact["date"]
         elif payments and total >= amount_to_pay:
             match = "sum"
+            # the transfer that reached the amount, not the last one: a second
+            # transfer after the row was settled is overpaid, not the payment
+            running = 0
+            for payment in payments:
+                running += payment["amount"]
+                if int(running) >= amount_to_pay:
+                    paid_at = payment["date"]
+                    break
         else:
             match = None
+            paid_at = None
 
         amount_paid = total if payments else None
     else:
@@ -233,10 +244,11 @@ def find_payment(corp_id:int, month:int, year:int, config=None, corp_name:str = 
         # Both signs in one pass; this used to be two scans in sequence
         payment = journal.filter(
             Q(amount=-amount_to_pay) | Q(amount=amount_to_pay)
-        ).values("date", "amount").first()
+        ).order_by("date").values("date", "amount").first()
         payments = [{"date": payment["date"], "amount": amount_to_pay}] if payment else []
         match = "exact" if payment else None
         amount_paid = amount_to_pay if payment else None
+        paid_at = payment["date"] if payment else None
 
     payed = tax_data.payed or match is not None
     name = corp_name or get_corp_name(corp_id)
@@ -249,4 +261,4 @@ def find_payment(corp_id:int, month:int, year:int, config=None, corp_name:str = 
         f"from {name} to holding corp {holding_corp_id} for >{corp_id}/{month}/{year}<"
     )
 
-    return {"payed": payed, "match": match, "amount_paid": amount_paid, "payments": payments}
+    return {"payed": payed, "match": match, "amount_paid": amount_paid, "payments": payments, "paid_at": paid_at}
