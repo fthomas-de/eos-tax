@@ -27,6 +27,11 @@
             <li>
                 {% blocktranslate count counter=breakdown.member_entries %}Member wallets: {{ counter }} entry{% plural %}Member wallets: {{ counter }} entries{% endblocktranslate %}
                 <ul class="mb-0 ps-3">
+                    {% if breakdown.member_before_join %}
+                        <li>
+                            {% blocktranslate count counter=breakdown.member_before_join %}{{ counter }} untaxed entry from outside the character's time in this corporation (or without a corporation history), not counted{% plural %}{{ counter }} untaxed entries from outside the character's time in this corporation (or without a corporation history), not counted{% endblocktranslate %}
+                        </li>
+                    {% endif %}
                     <li>
                         {% blocktranslate count counter=breakdown.member_matched %}{{ counter }} found in the corporation wallet as well, counted once{% plural %}{{ counter }} found in the corporation wallet as well, counted once{% endblocktranslate %}
                     </li>

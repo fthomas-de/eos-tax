@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Untaxed member wallet entries only count while the character was in the
+  Corporation. The member wallet reconciliation tied an untaxed payout to a
+  Corporation through the character's current corporation, so a new
+  member's bounties from their previous corporation - an NPC corp, or one
+  at 0% - were added as untaxed income of the one they had just joined, and
+  a member who had left lost their untaxed weeks to nobody. The
+  character's corporation history in corptools now decides: an untaxed
+  entry counts if the character was in the Corporation at that moment. A
+  character without a history counts nothing, so nothing from a previous
+  corporation slips in while corptools has not pulled it yet. A payout the
+  Corporation taxed still counts on its own - the tax is proof of
+  membership. The recalculate log shows how many entries were left out.
+
 ## [0.3.14] - 2026-10-08
 
 ### Added

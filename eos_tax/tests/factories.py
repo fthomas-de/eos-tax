@@ -24,6 +24,7 @@ from corptools.models import (
     CharacterAudit,
     CharacterWalletJournalEntry,
     CorporationAudit,
+    CorporationHistory,
     CorporationWalletDivision,
     CorporationWalletJournalEntry,
     EveName,
@@ -303,14 +304,38 @@ def add_entries(
             )
 
 
+LONG_AGO = datetime.datetime(2020, 1, 1, tzinfo=datetime.timezone.utc)
+
+
+def add_corporation_history(character_id, corporation_id, start_date):
+    """One record of a character's corporation history, as corptools keeps it.
+
+    The character's audit has to exist - `add_member_payout` creates it.
+    """
+    name, _created = EveName.objects.get_or_create(
+        eve_id=corporation_id,
+        defaults={"name": f"Corp {corporation_id}", "category": "corporation"},
+    )
+
+    return CorporationHistory.objects.create(
+        character=CharacterAudit.objects.get(character__character_id=character_id),
+        corporation_id=corporation_id,
+        corporation_name=name,
+        record_id=next(entry_ids),
+        start_date=start_date,
+    )
+
+
 def add_member_payout(character_id, corporation_id, date, amount, tax,
                       tax_receiver_id=None, context_id=30000001, reason=None,
-                      ref_type="bounty_prizes"):
+                      ref_type="bounty_prizes", joined=LONG_AGO):
     """One bounty payout in a member's own wallet, as corptools stores it.
 
     `amount` is what reached the member, `tax` what the corporation took -
     the opposite of the corporation's row, where both hold the slice.
-    The character is created in `corporation_id` on first use.
+    The character is created in `corporation_id` on first use, with a
+    corporation history that has it join at `joined` - None leaves the
+    history empty.
     """
     character, _created = EveCharacter.objects.get_or_create(
         character_id=character_id,
@@ -321,7 +346,9 @@ def add_member_payout(character_id, corporation_id, date, amount, tax,
             "corporation_ticker": "CORP",
         },
     )
-    audit, _created = CharacterAudit.objects.get_or_create(character=character)
+    audit, created = CharacterAudit.objects.get_or_create(character=character)
+    if created and joined is not None:
+        add_corporation_history(character_id, corporation_id, joined)
 
     return CharacterWalletJournalEntry.objects.create(
         character=audit,

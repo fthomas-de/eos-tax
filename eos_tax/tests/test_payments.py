@@ -38,6 +38,7 @@ from .factories import (
     OUTSIDER_CORP_ID,
     create_alliance,
     create_corporation,
+    add_corporation_history,
     add_member_payout,
     create_tax_row,
     mid_month,
@@ -654,6 +655,56 @@ class TestUpdateCorpReconcilesMemberWallets(PaymentsTestCase):
         update_corp(CORP_ID, MONTH, YEAR)
 
         self.assertEqual(self.row().gross_income, 100_000_000)
+
+    def test_should_not_count_an_untaxed_payout_from_before_joining(self):
+        """A new member's wallet goes back to their previous corporation; its
+        untaxed bounties were never this Corporation's income."""
+        add_member_payout(RATTER_ID, CORP_ID, at(3), amount=100_000_000, tax=0,
+                          joined=at(10))
+        self.untaxed(12, 100_000_000)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["member_before_join"], 1)
+        self.assertEqual(breakdown["member_entries"], 1)
+        self.assertEqual(self.row().gross_income, 100_000_000)
+
+    def test_should_count_a_former_member_until_they_left(self):
+        """The current corporation lost a member's untaxed month the moment
+        they moved on; their history still places it here."""
+        add_member_payout(OTHER_RATTER_ID, OTHER_CORP_ID, at(5), amount=100_000_000,
+                          tax=0, joined=None)
+        add_corporation_history(OTHER_RATTER_ID, CORP_ID, at(1))
+        add_corporation_history(OTHER_RATTER_ID, OTHER_CORP_ID, at(20))
+        self.untaxed(25, 100_000_000, character_id=OTHER_RATTER_ID,
+                     corporation_id=OTHER_CORP_ID)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["member_before_join"], 1)
+        self.assertEqual(self.row().gross_income, 100_000_000)
+
+    def test_should_not_count_an_untaxed_payout_without_a_history(self):
+        """Without a history nothing shows the character was a member then -
+        not counted, the user's call."""
+        self.set_corp_rate(0.0)
+        add_member_payout(RATTER_ID, CORP_ID, at(10), amount=100_000_000, tax=0,
+                          joined=None)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["reason"], "no_entries")
+
+    def test_should_count_a_taxed_payout_without_a_history(self):
+        """The Corporation taxing it already shows the character was a member."""
+        self.entry(10_000_000, at(10))
+        add_member_payout(RATTER_ID, CORP_ID, at(10), amount=90_000_000,
+                          tax=10_000_000, tax_receiver_id=CORP_ID, joined=None)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["member_matched"], 1)
+        self.assertEqual(breakdown["member_before_join"], 0)
 
     def test_should_only_count_configured_ref_types(self):
         self.untaxed(10, 100_000_000)

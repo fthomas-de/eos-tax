@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-08 12:26+0000\n"
+"POT-Creation-Date: 2026-10-08 12:50+0000\n"
 "Language: it-IT\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -903,13 +903,13 @@ msgstr ""
 "corporation da tassare."
 
 #: templates/eos_tax/index.html:90
-#: templates/eos_tax/partials/recalculate-result.html:103
+#: templates/eos_tax/partials/recalculate-result.html:108
 #, python-format
 msgid "Paid %(value)s ISK more than owed."
 msgstr "Pagati %(value)s ISK in più del dovuto."
 
 #: templates/eos_tax/index.html:94
-#: templates/eos_tax/partials/recalculate-result.html:108
+#: templates/eos_tax/partials/recalculate-result.html:113
 #, python-format
 msgid "%(value)s ISK short of the amount owed."
 msgstr "Mancano %(value)s ISK all'importo dovuto."
@@ -1411,7 +1411,22 @@ msgid_plural "Member wallets: %(counter)s entries"
 msgstr[0] "Wallet dei membri: %(counter)s voce"
 msgstr[1] "Wallet dei membri: %(counter)s voci"
 
-#: templates/eos_tax/partials/recalculate-result.html:31
+#: templates/eos_tax/partials/recalculate-result.html:32
+#, python-format
+msgid ""
+"%(counter)s untaxed entry from outside the character's time in this "
+"corporation (or without a corporation history), not counted"
+msgid_plural ""
+"%(counter)s untaxed entries from outside the character's time in this "
+"corporation (or without a corporation history), not counted"
+msgstr[0] ""
+"%(counter)s voce non tassata fuori dal periodo del character in questa "
+"corporation (o senza cronologia della corporation), non conteggiata"
+msgstr[1] ""
+"%(counter)s voci non tassate fuori dal periodo del character in questa "
+"corporation (o senza cronologia della corporation), non conteggiate"
+
+#: templates/eos_tax/partials/recalculate-result.html:36
 #, python-format
 msgid "%(counter)s found in the corporation wallet as well, counted once"
 msgid_plural ""
@@ -1421,14 +1436,14 @@ msgstr[0] ""
 msgstr[1] ""
 "%(counter)s trovate anche nel wallet della corporation, contate una volta"
 
-#: templates/eos_tax/partials/recalculate-result.html:36
+#: templates/eos_tax/partials/recalculate-result.html:41
 #, python-format
 msgid "%(counter)s without a corp tax slice, added: %(value)s ISK"
 msgid_plural "%(counter)s without a corp tax slice, added: %(value)s ISK"
 msgstr[0] "%(counter)s senza quota di corp tax, aggiunta: %(value)s ISK"
 msgstr[1] "%(counter)s senza quota di corp tax, aggiunte: %(value)s ISK"
 
-#: templates/eos_tax/partials/recalculate-result.html:42
+#: templates/eos_tax/partials/recalculate-result.html:47
 #, python-format
 msgid ""
 "%(counter)s corporation wallet entry without a member wallet, backed out "
@@ -1443,7 +1458,7 @@ msgstr[1] ""
 "%(counter)s voci del wallet della corporation senza wallet del membro, "
 "calcolate con l'aliquota misurata più vicina nel tempo"
 
-#: templates/eos_tax/partials/recalculate-result.html:47
+#: templates/eos_tax/partials/recalculate-result.html:52
 #, python-format
 msgid ""
 "%(counter)s corporation wallet entry with no rate known, counted at its "
@@ -1458,34 +1473,34 @@ msgstr[1] ""
 "%(counter)s voci del wallet della corporation senza aliquota nota, contate "
 "solo per la loro quota - il reddito è sottostimato"
 
-#: templates/eos_tax/partials/recalculate-result.html:52
+#: templates/eos_tax/partials/recalculate-result.html:57
 #, python-format
 msgid ""
 "Without wallet audit, %(minimum)s million ISK or more - add their wallet:"
 msgstr ""
-"Senza audit del wallet, %(minimum)s milioni di ISK o più - aggiungere il loro "
-"wallet:"
+"Senza audit del wallet, %(minimum)s milioni di ISK o più - aggiungere il "
+"loro wallet:"
 
-#: templates/eos_tax/partials/recalculate-result.html:63
+#: templates/eos_tax/partials/recalculate-result.html:68
 #, python-format
 msgid "Gross PvE income, the corp tax backed out: %(value)s ISK"
 msgstr "Reddito PvE lordo, tolta la corp tax: %(value)s ISK"
 
-#: templates/eos_tax/partials/recalculate-result.html:66
+#: templates/eos_tax/partials/recalculate-result.html:71
 #, python-format
 msgid "Alliance tax rate applied: %(rate)s%%"
 msgstr "Aliquota Alliance applicata: %(rate)s %%"
 
-#: templates/eos_tax/partials/recalculate-result.html:70
+#: templates/eos_tax/partials/recalculate-result.html:75
 #, python-format
 msgid "Amount owed to the alliance: %(value)s ISK"
 msgstr "Importo dovuto all'alliance: %(value)s ISK"
 
-#: templates/eos_tax/partials/recalculate-result.html:81
+#: templates/eos_tax/partials/recalculate-result.html:86
 msgid "A payment of exactly the amount owed was found."
 msgstr "È stato trovato un pagamento esattamente dell'importo dovuto."
 
-#: templates/eos_tax/partials/recalculate-result.html:83
+#: templates/eos_tax/partials/recalculate-result.html:88
 #, python-format
 msgid ""
 "No payment of exactly the amount owed. %(counter)s payment with this reason "
@@ -1500,11 +1515,11 @@ msgstr[1] ""
 "Nessun pagamento esattamente dell'importo dovuto. I %(counter)s pagamenti "
 "con questo reason ammontano in totale a %(total)s ISK."
 
-#: templates/eos_tax/partials/recalculate-result.html:85
+#: templates/eos_tax/partials/recalculate-result.html:90
 msgid "No payment with this reason found."
 msgstr "Nessun pagamento con questo reason trovato."
 
-#: templates/eos_tax/partials/recalculate-result.html:87
+#: templates/eos_tax/partials/recalculate-result.html:92
 msgid ""
 "No payment of exactly the amount owed found. Without matching by reason only "
 "that amount can be told to belong to this corporation."
@@ -1512,24 +1527,24 @@ msgstr ""
 "Nessun pagamento esattamente dell'importo dovuto trovato. Senza abbinamento "
 "per reason solo quell'importo si può attribuire a questa corporation."
 
-#: templates/eos_tax/partials/recalculate-result.html:92
+#: templates/eos_tax/partials/recalculate-result.html:97
 msgid "Payments:"
 msgstr "Pagamenti:"
 
-#: templates/eos_tax/partials/recalculate-result.html:113
+#: templates/eos_tax/partials/recalculate-result.html:118
 msgid "Already marked as paid."
 msgstr "Già segnato come pagato."
 
-#: templates/eos_tax/partials/recalculate-result.html:115
+#: templates/eos_tax/partials/recalculate-result.html:120
 msgid "Not marked as paid yet."
 msgstr "Non ancora segnato come pagato."
 
-#: templates/eos_tax/partials/recalculate-result.html:123
+#: templates/eos_tax/partials/recalculate-result.html:128
 #, python-format
 msgid "Corporation %(corp_id)s is not known to Alliance Auth."
 msgstr "Alliance Auth non conosce la corporation %(corp_id)s."
 
-#: templates/eos_tax/partials/recalculate-result.html:125
+#: templates/eos_tax/partials/recalculate-result.html:130
 #, python-format
 msgid ""
 "%(corp)s has no ingame tax rate in Alliance Auth, and ESI could not be "
@@ -1538,7 +1553,7 @@ msgstr ""
 "%(corp)s non ha un'aliquota ingame in Alliance Auth, e non è stato possibile "
 "contattare ESI per richiederla. Riprova più tardi."
 
-#: templates/eos_tax/partials/recalculate-result.html:127
+#: templates/eos_tax/partials/recalculate-result.html:132
 #, python-format
 msgid ""
 "%(corp)s has no journal entries of the configured tax types for %(month)s/"
@@ -1547,7 +1562,7 @@ msgstr ""
 "%(corp)s non ha voci di journal dei tipi di tassa configurati per %(month)s/"
 "%(year)s."
 
-#: templates/eos_tax/partials/recalculate-result.html:129
+#: templates/eos_tax/partials/recalculate-result.html:134
 #, python-format
 msgid ""
 "The alliance tax rate for %(month)s/%(year)s is 0, so nothing is owed and no "
@@ -1556,7 +1571,7 @@ msgstr ""
 "L'aliquota alliance per %(month)s/%(year)s è 0, quindi non si deve nulla e "
 "non viene scritta alcuna riga."
 
-#: templates/eos_tax/partials/recalculate-result.html:131
+#: templates/eos_tax/partials/recalculate-result.html:136
 msgid "Nothing could be calculated for this selection."
 msgstr "Non è stato possibile calcolare nulla per questa selezione."
 

@@ -1,7 +1,7 @@
 """The overview: what each Corporation owes, and whether it paid."""
 
 import time
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
 from collections import defaultdict
 from datetime import datetime, timedelta
 
@@ -9,6 +9,7 @@ from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.eveonline.providers import open_api_provider
 from corptools.models import (
     CharacterWalletJournalEntry,
+    CorporationHistory,
     CorporationWalletJournalEntry,
     EveName,
 )
@@ -264,6 +265,36 @@ def _nearest_rate(rates, moment):
     return min(nearby, key=lambda pair: abs(pair[0] - moment))[1]
 
 
+def _corporation_periods(audit_ids) -> dict:
+    """Each audited character's corporation history, oldest first."""
+    periods = defaultdict(list)
+    for audit_id, start_date, corporation_id in (
+        CorporationHistory.objects.filter(character__in=audit_ids)
+        .order_by("start_date", "record_id")
+        .values_list("character", "start_date", "corporation_id")
+    ):
+        periods[audit_id].append((start_date, corporation_id))
+
+    return periods
+
+
+def _corporation_at(periods, moment):
+    """The corporation a character was in at `moment`, from its history.
+
+    None without a history, or before its first record: a character whose
+    membership cannot be shown is not counted (the user's call), so a payout
+    from a previous corporation never slips in while the history is missing.
+    """
+    if not periods:
+        return None
+
+    index = bisect_right(periods, (moment, float("inf")))
+    if not index:
+        return None
+
+    return periods[index - 1][1]
+
+
 def _reconciled_income(corp_id: int, start, end, tax_types, corp_rate: float) -> dict:
     """Gross bounty income of one Corporation's month, both journals matched up.
 
@@ -288,19 +319,37 @@ def _reconciled_income(corp_id: int, start, end, tax_types, corp_rate: float) ->
     )
     # whether ESI names a tax receiver on a payout nobody taxed is not
     # documented, so an untaxed payout without one is tied to the
-    # Corporation through its member's current corporation
-    member_rows = list(
-        CharacterWalletJournalEntry.objects.filter(
-            Q(tax_receiver_id=corp_id)
-            | Q(tax_receiver_id=None, character__character__corporation_id=corp_id),
-            ref_type__in=tax_types,
-            date__gte=start,
-            date__lt=end,
-        ).values(
-            "character__character__character_id", "date", "context_id",
-            "reason", "ref_type", "amount", "tax",
-        )
+    # Corporation through its character's corporation history - the current
+    # corporation alone counted a new member's bounties from before they
+    # joined, and lost those of a member who has left since
+    fetched = list(CharacterWalletJournalEntry.objects.filter(
+        Q(tax_receiver_id=corp_id)
+        | Q(
+            tax_receiver_id=None,
+            character__in=CorporationHistory.objects.filter(
+                corporation_id=corp_id
+            ).values("character"),
+        ),
+        ref_type__in=tax_types,
+        date__gte=start,
+        date__lt=end,
+    ).values(
+        "character", "character__character__character_id", "date",
+        "context_id", "reason", "ref_type", "amount", "tax", "tax_receiver_id",
+    ))
+    periods = _corporation_periods(
+        {row["character"] for row in fetched if row["tax_receiver_id"] is None}
     )
+    member_rows = []
+    before_join = 0
+    for row in fetched:
+        # a payout the Corporation taxed is proof of membership on its own
+        if row["tax_receiver_id"] == corp_id or _corporation_at(
+            periods.get(row["character"]), row["date"]
+        ) == corp_id:
+            member_rows.append(row)
+        else:
+            before_join += 1
 
     unmatched = defaultdict(list)
     for row in corp_rows:
@@ -394,6 +443,7 @@ def _reconciled_income(corp_id: int, start, end, tax_types, corp_rate: float) ->
         ],
         "gross_income": round(gross),
         "member_entries": len(member_rows),
+        "member_before_join": before_join,
         "member_matched": matched,
         "member_added": added,
         "member_added_gross": round(added_gross),
@@ -561,6 +611,7 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
         "corp_tax_from_esi": corp_tax_from_esi,
         "gross_income": gross_income,
         "member_entries": income["member_entries"],
+        "member_before_join": income["member_before_join"],
         "member_matched": income["member_matched"],
         "member_added": income["member_added"],
         "member_added_gross": income["member_added_gross"],
