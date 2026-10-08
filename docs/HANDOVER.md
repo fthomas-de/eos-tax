@@ -4,20 +4,18 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-10-01.
+Last updated 2026-10-08.
 
 ## Release
 
-- Version **0.3.11** in `eos_tax/__init__.py`, released 2026-10-01
-- `[0.3.11]` in `CHANGELOG.md`: test users are created without a password -
-  hashing it cost ~0.2 s a user, most of the suite's run time. The suite now
-  runs its tests in ~20 s instead of 88 s
-- `[0.3.10]`: "Average day (hours)" column on "Hours per day", a heading row
-  for groups of one on all four bots tabs, the overview sorted by Month then
-  Corporation only, the payment tests that failed on the first of every
-  month (`mid_month()` in `factories.py`)
-- Migrations **0001-0020** applied to `aa_dev`; 0.3.11 brings none
-- 471 tests, all green (456 without the translation tag, 15 with it)
+- Version **0.3.12** in `eos_tax/__init__.py`, released 2026-10-08
+- `[0.3.12]` in `CHANGELOG.md`: what was paid is recorded - "Amount paid in
+  ISK" column on the overview with +/- badges, payments listed in the
+  recalculate log, payments with a reason code added up (exact amount
+  first), paid rows looked up again for their amount
+- `[0.3.11]`: test users without a password, suite ~20 s instead of 88 s
+- Migrations **0001-0021** applied to `aa_dev`
+- 506 tests, all green (491 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
@@ -25,7 +23,7 @@ Last updated 2026-10-01.
 - `CHANGELOG.md` is newest first; `[0.3.2]` and `[0.3.6]` were written from
   the commits that raised those versions
 
-## Decisions of the 2026-10-08 session (committed, not released yet)
+## Decisions of the 2026-10-08 session
 
 - **Paying more is recorded, not only accepted.** `MonthlyTax.amount_paid`
   and `payment_count` (migration 0021, applied to `aa_dev`) hold what
@@ -45,6 +43,8 @@ Last updated 2026-10-01.
   payer's journal; `_one_side` adds up the fuller side. The dev data has a
   single payment to the holding, so whether both sides share an
   `entry_id` could not be checked - the sign split does not depend on it.
+- **The new column is hidden on phones** (`d-none d-md-table-cell`), like
+  the two rate columns. Claude's call, told to the user, not objected to.
 
 ## Decisions of the 2026-10-01 sessions
 
@@ -128,8 +128,9 @@ alts from Alliance Auth, without assessments.
    one have not been looked at in a browser yet - only through the tests.
    Worth one render with the seeded data (see below) before tuning anything
    on top of them.
-3. The same for the "Amount paid in ISK" column and its badges: tested,
-   not looked at in a browser.
+3. The same for the "Amount paid in ISK" column, its badges and the new
+   lines of the recalculate log: tested, not looked at in a browser. The
+   Ether Element September row (see below) shows the `-` badge.
 
 ## Seeded test data
 
@@ -159,7 +160,7 @@ Removal and rollback records live outside the repo, next to the dev instance:
 
 | | |
 |---|---|
-| `~/aa-dev/seeded-bot-family.json` | every id the seed created |
+| `~/aa-dev/seeded-bot-family.json` | every id the seed created - its `entries` are journal `entry_id`s, not primary keys |
 | `~/aa-dev/seeded-beta-move-undo.json` | Beta's Corporation before the move |
 | `~/aa-dev/seeded-cleanup-record.json` | the audit and division removed on 14.09. |
 
@@ -187,8 +188,16 @@ Three traps in that setup, each of which produced a wrong answer once:
   runs. Use a seeded user that has one, e.g. `kaskade`. Also reverse the URL
   rather than guessing it: the app is mounted at `/eos_tax/`, not `/eos-tax/`.
 
-## Traps this session cost time on
+## Traps recent sessions cost time on
 
+- **`eos-test` takes one test label.** A second module after the first is
+  passed through as an option and `manage.py test` refuses it - run one
+  module per call.
+- **Someone else may migrate and start Celery meanwhile.** On 2026-10-08
+  migration 0021 was applied to `aa_dev` and a worker started from a VS Code
+  terminal a minute after the migration was generated, not by the session.
+  Check `showmigrations` before migrating, and leave a worker on someone's
+  terminal alone.
 - **`compilemessages` has to run from `eos_tax/`, the same as
   `makemessages`, not from `myauth/`.** Run from `myauth` it reported no
   error and did nothing - all six `.mo` stayed at their old content,

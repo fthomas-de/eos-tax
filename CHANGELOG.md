@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.12] - 2026-10-08
+
 ### Added
 
 - The overview has an "Amount paid in ISK" column next to the amount owed
