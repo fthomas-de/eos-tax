@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.16] - 2026-10-08
+
 ### Changed
 
 - The over- and underpayment badges in "Amount paid in ISK" only show with

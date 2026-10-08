@@ -8,8 +8,12 @@ Last updated 2026-10-08.
 
 ## Release
 
-- Version **0.3.15** in `eos_tax/__init__.py`, released 2026-10-08
-- `[0.3.15]` in `CHANGELOG.md`: untaxed member wallet entries only count
+- Version **0.3.16** in `eos_tax/__init__.py`, released 2026-10-08
+- `[0.3.16]` in `CHANGELOG.md`: the over-/underpayment badges in "Amount
+  paid in ISK" only with `admin_view`; "Characters without wallet audit"
+  is one badge per row (count, names and gross in its `title` tooltip)
+  (no migration, no new strings)
+- `[0.3.15]`: untaxed member wallet entries only count
   while the character was in the Corporation, by the corptools
   corporation history (no migration)
 - `[0.3.14]`: member wallets reconciled with the
@@ -22,7 +26,7 @@ Last updated 2026-10-08.
 - `[0.3.13]`: a missing ingame rate is asked from ESI; `[0.3.12]`: what was
   paid is recorded ("Amount paid in ISK", payments added up by reason)
 - Migrations **0001-0024** applied to `aa_dev`
-- 548 tests, all green (533 without the translation tag, 15 with it)
+- 550 tests, all green (535 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
@@ -31,6 +35,14 @@ Last updated 2026-10-08.
   the commits that raised those versions
 
 ## Decisions of the 2026-10-08 sessions
+
+- **Payment differences are for admins.** The user's request: the `+`/`-`
+  badges next to "Amount paid in ISK" only for admins
+  (`perms.eos_tax.admin_view` in the template). Members keep the amount
+  and the "in N payments" line.
+- **Unaudited characters as a badge with tooltip**, the user's request to
+  save space. Native `title` tooltip like the payment badges, not a
+  Bootstrap tooltip (Claude's call); the column header stays long.
 
 - **Member wallet entries count only from joining the Corporation.** The
   user's request: record character wallet entries only after the
@@ -193,7 +205,7 @@ alts from Alliance Auth, without assessments.
 2. Rows written before 0023/0024 show no characters and no calculation
    time until they are recalculated.
 3. Not looked at in a browser yet, only through the tests: the overview
-   columns "Characters without wallet audit", "Calculation time", the
+   columns "Characters without wallet audit" (now a badge), "Calculation time", the
    green amounts, "Amount paid in ISK" with its badges, "Average day
    (hours)" and the heading rows for groups of one on the bots page. The
    Ether Element September row (see below) shows the `-` badge. Worth one
