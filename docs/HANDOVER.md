@@ -8,14 +8,16 @@ Last updated 2026-10-08.
 
 ## Release
 
-- Version **0.3.12** in `eos_tax/__init__.py`, released 2026-10-08
-- `[0.3.12]` in `CHANGELOG.md`: what was paid is recorded - "Amount paid in
-  ISK" column on the overview with +/- badges, payments listed in the
-  recalculate log, payments with a reason code added up (exact amount
-  first), paid rows looked up again for their amount
-- `[0.3.11]`: test users without a password, suite ~20 s instead of 88 s
+- Version **0.3.13** in `eos_tax/__init__.py`, released 2026-10-08
+- `[0.3.13]` in `CHANGELOG.md`: a Corporation at 0% ingame tax is no
+  longer refused as "never pulled from ESI" - `update_corp` asks ESI when
+  Alliance Auth has no rate
+- `[0.3.12]`: what was paid is recorded - "Amount paid in ISK" column on
+  the overview with +/- badges, payments listed in the recalculate log,
+  payments with a reason code added up (exact amount first), paid rows
+  looked up again for their amount
 - Migrations **0001-0021** applied to `aa_dev`
-- 506 tests, all green (491 without the translation tag, 15 with it)
+- 508 tests, all green (493 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
@@ -23,8 +25,20 @@ Last updated 2026-10-08.
 - `CHANGELOG.md` is newest first; `[0.3.2]` and `[0.3.6]` were written from
   the commits that raised those versions
 
-## Decisions of the 2026-10-08 session
+## Decisions of the 2026-10-08 sessions
 
+- **A missing ingame rate is asked from ESI.** Production reported "no
+  ingame tax rate on file yet" for a Corporation whose `tax_rate` was
+  `None` with `last_updated` 2026-10-02. Cause is Alliance Auth itself
+  (5.2-5.5, `EveCorporationInfo.update_corporation`): `tax_rate if
+  tax_rate else None` turns 0% into `None` on every refresh. Of four
+  options (None = 0% when pulled, None = 0% always, ask ESI, only fix the
+  message) the user chose **ask ESI**. `_tax_rate_from_esi` in
+  `db/payments.py` uses AA's own `open_api_provider`; the answer is not
+  written back (AA's row, and AA would empty it again). ESI unreachable =
+  skipped as before, task keeps running. Tests patch
+  `eos_tax.db.payments.open_api_provider` - an unpatched test with a
+  `None` rate hits the real ESI.
 - **Paying more is recorded, not only accepted.** `MonthlyTax.amount_paid`
   and `payment_count` (migration 0021, applied to `aa_dev`) hold what
   `find_payment` (was `corp_has_payed`) found. Shown in the recalculate log
@@ -123,7 +137,9 @@ alts from Alliance Auth, without assessments.
 
 ## Open
 
-1. Nothing is blocked.
+1. Nothing is blocked. After deploying 0.3.13 to production, recalculate
+   the Corporation that reported the missing rate (settings page) - the log
+   should show its rate with "(read from ESI ...)".
 2. The new "Average day (hours)" column and the heading rows for groups of
    one have not been looked at in a browser yet - only through the tests.
    Worth one render with the seeded data (see below) before tuning anything

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.13] - 2026-10-08
+
 ### Fixed
 
 - A Corporation at 0% ingame tax was refused by the recalculation as "no
