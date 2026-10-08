@@ -8,8 +8,11 @@ Last updated 2026-10-08.
 
 ## Release
 
-- Version **0.3.14** in `eos_tax/__init__.py`, released 2026-10-08
-- `[0.3.14]` in `CHANGELOG.md`: member wallets reconciled with the
+- Version **0.3.15** in `eos_tax/__init__.py`, released 2026-10-08
+- `[0.3.15]` in `CHANGELOG.md`: untaxed member wallet entries only count
+  while the character was in the Corporation, by the corptools
+  corporation history (no migration)
+- `[0.3.14]`: member wallets reconciled with the
   corporation wallet, so 0% ingame tax is taxed (migration 0022,
   `MonthlyTax.gross_income`); overview column "Characters without wallet
   audit" (migration 0023, `MonthlyTax.unaudited_characters`, threshold
@@ -19,7 +22,7 @@ Last updated 2026-10-08.
 - `[0.3.13]`: a missing ingame rate is asked from ESI; `[0.3.12]`: what was
   paid is recorded ("Amount paid in ISK", payments added up by reason)
 - Migrations **0001-0024** applied to `aa_dev`
-- 544 tests, all green (529 without the translation tag, 15 with it)
+- 548 tests, all green (533 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
@@ -29,6 +32,18 @@ Last updated 2026-10-08.
 
 ## Decisions of the 2026-10-08 sessions
 
+- **Member wallet entries count only from joining the Corporation.** The
+  user's request: record character wallet entries only after the
+  characters joined the corp. `_corporation_at` in `db/payments.py` reads
+  corptools' `CorporationHistory`; an untaxed entry counts while the
+  character was in the Corporation, so a former member also counts up to
+  leaving (before, the current corporation decided). **A character without
+  a history counts nothing** - the user's choice over "count as before".
+  A payout the Corporation taxed (`tax_receiver_id`) counts regardless -
+  Claude's call, the tax is proof of membership. The recalculate log
+  shows the left-out count (`member_before_join`). Test factory:
+  `add_member_payout(..., joined=LONG_AGO)` creates the history on first
+  use, `joined=None` leaves it empty, `add_corporation_history` adds more.
 - **0% ingame tax is still taxed, from the member wallets.** Production:
   urex (your ex's) at 0% had no tax. The user's wording: the member
   wallets have to be included even though it is more work, because a week
@@ -167,10 +182,11 @@ alts from Alliance Auth, without assessments.
 
 ## Open
 
-1. Nothing is blocked. After deploying 0.3.14 (migrations 0022-0024),
-   recalculate urex (your ex's) for every month it ran at 0% (settings
-   page). The log shows member entries, matched and added; it only works
-   for members whose characters have a corptools audit with wallet access.
+1. Nothing is blocked. After deploying 0.3.14/0.3.15 (migrations
+   0022-0024), recalculate urex (your ex's) for every month it ran at 0%
+   (settings page). The log shows member entries, matched, added and left
+   out before joining; it only works for members whose characters have a
+   corptools audit with wallet access and a pulled corporation history.
    A paid row keeps its flag even when the new amount is higher. Check
    that "added" holds only untaxed payouts - the matching key has never
    seen real member wallet data.
@@ -249,6 +265,9 @@ Three traps in that setup, each of which produced a wrong answer once:
   refuses to overwrite it unless it was read in the session; `git commit
   -F` then silently used the previous release message. Read the file
   first, and check `git log -1` before anything is pushed.
+- **A fix with two guards needs a sabotage of both at once.** The history
+  filter sits in the query and in the loop; the "no history" test passed
+  against either half removed alone and only failed with both reverted.
 - **A sabotage check that does not compile proves nothing.** Deleting a
   line inside a call left a syntax error, the module never imported, and
   the run reported no failing test. Replace with valid code instead.

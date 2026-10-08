@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.15] - 2026-10-08
+
 ### Fixed
 
 - Untaxed member wallet entries only count while the character was in the
