@@ -10,7 +10,7 @@ from allianceauth.services.hooks import get_extension_logger
 from eos_tax.app_settings import get_config
 from eos_tax.models import MonthlyTax
 from eos_tax.util import (
-    corp_has_payed,
+    find_payment,
     format_isk,
     get_amount_to_pay,
     get_eve_alliance_id,
@@ -22,7 +22,7 @@ from eos_tax.db.shared import _month_range
 logger = get_extension_logger(__name__)
 
 
-def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False, alliance_tax_rate: float = 0):
+def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False, alliance_tax_rate: float = 0, amount_paid: int = None, payment_count: int = 0):
     selected_corp = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).first()
     # worked out here from the three values this function writes anyway,
     # rather than handed in: a caller that forgot to pass it used to store a
@@ -45,6 +45,13 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
         selected_corp.payed=selected_corp.payed or payed
         selected_corp.alliance_tax_rate=alliance_tax_rate
         selected_corp.amount_to_pay=amount_to_pay
+        # like the flag above, the amount is never taken back: a check that
+        # finds nothing this time - the
+        # reason setting switched off, or the row checked against an amount a
+        # rate correction just changed - keeps what an earlier one found
+        if amount_paid is not None:
+            selected_corp.amount_paid=amount_paid
+            selected_corp.payment_count=payment_count
 
         selected_corp.save()
 
@@ -59,6 +66,8 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
             payed=payed,
             alliance_tax_rate=alliance_tax_rate,
             amount_to_pay=amount_to_pay,
+            amount_paid=amount_paid,
+            payment_count=payment_count if amount_paid is not None else 0,
         )
 
     return amount_to_pay
@@ -136,11 +145,25 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
             # for every row written since.
             applied_rate = selected_corp.alliance_tax_rate or fallback_rate
 
+            amount_paid = selected_corp.amount_paid
+            # signed: above zero is more than owed, below it short of it
+            paid_difference = (
+                amount_paid - selected_corp.amount_to_pay
+                if amount_paid is not None
+                else 0
+            )
+
             website_data.append({
                 "corporation_id":selected_corp.corp_id,
                 "corporation_name":selected_corp.corp_name,
                 "isk_to_pay": format_isk(selected_corp.amount_to_pay),
                 "isk_to_pay_value": selected_corp.amount_to_pay,
+                "isk_paid": format_isk(amount_paid) if amount_paid is not None else "",
+                # nothing found sorts below a payment of 0, not together with it
+                "isk_paid_value": amount_paid if amount_paid is not None else -1,
+                "paid_difference": paid_difference,
+                "isk_paid_difference": format_isk(abs(paid_difference)),
+                "payment_count": selected_corp.payment_count,
                 "month":selected_corp.month,
                 "year":selected_corp.year,
                 "period": selected_corp.year * 100 + selected_corp.month,
@@ -238,13 +261,14 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
         }
 
     overall_ratted = int(tax_sum)
-    payed = corp_has_payed(
+    payment = find_payment(
         corp_id=corp_id,
         month=month,
         year=year,
         config=config,
         corp_name=corp_info.corporation_name,
     )
+    payed = payment["payed"]
     logger.info(f"dbcon update_corp3: {corp_info.corporation_name} ({corp_id}): payed {payed} - {month}/{year}")
 
     # rounded to the precision the rate is stored with, so the float noise of
@@ -261,7 +285,10 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
         year=year,
         payed=payed,
         alliance_tax_rate=alliance_tax_rate,
+        amount_paid=payment["amount_paid"],
+        payment_count=len(payment["payments"]),
     )
+    amount_paid = payment["amount_paid"]
 
     return {
         "ok": True,
@@ -279,6 +306,12 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
         "alliance_tax_percent": float("%.2f" % (alliance_tax_rate * 100)),
         "amount_to_pay": amount_to_pay,
         "payed": payed,
+        "use_reason": config.use_reason,
+        "payment_match": payment["match"],
+        "payments": payment["payments"],
+        "amount_paid": amount_paid,
+        # against the amount just stored, the one the overview shows next to it
+        "paid_difference": amount_paid - amount_to_pay if amount_paid is not None else 0,
     }
 
 

@@ -25,6 +25,27 @@ Last updated 2026-10-01.
 - `CHANGELOG.md` is newest first; `[0.3.2]` and `[0.3.6]` were written from
   the commits that raised those versions
 
+## Decisions of the 2026-10-08 session (committed, not released yet)
+
+- **Paying more is recorded, not only accepted.** `MonthlyTax.amount_paid`
+  and `payment_count` (migration 0021, applied to `aa_dev`) hold what
+  `find_payment` (was `corp_has_payed`) found. Shown in the recalculate log
+  and in an own overview column "Amount paid in ISK" - the user's choice
+  over a note in the Paid column.
+- **With reason codes: the exact amount first, then the sum.** The user's
+  wording: look for the matching amount, if none fits add up and check
+  whether the amount was reached. Partial payments therefore settle a row
+  now; before, one transfer had to cover it alone.
+- **Without reason codes only the exact amount counts**, as before - the
+  user kept it on purpose.
+- **Paid rows are looked up again** on every run for the amount (the flag
+  stays). That is the backfill for rows paid before 0021, the user's
+  choice over leaving them empty; there is no data migration.
+- **One journal side only.** A transfer can be in the holding's and the
+  payer's journal; `_one_side` adds up the fuller side. The dev data has a
+  single payment to the holding, so whether both sides share an
+  `entry_id` could not be checked - the sign split does not depend on it.
+
 ## Decisions of the 2026-10-01 sessions
 
 - **Tests keep their database while working, `/commit` builds it fresh.**
@@ -107,6 +128,8 @@ alts from Alliance Auth, without assessments.
    one have not been looked at in a browser yet - only through the tests.
    Worth one render with the seeded data (see below) before tuning anything
    on top of them.
+3. The same for the "Amount paid in ISK" column and its badges: tested,
+   not looked at in a browser.
 
 ## Seeded test data
 
@@ -124,6 +147,13 @@ Five characters under the main **Kaskade Prime**, all in Ether Element
 Beta holds 546 of Ether Element's 1249 payouts and covers 21 of 24 hours. That
 is the character the purged yardstick was found on: moving her into a real
 Corporation cost every other member of it about fifteen percentage points.
+
+The seed also counts as tax: it adds 636,000,000 ISK to Ether Element's
+September 2026 journal, so that row owes 1,497,770,014 instead of the
+1,200,970,014 the real entries make, and the real payment of exactly the
+latter (2026-10-02, reason `98633815/9/2026`) leaves it unpaid with
+-296,800,000 in "Amount paid in ISK". Left that way on purpose (user's call,
+2026-10-08): the row is the test case for an underpayment.
 
 Removal and rollback records live outside the repo, next to the dev instance:
 

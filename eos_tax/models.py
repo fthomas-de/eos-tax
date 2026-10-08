@@ -79,7 +79,9 @@ class TaxConfiguration(SingletonModel):
         default=False,
         help_text=_(
             "Match payments by their reason code instead of by amount alone. "
-            "Without it a payment is recognised by its amount only, so two "
+            "With it every payment carrying the code counts, so a corporation "
+            "can pay in parts, and paying more than it owes is recorded. "
+            "Without it a payment is recognised by its exact amount only, so two "
             "corporations owing the same sum, or one corporation owing the "
             "same sum twice, cannot be told apart."
         ),
@@ -395,4 +397,22 @@ class MonthlyTax(models.Model):
             "written, and kept with them from then on - the page, the chart and the "
             "payment check read it rather than redoing the arithmetic."
         ),
+    )
+
+    amount_paid = models.BigIntegerField(
+        verbose_name=_("Amount paid"),
+        null=True,
+        blank=True,
+        help_text=_(
+            "ISK the payment check found for this month, in whole ISK: with reason "
+            "codes every payment carrying this row's code added up, without them "
+            "the amount owed once a payment of exactly that turned up. Empty until "
+            "a payment was seen."
+        ),
+    )
+
+    payment_count = models.PositiveSmallIntegerField(
+        verbose_name=_("Payments"),
+        default=0,
+        help_text=_("How many payments the amount paid is made of."),
     )

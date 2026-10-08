@@ -309,6 +309,17 @@ def _breakdown_for_display(breakdown):
             {**row, "sum": format_isk(row["sum"])}
             for row in breakdown["by_type"]
         ],
+        "amount_paid": (
+            format_isk(breakdown["amount_paid"])
+            if breakdown["amount_paid"] is not None
+            else ""
+        ),
+        "payments": [
+            {**payment, "amount": format_isk(payment["amount"])}
+            for payment in breakdown["payments"]
+        ],
+        # the sign stays with paid_difference for the template to branch on
+        "isk_paid_difference": format_isk(abs(breakdown["paid_difference"])),
     }
 
 

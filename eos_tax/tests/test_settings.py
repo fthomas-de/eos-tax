@@ -545,6 +545,60 @@ class TestSettingsRecalculate(EosTaxTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("no journal entries", response.content.decode().lower())
 
+    def payment(self, amount, day):
+        """A transfer to the holding, as the payer's journal holds it."""
+        division = CorporationWalletDivision.objects.get(corporation__corporation=self.corporation)
+
+        return CorporationWalletJournalEntry.objects.create(
+            division=division,
+            date=datetime.datetime(2026, 10, day, 12, tzinfo=datetime.timezone.utc),
+            description="tax payment",
+            entry_id=1000 + day,
+            ref_type="player_donation",
+            first_party_id=2100000001,
+            second_party_id=98000048,
+            reason=f"{BRAVO_CORP_ID}/9/2026",
+            amount=-amount,
+        )
+
+    def test_should_list_the_payments_and_what_was_paid_too_much(self):
+        """Two transfers that together pass the 700M owed: the log names them
+        both, says no single one fit, and how much more came in."""
+        self.config.tax_corporation = EveCorporationInfo.objects.create(
+            corporation_id=98000048, corporation_name="Holding Corp",
+            corporation_ticker="HOLD", tax_rate=0.1,
+        )
+        self.config.use_reason = True
+        self.config.save()
+        self.journal_entry(1_000_000_000, day=15)
+        # the first run writes the row a payment is checked against
+        self.post(corp_id=str(BRAVO_CORP_ID), month="9", year="2026")
+        self.payment(400_000_000, day=2)
+        self.payment(400_000_000, day=3)
+
+        body = self.post(corp_id=str(BRAVO_CORP_ID), month="9", year="2026").content.decode()
+
+        self.assertIn("No payment of exactly the amount owed.", body)
+        self.assertIn(f"The 2 payments with this reason add up to {format_isk(800_000_000)} ISK.", body)
+        self.assertIn(f"2026-10-02 12:00: {format_isk(400_000_000)} ISK", body)
+        self.assertIn(f"Paid {format_isk(100_000_000)} ISK more than owed.", body)
+
+    def test_should_say_when_the_exact_amount_came_in(self):
+        self.config.tax_corporation = EveCorporationInfo.objects.create(
+            corporation_id=98000048, corporation_name="Holding Corp",
+            corporation_ticker="HOLD", tax_rate=0.1,
+        )
+        self.config.use_reason = True
+        self.config.save()
+        self.journal_entry(1_000_000_000, day=15)
+        self.post(corp_id=str(BRAVO_CORP_ID), month="9", year="2026")
+        self.payment(700_000_000, day=2)
+
+        body = self.post(corp_id=str(BRAVO_CORP_ID), month="9", year="2026").content.decode()
+
+        self.assertIn("A payment of exactly the amount owed was found.", body)
+        self.assertNotIn("more than owed", body)
+
     def test_should_reject_a_non_numeric_month(self):
         response = self.post(corp_id="all", month="not-a-month", year="2026")
 

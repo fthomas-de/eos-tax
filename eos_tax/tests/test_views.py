@@ -297,9 +297,19 @@ class TestOverviewTable(EosTaxTestCase):
         self.assertNotContains(self.overview(), 'id="table-eos-tax"')
 
     def test_should_sort_by_month_then_corporation(self):
-        """Shallow guard on the config in the source: column 4 is Month,
-        column 0 Corporation, and nothing else takes part."""
-        self.assertIn('order: [[4, "asc"], [0, "asc"]],', read_static("overview.js"))
+        """Shallow guard on the config in the source: column 5 is Month,
+        column 0 Corporation, and nothing else takes part. Month moved from
+        4 to 5 when "Amount paid in ISK" went in next to the amount owed;
+        left at 4 the overview would sort by what was paid."""
+        self.assertIn('order: [[5, "asc"], [0, "asc"]],', read_static("overview.js"))
+
+    def test_should_put_month_where_the_sort_config_looks_for_it(self):
+        """The other half of the guard above: the sixth header is Month."""
+        body = self.overview().content.decode()
+        thead = body[body.index("<thead>"):body.index("</thead>")]
+        headers = [cell.split(">", 1)[1].split("<", 1)[0] for cell in thead.split("<th ")[1:]]
+
+        self.assertEqual(headers[5], "Month")
 
     def test_should_make_exactly_the_corporation_column_searchable(self):
         """Shallow guard: overlapping columnDefs once made every column
@@ -308,7 +318,7 @@ class TestOverviewTable(EosTaxTestCase):
         script = read_static("overview.js")
 
         self.assertEqual(script.count("searchable: true"), 1)
-        self.assertEqual(script.count("searchable: false"), 6)
+        self.assertEqual(script.count("searchable: false"), 7)
         self.assertNotIn('targets: "_all"', script)
 
     def test_should_load_its_script_from_a_static_file(self):
@@ -390,6 +400,59 @@ class TestOverviewTable(EosTaxTestCase):
 
     def test_should_search_case_insensitively(self):
         self.assertIn("caseInsensitive: true", read_static("overview.js"))
+
+    def paid(self, amount, count=1):
+        self.row.amount_paid = amount
+        self.row.payment_count = count
+        self.row.save()
+
+    def test_should_mark_a_payment_of_more_than_was_owed(self):
+        self.paid(self.row.amount_to_pay + 1_234_567)
+
+        body = self.overview().content.decode()
+
+        self.assertIn(">+1.234.567</span>", body)
+        self.assertIn("Paid 1.234.567 ISK more than owed.", body)
+        self.assertIn("text-bg-warning", body)
+
+    def test_should_mark_a_payment_short_of_what_was_owed(self):
+        self.paid(self.row.amount_to_pay - 1_000)
+
+        body = self.overview().content.decode()
+
+        self.assertIn(">-1.000</span>", body)
+        self.assertIn("1.000 ISK short of the amount owed.", body)
+
+    def test_should_leave_an_exact_payment_unmarked(self):
+        self.paid(self.row.amount_to_pay)
+
+        body = self.overview().content.decode()
+
+        self.assertNotIn("more than owed", body)
+        self.assertNotIn("short of the amount owed", body)
+
+    def test_should_say_how_many_payments_it_took(self):
+        self.paid(self.row.amount_to_pay, count=3)
+
+        self.assertContains(self.overview(), "in 3 payments")
+
+    def test_should_not_count_a_single_payment(self):
+        self.paid(self.row.amount_to_pay, count=1)
+
+        self.assertNotContains(self.overview(), "in 1 payment")
+
+    def test_should_expose_numeric_sort_value_for_the_amount_paid(self):
+        self.paid(self.row.amount_to_pay + 7)
+
+        self.assertContains(
+            self.overview(),
+            f'<td class="d-none d-md-table-cell" data-order="{self.row.amount_to_pay + 7}">',
+        )
+
+    def test_should_sort_nothing_paid_below_zero(self):
+        self.assertContains(
+            self.overview(), '<td class="d-none d-md-table-cell" data-order="-1">'
+        )
 
 
 class TestMenuBadge(EosTaxTestCase):
@@ -598,7 +661,7 @@ class TestNarrowScreens(EosTaxTestCase):
     """What the overview drops on a phone, and what it must not drop.
 
     The overview is the only page without admin_view, so it is the one every
-    member opens on a telephone. Seven columns do not fit; the four that carry
+    member opens on a telephone. Eight columns do not fit; the four that carry
     the purpose of the page - which Corporation, how much, for which month,
     the reason to copy and whether it is paid - stay.
     """
@@ -614,10 +677,13 @@ class TestNarrowScreens(EosTaxTestCase):
     def overview(self):
         return self.client.get(reverse("eos_tax:index"))
 
-    def test_should_hide_the_two_rate_columns(self):
+    def test_should_hide_the_two_rate_columns_and_the_amount_paid(self):
+        """The amount paid is the treasurer's question, not the one a member
+        opens the page on a phone for - whether it is settled is the Paid
+        column, which stays."""
         body = self.overview().content.decode()
 
-        for label in ("Ingame Corp Tax", "Alliance Tax"):
+        for label in ("Ingame Corp Tax", "Alliance Tax", "Amount paid in ISK"):
             with self.subTest(column=label):
                 self.assertIn(
                     f'<th scope="col" class="d-none d-md-table-cell">{label}</th>',

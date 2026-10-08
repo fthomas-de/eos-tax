@@ -39,6 +39,7 @@
                                 <th scope="col" class="d-none d-md-table-cell">{% translate "Ingame Corp Tax" %}</th>
                                 <th scope="col" class="d-none d-md-table-cell">{% translate "Alliance Tax" %}</th>
                                 <th scope="col">{% translate "Amount to pay in ISK" %}</th>
+                                <th scope="col" class="d-none d-md-table-cell">{% translate "Amount paid in ISK" %}</th>
                                 <th scope="col">{% translate "Month" %}</th>
                                 <th scope="col">{% translate "Reason" %}</th>
                                 <th scope="col">{% translate "Paid" %}</th>
@@ -67,6 +68,30 @@
                                         class="d-none d-md-table-cell {% if not data.corp_tax_rate %}text-danger fw-semibold{% endif %}">{{ data.corp_tax_rate }}%</td>
                                     <td class="d-none d-md-table-cell" data-order="{{ data.alliance_tax_rate|unlocalize }}">{{ data.alliance_tax_rate }}%</td>
                                     <td data-order="{{ data.isk_to_pay_value|unlocalize }}">{{ data.isk_to_pay }}</td>
+                                    {% comment %}
+                                        What came in next to what was owed, so a transfer of
+                                        more - or a second one - does not pass as settled and
+                                        nothing else. Empty until a payment was seen.
+                                    {% endcomment %}
+                                    <td class="d-none d-md-table-cell" data-order="{{ data.isk_paid_value|unlocalize }}">
+                                        {% if data.isk_paid %}
+                                            {{ data.isk_paid }}
+                                            {% if data.paid_difference > 0 %}
+                                                {% blocktranslate with value=data.isk_paid_difference asvar overpaid %}Paid {{ value }} ISK more than owed.{% endblocktranslate %}
+                                                <span class="badge text-bg-warning ms-1" title="{{ overpaid }}" aria-hidden="true">+{{ data.isk_paid_difference }}</span>
+                                                <span class="visually-hidden">{{ overpaid }}</span>
+                                            {% elif data.paid_difference < 0 %}
+                                                {% blocktranslate with value=data.isk_paid_difference asvar short %}{{ value }} ISK short of the amount owed.{% endblocktranslate %}
+                                                <span class="badge text-bg-danger ms-1" title="{{ short }}" aria-hidden="true">-{{ data.isk_paid_difference }}</span>
+                                                <span class="visually-hidden">{{ short }}</span>
+                                            {% endif %}
+                                            {% if data.payment_count > 1 %}
+                                                <div class="small text-body-secondary">
+                                                    {% blocktranslate count counter=data.payment_count %}in {{ counter }} payment{% plural %}in {{ counter }} payments{% endblocktranslate %}
+                                                </div>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
                                     <td data-order="{{ data.period|unlocalize }}">{{ data.month }}/{{ data.year }}</td>
                                     {% comment %}
                                         The payable month carries a reason code, the follow-up

@@ -32,6 +32,43 @@
                     {% blocktranslate with value=breakdown.amount_to_pay %}Amount owed to the alliance: {{ value }} ISK{% endblocktranslate %}
                 </strong>
             </li>
+            {% comment %}
+                The same order the check itself goes in: one payment of
+                exactly the amount owed first, the payments added up only
+                when none fits.
+            {% endcomment %}
+            <li>
+                {% if breakdown.payment_match == "exact" %}
+                    {% translate "A payment of exactly the amount owed was found." %}
+                {% elif breakdown.payments %}
+                    {% blocktranslate with total=breakdown.amount_paid count counter=breakdown.payments|length %}No payment of exactly the amount owed. {{ counter }} payment with this reason comes to {{ total }} ISK.{% plural %}No payment of exactly the amount owed. The {{ counter }} payments with this reason add up to {{ total }} ISK.{% endblocktranslate %}
+                {% elif breakdown.use_reason %}
+                    {% translate "No payment with this reason found." %}
+                {% else %}
+                    {% translate "No payment of exactly the amount owed found. Without matching by reason only that amount can be told to belong to this corporation." %}
+                {% endif %}
+            </li>
+            {% if breakdown.payments|length > 1 %}
+                <li>
+                    {% translate "Payments:" %}
+                    <ul class="mb-0 ps-3">
+                        {% for payment in breakdown.payments %}
+                            <li>{{ payment.date|date:"Y-m-d H:i" }}: {{ payment.amount }} ISK</li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endif %}
+            {% if breakdown.paid_difference > 0 %}
+                <li>
+                    <strong>
+                        {% blocktranslate with value=breakdown.isk_paid_difference %}Paid {{ value }} ISK more than owed.{% endblocktranslate %}
+                    </strong>
+                </li>
+            {% elif breakdown.paid_difference < 0 %}
+                <li>
+                    {% blocktranslate with value=breakdown.isk_paid_difference %}{{ value }} ISK short of the amount owed.{% endblocktranslate %}
+                </li>
+            {% endif %}
             <li>
                 {% if breakdown.payed %}
                     {% translate "Already marked as paid." %}

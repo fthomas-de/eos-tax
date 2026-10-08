@@ -53,6 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
             { searchable: false },  // Ingame Corp Tax
             { searchable: false },  // Alliance Tax
             { searchable: false },  // Amount to pay in Isk
+            { searchable: false },  // Amount paid in Isk
             { searchable: false },  // Month
             { searchable: false },  // Reason
             { searchable: false }   // Payed
@@ -63,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         // month, then corporation name, and nothing else - Reason and Paid
         // stay sortable by click, but do not reorder the rows on their own
-        order: [[4, "asc"], [0, "asc"]],
+        order: [[5, "asc"], [0, "asc"]],
         pageLength: 25,
         language: {
             search: labels.searchLabel,

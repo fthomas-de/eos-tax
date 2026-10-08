@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The overview has an "Amount paid in ISK" column next to the amount owed
+  (migration 0021). A transfer of more than was owed used to pass as paid
+  and nothing else; now the column shows what came in, with a `+` badge for
+  the surplus, a `-` badge for what is still missing and "in n payments"
+  when it took more than one. Hidden on phones like the two rate columns.
+- The recalculate log on the settings page says how the payment was found -
+  one transfer of exactly the amount owed, or several that only add up to
+  it - lists the transfers when there are several, and how much too much or
+  too little came in.
+
+### Changed
+
+- With *Match by Reason* switched on, every transfer carrying the reason
+  code counts now, not only one that covers the amount on its own. The
+  check looks for a single transfer of exactly the amount owed first and
+  adds them all up only when none fits, so a corporation can pay in parts,
+  and paying twice shows up as paid too much. A transfer seen from both
+  sides - income in the holding's journal, an expense in the payer's, when
+  corptools has a token for both - is added up from one side only, the
+  fuller one; over both it would read as paid twice. Without *Match by
+  Reason* nothing changes: only the exact amount can be told to belong to a
+  corporation, and that is still all that counts.
+- A row already marked paid is looked up in the journal again on every
+  run. Its flag still never goes back, but a second transfer after the
+  first one settled it reaches the row, and rows paid before 0021 get their
+  amount on the next run instead of from a backfill. Months outside the
+  task's range fill in on their next recalculation.
+
 ## [0.3.11] - 2026-10-01
 
 ### Changed

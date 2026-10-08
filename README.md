@@ -85,6 +85,13 @@ that owes the same sum in two months, cannot be told apart, and a single
 transfer can settle both. The Reason code shown on the Overview carries
 `corporation/month/year`, which is what makes a payment identifiable.
 
+With it, every transfer carrying the code counts: a single one of exactly
+the amount owed settles the month, and failing that the transfers are added
+up, so a Corporation can pay in parts. What came in is shown in the
+Overview's "Amount paid in ISK" column, with a badge when it is more or less
+than was owed. Without Match by Reason only a transfer of exactly the amount
+owed is recognised - a larger one could belong to anybody.
+
 The Holding Corporation has to be known to Alliance Auth. A holding without
 members never shows up on its own - import it once:
 

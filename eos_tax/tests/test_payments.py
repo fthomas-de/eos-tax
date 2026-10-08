@@ -1,5 +1,5 @@
 """The write path: update_corp turns a wallet journal into a number, and
-corp_has_payed decides whether that number was settled.
+find_payment decides whether that number was settled, and by how much.
 
 update_corp is the only place in the app that produces the figures everything
 else only displays or sums - it had no coverage before this file.
@@ -27,7 +27,7 @@ from eos_tax.db.payments import (
 )
 from eos_tax.models import MonthlyTax, TaxConfiguration, TaxRate
 from eos_tax.tests.base import EosTaxTestCase
-from eos_tax.util import corp_has_payed, get_amount_to_pay
+from eos_tax.util import _one_side, find_payment, get_amount_to_pay
 
 from .factories import (
     ALPHA_CORP_ID,
@@ -315,6 +315,43 @@ class TestPaidIsNeverTakenBack(PaymentsTestCase):
 
         self.assertTrue(self.row().payed)
 
+    def test_should_keep_the_amount_paid_when_a_later_check_finds_nothing(self):
+        """The same for the amount: the reason setting switched off, or the
+        row checked against an amount a rate correction just changed."""
+        row = create_tax_row(
+            CORP_ID, "Bravo Corp", payed=True, tax_value=1, tax_percentage=10.0,
+            month=MONTH, year=YEAR, alliance_tax_rate=0.15,
+        )
+        row.amount_paid = 12_345_678
+        row.payment_count = 2
+        row.save()
+
+        set_corp_tax(
+            corp_id=CORP_ID, corp_name="Bravo Corp", tax_value=5_000_000,
+            tax_percentage=10.0, month=MONTH, year=YEAR, payed=False,
+            alliance_tax_rate=0.2, amount_paid=None, payment_count=0,
+        )
+
+        row = self.row()
+        self.assertEqual(row.amount_paid, 12_345_678)
+        self.assertEqual(row.payment_count, 2)
+
+    def test_should_store_a_newer_amount_paid(self):
+        create_tax_row(
+            CORP_ID, "Bravo Corp", payed=True, tax_value=1, tax_percentage=10.0,
+            month=MONTH, year=YEAR, alliance_tax_rate=0.15,
+        )
+
+        set_corp_tax(
+            corp_id=CORP_ID, corp_name="Bravo Corp", tax_value=5_000_000,
+            tax_percentage=10.0, month=MONTH, year=YEAR, payed=True,
+            alliance_tax_rate=0.2, amount_paid=9_000_000, payment_count=3,
+        )
+
+        row = self.row()
+        self.assertEqual(row.amount_paid, 9_000_000)
+        self.assertEqual(row.payment_count, 3)
+
 
 class TestUpdateCorpYearRollover(PaymentsTestCase):
     def test_should_roll_december_into_january(self):
@@ -395,13 +432,13 @@ class TestUpdateCorpBreakdown(PaymentsTestCase):
         self.assertEqual(breakdown["reason"], "no_entries")
 
 
-# --- corp_has_payed -----------------------------------------------------
+# --- find_payment -------------------------------------------------------
 
 ALLIANCE_RATE = 0.15
 TAX_VALUE = 1_000_000_000
 TAX_PERCENTAGE = 10.0
 # the amount owed for TAX_VALUE/TAX_PERCENTAGE/ALLIANCE_RATE, worked out the
-# same way corp_has_payed itself works it out
+# same way find_payment itself works it out
 OWED = int(get_amount_to_pay(TAX_VALUE, TAX_PERCENTAGE, ALLIANCE_RATE))
 
 
@@ -424,10 +461,10 @@ class CorpHasPayedTestCase(PaymentsTestCase):
         self.config.save()
 
     def pay(self, amount, when=None, ref_type="player_donation", reason=None,
-            second_party_id=_UNSET):
+            second_party_id=_UNSET, division=None):
         self.entry_id += 1
         return CorporationWalletJournalEntry.objects.create(
-            division=self.division,
+            division=division or self.division,
             date=when or datetime.datetime(YEAR, MONTH, 2, tzinfo=datetime.timezone.utc),
             description="tax payment",
             entry_id=self.entry_id,
@@ -444,8 +481,11 @@ class CorpHasPayedTestCase(PaymentsTestCase):
             tax=None,
         )
 
+    def found(self):
+        return find_payment(CORP_ID, MONTH, YEAR)
+
     def has_payed(self):
-        return corp_has_payed(CORP_ID, MONTH, YEAR)
+        return self.found()["payed"]
 
 
 class TestCorpHasPayedWithoutARow(CorpHasPayedTestCase):
@@ -554,6 +594,293 @@ class TestCorpHasPayedStoredRate(CorpHasPayedTestCase):
         self.config.save()
 
         self.assertTrue(self.has_payed())
+
+
+REASON = f"{CORP_ID}/{MONTH}/{YEAR}"
+
+
+class TestFindPaymentAmountWithReason(CorpHasPayedTestCase):
+    """What came in, not only whether it was enough: a transfer of more than
+    was owed used to pass as paid and nothing else."""
+
+    def setUp(self):
+        super().setUp()
+        self.owe()
+        self.configure_holding()
+        self.config.use_reason = True
+        self.config.save()
+
+    def test_should_record_a_payment_of_exactly_the_amount_owed(self):
+        self.pay(OWED, reason=REASON)
+
+        found = self.found()
+
+        self.assertTrue(found["payed"])
+        self.assertEqual(found["match"], "exact")
+        self.assertEqual(found["amount_paid"], OWED)
+        self.assertEqual(len(found["payments"]), 1)
+
+    def test_should_record_what_a_larger_payment_brought_in(self):
+        self.pay(OWED + 500_000, reason=REASON)
+
+        found = self.found()
+
+        self.assertTrue(found["payed"])
+        self.assertEqual(found["match"], "sum")
+        self.assertEqual(found["amount_paid"], OWED + 500_000)
+
+    def test_should_add_up_a_payment_in_parts(self):
+        """No single transfer fits; together they reach the amount owed."""
+        self.pay(OWED // 2, reason=REASON)
+        self.pay(OWED - OWED // 2, reason=REASON)
+
+        found = self.found()
+
+        self.assertTrue(found["payed"])
+        self.assertEqual(found["match"], "sum")
+        self.assertEqual(found["amount_paid"], OWED)
+        self.assertEqual(len(found["payments"]), 2)
+
+    def test_should_not_settle_parts_short_of_the_amount_owed(self):
+        """Still recorded: the overview shows what is missing."""
+        self.pay(OWED // 2, reason=REASON)
+
+        found = self.found()
+
+        self.assertFalse(found["payed"])
+        self.assertIsNone(found["match"])
+        self.assertEqual(found["amount_paid"], OWED // 2)
+
+    def test_should_take_the_exact_payment_and_still_count_a_second_one(self):
+        """Paid twice: the first one settles it, the second one is what the
+        overview has to show as paid too much."""
+        self.pay(OWED, reason=REASON)
+        self.pay(OWED, reason=REASON, when=datetime.datetime(YEAR, MONTH, 5, tzinfo=datetime.timezone.utc))
+
+        found = self.found()
+
+        self.assertEqual(found["match"], "exact")
+        self.assertEqual(found["amount_paid"], 2 * OWED)
+        self.assertEqual(len(found["payments"]), 2)
+
+    def test_should_count_a_transfer_seen_from_both_sides_once(self):
+        """corptools reads the holding's wallet and the payer's: the same
+        transfer is income in one journal and an expense in the other."""
+        holding_audit = CorporationAudit.objects.create(corporation=self.holding)
+        holding_division = CorporationWalletDivision.objects.create(
+            corporation=holding_audit, balance=0, division=1
+        )
+        self.pay(-OWED, reason=REASON)
+        self.pay(OWED, reason=REASON, division=holding_division)
+
+        found = self.found()
+
+        self.assertEqual(found["amount_paid"], OWED)
+        self.assertEqual(len(found["payments"]), 1)
+
+    def test_should_add_fractions_up_before_cutting_them_off(self):
+        """Two transfers of x.50 cut to whole ISK one by one came out a whole
+        ISK short of what together arrived."""
+        self.pay(Decimal(OWED // 2) + Decimal("0.50"), reason=REASON)
+        self.pay(Decimal(OWED - OWED // 2) - Decimal("0.50"), reason=REASON)
+
+        found = self.found()
+
+        self.assertTrue(found["payed"])
+        self.assertEqual(found["amount_paid"], OWED)
+
+    def test_should_not_round_a_fraction_short_up_to_settling_it(self):
+        self.pay(Decimal(OWED) - Decimal("0.01"), reason=REASON)
+
+        found = self.found()
+
+        self.assertFalse(found["payed"])
+        self.assertEqual(found["amount_paid"], OWED - 1)
+
+    def test_should_skip_an_entry_without_an_amount(self):
+        """corptools allows one; comparing None against zero raised."""
+        self.pay(None, reason=REASON)
+        self.pay(OWED, reason=REASON)
+
+        self.assertEqual(self.found()["amount_paid"], OWED)
+
+    def test_should_look_up_what_came_in_for_a_row_already_paid(self):
+        """Rows paid before the amount was stored get it this way, and a
+        second transfer after the first one settled the row still shows."""
+        row = MonthlyTax.objects.get(corp_id=CORP_ID, month=MONTH, year=YEAR)
+        row.payed = True
+        row.save()
+        self.pay(OWED + 500_000, reason=REASON)
+
+        found = self.found()
+
+        self.assertTrue(found["payed"])
+        self.assertEqual(found["amount_paid"], OWED + 500_000)
+
+    def test_should_keep_a_paid_row_paid_when_nothing_turns_up(self):
+        row = MonthlyTax.objects.get(corp_id=CORP_ID, month=MONTH, year=YEAR)
+        row.payed = True
+        row.save()
+
+        found = self.found()
+
+        self.assertTrue(found["payed"])
+        self.assertIsNone(found["amount_paid"])
+
+
+class TestFindPaymentAmountWithoutReason(CorpHasPayedTestCase):
+    def setUp(self):
+        super().setUp()
+        self.owe()
+        self.configure_holding()
+
+    def test_should_record_the_amount_owed_for_an_exact_payment(self):
+        self.pay(OWED)
+
+        found = self.found()
+
+        self.assertEqual(found["match"], "exact")
+        self.assertEqual(found["amount_paid"], OWED)
+        self.assertEqual(len(found["payments"]), 1)
+
+    def test_should_record_nothing_for_a_larger_payment(self):
+        """Without a reason a larger transfer could be anybody's."""
+        self.pay(OWED + 1)
+
+        found = self.found()
+
+        self.assertFalse(found["payed"])
+        self.assertIsNone(found["amount_paid"])
+        self.assertEqual(found["payments"], [])
+
+
+class TestOneSide(EosTaxTestCase):
+    """_one_side picks the journal side to add up, from hand-built rows."""
+
+    WHEN = datetime.datetime(YEAR, MONTH, 2, tzinfo=datetime.timezone.utc)
+
+    def rows(self, *amounts):
+        return [{"date": self.WHEN, "amount": amount} for amount in amounts]
+
+    def test_should_take_one_side_when_both_saw_the_transfer(self):
+        payments = _one_side(self.rows(Decimal("100"), Decimal("-100")))
+
+        self.assertEqual([payment["amount"] for payment in payments], [Decimal("100")])
+
+    def test_should_take_the_payer_side_when_the_holding_saw_nothing(self):
+        payments = _one_side(self.rows(Decimal("-60"), Decimal("-40")))
+
+        self.assertEqual([payment["amount"] for payment in payments], [Decimal("60"), Decimal("40")])
+
+    def test_should_take_the_fuller_side(self):
+        """The holding saw one transfer, the payer's wallet both."""
+        payments = _one_side(self.rows(Decimal("60"), Decimal("-60"), Decimal("-40")))
+
+        self.assertEqual(sum(payment["amount"] for payment in payments), Decimal("100"))
+
+    def test_should_order_the_payments_by_date(self):
+        later = {"date": self.WHEN + datetime.timedelta(days=1), "amount": Decimal("1")}
+        earlier = {"date": self.WHEN, "amount": Decimal("2")}
+
+        payments = _one_side([later, earlier])
+
+        self.assertEqual([payment["amount"] for payment in payments], [Decimal("2"), Decimal("1")])
+
+
+class TestUpdateCorpRecordsThePayment(PaymentsTestCase):
+    """update_corp hands what find_payment found to the row and the log."""
+
+    def setUp(self):
+        super().setUp()
+        self.config.tax_rate = Decimal("0.15")
+        self.config.use_reason = True
+        self.config.tax_corporation = create_corporation(HOLDING_CORP_ID, "Holding Corp", None)
+        self.config.save()
+        self.bounty(500_000_000, day=10)
+        # the first run writes the row the payment is checked against
+        update_corp(CORP_ID, MONTH, YEAR)
+        self.owed = self.row().amount_to_pay
+
+    def pay(self, amount, day):
+        self.entry_id += 1
+        CorporationWalletJournalEntry.objects.create(
+            division=self.division,
+            date=datetime.datetime(YEAR, MONTH, day, tzinfo=datetime.timezone.utc),
+            description="tax payment",
+            entry_id=self.entry_id,
+            ref_type="player_donation",
+            first_party_id=RATTER_ID,
+            second_party_id=HOLDING_CORP_ID,
+            reason=REASON,
+            amount=-amount,
+        )
+
+    def test_should_store_what_was_paid_on_the_row(self):
+        self.pay(self.owed + 1_000, day=12)
+        self.pay(2_000, day=13)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        row = self.row()
+        self.assertTrue(row.payed)
+        self.assertEqual(row.amount_paid, self.owed + 3_000)
+        self.assertEqual(row.payment_count, 2)
+
+    def test_should_tell_the_log_how_much_too_much(self):
+        self.pay(self.owed + 1_000, day=12)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["payment_match"], "sum")
+        self.assertEqual(breakdown["amount_paid"], self.owed + 1_000)
+        self.assertEqual(breakdown["paid_difference"], 1_000)
+        self.assertEqual(len(breakdown["payments"]), 1)
+
+    def test_should_leave_the_amount_empty_without_a_payment(self):
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertIsNone(self.row().amount_paid)
+        self.assertEqual(self.row().payment_count, 0)
+        self.assertEqual(breakdown["paid_difference"], 0)
+
+
+class TestOverviewPaidAmount(PaymentsTestCase):
+    """get_website_data: what the new column of the overview reads."""
+
+    def overview_row(self):
+        now = datetime.datetime.now()
+
+        return get_website_data(dates=[(now.month, now.year)], admin=True)[0]
+
+    def test_should_show_how_much_more_was_paid(self):
+        row = create_tax_row(CORP_ID, "Bravo Corp", payed=True, alliance_tax_rate=0.15)
+        row.amount_paid = row.amount_to_pay + 1_234_567
+        row.payment_count = 2
+        row.save()
+
+        data = self.overview_row()
+
+        self.assertEqual(data["isk_paid_value"], row.amount_to_pay + 1_234_567)
+        self.assertEqual(data["paid_difference"], 1_234_567)
+        self.assertEqual(data["isk_paid_difference"], "1.234.567")
+        self.assertEqual(data["payment_count"], 2)
+
+    def test_should_show_how_much_is_missing(self):
+        row = create_tax_row(CORP_ID, "Bravo Corp", alliance_tax_rate=0.15)
+        row.amount_paid = row.amount_to_pay - 1_000
+        row.payment_count = 1
+        row.save()
+
+        self.assertEqual(self.overview_row()["paid_difference"], -1_000)
+
+    def test_should_sort_nothing_paid_below_a_payment_of_zero(self):
+        create_tax_row(CORP_ID, "Bravo Corp", alliance_tax_rate=0.15)
+
+        data = self.overview_row()
+
+        self.assertEqual(data["isk_paid"], "")
+        self.assertEqual(data["isk_paid_value"], -1)
+        self.assertEqual(data["paid_difference"], 0)
 
 
 # The two below moved here from test_views.py: neither renders a page.
