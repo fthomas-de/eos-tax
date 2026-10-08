@@ -81,8 +81,18 @@
                                     {% comment %}
                                         Green on both figures when they agree to the ISK, so a
                                         settled row reads as settled without comparing digits.
+                                        The tooltip names what the amount is a share of, so a
+                                        surprising figure can be checked without the log.
                                     {% endcomment %}
-                                    <td data-order="{{ data.isk_to_pay_value|unlocalize }}"{% if data.paid_exactly %} class="text-success"{% endif %}>{{ data.isk_to_pay }}</td>
+                                    <td data-order="{{ data.isk_to_pay_value|unlocalize }}"{% if data.paid_exactly %} class="text-success"{% endif %}>
+                                        {% if data.isk_gross %}
+                                            {% blocktranslate with value=data.isk_gross asvar earned %}Earned in total: {{ value }} ISK{% endblocktranslate %}
+                                            <span title="{{ earned }}">{{ data.isk_to_pay }}</span>
+                                            <span class="visually-hidden">{{ earned }}</span>
+                                        {% else %}
+                                            {{ data.isk_to_pay }}
+                                        {% endif %}
+                                    </td>
                                     {% comment %}
                                         What came in next to what was owed, so a transfer of
                                         more - or a second one - does not pass as settled and
@@ -106,10 +116,16 @@
                                                     <span class="visually-hidden">{{ short }}</span>
                                                 {% endif %}
                                             {% endif %}
+                                            {% comment %}
+                                                A badge rather than a grey line below: a sum is
+                                                what tells a treasurer to look at the journal
+                                                before trusting the figure, and a line under
+                                                the amount was easy to read past.
+                                            {% endcomment %}
                                             {% if data.payment_count > 1 %}
-                                                <div class="small text-body-secondary">
-                                                    {% blocktranslate count counter=data.payment_count %}in {{ counter }} payment{% plural %}in {{ counter }} payments{% endblocktranslate %}
-                                                </div>
+                                                {% blocktranslate count counter=data.payment_count asvar summed %}Sum of {{ counter }} payment{% plural %}Sum of {{ counter }} payments{% endblocktranslate %}
+                                                <span class="badge text-bg-secondary ms-1" title="{{ summed }}" aria-hidden="true"><i class="fa-solid fa-layer-group me-1"></i>{{ data.payment_count }}</span>
+                                                <span class="visually-hidden">{{ summed }}</span>
                                             {% endif %}
                                         {% endif %}
                                     </td>

@@ -15,7 +15,7 @@ from eos_tax.auth_hooks import EosTaxMenuItem
 from decimal import Decimal
 
 from eos_tax.models import MonthlyTax, TaxConfiguration, TaxRate
-from eos_tax.util import get_amount_to_pay
+from eos_tax.util import format_isk, get_amount_to_pay
 
 from .factories import (
     ALPHA_CORP_ID,
@@ -583,15 +583,39 @@ class TestOverviewTable(EosTaxTestCase):
         self.assertNotIn("more than owed", body)
         self.assertNotIn("short of the amount owed", body)
 
-    def test_should_say_how_many_payments_it_took(self):
+    def test_should_mark_an_amount_paid_that_is_a_sum(self):
         self.paid(self.row.amount_to_pay, count=3)
 
-        self.assertContains(self.overview(), "in 3 payments")
+        body = self.overview().content.decode()
 
-    def test_should_not_count_a_single_payment(self):
+        self.assertIn('title="Sum of 3 payments"', body)
+        self.assertIn('fa-layer-group me-1"></i>3</span>', body)
+
+    def test_should_not_mark_a_single_payment_as_a_sum(self):
         self.paid(self.row.amount_to_pay, count=1)
 
-        self.assertNotContains(self.overview(), "in 1 payment")
+        body = self.overview().content.decode()
+
+        self.assertNotIn("Sum of 1 payment", body)
+        self.assertNotIn("fa-layer-group", body)
+
+    def test_should_show_the_gross_income_on_the_amount_to_pay(self):
+        """The amount owed is a share of what was earned; the tooltip names
+        that figure so it can be checked without the recalculate log."""
+        self.row.gross_income = 1_234_567_890
+        self.row.save()
+
+        self.assertContains(
+            self.overview(),
+            f'<span title="Earned in total: 1.234.567.890 ISK">{format_isk(self.row.amount_to_pay)}</span>',
+        )
+
+    def test_should_leave_the_amount_to_pay_bare_without_a_gross_income(self):
+        """A row written before the gross was stored has nothing to show."""
+        self.row.gross_income = None
+        self.row.save()
+
+        self.assertNotContains(self.overview(), "Earned in total")
 
     def test_should_expose_numeric_sort_value_for_the_amount_paid(self):
         self.paid(self.row.amount_to_pay + 7)

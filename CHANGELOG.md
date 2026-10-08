@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- "Amount to pay in ISK" names what it is a share of: its tooltip shows
+  the bounties earned in total that month, before any corp tax. A
+  surprising amount could only be checked against the recalculate log
+  before. Rows written before the gross was stored keep the bare figure.
+- An "Amount paid in ISK" made up of several payments carries a badge with
+  their number ("Sum of 3 payments" in its tooltip), in place of the small
+  grey "in 3 payments" line under the amount, which was easy to read past.
+
 ## [0.4.1] - 2026-10-08
 
 ### Changed

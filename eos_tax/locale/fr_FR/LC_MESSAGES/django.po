@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-08 15:13+0000\n"
+"POT-Creation-Date: 2026-10-08 17:26+0000\n"
 "Language: fr-FR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -463,7 +463,7 @@ msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
 #: models.py:388 templates/eos_tax/index.html:32
-#: templates/eos_tax/index.html:55 templates/eos_tax/index.html:154
+#: templates/eos_tax/index.html:55 templates/eos_tax/index.html:171
 msgid "Paid"
 msgstr "Payé"
 
@@ -947,65 +947,70 @@ msgstr ""
 "Aucune ingame corp tax, donc rien n'arrive dans le wallet de la corporation "
 "qui puisse être taxé."
 
-#: templates/eos_tax/index.html:104
+#: templates/eos_tax/index.html:92
+#, python-format
+msgid "Earned in total: %(value)s ISK"
+msgstr "Gagné au total : %(value)s ISK"
+
+#: templates/eos_tax/index.html:114
 #: templates/eos_tax/partials/recalculate-result.html:108
 #, python-format
 msgid "Paid %(value)s ISK more than owed."
 msgstr "%(value)s ISK payés en plus du montant dû."
 
-#: templates/eos_tax/index.html:108
+#: templates/eos_tax/index.html:118
 #: templates/eos_tax/partials/recalculate-result.html:113
 #, python-format
 msgid "%(value)s ISK short of the amount owed."
 msgstr "Il manque %(value)s ISK au montant dû."
 
-#: templates/eos_tax/index.html:115
+#: templates/eos_tax/index.html:131
 #, python-format
-msgid "in %(counter)s payment"
-msgid_plural "in %(counter)s payments"
-msgstr[0] "en %(counter)s paiement"
-msgstr[1] "en %(counter)s paiements"
+msgid "Sum of %(counter)s payment"
+msgid_plural "Sum of %(counter)s payments"
+msgstr[0] "Somme de %(counter)s paiement"
+msgstr[1] "Somme de %(counter)s paiements"
 
-#: templates/eos_tax/index.html:130
+#: templates/eos_tax/index.html:147
 msgid "Not shown while in progress"
 msgstr "Non affiché tant que le mois est en cours"
 
-#: templates/eos_tax/index.html:136 templates/eos_tax/index.html:137
+#: templates/eos_tax/index.html:153 templates/eos_tax/index.html:154
 msgid "Copy reason to clipboard"
 msgstr "Copier le Reason dans le presse-papiers"
 
-#: templates/eos_tax/index.html:153 templates/eos_tax/index.html:154
+#: templates/eos_tax/index.html:170 templates/eos_tax/index.html:171
 #, python-format
 msgid "Transferred %(date)s EVE"
 msgstr "Viré le %(date)s EVE"
 
-#: templates/eos_tax/index.html:153 templates/eos_tax/index.html:154
+#: templates/eos_tax/index.html:170 templates/eos_tax/index.html:171
 #, python-format
 msgid "Recorded as paid %(date)s EVE"
 msgstr "Enregistré comme payé le %(date)s EVE"
 
-#: templates/eos_tax/index.html:157
+#: templates/eos_tax/index.html:174
 msgid "Not paid"
 msgstr "Non payé"
 
-#: templates/eos_tax/index.html:188
+#: templates/eos_tax/index.html:205
 #, python-format
 msgid "%(seconds)s s"
 msgstr "%(seconds)s s"
 
-#: templates/eos_tax/index.html:199
+#: templates/eos_tax/index.html:216
 msgid "No tax data for the selected months."
 msgstr "Aucune donnée de taxe pour les mois sélectionnés."
 
-#: templates/eos_tax/index.html:201
+#: templates/eos_tax/index.html:218
 msgid "Nothing outstanding."
 msgstr "Rien à payer."
 
-#: templates/eos_tax/index.html:203
+#: templates/eos_tax/index.html:220
 msgid "Nothing paid yet."
 msgstr "Rien de payé pour l'instant."
 
-#: templates/eos_tax/index.html:205
+#: templates/eos_tax/index.html:222
 msgid "Nothing in progress."
 msgstr "Rien en cours."
 

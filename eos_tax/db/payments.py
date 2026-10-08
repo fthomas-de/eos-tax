@@ -198,6 +198,13 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
                 "corporation_name":selected_corp.corp_name,
                 "isk_to_pay": format_isk(selected_corp.amount_to_pay),
                 "isk_to_pay_value": selected_corp.amount_to_pay,
+                # what the amount owed is a share of; a row written before
+                # the gross was stored has none, and no tooltip
+                "isk_gross": (
+                    format_isk(selected_corp.gross_income)
+                    if selected_corp.gross_income is not None
+                    else ""
+                ),
                 "isk_paid": format_isk(amount_paid) if amount_paid is not None else "",
                 # nothing found sorts below a payment of 0, not together with it
                 "isk_paid_value": amount_paid if amount_paid is not None else -1,

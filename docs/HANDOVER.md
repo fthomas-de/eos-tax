@@ -53,6 +53,15 @@ Last updated 2026-10-08.
 
 ## Decisions of the 2026-10-08 sessions
 
+- **Gross income as tooltip on "Amount to pay in ISK"**, the user's
+  request; `gross_income` is the figure ("Earned in total: N ISK", the
+  user's choice over adding the arithmetic). Native `title` on a span,
+  rows without a gross keep the bare amount. **A sum of payments is a
+  badge** (`fa-layer-group` + count, "Sum of N payments" as tooltip) in
+  place of the grey "in N payments" line - the user had no preference,
+  Claude's call. Not translated yet (at `/commit`); not looked at in a
+  browser.
+
 - **Overview filter by state** (0.4.1), the user's request: see open,
   paid and in progress (running month) separately. Four links
   Outstanding / Paid / In progress / All as `?show=open|paid|progress|all`,
