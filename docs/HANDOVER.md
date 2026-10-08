@@ -8,8 +8,14 @@ Last updated 2026-10-08.
 
 ## Release
 
-- Version **0.3.18** in `eos_tax/__init__.py`, released 2026-10-08
-- `[0.3.18]` in `CHANGELOG.md`: setting `paid_difference_min_millions`
+- Version **0.4.0** in `eos_tax/__init__.py`, released 2026-10-08 (the
+  user chose a minor step for it)
+- `[0.4.0]` in `CHANGELOG.md`: progress bar of every recalculation run above
+  each page, admins only (`eos_tax/progress.py`, cache only, no migration);
+  `run_update_corporation` takes an optional `run_id`; pages put their
+  scripts in `{% block eos_tax_javascript %}`; tests run on a local memory
+  cache
+- `[0.3.18]`: setting `paid_difference_min_millions`
   (default 10, migration 0026) - the `+`/`-` badges in "Amount paid in ISK"
   only from that difference on, 0 flags every difference
 - `[0.3.17]`: tooltip on the Paid tick with the
@@ -34,7 +40,7 @@ Last updated 2026-10-08.
 - `[0.3.13]`: a missing ingame rate is asked from ESI; `[0.3.12]`: what was
   paid is recorded ("Amount paid in ISK", payments added up by reason)
 - Migrations **0001-0026** applied to `aa_dev`
-- 570 tests, all green (555 without the translation tag, 15 with it)
+- 594 tests, all green (579 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
@@ -53,10 +59,10 @@ Last updated 2026-10-08.
   database; one key per job, because the subtasks run in parallel (Claude's
   call). A finished run is only shown if it started after the page loaded
   or has a failed job; dismissing removes it for every admin. The single
-  Corporation recalculation also appears as a run of one. Not looked at in
-  a browser yet, and the worker in the VS Code terminal (pts/6) still runs
-  the old code: until it is restarted, "all" on the settings page fails
-  with an unexpected `run_id`.
+  Corporation recalculation also appears as a run of one. A finished run
+  without failures disappears on reload - asked about, by design: the page
+  then shows its figures. Keeping it visible for some minutes was offered,
+  not taken up yet.
 
 - **Payment differences flagged from 10M on**, the user's request: small
   differences need no extra hint, the threshold is a setting with 10M as
@@ -309,6 +315,17 @@ Three traps in that setup, each of which produced a wrong answer once:
   rather than guessing it: the app is mounted at `/eos_tax/`, not `/eos-tax/`.
 
 ## Traps recent sessions cost time on
+
+- **Static files are hashed in tests.** `sri_static` goes through the
+  manifest storage: assert `"eos_tax/js/progress."`, never `progress.js`,
+  and run `collectstatic` before a test that renders a new script, or it
+  fails with "Missing staticfiles manifest entry".
+- **A `msgctxt` entry needs the context in the catalogue test.** The 0.4.0
+  strings are the first with a context; `read_po` keys them
+  `context\x04msgid` now, the way gettext stores them in the `.mo`.
+- **Celery task arguments are a contract with the running worker.** A new
+  keyword on a task fails in a worker started before the change - restart
+  it (on 2026-10-08 the user did, in the VS Code terminal).
 
 - **The overview hides paid rows by default.** A view test on a paid row
   finds "Nothing outstanding" unless it requests `?paid=1`.
