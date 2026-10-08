@@ -1,11 +1,18 @@
 """The overview: what each Corporation owes, and whether it paid."""
 
-from datetime import datetime
+import time
+from bisect import bisect_left
+from collections import defaultdict
+from datetime import datetime, timedelta
 
-from allianceauth.eveonline.models import EveCorporationInfo
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.eveonline.providers import open_api_provider
-from corptools.models import CorporationWalletJournalEntry
-from django.db.models import Count, Q, Sum
+from corptools.models import (
+    CharacterWalletJournalEntry,
+    CorporationWalletJournalEntry,
+    EveName,
+)
+from django.db.models import Q
 from allianceauth.services.hooks import get_extension_logger
 
 from eos_tax.app_settings import get_config
@@ -15,7 +22,6 @@ from eos_tax.util import (
     format_isk,
     get_amount_to_pay,
     get_eve_alliance_id,
-    get_pve_income,
 )
 
 from eos_tax.db.shared import _month_range
@@ -23,15 +29,20 @@ from eos_tax.db.shared import _month_range
 logger = get_extension_logger(__name__)
 
 
-def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False, alliance_tax_rate: float = 0, amount_paid: int = None, payment_count: int = 0):
+def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False, alliance_tax_rate: float = 0, amount_paid: int = None, payment_count: int = 0, gross_income: int = None, unaudited_characters: list = None, calculation_seconds: float = None):
     selected_corp = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).first()
-    # worked out here from the three values this function writes anyway,
+    # worked out here from the values this function writes anyway,
     # rather than handed in: a caller that forgot to pass it used to store a
     # silent 0 - every corporation "owing" nothing - and no test noticed
     # rounded, not cut off: the percentages are floats, 0.07 * 100 is
     # 7.000000000000001, and 7M ISK at 7 % corp tax and 10 % alliance tax came
     # out as 9,999,999 instead of the 10,000,000 anybody would work out
-    amount_to_pay = round(get_amount_to_pay(tax_value, tax_percentage, alliance_tax_rate))
+    if gross_income is not None:
+        # the reconciled gross already holds what the corp's slice cannot
+        # show - a stretch at 0% ingame tax, a rate switched mid-month
+        amount_to_pay = round(gross_income * alliance_tax_rate)
+    else:
+        amount_to_pay = round(get_amount_to_pay(tax_value, tax_percentage, alliance_tax_rate))
     # corp_name is handed in by the caller; looking it up again cost a query
     # per corporation and month, for a log line
     logger.info(f"set_corp_tax: {corp_name or corp_id} ({corp_id}), tax_value: {format_isk(tax_value)} tax_percentage {tax_percentage} {month}/{year}")
@@ -46,6 +57,13 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
         selected_corp.payed=selected_corp.payed or payed
         selected_corp.alliance_tax_rate=alliance_tax_rate
         selected_corp.amount_to_pay=amount_to_pay
+        selected_corp.gross_income=gross_income
+        # replaced, not merged: a character whose wallet was added since is
+        # done and has to drop off the list
+        if unaudited_characters is not None:
+            selected_corp.unaudited_characters=unaudited_characters
+        if calculation_seconds is not None:
+            selected_corp.calculation_seconds=calculation_seconds
         # like the flag above, the amount is never taken back: a check that
         # finds nothing this time - the
         # reason setting switched off, or the row checked against an amount a
@@ -67,6 +85,9 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
             payed=payed,
             alliance_tax_rate=alliance_tax_rate,
             amount_to_pay=amount_to_pay,
+            gross_income=gross_income,
+            unaudited_characters=unaudited_characters or [],
+            calculation_seconds=calculation_seconds,
             amount_paid=amount_paid,
             payment_count=payment_count if amount_paid is not None else 0,
         )
@@ -165,6 +186,13 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
                 "paid_difference": paid_difference,
                 "isk_paid_difference": format_isk(abs(paid_difference)),
                 "payment_count": selected_corp.payment_count,
+                # settled to the ISK - neither more nor less than owed
+                "paid_exactly": amount_paid is not None and paid_difference == 0,
+                "unaudited_characters": [
+                    {**character, "isk": format_isk(character["gross"])}
+                    for character in selected_corp.unaudited_characters or []
+                ],
+                "calculation_seconds": selected_corp.calculation_seconds,
                 "month":selected_corp.month,
                 "year":selected_corp.year,
                 "period": selected_corp.year * 100 + selected_corp.month,
@@ -204,6 +232,210 @@ def _tax_rate_from_esi(corp_id: int) -> float | None:
     return corporation.tax_rate
 
 
+# how far apart a member's taxed payout and its slice may lie when the exact
+# key does not pair them; an hour holds three bounty ticks either side
+LOOSE_MATCH_WINDOW = timedelta(hours=1)
+
+
+def _payout_key(row, character_id):
+    """What one bounty payout is known by on both sides of the journal.
+
+    The corporation's slice and the member's payout are separate rows with
+    their own entry ids, so nothing links them directly. Character, second,
+    system, kill list and type together do: a fleet tick is split into one
+    row per member, and each member's pair shares all five.
+    """
+    return (character_id, row["date"], row["context_id"], row["reason"], row["ref_type"])
+
+
+def _nearest_rate(rates, moment):
+    """The corp's ingame rate measured on the matched payout nearest in time.
+
+    Nearest rather than the month's median: a Corporation that switched
+    mid-month has two rates in it, and a slice from before the switch has to
+    be backed out with the rate that applied then.
+    """
+    if not rates:
+        return None
+
+    index = bisect_left(rates, (moment,))
+    nearby = rates[max(0, index - 1):index + 1]
+
+    return min(nearby, key=lambda pair: abs(pair[0] - moment))[1]
+
+
+def _reconciled_income(corp_id: int, start, end, tax_types, corp_rate: float) -> dict:
+    """Gross bounty income of one Corporation's month, both journals matched up.
+
+    The corporation wallet only shows the corporation's slice, so a stretch at
+    0% ingame tax leaves no row there at all - a Corporation that dropped its
+    tax for a week paid the alliance nothing for that week, and the month's
+    total did not give it away. The member wallets show every payout with
+    the tax taken from it. Each member payout is matched to its slice in the
+    corporation wallet; a matched pair counts once, at the member's exact
+    gross. A member payout without a slice is added - that is the untaxed
+    stretch. A slice without a member payout (a character without a
+    corptools audit) is backed out with the rate measured nearest in time,
+    or the Corporation's current rate when no pair says otherwise.
+    """
+    corp_rows = list(
+        CorporationWalletJournalEntry.objects.filter(
+            tax_receiver_id=corp_id,
+            ref_type__in=tax_types,
+            date__gte=start,
+            date__lt=end,
+        ).values("second_party_id", "date", "context_id", "reason", "ref_type", "amount")
+    )
+    # whether ESI names a tax receiver on a payout nobody taxed is not
+    # documented, so an untaxed payout without one is tied to the
+    # Corporation through its member's current corporation
+    member_rows = list(
+        CharacterWalletJournalEntry.objects.filter(
+            Q(tax_receiver_id=corp_id)
+            | Q(tax_receiver_id=None, character__character__corporation_id=corp_id),
+            ref_type__in=tax_types,
+            date__gte=start,
+            date__lt=end,
+        ).values(
+            "character__character__character_id", "date", "context_id",
+            "reason", "ref_type", "amount", "tax",
+        )
+    )
+
+    unmatched = defaultdict(list)
+    for row in corp_rows:
+        unmatched[_payout_key(row, row["second_party_id"])].append(row)
+
+    gross = 0.0
+    matched = 0
+    added = 0
+    added_gross = 0.0
+    rates = []
+    pending = []
+
+    def pair(row, payout):
+        nonlocal matched
+        matched += 1
+        if payout > 0:
+            rates.append((row["date"], float(row["tax"] or 0) / payout))
+
+    for row in member_rows:
+        payout = float(row["amount"] or 0) + float(row["tax"] or 0)
+        gross += payout
+        slices = unmatched.get(_payout_key(row, row["character__character__character_id"]))
+
+        if slices:
+            slices.pop()
+            pair(row, payout)
+        else:
+            pending.append((row, payout))
+
+    # A taxed payout always left a slice behind, so one the exact key missed
+    # is still in the corporation wallet - a second off, a system id corptools
+    # filled differently. Counting it as added would count it twice, so it
+    # takes the nearest slice of its own character, type and amount instead.
+    by_slice = defaultdict(list)
+    for rows in unmatched.values():
+        for row in rows:
+            by_slice[(row["second_party_id"], row["ref_type"], row["amount"])].append(row)
+
+    for row, payout in pending:
+        candidates = by_slice.get(
+            (row["character__character__character_id"], row["ref_type"], row["tax"])
+        ) if row["tax"] else None
+        nearest = min(
+            (
+                candidate for candidate in candidates or ()
+                if abs(candidate["date"] - row["date"]) <= LOOSE_MATCH_WINDOW
+            ),
+            key=lambda candidate: abs(candidate["date"] - row["date"]),
+            default=None,
+        )
+
+        if nearest is not None:
+            candidates.remove(nearest)
+            unmatched[_payout_key(nearest, nearest["second_party_id"])].remove(nearest)
+            pair(row, payout)
+        else:
+            added += 1
+            added_gross += payout
+
+    rates.sort()
+    fallback = corp_rate if corp_rate > 0 else None
+    left = [row for rows in unmatched.values() for row in rows]
+    unrated = 0
+    # per character, because these are the ones a stretch at 0% would hide
+    # completely - the overview lists them so their wallet gets added
+    unaudited = defaultdict(float)
+    for row in left:
+        rate = _nearest_rate(rates, row["date"]) or fallback
+        cut = float(row["amount"] or 0)
+
+        if rate:
+            earned = cut / rate
+        else:
+            # no rate anywhere - neither a pair nor the Corporation's own. The
+            # slice is at least what was earned; the log says it is short
+            unrated += 1
+            earned = cut
+
+        gross += earned
+        if row["second_party_id"] is not None:
+            unaudited[row["second_party_id"]] += earned
+
+    by_type = defaultdict(lambda: {"sum": 0, "count": 0})
+    for row in corp_rows:
+        by_type[row["ref_type"]]["sum"] += row["amount"] or 0
+        by_type[row["ref_type"]]["count"] += 1
+
+    return {
+        "by_type": [
+            {"ref_type": ref_type, **by_type[ref_type]} for ref_type in sorted(by_type)
+        ],
+        "gross_income": round(gross),
+        "member_entries": len(member_rows),
+        "member_matched": matched,
+        "member_added": added,
+        "member_added_gross": round(added_gross),
+        "corp_unmatched": len(left),
+        "corp_unrated": unrated,
+        "unaudited": {
+            character_id: round(earned) for character_id, earned in unaudited.items()
+        },
+    }
+
+
+def _unaudited_characters(unaudited: dict, minimum: int) -> list:
+    """The characters worth chasing for a wallet audit, highest earner first.
+
+    Named from corptools' EveName, Alliance Auth's EveCharacter second; an id
+    neither knows is still listed - it earned the money all the same.
+    """
+    listed = {
+        character_id: gross
+        for character_id, gross in unaudited.items()
+        if gross >= minimum
+    }
+    if not listed:
+        return []
+
+    names = dict(
+        EveCharacter.objects.filter(character_id__in=listed)
+        .values_list("character_id", "character_name")
+    )
+    names.update(
+        EveName.objects.filter(eve_id__in=listed).values_list("eve_id", "name")
+    )
+
+    return sorted(
+        (
+            {"id": character_id, "name": names.get(character_id, str(character_id)), "gross": gross}
+            for character_id, gross in listed.items()
+        ),
+        key=lambda character: (-character["gross"], character["name"]),
+    )
+
+
 def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
     """Recalculate one Corporation's month and persist it.
 
@@ -212,6 +444,7 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
     settings page's recalculate button renders this as a log; the periodic
     task, the only other caller, ignores it.
     """
+    started = time.perf_counter()
     corp_info = EveCorporationInfo.objects.filter(corporation_id=corp_id).first()
     if not corp_info:
         logger.warning(f"dbcon update_corp: unknown corporation {corp_id} - skipped")
@@ -261,25 +494,16 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
 
     start, end = _month_range(year, month)
 
-    # filter is on a single corp, so the whole month collapses into one sum
-    entries = CorporationWalletJournalEntry.objects.filter(
-        tax_receiver_id=corp_id,
-        ref_type__in=config.tax_types,
-        date__gte=start,
-        date__lt=end,
+    # rounded to the precision the rate is stored with, so the float noise of
+    # the multiplication neither reaches the amount nor the log
+    corp_tax_percent = round(corp_tax_rate * 100, 2)
+    income = _reconciled_income(
+        corp_id, start, end, config.tax_types, corp_tax_percent / 100,
     )
-    # one sum per tax type, so the log can show what each contributed - the
-    # total below is their sum, which is what the rest of the calculation
-    # uses. Grouping this way costs one query, the same as the plain
-    # aggregate it replaces.
-    by_type = list(
-        entries.values("ref_type")
-        .annotate(sum=Sum("amount"), count=Count("id"))
-        .order_by("ref_type")
-    )
+    by_type = income["by_type"]
     tax_sum = sum(row["sum"] for row in by_type)
 
-    if not tax_sum:
+    if not tax_sum and not income["member_added"]:
         logger.info(f"dbcon update_corp2: {corp_info.corporation_name} ({corp_id}): no journal entries - {month}/{year}")
         return {
             "ok": False, "reason": "no_entries", "corp_id": corp_id,
@@ -299,10 +523,10 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
     payed = payment["payed"]
     logger.info(f"dbcon update_corp3: {corp_info.corporation_name} ({corp_id}): payed {payed} - {month}/{year}")
 
-    # rounded to the precision the rate is stored with, so the float noise of
-    # the multiplication neither reaches the amount nor the log
-    corp_tax_percent = round(corp_tax_rate * 100, 2)
-    gross_income = round(get_pve_income(overall_ratted, corp_tax_percent))
+    gross_income = income["gross_income"]
+    unaudited_characters = _unaudited_characters(
+        income["unaudited"], config.unaudited_min_millions * 1_000_000,
+    )
 
     amount_to_pay = set_corp_tax(
         corp_id=corp_id,
@@ -315,6 +539,11 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
         alliance_tax_rate=alliance_tax_rate,
         amount_paid=payment["amount_paid"],
         payment_count=len(payment["payments"]),
+        gross_income=gross_income,
+        unaudited_characters=unaudited_characters,
+        # everything up to the write - the member wallets made this month the
+        # slow part, and the overview shows which Corporation it is slow for
+        calculation_seconds=round(time.perf_counter() - started, 3),
     )
     amount_paid = payment["amount_paid"]
 
@@ -331,6 +560,14 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
         "corp_tax_percent": corp_tax_percent,
         "corp_tax_from_esi": corp_tax_from_esi,
         "gross_income": gross_income,
+        "member_entries": income["member_entries"],
+        "member_matched": income["member_matched"],
+        "member_added": income["member_added"],
+        "member_added_gross": income["member_added_gross"],
+        "corp_unmatched": income["corp_unmatched"],
+        "corp_unrated": income["corp_unrated"],
+        "unaudited_characters": unaudited_characters,
+        "unaudited_min_millions": config.unaudited_min_millions,
         "alliance_tax_rate": alliance_tax_rate,
         "alliance_tax_percent": float("%.2f" % (alliance_tax_rate * 100)),
         "amount_to_pay": amount_to_pay,

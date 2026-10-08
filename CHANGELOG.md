@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The overview has a column "Characters without wallet audit" (migration
+  0023). A character whose bounties reach the corporation wallet but no
+  member wallet is invisible for any stretch at 0% ingame tax, so the
+  member wallet reconciliation below can only be as complete as the audits
+  behind it. Every recalculation stores, per Corporation and month, the
+  characters whose unmatched slices back out to at least the configured
+  income - "Income that needs a wallet audit" on the settings page, 100
+  million ISK by default - highest earner first, with their gross. The list
+  is replaced on every run, so a character drops off once their wallet
+  arrives. The recalculate log lists them as well. Same permissions as the
+  rows they sit in.
+- "Amount to pay" and "Amount paid" turn green on the overview when they
+  agree to the ISK, so a settled row reads as settled without comparing
+  digits. Nothing paid yet is not a match, even though the difference is 0.
+- The overview has a column "Calculation time" (migration 0024): how long
+  the last calculation of that Corporation's month took, journals,
+  reconciliation and payment check together. Reading the member wallets
+  made the calculation heavier, and this shows which Corporation it is
+  heavy for. A calculation that finds nothing keeps the time of the last
+  one that did; rows from before the column show nothing and sort last.
+
+### Fixed
+
+- A Corporation at 0% ingame tax owed the alliance nothing. The amount was
+  backed out of the corporation wallet, which only holds the corporation's
+  slice of each bounty - at 0% there is no slice and no row, so a whole
+  month at 0% produced no tax row at all, and a week at 0% simply vanished
+  from the month's total. A rate switched to 0% mid-month was worse still:
+  the slices from before the switch were divided by the current 0%, which
+  counted each slice as the whole bounty. `update_corp` now reconciles the
+  corporation wallet with the member wallets corptools collects. A member
+  payout and its slice are matched by character, second, system, kill list
+  and type and counted once, at the member's exact gross. A taxed member
+  payout the exact key misses still takes the nearest slice of the same
+  character, type and amount within an hour - a taxed payout always left a
+  slice, and counting it as added would count it twice. A member payout
+  without a slice - the untaxed stretch - is added; a slice without a
+  member payout (a character without a corptools audit) is backed out with
+  the rate measured on the matched payout nearest in time, the current rate
+  only when there is none. The result is stored as `MonthlyTax.gross_income`
+  (migration 0022) and the amount owed is worked out from it; the
+  statistics read it too. The recalculate log lists the member entries,
+  how many were matched, what was added and any slice no rate was known
+  for. Untaxed payouts without a tax receiver are tied to the Corporation
+  through the member's current corporation.
+
 ## [0.3.13] - 2026-10-08
 
 ### Fixed

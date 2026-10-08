@@ -56,7 +56,9 @@ document.addEventListener("DOMContentLoaded", function () {
             { searchable: false },  // Amount paid in Isk
             { searchable: false },  // Month
             { searchable: false },  // Reason
-            { searchable: false }   // Payed
+            { searchable: false },  // Payed
+            { searchable: false },  // Characters without wallet audit
+            { searchable: false }   // Calculation time
         ],
         search: {
             caseInsensitive: true,  // "e" must also find "Ether Element"

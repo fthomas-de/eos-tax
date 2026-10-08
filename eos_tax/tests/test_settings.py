@@ -28,7 +28,7 @@ from eos_tax.forms import TaxConfigurationForm, journal_type_choices
 from eos_tax.models import MonthlyTax, TaxConfiguration, TaxRate
 from eos_tax.util import format_isk
 
-from .factories import create_tax_row, create_user, settings_numbers
+from .factories import add_member_payout, create_tax_row, create_user, settings_numbers
 
 BRAVO_CORP_ID = 98000001
 ALLIANCE_ID = 99000001
@@ -538,6 +538,29 @@ class TestSettingsRecalculate(EosTaxTestCase):
         self.assertTrue(
             MonthlyTax.objects.filter(corp_id=BRAVO_CORP_ID, month=9, year=2026).exists()
         )
+
+    def test_should_log_what_the_member_wallets_added(self):
+        add_member_payout(
+            2100000001, BRAVO_CORP_ID,
+            datetime.datetime(2026, 9, 20, 12, tzinfo=datetime.timezone.utc),
+            amount=300_000_000, tax=0,
+        )
+
+        body = self.post(corp_id=str(BRAVO_CORP_ID), month="9", year="2026").content.decode()
+
+        self.assertIn("Member wallets: 1 entry", body)
+        self.assertIn(
+            f"1 without a corp tax slice, added: {format_isk(300_000_000)} ISK", body
+        )
+
+    def test_should_log_the_characters_without_wallet_audit(self):
+        # journal_entry's character has no member wallet; 1,000M at 10%
+        self.journal_entry(1_000_000_000, day=15)
+
+        body = self.post(corp_id=str(BRAVO_CORP_ID), month="9", year="2026").content.decode()
+
+        self.assertIn("Without wallet audit, 100 million ISK or more", body)
+        self.assertIn(f"2100000001: {format_isk(10_000_000_000)} ISK", body)
 
     def test_should_explain_a_month_without_entries(self):
         response = self.post(corp_id=str(BRAVO_CORP_ID), month="9", year="2026")

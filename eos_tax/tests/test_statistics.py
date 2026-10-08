@@ -239,6 +239,17 @@ class TestStatisticsData(EosTaxTestCase):
 
         self.assertEqual(bravo["members"], 120)
 
+    def test_should_report_the_stored_gross_income(self):
+        """It holds the member wallets too; the corp's slice over its rate
+        drops every stretch at 0% ingame tax."""
+        MonthlyTax.objects.filter(corp_id=BRAVO_CORP_ID, month=1).update(
+            gross_income=123_456_789
+        )
+
+        bravo = self.payload()["series"][1]
+
+        self.assertEqual(bravo["income"][0], 123_456_789)
+
     def test_should_report_gross_income_above_the_tax(self):
         bravo = self.payload()["series"][1]
 

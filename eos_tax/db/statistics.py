@@ -95,7 +95,13 @@ def get_statistics_series(year: int, alliance_id: int = None):
         # the figure the overview shows for this month, so the chart and the
         # page cannot disagree about what a corporation owed
         corp["tax"][row.month - 1] += row.amount_to_pay
-        corp["income"][row.month - 1] += get_pve_income(row.tax_value, row.tax_percentage)
+        # the stored gross counts the member wallets as well; backing it out
+        # of the corp's slice again would drop every stretch at 0% ingame tax
+        corp["income"][row.month - 1] += (
+            row.gross_income
+            if row.gross_income is not None
+            else get_pve_income(row.tax_value, row.tax_percentage)
+        )
 
     series = sorted(corps.values(), key=lambda corp: corp["name"].lower())
     for corp in series:

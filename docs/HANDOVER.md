@@ -16,7 +16,15 @@ Last updated 2026-10-08.
   the overview with +/- badges, payments listed in the recalculate log,
   payments with a reason code added up (exact amount first), paid rows
   looked up again for their amount
-- Migrations **0001-0021** applied to `aa_dev`
+- `[Unreleased]`: member wallets reconciled with the corporation wallet, so
+  0% ingame tax is taxed (migration 0022, `MonthlyTax.gross_income`) - not
+  committed yet, translations of the new log lines still open. Also in it:
+  overview column "Characters without wallet audit" (migration 0023,
+  `MonthlyTax.unaudited_characters`, threshold `unaudited_min_millions`,
+  default 100), green amounts when paid to the ISK, and an own column
+  "Calculation time" (migration 0024, `MonthlyTax.calculation_seconds`,
+  the user's choice of duration over timestamp, own column over a note)
+- Migrations **0001-0024** applied to `aa_dev`
 - 508 tests, all green (493 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
@@ -26,6 +34,29 @@ Last updated 2026-10-08.
   the commits that raised those versions
 
 ## Decisions of the 2026-10-08 sessions
+
+- **0% ingame tax is still taxed, from the member wallets.** Production:
+  urex (your ex's) at 0% had no tax. The user's wording: the member
+  wallets have to be included even though it is more work, because a week
+  without tax does not show in a monthly figure; reconcile corp and member
+  entries and add what is missing, never count twice. Always reconciled,
+  not only when the current rate is 0. Matching key: character, second,
+  system (`context_id`), `reason`, `ref_type` - unverified against real
+  data, dev has no member bounty rows. A taxed member payout the key
+  misses falls back to the nearest slice of the same character, type and
+  amount within an hour (`LOOSE_MATCH_WINDOW`), so a key that does not
+  line up cannot double a taxed payout. Still worth a look at the
+  recalculate log after deploying: "added" should only be untaxed payouts. A lone slice is backed out with the
+  rate of the nearest matched pair (Claude's call, the user rejected the
+  question about it without answering), a slice with no rate anywhere
+  counts at its own value and is flagged red in the log.
+- **Characters without a member wallet are listed per month.** The user's
+  choices: "without wallet audit" means slices without a member
+  counterpart (covers an audit lacking the wallet token too), threshold
+  settable with 100M a month default, a new overview column per month
+  with the same permissions as the row. Placed as the last column so the
+  DataTables indices in `overview.js` stay put. Rows written before 0023
+  show an empty list until recalculated.
 
 - **A missing ingame rate is asked from ESI.** Production reported "no
   ingame tax rate on file yet" for a Corporation whose `tax_rate` was
@@ -137,9 +168,11 @@ alts from Alliance Auth, without assessments.
 
 ## Open
 
-1. Nothing is blocked. After deploying 0.3.13 to production, recalculate
-   the Corporation that reported the missing rate (settings page) - the log
-   should show its rate with "(read from ESI ...)".
+1. Nothing is blocked. After deploying the member wallet reconciliation,
+   recalculate urex (your ex's) for every month it ran at 0% (settings
+   page). The log shows member entries, matched and added; it only works
+   for members whose characters have a corptools audit with wallet access.
+   A paid row keeps its flag even when the new amount is higher.
 2. The new "Average day (hours)" column and the heading rows for groups of
    one have not been looked at in a browser yet - only through the tests.
    Worth one render with the seeded data (see below) before tuning anything

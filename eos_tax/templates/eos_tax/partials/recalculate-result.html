@@ -25,6 +25,41 @@
                 {% endif %}
             </li>
             <li>
+                {% blocktranslate count counter=breakdown.member_entries %}Member wallets: {{ counter }} entry{% plural %}Member wallets: {{ counter }} entries{% endblocktranslate %}
+                <ul class="mb-0 ps-3">
+                    <li>
+                        {% blocktranslate count counter=breakdown.member_matched %}{{ counter }} found in the corporation wallet as well, counted once{% plural %}{{ counter }} found in the corporation wallet as well, counted once{% endblocktranslate %}
+                    </li>
+                    {% if breakdown.member_added %}
+                        <li>
+                            <strong>
+                                {% blocktranslate with value=breakdown.member_added_gross count counter=breakdown.member_added %}{{ counter }} without a corp tax slice, added: {{ value }} ISK{% plural %}{{ counter }} without a corp tax slice, added: {{ value }} ISK{% endblocktranslate %}
+                            </strong>
+                        </li>
+                    {% endif %}
+                    {% if breakdown.corp_unmatched %}
+                        <li>
+                            {% blocktranslate count counter=breakdown.corp_unmatched %}{{ counter }} corporation wallet entry without a member wallet, backed out with the rate measured nearest in time{% plural %}{{ counter }} corporation wallet entries without a member wallet, backed out with the rate measured nearest in time{% endblocktranslate %}
+                        </li>
+                    {% endif %}
+                    {% if breakdown.corp_unrated %}
+                        <li class="text-danger">
+                            {% blocktranslate count counter=breakdown.corp_unrated %}{{ counter }} corporation wallet entry with no rate known, counted at its slice only - the income is understated{% plural %}{{ counter }} corporation wallet entries with no rate known, counted at their slice only - the income is understated{% endblocktranslate %}
+                        </li>
+                    {% endif %}
+                    {% if breakdown.unaudited_characters %}
+                        <li class="text-danger">
+                            {% blocktranslate with minimum=breakdown.unaudited_min_millions %}Without wallet audit, {{ minimum }} million ISK or more - add their wallet:{% endblocktranslate %}
+                            <ul class="mb-0 ps-3">
+                                {% for character in breakdown.unaudited_characters %}
+                                    <li>{{ character.name }}: {{ character.isk }} ISK</li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    {% endif %}
+                </ul>
+            </li>
+            <li>
                 {% blocktranslate with value=breakdown.gross_income %}Gross PvE income, the corp tax backed out: {{ value }} ISK{% endblocktranslate %}
             </li>
             <li>

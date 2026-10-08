@@ -86,6 +86,18 @@ class TaxConfiguration(SingletonModel):
             "same sum twice, cannot be told apart."
         ),
     )
+    unaudited_min_millions = models.PositiveSmallIntegerField(
+        verbose_name=_("Income that needs a wallet audit (million ISK)"),
+        default=100,
+        validators=[MinValueValidator(1), MaxValueValidator(30000)],
+        help_text=_(
+            "A character whose bounties reach the corporation wallet but not "
+            "through a member wallet is listed on the overview once this much "
+            "gross income a month is backed out of the corporation's slice. "
+            "Without the member wallet a stretch without ingame tax cannot be "
+            "seen for that character."
+        ),
+    )
     tax_change_min_points = models.DecimalField(
         verbose_name=_("Smallest move worth listing"),
         max_digits=5,
@@ -415,4 +427,38 @@ class MonthlyTax(models.Model):
         verbose_name=_("Payments"),
         default=0,
         help_text=_("How many payments the amount paid is made of."),
+    )
+
+    gross_income = models.BigIntegerField(
+        verbose_name=_("Gross PvE income"),
+        null=True,
+        blank=True,
+        help_text=_(
+            "Bounties earned this month before any corp tax, in whole ISK: the "
+            "corporation wallet reconciled with the member wallets, so a stretch "
+            "without ingame tax is counted as well. The amount to pay is worked out "
+            "from it. Empty on rows written before it was stored."
+        ),
+    )
+
+    unaudited_characters = models.JSONField(
+        verbose_name=_("Characters without wallet audit"),
+        default=list,
+        blank=True,
+        help_text=_(
+            "Characters whose bounties this month showed up in the corporation "
+            "wallet only, at or above the configured income, as "
+            "[{id, name, gross}], highest first."
+        ),
+    )
+
+    calculation_seconds = models.FloatField(
+        verbose_name=_("Calculation time"),
+        null=True,
+        blank=True,
+        help_text=_(
+            "How long the last calculation of this month took, in seconds - "
+            "reading both journals, the reconciliation and the payment check. "
+            "Empty on rows written before it was stored."
+        ),
     )

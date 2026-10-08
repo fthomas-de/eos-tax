@@ -304,6 +304,11 @@ def _breakdown_for_display(breakdown):
         **breakdown,
         "tax_value": format_isk(breakdown["tax_value"]),
         "gross_income": format_isk(breakdown["gross_income"]),
+        "member_added_gross": format_isk(breakdown["member_added_gross"]),
+        "unaudited_characters": [
+            {**character, "isk": format_isk(character["gross"])}
+            for character in breakdown["unaudited_characters"]
+        ],
         "amount_to_pay": format_isk(breakdown["amount_to_pay"]),
         "by_type": [
             {**row, "sum": format_isk(row["sum"])}

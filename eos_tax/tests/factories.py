@@ -21,6 +21,8 @@ from allianceauth.eveonline.models import (
     EveCorporationInfo,
 )
 from corptools.models import (
+    CharacterAudit,
+    CharacterWalletJournalEntry,
     CorporationAudit,
     CorporationWalletDivision,
     CorporationWalletJournalEntry,
@@ -299,3 +301,40 @@ def add_entries(
                 amount=tax,
                 tax=tax,
             )
+
+
+def add_member_payout(character_id, corporation_id, date, amount, tax,
+                      tax_receiver_id=None, context_id=30000001, reason=None,
+                      ref_type="bounty_prizes"):
+    """One bounty payout in a member's own wallet, as corptools stores it.
+
+    `amount` is what reached the member, `tax` what the corporation took -
+    the opposite of the corporation's row, where both hold the slice.
+    The character is created in `corporation_id` on first use.
+    """
+    character, _created = EveCharacter.objects.get_or_create(
+        character_id=character_id,
+        defaults={
+            "character_name": f"Member {character_id}",
+            "corporation_id": corporation_id,
+            "corporation_name": f"Corp {corporation_id}",
+            "corporation_ticker": "CORP",
+        },
+    )
+    audit, _created = CharacterAudit.objects.get_or_create(character=character)
+
+    return CharacterWalletJournalEntry.objects.create(
+        character=audit,
+        date=date,
+        description="got bounty prizes for killing pirates",
+        entry_id=next(entry_ids),
+        ref_type=ref_type,
+        first_party_id=1000125,
+        second_party_id=character_id,
+        tax_receiver_id=tax_receiver_id,
+        context_id=context_id,
+        context_id_type="system_id",
+        reason=reason,
+        amount=amount,
+        tax=tax,
+    )

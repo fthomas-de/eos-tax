@@ -92,6 +92,7 @@ class TaxConfigurationForm(forms.ModelForm):
             "last_month",
             "current_month",
             "use_reason",
+            "unaudited_min_millions",
             "tax_change_min_points",
             "bot_hours_min_entries",
             "bot_min_hours_per_day",

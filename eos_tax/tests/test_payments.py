@@ -17,6 +17,7 @@ from corptools.models import (
     CorporationAudit,
     CorporationWalletDivision,
     CorporationWalletJournalEntry,
+    EveName,
 )
 from dateutil.relativedelta import relativedelta
 
@@ -37,6 +38,7 @@ from .factories import (
     OUTSIDER_CORP_ID,
     create_alliance,
     create_corporation,
+    add_member_payout,
     create_tax_row,
     mid_month,
 )
@@ -75,7 +77,7 @@ class PaymentsTestCase(EosTaxTestCase):
         self.entry_id = 0
 
     def entry(self, amount, date, ref_type="bounty_prizes", tax_receiver_id=None,
-              reason=None):
+              reason=None, character_id=RATTER_ID):
         """One wallet journal row, dated and typed by the caller."""
         self.entry_id += 1
         return CorporationWalletJournalEntry.objects.create(
@@ -85,7 +87,7 @@ class PaymentsTestCase(EosTaxTestCase):
             entry_id=self.entry_id,
             ref_type=ref_type,
             first_party_id=1000125,
-            second_party_id=RATTER_ID,
+            second_party_id=character_id,
             tax_receiver_id=CORP_ID if tax_receiver_id is None else tax_receiver_id,
             context_id=30000001,
             context_id_type="system_id",
@@ -468,6 +470,302 @@ class TestUpdateCorpWithoutStoredRate(PaymentsTestCase):
 
         provider.get_corporation.assert_not_called()
         self.assertFalse(breakdown["corp_tax_from_esi"])
+
+
+OTHER_RATTER_ID = 2100000002
+
+
+def at(day, hour=12):
+    return datetime.datetime(YEAR, MONTH, day, hour, tzinfo=datetime.timezone.utc)
+
+
+class TestUpdateCorpReconcilesMemberWallets(PaymentsTestCase):
+    """The corporation wallet only shows the corporation's slice, so a
+    stretch at 0% ingame tax left nothing there to tax - a Corporation could
+    drop its rate for a week and the alliance never saw that week's income.
+    The member wallets fill it in, without counting a payout twice."""
+
+    def setUp(self):
+        super().setUp()
+        self.config.tax_rate = Decimal("0.15")
+        self.config.save()
+
+    def taxed_pair(self, day, gross, rate, character_id=RATTER_ID, hour=12):
+        """One payout seen from both sides: the slice and the member's net."""
+        cut = round(gross * rate)
+        self.entry(cut, at(day, hour), character_id=character_id)
+        add_member_payout(
+            character_id, CORP_ID, at(day, hour), amount=gross - cut, tax=cut,
+            tax_receiver_id=CORP_ID,
+        )
+
+    def untaxed(self, day, gross, character_id=RATTER_ID, corporation_id=CORP_ID,
+                tax_receiver_id=None):
+        add_member_payout(
+            character_id, corporation_id, at(day), amount=gross, tax=0,
+            tax_receiver_id=tax_receiver_id,
+        )
+
+    def set_corp_rate(self, rate):
+        EveCorporationInfo.objects.filter(corporation_id=CORP_ID).update(tax_rate=rate)
+
+    def test_should_tax_a_month_at_zero_percent(self):
+        self.set_corp_rate(0.0)
+        self.untaxed(3, 100_000_000)
+        self.untaxed(4, 100_000_000)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertTrue(breakdown["ok"])
+        self.assertEqual(breakdown["member_added"], 2)
+        self.assertEqual(self.row().gross_income, 200_000_000)
+        self.assertEqual(self.row().amount_to_pay, 30_000_000)
+
+    def test_should_add_a_week_without_tax(self):
+        for day in range(1, 21):
+            self.taxed_pair(day, 100_000_000, 0.1)
+        for day in range(21, 28):
+            self.untaxed(day, 100_000_000)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["member_matched"], 20)
+        self.assertEqual(breakdown["member_added"], 7)
+        self.assertEqual(breakdown["member_added_gross"], 700_000_000)
+        self.assertEqual(self.row().gross_income, 2_700_000_000)
+        self.assertEqual(self.row().amount_to_pay, 405_000_000)
+
+    def test_should_count_a_matched_payout_once(self):
+        """The slice and the member's net are the same payout; adding the
+        backed-out slice to the member's gross doubled it."""
+        self.taxed_pair(10, 100_000_000, 0.1)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["member_added"], 0)
+        self.assertEqual(breakdown["corp_unmatched"], 0)
+        self.assertEqual(self.row().gross_income, 100_000_000)
+
+    def test_should_pair_a_taxed_payout_the_exact_key_misses(self):
+        """A taxed payout always left a slice; a second off and another
+        system id must not turn it into a second payout."""
+        self.entry(10_000_000, at(10))
+        add_member_payout(
+            RATTER_ID, CORP_ID, at(10) + datetime.timedelta(seconds=1),
+            amount=90_000_000, tax=10_000_000, tax_receiver_id=CORP_ID,
+            context_id=30000099,
+        )
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["member_matched"], 1)
+        self.assertEqual(breakdown["member_added"], 0)
+        self.assertEqual(self.row().gross_income, 100_000_000)
+
+    def test_should_not_pair_a_slice_hours_away(self):
+        self.entry(10_000_000, at(10, hour=8))
+        add_member_payout(
+            RATTER_ID, CORP_ID, at(10, hour=12),
+            amount=90_000_000, tax=10_000_000, tax_receiver_id=CORP_ID,
+            context_id=30000099,
+        )
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["member_matched"], 0)
+        self.assertEqual(breakdown["member_added"], 1)
+
+    def test_should_take_the_exact_gross_of_a_matched_payout(self):
+        """The member's own figure, not the slice over a rate that may have
+        moved since."""
+        self.set_corp_rate(0.05)
+        self.taxed_pair(10, 100_000_000, 0.1)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(self.row().gross_income, 100_000_000)
+
+    def test_should_back_out_a_lone_slice_with_the_rate_before_the_switch(self):
+        """A character without a corptools audit leaves only the slice. The
+        Corporation is at 0% now; the slice came in at 20%."""
+        self.set_corp_rate(0.0)
+        self.entry(20_000_000, at(5), character_id=OTHER_RATTER_ID)
+        self.taxed_pair(5, 100_000_000, 0.2, hour=13)
+        self.untaxed(25, 100_000_000)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["corp_unmatched"], 1)
+        self.assertEqual(breakdown["corp_unrated"], 0)
+        self.assertEqual(self.row().gross_income, 300_000_000)
+
+    def test_should_take_the_rate_nearest_in_time(self):
+        """Two rates in one month: each lone slice goes with its own."""
+        self.taxed_pair(2, 100_000_000, 0.2)
+        self.taxed_pair(28, 100_000_000, 0.05)
+        self.entry(20_000_000, at(3), character_id=OTHER_RATTER_ID)
+        self.entry(5_000_000, at(27), character_id=OTHER_RATTER_ID)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(self.row().gross_income, 400_000_000)
+
+    def test_should_fall_back_to_the_current_rate_without_a_pair(self):
+        self.bounty(100_000_000, day=10)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["corp_unmatched"], 1)
+        self.assertEqual(self.row().gross_income, 1_000_000_000)
+
+    def test_should_flag_a_slice_with_no_rate_at_all(self):
+        self.set_corp_rate(0.0)
+        self.bounty(100_000_000, day=10)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["corp_unrated"], 1)
+        self.assertEqual(self.row().gross_income, 100_000_000)
+
+    def test_should_ignore_a_payout_taxed_by_another_corporation(self):
+        add_member_payout(
+            RATTER_ID, CORP_ID, at(10), amount=90_000_000, tax=10_000_000,
+            tax_receiver_id=OTHER_CORP_ID,
+        )
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["reason"], "no_entries")
+
+    def test_should_ignore_an_untaxed_payout_of_another_corporation(self):
+        self.untaxed(10, 100_000_000, character_id=OTHER_RATTER_ID,
+                     corporation_id=OTHER_CORP_ID)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["reason"], "no_entries")
+
+    def test_should_count_an_untaxed_payout_naming_the_corporation(self):
+        """Should ESI name the receiver on a 0% payout after all, the
+        member's current corporation must not be needed to find it."""
+        self.untaxed(10, 100_000_000, character_id=OTHER_RATTER_ID,
+                     corporation_id=OTHER_CORP_ID, tax_receiver_id=CORP_ID)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(self.row().gross_income, 100_000_000)
+
+    def test_should_only_count_configured_ref_types(self):
+        self.untaxed(10, 100_000_000)
+        add_member_payout(
+            RATTER_ID, CORP_ID, at(11), amount=500_000_000, tax=0,
+            ref_type="market_transaction",
+        )
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(self.row().gross_income, 100_000_000)
+
+    def test_should_list_a_high_earner_without_a_member_wallet(self):
+        EveName.objects.create(eve_id=OTHER_RATTER_ID, name="Hidden Ratter", category="character")
+        # 20M slice at 10% is 200M earned - past the 100M default
+        self.entry(20_000_000, at(5), character_id=OTHER_RATTER_ID)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        expected = [{"id": OTHER_RATTER_ID, "name": "Hidden Ratter", "gross": 200_000_000}]
+        self.assertEqual(breakdown["unaudited_characters"], expected)
+        self.assertEqual(self.row().unaudited_characters, expected)
+
+    def test_should_list_the_highest_earner_first(self):
+        self.entry(5_000_000, at(5), character_id=RATTER_ID)
+        self.entry(15_000_000, at(5), character_id=RATTER_ID)
+        self.entry(30_000_000, at(6), character_id=OTHER_RATTER_ID)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(
+            [(c["id"], c["gross"]) for c in self.row().unaudited_characters],
+            [(OTHER_RATTER_ID, 300_000_000), (RATTER_ID, 200_000_000)],
+        )
+
+    def test_should_not_list_a_character_below_the_threshold(self):
+        # 9.9M at 10% is 99M
+        self.entry(9_900_000, at(5), character_id=OTHER_RATTER_ID)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(self.row().unaudited_characters, [])
+
+    def test_should_list_a_character_at_the_threshold(self):
+        self.entry(10_000_000, at(5), character_id=OTHER_RATTER_ID)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(len(self.row().unaudited_characters), 1)
+
+    def test_should_read_the_threshold_from_the_settings(self):
+        self.config.unaudited_min_millions = 300
+        self.config.save()
+        self.entry(20_000_000, at(5), character_id=OTHER_RATTER_ID)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(self.row().unaudited_characters, [])
+
+    def test_should_not_list_a_character_with_a_member_wallet(self):
+        self.taxed_pair(5, 1_000_000_000, 0.1)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(self.row().unaudited_characters, [])
+
+    def test_should_drop_a_character_once_the_wallet_is_added(self):
+        self.entry(20_000_000, at(5), character_id=OTHER_RATTER_ID)
+        update_corp(CORP_ID, MONTH, YEAR)
+        add_member_payout(
+            OTHER_RATTER_ID, CORP_ID, at(5), amount=180_000_000, tax=20_000_000,
+            tax_receiver_id=CORP_ID,
+        )
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(self.row().unaudited_characters, [])
+
+    def test_should_store_how_long_the_calculation_took(self):
+        self.untaxed(10, 100_000_000)
+
+        with mock.patch(
+            "eos_tax.db.payments.time.perf_counter", side_effect=[100.0, 102.5]
+        ):
+            update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(self.row().calculation_seconds, 2.5)
+
+    def test_should_keep_the_time_when_none_is_handed_in(self):
+        self.untaxed(10, 100_000_000)
+        update_corp(CORP_ID, MONTH, YEAR)
+        measured = self.row().calculation_seconds
+
+        set_corp_tax(
+            corp_id=CORP_ID, corp_name="Bravo Corp", tax_value=0,
+            tax_percentage=10.0, month=MONTH, year=YEAR, alliance_tax_rate=0.15,
+        )
+
+        self.assertIsNotNone(measured)
+        self.assertEqual(self.row().calculation_seconds, measured)
+
+    def test_should_stay_inside_the_month(self):
+        self.untaxed(10, 100_000_000)
+        add_member_payout(
+            RATTER_ID, CORP_ID,
+            datetime.datetime(YEAR, MONTH + 1, 1, tzinfo=datetime.timezone.utc),
+            amount=500_000_000, tax=0,
+        )
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(self.row().gross_income, 100_000_000)
 
 
 # --- find_payment -------------------------------------------------------
@@ -919,6 +1217,35 @@ class TestOverviewPaidAmount(PaymentsTestCase):
         self.assertEqual(data["isk_paid"], "")
         self.assertEqual(data["isk_paid_value"], -1)
         self.assertEqual(data["paid_difference"], 0)
+        # a difference of 0 with nothing paid is not a settled row
+        self.assertFalse(data["paid_exactly"])
+
+    def test_should_mark_a_row_paid_to_the_isk(self):
+        row = create_tax_row(CORP_ID, "Bravo Corp", alliance_tax_rate=0.15)
+        row.amount_paid = row.amount_to_pay
+        row.save()
+
+        self.assertTrue(self.overview_row()["paid_exactly"])
+
+    def test_should_not_mark_a_row_paid_more_or_less(self):
+        row = create_tax_row(CORP_ID, "Bravo Corp", alliance_tax_rate=0.15)
+
+        for amount in (row.amount_to_pay + 1, row.amount_to_pay - 1):
+            with self.subTest(amount=amount):
+                row.amount_paid = amount
+                row.save()
+
+                self.assertFalse(self.overview_row()["paid_exactly"])
+
+    def test_should_list_the_characters_without_wallet_audit(self):
+        row = create_tax_row(CORP_ID, "Bravo Corp", alliance_tax_rate=0.15)
+        row.unaudited_characters = [{"id": 1, "name": "Hidden Ratter", "gross": 250_000_000}]
+        row.save()
+
+        self.assertEqual(
+            self.overview_row()["unaudited_characters"],
+            [{"id": 1, "name": "Hidden Ratter", "gross": 250_000_000, "isk": "250.000.000"}],
+        )
 
 
 # The two below moved here from test_views.py: neither renders a page.

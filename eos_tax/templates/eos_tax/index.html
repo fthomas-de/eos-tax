@@ -43,6 +43,8 @@
                                 <th scope="col">{% translate "Month" %}</th>
                                 <th scope="col">{% translate "Reason" %}</th>
                                 <th scope="col">{% translate "Paid" %}</th>
+                                <th scope="col" class="d-none d-md-table-cell">{% translate "Characters without wallet audit" %}</th>
+                                <th scope="col" class="d-none d-md-table-cell">{% translate "Calculation time" %}</th>
                             </tr>
                         </thead>
 
@@ -67,13 +69,17 @@
                                     <td data-order="{{ data.corp_tax_rate|unlocalize }}"
                                         class="d-none d-md-table-cell {% if not data.corp_tax_rate %}text-danger fw-semibold{% endif %}">{{ data.corp_tax_rate }}%</td>
                                     <td class="d-none d-md-table-cell" data-order="{{ data.alliance_tax_rate|unlocalize }}">{{ data.alliance_tax_rate }}%</td>
-                                    <td data-order="{{ data.isk_to_pay_value|unlocalize }}">{{ data.isk_to_pay }}</td>
+                                    {% comment %}
+                                        Green on both figures when they agree to the ISK, so a
+                                        settled row reads as settled without comparing digits.
+                                    {% endcomment %}
+                                    <td data-order="{{ data.isk_to_pay_value|unlocalize }}"{% if data.paid_exactly %} class="text-success"{% endif %}>{{ data.isk_to_pay }}</td>
                                     {% comment %}
                                         What came in next to what was owed, so a transfer of
                                         more - or a second one - does not pass as settled and
                                         nothing else. Empty until a payment was seen.
                                     {% endcomment %}
-                                    <td class="d-none d-md-table-cell" data-order="{{ data.isk_paid_value|unlocalize }}">
+                                    <td class="d-none d-md-table-cell{% if data.paid_exactly %} text-success{% endif %}" data-order="{{ data.isk_paid_value|unlocalize }}">
                                         {% if data.isk_paid %}
                                             {{ data.isk_paid }}
                                             {% if data.paid_difference > 0 %}
@@ -117,6 +123,30 @@
                                         {% else %}
                                             <i class="fa-solid fa-xmark text-danger"></i>
                                             <span class="visually-hidden">{% translate "Not paid" %}</span>
+                                        {% endif %}
+                                    </td>
+                                    {% comment %}
+                                        Characters whose bounties reach the corporation wallet
+                                        but no member wallet: a stretch at 0% ingame tax would
+                                        not show for them at all, so their wallet audit has to
+                                        be added. Kept per month, as calculated then.
+                                    {% endcomment %}
+                                    <td class="d-none d-md-table-cell" data-order="{{ data.unaudited_characters|length }}">
+                                        {% for character in data.unaudited_characters %}
+                                            <div class="text-danger text-nowrap">
+                                                {{ character.name }}
+                                                <span class="small">({{ character.isk }} ISK)</span>
+                                            </div>
+                                        {% endfor %}
+                                    </td>
+                                    {% comment %}
+                                        How long the last calculation of this month took;
+                                        empty for a row from before it was measured, which
+                                        sorts below every measured one.
+                                    {% endcomment %}
+                                    <td class="d-none d-md-table-cell text-nowrap" data-order="{% if data.calculation_seconds is not None %}{{ data.calculation_seconds|unlocalize }}{% else %}-1{% endif %}">
+                                        {% if data.calculation_seconds is not None %}
+                                            {% blocktranslate with seconds=data.calculation_seconds|floatformat:2 %}{{ seconds }} s{% endblocktranslate %}
                                         {% endif %}
                                     </td>
                                 </tr>

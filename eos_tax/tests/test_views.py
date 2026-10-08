@@ -318,7 +318,7 @@ class TestOverviewTable(EosTaxTestCase):
         script = read_static("overview.js")
 
         self.assertEqual(script.count("searchable: true"), 1)
-        self.assertEqual(script.count("searchable: false"), 7)
+        self.assertEqual(script.count("searchable: false"), 9)
         self.assertNotIn('targets: "_all"', script)
 
     def test_should_load_its_script_from_a_static_file(self):
@@ -448,6 +448,60 @@ class TestOverviewTable(EosTaxTestCase):
             self.overview(),
             f'<td class="d-none d-md-table-cell" data-order="{self.row.amount_to_pay + 7}">',
         )
+
+    def test_should_colour_both_amounts_green_when_they_agree(self):
+        self.paid(self.row.amount_to_pay)
+
+        body = self.overview().content.decode()
+
+        self.assertIn(
+            f'<td data-order="{self.row.amount_to_pay}" class="text-success">', body
+        )
+        self.assertIn(
+            '<td class="d-none d-md-table-cell text-success" '
+            f'data-order="{self.row.amount_to_pay}">',
+            body,
+        )
+
+    def test_should_leave_differing_amounts_uncoloured(self):
+        self.paid(self.row.amount_to_pay + 1)
+
+        body = self.overview().content.decode()
+
+        self.assertNotIn('class="text-success">', body)
+        self.assertNotIn('text-success" data-order', body)
+
+    def test_should_list_characters_without_wallet_audit(self):
+        self.row.unaudited_characters = [
+            {"id": 1, "name": "Hidden Ratter", "gross": 250_000_000}
+        ]
+        self.row.save()
+
+        body = self.overview().content.decode()
+
+        self.assertIn("Characters without wallet audit</th>", body)
+        self.assertIn("Hidden Ratter", body)
+        self.assertIn("(250.000.000 ISK)", body)
+
+    def test_should_configure_the_new_column_in_datatables(self):
+        """DataTables refuses a table whose columns list is one short."""
+        self.assertIn("// Characters without wallet audit", read_static("overview.js"))
+        self.assertIn("// Calculation time", read_static("overview.js"))
+
+    def test_should_show_the_calculation_time(self):
+        self.row.calculation_seconds = 1.2345
+        self.row.save()
+
+        body = self.overview().content.decode()
+
+        self.assertIn("Calculation time</th>", body)
+        self.assertIn('data-order="1.2345"', body)
+        self.assertIn("1.23 s", body)
+
+    def test_should_sort_an_unmeasured_row_last(self):
+        body = self.overview().content.decode()
+
+        self.assertIn('<td class="d-none d-md-table-cell text-nowrap" data-order="-1">', body)
 
     def test_should_sort_nothing_paid_below_zero(self):
         self.assertContains(
