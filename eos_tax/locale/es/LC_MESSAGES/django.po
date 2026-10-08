@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-08 13:45+0000\n"
+"POT-Creation-Date: 2026-10-08 14:38+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -590,19 +590,19 @@ msgstr ""
 msgid "Overview"
 msgstr "Resumen"
 
-#: templates/eos_tax/base.html:15 views.py:109
+#: templates/eos_tax/base.html:15 views.py:111
 msgid "Statistics"
 msgstr "Estadísticas"
 
-#: templates/eos_tax/base.html:19 views.py:468
+#: templates/eos_tax/base.html:19 views.py:507
 msgid "Bots"
 msgstr "Bots"
 
-#: templates/eos_tax/base.html:23 views.py:183
+#: templates/eos_tax/base.html:23 views.py:185
 msgid "Corp Tax Changes"
 msgstr "Corp Tax Changes"
 
-#: templates/eos_tax/base.html:27 views.py:277
+#: templates/eos_tax/base.html:27 views.py:279
 msgid "Settings"
 msgstr "Ajustes"
 
@@ -642,22 +642,22 @@ msgid "Show"
 msgstr "Mostrar"
 
 #: templates/eos_tax/bot-detail.html:160 templates/eos_tax/bots.html:50
-#: templates/eos_tax/settings.html:233 views.py:511
+#: templates/eos_tax/settings.html:233 views.py:550
 msgid "Hours per day"
 msgstr "Horas por día"
 
 #: templates/eos_tax/bot-detail.html:167 templates/eos_tax/bots.html:57
-#: templates/eos_tax/settings.html:248 views.py:512
+#: templates/eos_tax/settings.html:248 views.py:551
 msgid "Unbroken runs"
 msgstr "Rachas ininterrumpidas"
 
 #: templates/eos_tax/bot-detail.html:174 templates/eos_tax/bots.html:64
-#: templates/eos_tax/settings.html:265 views.py:513
+#: templates/eos_tax/settings.html:265 views.py:552
 msgid "Against the Corporation"
 msgstr "Al ritmo de la Corporation"
 
 #: templates/eos_tax/bot-detail.html:181 templates/eos_tax/bots.html:71
-#: templates/eos_tax/settings.html:283 views.py:514
+#: templates/eos_tax/settings.html:283 views.py:553
 msgid "Off the Corporation clock"
 msgstr "Fuera del horario de la Corporation"
 
@@ -1105,7 +1105,7 @@ msgstr "Diferencia"
 
 #: templates/eos_tax/partials/bot-clock.html:28
 #: templates/eos_tax/partials/bot-rhythm.html:28
-#: templates/eos_tax/tax-changes.html:75 views.py:221
+#: templates/eos_tax/tax-changes.html:75 views.py:223
 msgid "Payouts"
 msgstr "Pagos"
 
@@ -1403,6 +1403,82 @@ msgstr "Día promedio (horas)"
 #: templates/eos_tax/partials/bot-table.html:15
 msgid "Contributed tax"
 msgstr "Impuesto aportado"
+
+#: templates/eos_tax/partials/progress.html:11
+msgid "Automatic recalculation"
+msgstr "Recálculo automático"
+
+#: templates/eos_tax/partials/progress.html:12
+msgid "Manual recalculation"
+msgstr "Recálculo manual"
+
+#: templates/eos_tax/partials/progress.html:13
+#, python-brace-format
+msgid "{finished} of {total} done"
+msgstr "{finished} de {total} completados"
+
+#: templates/eos_tax/partials/progress.html:14
+msgid "Finished. Reload the page to see the new figures."
+msgstr "Terminado. Recarga la página para ver las nuevas cifras."
+
+#: templates/eos_tax/partials/progress.html:15
+msgid "Reload"
+msgstr "Recargar"
+
+#: templates/eos_tax/partials/progress.html:16
+msgid "Dismiss"
+msgstr "Cerrar"
+
+#: templates/eos_tax/partials/progress.html:17
+msgctxt "progress bar details"
+msgid "Corporations"
+msgstr "Corporations"
+
+#: templates/eos_tax/partials/progress.html:18
+#, python-brace-format
+msgid "{count} failed"
+msgstr "{count} fallidos"
+
+#: templates/eos_tax/partials/progress.html:19
+msgctxt "progress bar job state"
+msgid "Waiting"
+msgstr "En espera"
+
+#: templates/eos_tax/partials/progress.html:20
+msgctxt "progress bar job state"
+msgid "Running"
+msgstr "En curso"
+
+#: templates/eos_tax/partials/progress.html:21
+msgctxt "progress bar job state"
+msgid "Done"
+msgstr "Terminado"
+
+#: templates/eos_tax/partials/progress.html:22
+msgctxt "progress bar job state"
+msgid "Skipped"
+msgstr "Omitido"
+
+#: templates/eos_tax/partials/progress.html:23
+msgctxt "progress bar job state"
+msgid "Failed"
+msgstr "Fallido"
+
+#: templates/eos_tax/partials/progress.html:24
+msgid "Corporation not known to Alliance Auth"
+msgstr "Alliance Auth no conoce la corporation"
+
+#: templates/eos_tax/partials/progress.html:25
+msgid "No ingame tax rate"
+msgstr "Sin tipo de impuesto ingame"
+
+#: templates/eos_tax/partials/progress.html:26
+msgid "Alliance tax rate is 0"
+msgstr "La tasa de impuesto de la Alliance es 0"
+
+#: templates/eos_tax/partials/progress.html:27
+msgid "No journal entries"
+msgstr "Sin entradas de Journal"
 
 #: templates/eos_tax/partials/recalculate-queued.html:4
 #, python-format
@@ -1946,7 +2022,7 @@ msgstr "Cambio en la parte"
 msgid "On"
 msgstr "El"
 
-#: templates/eos_tax/tax-changes.html:74 views.py:222
+#: templates/eos_tax/tax-changes.html:74 views.py:224
 msgid "Systems"
 msgstr "Sistemas"
 
@@ -2002,84 +2078,84 @@ msgstr "m"
 msgid "y"
 msgstr "a"
 
-#: views.py:88
+#: views.py:90
 #, python-format
 msgid "Taxes to pay: %(rate)s%%"
 msgstr "Impuesto a pagar: %(rate)s%%"
 
-#: views.py:97
+#: views.py:99
 msgid "Corporation:"
 msgstr "Corporation:"
 
-#: views.py:98
+#: views.py:100
 msgid "Filter by corporation name"
 msgstr "Filtrar por nombre de Corporation"
 
-#: views.py:117 views.py:439 views.py:488
+#: views.py:119 views.py:478 views.py:527
 msgid "Loading…"
 msgstr "Cargando…"
 
-#: views.py:118
+#: views.py:120
 msgid "No data for this selection."
 msgstr "No hay datos para esta selección."
 
-#: views.py:119
+#: views.py:121
 msgid "Could not load the statistics."
 msgstr "No se pudieron cargar las estadísticas."
 
-#: views.py:120
+#: views.py:122
 msgid "corporations"
 msgstr "Corporations"
 
-#: views.py:121
+#: views.py:123
 msgid "Other"
 msgstr "Otras"
 
-#: views.py:122
+#: views.py:124
 #, python-brace-format
 msgid "{shown} of {total} corporations drawn"
 msgstr "{shown} de {total} corporations dibujadas"
 
-#: views.py:123
+#: views.py:125
 #, python-brace-format
 msgid "{value} of the tax covered"
 msgstr "{value} del impuesto cubierto"
 
-#: views.py:124
+#: views.py:126
 #, python-brace-format
 msgid "{value} ISK income"
 msgstr "{value} ISK de ingreso"
 
-#: views.py:125
+#: views.py:127
 #, python-brace-format
 msgid "{value} ISK tax"
 msgstr "{value} ISK de impuesto"
 
-#: views.py:190
+#: views.py:192
 msgid "Search:"
 msgstr "Buscar:"
 
-#: views.py:191
+#: views.py:193
 msgid "Corporation name, or a rate such as 0 or 100"
 msgstr "Nombre de la corporation o un tipo como 0 o 100"
 
-#: views.py:220
+#: views.py:222
 msgid "Share of the bounty in percent"
 msgstr "Parte de la bounty en por ciento"
 
-#: views.py:253
+#: views.py:255
 msgid "Settings saved."
 msgstr "Ajustes guardados."
 
-#: views.py:289
+#: views.py:291
 msgid "Calculating…"
 msgstr "Calculando…"
 
-#: views.py:290
+#: views.py:292
 msgid "Could not recalculate this month."
 msgstr "No se pudo recalcular este mes."
 
-#: views.py:440 views.py:489
+#: views.py:479 views.py:528
 msgid "Could not load this view."
 msgstr "No se pudo cargar esta vista."
 

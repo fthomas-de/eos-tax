@@ -1,0 +1,31 @@
+{% load i18n %}
+{% comment %}
+    The recalculation runs - the periodic task's and the settings page's -
+    above every page of the app, for admins. Filled by progress.js; empty
+    and hidden while nothing runs. The texts sit here rather than in the
+    script so they reach the catalogues.
+{% endcomment %}
+<div id="eos-tax-progress" class="mb-3 d-none"
+     data-eos-tax-progress-url="{% url 'eos_tax:progress' %}"
+     data-eos-tax-progress-dismiss-url="{% url 'eos_tax:progress_dismiss' 'RUN_ID' %}"
+     data-eos-tax-label-automatic="{% translate 'Automatic recalculation' %}"
+     data-eos-tax-label-manual="{% translate 'Manual recalculation' %}"
+     data-eos-tax-label-count="{% translate '{finished} of {total} done' %}"
+     data-eos-tax-label-complete="{% translate 'Finished. Reload the page to see the new figures.' %}"
+     data-eos-tax-label-reload="{% translate 'Reload' %}"
+     data-eos-tax-label-dismiss="{% translate 'Dismiss' %}"
+     data-eos-tax-label-details="{% translate 'Corporations' context 'progress bar details' %}"
+     data-eos-tax-label-failed-count="{% translate '{count} failed' %}"
+     data-eos-tax-state-queued="{% translate 'Waiting' context 'progress bar job state' %}"
+     data-eos-tax-state-running="{% translate 'Running' context 'progress bar job state' %}"
+     data-eos-tax-state-done="{% translate 'Done' context 'progress bar job state' %}"
+     data-eos-tax-state-skipped="{% translate 'Skipped' context 'progress bar job state' %}"
+     data-eos-tax-state-failed="{% translate 'Failed' context 'progress bar job state' %}"
+     data-eos-tax-reason-unknown_corp="{% translate 'Corporation not known to Alliance Auth' %}"
+     data-eos-tax-reason-no_tax_rate="{% translate 'No ingame tax rate' %}"
+     data-eos-tax-reason-no_alliance_rate="{% translate 'Alliance tax rate is 0' %}"
+     data-eos-tax-reason-no_entries="{% translate 'No journal entries' %}">
+    {# the dismiss button posts; not every page of the app has a form of its own #}
+    {% csrf_token %}
+    <div class="eos-tax-progress-runs"></div>
+</div>

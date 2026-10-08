@@ -10,6 +10,9 @@ urlpatterns = [
     path("statistics/data/", views.statistics_data, name="statistics_data"),
     path("settings/", views.settings, name="settings"),
     path("settings/recalculate/", views.settings_recalculate, name="settings_recalculate"),
+    # the progress bar above every page, admins only
+    path("progress/", views.progress_state, name="progress"),
+    path("progress/<slug:run_id>/dismiss/", views.progress_dismiss, name="progress_dismiss"),
     path("bots/", views.bots, name="bots"),
     path("bots/<int:character_id>/", views.bot_detail, name="bot_detail"),
     # the sub tabs of the bots page, fetched one at a time when opened

@@ -56,6 +56,8 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .finally(function () {
                 button.disabled = false;
+                // the bar only polls while it knows of a run; this one is new
+                document.dispatchEvent(new CustomEvent("eos-tax:progress-poll"));
             });
     });
 });

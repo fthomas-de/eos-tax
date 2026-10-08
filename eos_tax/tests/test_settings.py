@@ -502,13 +502,14 @@ class TestSettingsRecalculate(EosTaxTestCase):
             corporation_ticker="SEC", alliance=self.alliance, tax_rate=0.1,
         )
 
-        with patch("eos_tax.views.run_update_corporation.delay") as delay:
+        with patch("eos_tax.tasks.run_update_corporation.delay") as delay:
             response = self.post(corp_id="all", month="9", year="2026")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(delay.call_count, 2)
-        delay.assert_any_call(corp_id=BRAVO_CORP_ID, month=9, year=2026)
-        delay.assert_any_call(corp_id=second.corporation_id, month=9, year=2026)
+        run_id = delay.call_args.kwargs["run_id"]
+        delay.assert_any_call(corp_id=BRAVO_CORP_ID, month=9, year=2026, run_id=run_id)
+        delay.assert_any_call(corp_id=second.corporation_id, month=9, year=2026, run_id=run_id)
         self.assertIn("2", response.content.decode())
 
     def test_should_not_queue_a_corporation_outside_the_taxed_alliances(self):
@@ -520,7 +521,7 @@ class TestSettingsRecalculate(EosTaxTestCase):
             corporation_ticker="OUT", alliance=outside_alliance, tax_rate=0.1,
         )
 
-        with patch("eos_tax.views.run_update_corporation.delay") as delay:
+        with patch("eos_tax.tasks.run_update_corporation.delay") as delay:
             self.post(corp_id="all", month="9", year="2026")
 
         self.assertEqual(delay.call_count, 1)

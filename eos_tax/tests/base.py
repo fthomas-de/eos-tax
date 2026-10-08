@@ -9,6 +9,11 @@ existed - the next ``save()`` then failed on the foreign key.
 Production commits its transactions, so the leak is an artefact of the test
 harness rather than a defect in the app. The cache is switched off here instead
 of being cleared in every ``setUp``.
+
+The default cache is a local memory one for the same reason, and one more: the
+instance's own is the Redis of the running dev server, and the progress bar
+reads its runs from there - a test that queued a run would show it on the real
+pages for an hour.
 """
 
 import html
@@ -20,7 +25,15 @@ from django.test import TestCase, override_settings
 import eos_tax
 
 
-@override_settings(SOLO_CACHE=None)
+TEST_CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "eos-tax-tests",
+    },
+}
+
+
+@override_settings(SOLO_CACHE=None, CACHES=TEST_CACHES)
 class EosTaxTestCase(TestCase):
     """Base class for every test in this app."""
 

@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required, permission_required
@@ -44,7 +45,8 @@ from eos_tax.db.statistics import (
     get_statistics_years,
 )
 from eos_tax.db.tax_changes import get_corp_tax_changes, get_corp_tax_detail
-from eos_tax.tasks import run_update_corporation
+from eos_tax import progress
+from eos_tax.tasks import queue_corporations
 from eos_tax.util import get_dates, format_isk
 
 logger = get_extension_logger(__name__)
@@ -361,17 +363,16 @@ def settings_recalculate(request):
     corp_id = request.POST.get("corp_id", "all")
 
     if corp_id == "all":
-        corp_ids = list(
+        corporations = list(
             EveCorporationInfo.objects.filter(
                 alliance__alliance_id__in=config.alliance_ids()
-            ).values_list("corporation_id", flat=True)
+            ).values_list("corporation_id", "corporation_name")
         )
 
-        for cid in corp_ids:
-            run_update_corporation.delay(corp_id=cid, month=month, year=year)
+        queue_corporations(corporations, [(month, year)], progress.MANUAL)
 
         return render(request, "eos_tax/partials/recalculate-queued.html", {
-            "count": len(corp_ids),
+            "count": len(corporations),
         })
 
     try:
@@ -379,11 +380,49 @@ def settings_recalculate(request):
     except ValueError:
         return HttpResponseBadRequest("corp_id must be an integer or 'all'")
 
-    breakdown = _breakdown_for_display(update_corp(corp_id=corp_id, month=month, year=year))
+    # a run of one, so the bar on another admin's page shows it as well
+    corp_name = (
+        EveCorporationInfo.objects.filter(corporation_id=corp_id)
+        .values_list("corporation_name", flat=True).first()
+        or str(corp_id)
+    )
+    run_id = progress.start_run(progress.MANUAL, [
+        {"corp_id": corp_id, "corp_name": corp_name, "month": month, "year": year},
+    ])
+    with progress.tracked(run_id, corp_id, month, year) as outcome:
+        outcome["result"] = update_corp(corp_id=corp_id, month=month, year=year)
+
+    breakdown = _breakdown_for_display(outcome["result"])
 
     return render(request, "eos_tax/partials/recalculate-result.html", {
         "breakdown": breakdown,
     })
+
+
+@login_required
+@permission_required("eos_tax.admin_view")
+def progress_state(request):
+    """The runs for the progress bar; polled while one of them is going.
+
+    "now" is the server's clock: the page tells a run that started after it
+    was loaded from one it already shows the result of, and the browser's
+    own clock may be minutes off.
+    """
+    return JsonResponse({"now": time.time(), "runs": progress.get_runs()})
+
+
+@login_required
+@permission_required("eos_tax.admin_view")
+@require_POST
+def progress_dismiss(request, run_id):
+    """Takes a finished run off the bar - for every admin, not only this one."""
+    if any(run["id"] == run_id and not run["complete"] for run in progress.get_runs()):
+        # a run still going would come back on the next poll of anyone else
+        return HttpResponseBadRequest("the run is still going")
+
+    progress.withdraw(run_id)
+
+    return JsonResponse({"ok": True})
 
 
 def _selected_month(request):

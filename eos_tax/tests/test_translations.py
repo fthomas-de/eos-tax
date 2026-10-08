@@ -27,21 +27,36 @@ def _unescape(raw):
 
 
 def read_po(path):
-    """Minimal .po reader - enough to compare a catalogue against its build."""
+    """Minimal .po reader - enough to compare a catalogue against its build.
+
+    An entry with a msgctxt comes back keyed the way gettext stores it in the
+    .mo, context and msgid joined by \\x04. Read without its context, the
+    progress bar's "Done" was looked up as a plain "Done", which no catalogue
+    has, and the comparison reported a stale .mo that was not stale.
+    """
     entries = []
     msgid = None
+    context = None
     parts = []
     section = None
 
     def flush():
-        nonlocal msgid, parts, section
+        nonlocal msgid, context, parts, section
         if section == "msgstr" and msgid is not None:
-            entries.append((msgid, _unescape("".join(parts))))
+            key = f"{context}\x04{msgid}" if context is not None else msgid
+            entries.append((key, _unescape("".join(parts))))
+            context = None
         msgid, parts, section = None, [], None
 
     for line in path.read_text(encoding="utf-8").splitlines():
-        if line.startswith("msgid "):
+        if line.startswith("msgctxt "):
             flush()
+            section, parts = "msgctxt", PO_STRING.findall(line)
+        elif line.startswith("msgid "):
+            if section == "msgctxt":
+                context = _unescape("".join(parts))
+            else:
+                flush()
             section, parts = "msgid", PO_STRING.findall(line)
         elif line.startswith("msgstr "):
             msgid = _unescape("".join(parts))

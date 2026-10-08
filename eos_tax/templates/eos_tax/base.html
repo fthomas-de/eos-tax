@@ -45,10 +45,26 @@
         {% translate "Alliance PvE Tax" as app_title %}
         {% include "framework/header/page-header.html" with title=app_title subtitle=version %}
 
+        {% if perms.eos_tax.admin_view %}
+            {% include "eos_tax/partials/progress.html" %}
+        {% endif %}
+
         {% block app_help %}
             {% include "eos_tax/help.html" %}
         {% endblock %}
 
         {% block details %}{% endblock %}
     </div>
+{% endblock %}
+
+{% comment %}
+    Same split as the stylesheet: the progress bar's script on every page,
+    and a block inside for what a single page adds - a page overriding
+    extra_javascript itself would drop the bar without noticing.
+{% endcomment %}
+{% block extra_javascript %}
+    {% if perms.eos_tax.admin_view %}
+        {% sri_static "eos_tax/js/progress.js" %}
+    {% endif %}
+    {% block eos_tax_javascript %}{% endblock %}
 {% endblock %}

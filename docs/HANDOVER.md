@@ -44,6 +44,20 @@ Last updated 2026-10-08.
 
 ## Decisions of the 2026-10-08 sessions
 
+- **Progress bar for every recalculation**, the user's request: "like
+  eos-invoices" turned out to mean eos-auth-monitor's bar (eos-invoices
+  has none). It shows every run of eos-tax, automatic or manual, with bar,
+  counter and a list of Corporations (the user's choice over bar and counter
+  alone). **Admins only**, and **a finished run shows a "Reload" button**
+  instead of reloading by itself (both the user's choices). Cache, not
+  database; one key per job, because the subtasks run in parallel (Claude's
+  call). A finished run is only shown if it started after the page loaded
+  or has a failed job; dismissing removes it for every admin. The single
+  Corporation recalculation also appears as a run of one. Not looked at in
+  a browser yet, and the worker in the VS Code terminal (pts/6) still runs
+  the old code: until it is restarted, "all" on the settings page fails
+  with an unexpected `run_id`.
+
 - **Payment differences flagged from 10M on**, the user's request: small
   differences need no extra hint, the threshold is a setting with 10M as
   default. Integer millions like `unaudited_min_millions`; `>=` the

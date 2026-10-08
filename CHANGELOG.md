@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- A progress bar above every page of the app, for admins, showing each
+  recalculation that is running: the periodic task's as well as the
+  settings page's, for every Corporation or for one. Until now the
+  settings page said "queued for 30 corporations" and nothing after that,
+  and the periodic task was not visible at all. Each run has a bar with
+  how many of its Corporations and months are done, and a list of them with
+  their state (waiting, running, done, skipped with its reason, failed with
+  the error). A finished run stays with a "Reload" button instead of
+  reloading the page by itself, which could throw away an unsaved settings
+  form. A run with a failed job stays until somebody dismisses it.
+  The state is kept in the cache, not the database, with one key per job,
+  so parallel workers finishing at the same moment cannot overwrite each
+  other's state. A run that stops moving, for example because a worker
+  crashed, expires after an hour.
+- `run_update_corporation` takes an optional `run_id`. A subtask queued by
+  the previous version still runs, just without a bar. **A running Celery
+  worker has to be restarted** before the new version queues anything: the
+  old code rejects the new argument.
+
+### Changed
+
+- The pages add their scripts in `{% block eos_tax_javascript %}` instead of
+  overriding `extra_javascript`, the same split as `eos_tax_css`. Otherwise
+  every page would have dropped the progress bar's script without anyone
+  noticing.
+- Tests use a local memory cache instead of the instance's Redis. A test
+  that queued a run would otherwise have shown it on the dev server's pages
+  for an hour.
+
 ## [0.3.18] - 2026-10-08
 
 ### Added
