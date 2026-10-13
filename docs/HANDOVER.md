@@ -8,8 +8,12 @@ Last updated 2026-10-13.
 
 ## Release
 
-- Version **0.4.2** in `eos_tax/__init__.py`, released 2026-10-08
-- `[0.4.2]` in `CHANGELOG.md`: tooltip "Earned in total" (the stored
+- Version **0.4.3** in `eos_tax/__init__.py`, released 2026-10-13
+- `[0.4.3]` in `CHANGELOG.md`: "Characters without wallet audit" leaves
+  out characters who have left the Corporation since, by ESI's character
+  affiliation at recalculation; the recalculate log counts them (no
+  migration, one new plural string in all six catalogues)
+- `[0.4.2]`: tooltip "Earned in total" (the stored
   `gross_income`) on "Amount to pay in ISK"; a sum of several payments in
   "Amount paid in ISK" is a badge instead of the grey "in N payments" line
   (no migration)
@@ -47,7 +51,7 @@ Last updated 2026-10-13.
 - `[0.3.13]`: a missing ingame rate is asked from ESI; `[0.3.12]`: what was
   paid is recorded ("Amount paid in ISK", payments added up by reason)
 - Migrations **0001-0026** applied to `aa_dev`
-- 604 tests, all green (589 without the translation tag, 15 with it)
+- 612 tests, all green (597 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
@@ -302,6 +306,12 @@ alts from Alliance Auth, without assessments.
    Element September row (see below) showed the `-` badge; since 0.3.18
    only if it is 10M or more off. Worth one render with the seeded data
    before building on any of them.
+4. The affiliation filter (0.4.3) has never talked to the real ESI - only
+   to mocks. After deploying, recalculate a month with listed characters
+   and check the log line "... has left this corporation since"; a
+   "ESI affiliation lookup failed" warning in the worker log means
+   everyone stayed listed. Months already calculated keep former members
+   until recalculated. The Celery worker needs a restart for the new code.
 
 ## Seeded test data
 

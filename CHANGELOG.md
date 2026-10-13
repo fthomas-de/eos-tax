@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-10-13
+
 ### Changed
 
 - "Characters without wallet audit" no longer lists a character who has
