@@ -8,8 +8,15 @@ Last updated 2026-10-13.
 
 ## Release
 
-- Version **0.4.3** in `eos_tax/__init__.py`, released 2026-10-13
-- `[0.4.3]` in `CHANGELOG.md`: "Characters without wallet audit" leaves
+- Version **0.4.4** in `eos_tax/__init__.py`, released 2026-10-13
+- `[0.4.4]` in `CHANGELOG.md`: the introductions of the three fetched bot
+  tabs now show (they sat in panes the tab script replaces); otherwise
+  less code for the same pages - rhythm and clock lists share
+  `_against_the_corporation` and `_baseline` in `db/bot_signals.py`,
+  includes `partials/bot-tabs.html` and `partials/bot-character-cells.html`,
+  payment help included by `index.html` only, `get_tax_corp` one query,
+  `set_corp_tax` one write path (no migration, no new strings)
+- `[0.4.3]`: "Characters without wallet audit" leaves
   out characters who have left the Corporation since, by ESI's character
   affiliation at recalculation; the recalculate log counts them (no
   migration, one new plural string in all six catalogues)
@@ -51,7 +58,7 @@ Last updated 2026-10-13.
 - `[0.3.13]`: a missing ingame rate is asked from ESI; `[0.3.12]`: what was
   paid is recorded ("Amount paid in ISK", payments added up by reason)
 - Migrations **0001-0026** applied to `aa_dev`
-- 612 tests, all green (597 without the translation tag, 15 with it)
+- 614 tests, all green (599 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
@@ -59,8 +66,22 @@ Last updated 2026-10-13.
 - `CHANGELOG.md` is newest first; `[0.3.2]` and `[0.3.6]` were written from
   the commits that raised those versions
 
-## Decisions of the 2026-10-13 session
+## Decisions of the 2026-10-13 sessions
 
+- **The bot readings may share logic where it makes sense** - the user's
+  words, loosening the earlier "deliberately separate". What stays
+  separate are the thresholds and settings per reading (see "The bots
+  page"); structure - both passes, the yardstick, the fallback - is
+  shared since 0.4.4.
+- **Bloat review, not taken up yet** (offered, the user chose the bug and
+  the larger cuts only): `bot_signal` and `bot_signal_detail` in
+  `views.py` are near-identical; small idioms (`Counter` subtraction in
+  `_rest_of_corp`, `most_common` and the unread `middle`/`payouts` keys in
+  `_window`, `itertools.product` in `palette.py`, `**income` in
+  `update_corp`, `value_from_datadict` in `forms.py`, `columnDefs` with
+  `"_all"` in the DataTables scripts, an unused logger in `models.py`);
+  fallbacks only tests reach (`gross_income is None` in `set_corp_tax`,
+  `tax_rate=None` in `get_amount_to_pay`).
 - **Former members are not listed as "without wallet audit"**, the
   user's request. Source of the current corporation is ESI's
   `/characters/affiliation/` (the user's choice over AA's EveCharacter and
@@ -295,7 +316,10 @@ alts from Alliance Auth, without assessments.
    transfer date on the next run, but never a "recorded as paid" time.
    A running Celery worker needs a restart to store either - it was not
    restarted in the 0.3.17 session (may belong to someone's terminal).
-3. Not looked at in a browser yet, only through the tests: the overview's
+3. Not looked at in a browser yet, only through the tests: the 0.4.4
+   template moves (bot tab intros inside the fetched fragments, the tab
+   strip and character cells as includes, payment help on the overview
+   only), the overview's
    four state links and the "Not shown while in progress" note, the
    "Earned in total" tooltip and the sum badge (0.4.2), the Paid
    tooltip, the overview
@@ -370,6 +394,11 @@ Three traps in that setup, each of which produced a wrong answer once:
   rather than guessing it: the app is mounted at `/eos_tax/`, not `/eos-tax/`.
 
 ## Traps recent sessions cost time on
+
+- **The `#:` locations in the `.po` files are stale since 0.4.4.** Strings
+  moved between templates without changing, so no catalogue was
+  regenerated; the next `makemessages` rewrites the locations - a large
+  but harmless diff, not a sign of lost translations.
 
 - **Static files are hashed in tests.** `sri_static` goes through the
   manifest storage: assert `"eos_tax/js/progress."`, never `progress.js`,

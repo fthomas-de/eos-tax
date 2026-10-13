@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-10-13
+
 ### Fixed
 
 - The introductions of the tabs "Unbroken runs", "Against the Corporation"
