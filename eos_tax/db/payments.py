@@ -23,7 +23,6 @@ from eos_tax.util import (
     find_payment,
     format_isk,
     get_amount_to_pay,
-    get_eve_alliance_id,
 )
 
 from eos_tax.db.shared import _month_range
@@ -32,7 +31,12 @@ logger = get_extension_logger(__name__)
 
 
 def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False, alliance_tax_rate: float = 0, amount_paid: int = None, payment_count: int = 0, gross_income: int = None, unaudited_characters: list = None, calculation_seconds: float = None, paid_at: datetime = None):
-    selected_corp = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).first()
+    # a new row starts from the model defaults, which are what the
+    # conditional writes below leave alone
+    selected_corp = (
+        MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).first()
+        or MonthlyTax(corp_id=corp_id, month=month, year=year)
+    )
     # worked out here from the values this function writes anyway,
     # rather than handed in: a caller that forgot to pass it used to store a
     # silent 0 - every corporation "owing" nothing - and no test noticed
@@ -49,58 +53,37 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
     # per corporation and month, for a log line
     logger.info(f"set_corp_tax: {corp_name or corp_id} ({corp_id}), tax_value: {format_isk(tax_value)} tax_percentage {tax_percentage} {month}/{year}")
 
-    if selected_corp:
-        selected_corp.corp_name=corp_name
-        selected_corp.tax_value=tax_value
-        selected_corp.tax_percentage=tax_percentage
-        # once paid, always paid: a recalculation after a rate correction
-        # finds no payment of the new amount, and must not take back a
-        # payment that was already recognised
-        # the first run that sees it paid stamps it; a later one, which
-        # finds the flag already set, must not move the moment forward
-        if payed and not selected_corp.payed:
-            selected_corp.paid_recorded_at=timezone.now()
-        selected_corp.payed=selected_corp.payed or payed
-        selected_corp.alliance_tax_rate=alliance_tax_rate
-        selected_corp.amount_to_pay=amount_to_pay
-        selected_corp.gross_income=gross_income
-        # replaced, not merged: a character whose wallet was added since is
-        # done and has to drop off the list
-        if unaudited_characters is not None:
-            selected_corp.unaudited_characters=unaudited_characters
-        if calculation_seconds is not None:
-            selected_corp.calculation_seconds=calculation_seconds
-        # like the flag above, the amount is never taken back: a check that
-        # finds nothing this time - the
-        # reason setting switched off, or the row checked against an amount a
-        # rate correction just changed - keeps what an earlier one found
-        if amount_paid is not None:
-            selected_corp.amount_paid=amount_paid
-            selected_corp.payment_count=payment_count
-        if paid_at is not None:
-            selected_corp.paid_at=paid_at
+    selected_corp.corp_name=corp_name
+    selected_corp.tax_value=tax_value
+    selected_corp.tax_percentage=tax_percentage
+    # once paid, always paid: a recalculation after a rate correction
+    # finds no payment of the new amount, and must not take back a
+    # payment that was already recognised
+    # the first run that sees it paid stamps it; a later one, which
+    # finds the flag already set, must not move the moment forward
+    if payed and not selected_corp.payed:
+        selected_corp.paid_recorded_at=timezone.now()
+    selected_corp.payed=selected_corp.payed or payed
+    selected_corp.alliance_tax_rate=alliance_tax_rate
+    selected_corp.amount_to_pay=amount_to_pay
+    selected_corp.gross_income=gross_income
+    # replaced, not merged: a character whose wallet was added since is
+    # done and has to drop off the list
+    if unaudited_characters is not None:
+        selected_corp.unaudited_characters=unaudited_characters
+    if calculation_seconds is not None:
+        selected_corp.calculation_seconds=calculation_seconds
+    # like the flag above, the amount is never taken back: a check that
+    # finds nothing this time - the
+    # reason setting switched off, or the row checked against an amount a
+    # rate correction just changed - keeps what an earlier one found
+    if amount_paid is not None:
+        selected_corp.amount_paid=amount_paid
+        selected_corp.payment_count=payment_count
+    if paid_at is not None:
+        selected_corp.paid_at=paid_at
 
-        selected_corp.save()
-
-    else:
-        MonthlyTax.objects.create(
-            corp_id=corp_id,
-            corp_name=corp_name,
-            tax_value=tax_value,
-            tax_percentage=tax_percentage,
-            month=month,
-            year=year,
-            payed=payed,
-            alliance_tax_rate=alliance_tax_rate,
-            amount_to_pay=amount_to_pay,
-            gross_income=gross_income,
-            unaudited_characters=unaudited_characters or [],
-            calculation_seconds=calculation_seconds,
-            amount_paid=amount_paid,
-            payment_count=payment_count if amount_paid is not None else 0,
-            paid_at=paid_at,
-            paid_recorded_at=timezone.now() if payed else None,
-        )
+    selected_corp.save()
 
     return amount_to_pay
 
@@ -726,19 +709,14 @@ def get_all_corps_for_user(characters: list = []):
     return corporation_ids
 
 
-def get_tax_corp(corps:list = []):
-    # input: user corps
-    logger.debug(corps)
-
+def get_tax_corp(corps: list):
+    """The holding Corporation's name, for a user in its own taxed alliance."""
     config = get_config()
-    alliance_ids = config.alliance_ids()
     holding = config.tax_corporation
 
-    # 1: get all tax_alliances, the user is in 
-    tax_alliances = { 
-        x.alliance_id for x in EveCorporationInfo.objects.filter(corporation_id__in=corps).all() 
-            if get_eve_alliance_id(x.alliance_id) in alliance_ids}
-    logger.debug(tax_alliances)
-
-    if holding and holding.alliance_id in tax_alliances:
+    if holding and EveCorporationInfo.objects.filter(
+        corporation_id__in=corps,
+        alliance_id=holding.alliance_id,
+        alliance__alliance_id__in=config.alliance_ids(),
+    ).exists():
         return holding.corporation_name

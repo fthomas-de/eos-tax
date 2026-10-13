@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The introductions of the tabs "Unbroken runs", "Against the Corporation"
+  and "Off the Corporation clock" on the bots page were never shown. They
+  sat in the empty tab panes, and the tab replaces the whole pane with what
+  it loads. Each fragment now carries its own introduction.
+
+### Changed
+
+- Less code for the same pages, no change in behaviour:
+  - "Against the Corporation" and "Off the Corporation clock" build their
+    list through one function: both passes, the purged yardstick, the
+    fallback and the shared figures. Each keeps its own rows, threshold
+    and settings. The yardstick with its fallback to the plain one was
+    written out four times and is one helper now, used by the lists and
+    the character page alike.
+  - The tab strip of the bots and the character page, and the Character,
+    Corporation, Main and Age cells of the three fetched tabs, are one
+    include each instead of two and three copies.
+  - The payment instructions are included by the overview only, instead of
+    by every page with six pages switching them off again.
+  - The holding Corporation for the payment instructions is found in one
+    query instead of one per Corporation of the user. A test now covers
+    who must not be shown it.
+  - A tax row is written through one path whether it exists or not; a new
+    row starts from the model defaults, which is what the separate create
+    call spelled out field by field.
+  - Removed: a Main lookup on the hours tab that grouping overwrote anyway,
+    and a year list the corporation tax detail page computed and never
+    showed - one query less per page view.
+
 ## [0.4.3] - 2026-10-13
 
 ### Changed

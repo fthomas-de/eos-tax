@@ -14,12 +14,15 @@ from django.urls import reverse
 from eos_tax.auth_hooks import EosTaxMenuItem
 from decimal import Decimal
 
+from eos_tax.db.payments import get_tax_corp
 from eos_tax.models import MonthlyTax, TaxConfiguration, TaxRate
 from eos_tax.util import format_isk, get_amount_to_pay
 
 from .factories import (
     ALPHA_CORP_ID,
     BRAVO_CORP_ID,
+    OTHER_ALLIANCE_ID,
+    OUTSIDER_CORP_ID,
     TAXED_ALLIANCE_ID,
     create_alliance,
     create_corporation,
@@ -839,6 +842,29 @@ class TestHelpBlock(EosTaxTestCase):
         response = self.client.get(reverse("eos_tax:index"))
 
         self.assertContains(response, 'data-clipboard-text="Invidia Administrative"')
+
+    def test_should_name_the_holding_only_to_its_own_taxed_alliance(self):
+        """A member of another taxed alliance, or of the holding's own
+        alliance while that one is not taxed, is not told where to pay."""
+        taxed = create_alliance(TAXED_ALLIANCE_ID, "Taxed Alliance")
+        other = create_alliance(OTHER_ALLIANCE_ID, "Other Alliance")
+        create_corporation(BRAVO_CORP_ID, "Bravo Corp", taxed)
+        create_corporation(OUTSIDER_CORP_ID, "Outsider Corp", other)
+        holding = create_corporation(91000099, "Invidia Administrative", taxed)
+        config = TaxConfiguration.get_solo()
+        config.tax_corporation = holding
+        config.save()
+
+        for corps, alliances, expected in (
+            ([BRAVO_CORP_ID], [taxed], "Invidia Administrative"),
+            ([OUTSIDER_CORP_ID], [taxed, other], None),
+            ([BRAVO_CORP_ID], [other], None),
+            ([], [taxed], None),
+        ):
+            with self.subTest(corps=corps, alliances=alliances):
+                config.tax_alliances.set(alliances)
+
+                self.assertEqual(get_tax_corp(corps), expected)
 
     def test_should_not_offer_a_copy_button_without_a_holding_corporation(self):
         """Nothing configured, nothing to copy - see

@@ -1,6 +1,11 @@
 {% load i18n %}
 {% load humanize %}
 
+{# here and not in bots.html: bots.js replaces the whole pane with this #}
+<p class="text-body-secondary small">
+    {% blocktranslate %}The game pays a ratter about every twenty minutes, so an uninterrupted stretch shows up as a chain of payouts and nothing else does. This says nothing about when somebody plays, which makes it the one reading that treats every timezone of the alliance alike.{% endblocktranslate %}
+</p>
+
 {% if groups %}
     {% if not rows %}
         {% comment %}
@@ -35,27 +40,7 @@
 
                     {% for row in group.characters %}
                     <tr>
-                        <th scope="row" class="ps-4">
-                            {# opens on the tab being read, the way the dropdown does #}
-                            <a data-eos-keep-tab
-                               href="{% url 'eos_tax:bot_detail' row.character_id %}?month={{ selected_month }}">
-                                {{ row.character_name }}
-                            </a>
-                        </th>
-                        <td class="d-none d-md-table-cell">{{ row.corporation_name }}</td>
-                        {% comment %}
-                            Empty when Alliance Auth does not know the
-                            character - a dash would read as "no main", which
-                            is a different thing from "not registered".
-                        {% endcomment %}
-                        <td class="d-none d-lg-table-cell">
-                            {% if row.main_name %}
-                                {{ row.main_name }}
-                            {% else %}
-                                <span class="text-body-secondary">{% translate "not registered" %}</span>
-                            {% endif %}
-                        </td>
-                        <td class="d-none d-lg-table-cell">{{ row.age|default:"&mdash;" }}</td>
+                        {% include "eos_tax/partials/bot-character-cells.html" %}
                         <td class="text-end">{{ row.ticks }}</td>
                         {% comment %}
                             The date once when the run stayed inside a day, twice

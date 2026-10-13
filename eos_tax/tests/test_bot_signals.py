@@ -807,6 +807,28 @@ class TestBotSignalView(EosTaxTestCase):
                 # a fragment, not a full page - the tab injects it with innerHTML
                 self.assertNotIn("<html", response.content.decode())
 
+    def test_should_bring_its_own_introduction(self):
+        """The introductions sat in the empty panes of bots.html, and the tab
+        script replaces a pane's whole content when it loads - so not one of
+        them was ever seen."""
+        self.client.force_login(
+            create_user("boss", 94100007, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+        )
+        intros = {
+            "runs": "about every twenty minutes",
+            "rhythm": "A ranking, not a verdict.",
+            "clock": "a hint, never an accusation",
+        }
+
+        for name, intro in intros.items():
+            with self.subTest(name=name):
+                response = self.client.get(
+                    reverse("eos_tax:bot_signal", args=[name]),
+                    {"month": f"{YEAR}-{MONTH:02d}"},
+                )
+
+                self.assertContains(response, intro)
+
     def test_should_404_for_an_unknown_signal(self):
         self.client.force_login(
             create_user("boss", 94100002, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])

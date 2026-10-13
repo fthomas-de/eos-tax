@@ -18,7 +18,6 @@ from eos_tax.db.shared import (
     group_limited_rows,
     grouped,
     level_for,
-    main_characters,
 )
 
 
@@ -33,18 +32,6 @@ MATRIX_ALPHA_CEILING = 0.55
 
 
 MATRIX_LEGEND_STEPS = 5
-
-
-def _main_characters(character_ids):
-    """Main character name per character id, in one query.
-
-    The lookup itself lives in shared.py, because the bot signals need the
-    same thing with the id attached; this column only ever shows the name.
-    """
-    return {
-        character_id: name
-        for character_id, (_, name) in main_characters(character_ids).items()
-    }
 
 
 def _tax_receivers(entries, character_ids):
@@ -92,7 +79,6 @@ def _row(character_id, days, contributed, config):
         "character_id": character_id,
         "character_name": str(character_id),
         "corporation_name": "",
-        "main_name": "",
         # against the configured threshold, and only reaching it counts as
         # strong - the fallback list is made of characters who did not
         "level": level_for(
@@ -233,14 +219,12 @@ def get_bot_report(year: int, month: int):
     names = dict(
         EveName.objects.filter(eve_id__in=shown_ids).values_list("eve_id", "name")
     )
-    mains = _main_characters(shown_ids)
     corporations = _tax_receivers(entries, shown_ids)
 
     for entry in shown:
         character_id = entry["character_id"]
         entry["character_name"] = names.get(character_id) or str(character_id)
         entry["corporation_name"] = corporations.get(character_id, "")
-        entry["main_name"] = mains.get(character_id, "")
 
     stats["seconds_aggregate"] = time.perf_counter() - aggregate_started
 

@@ -3,8 +3,6 @@
 {% load humanize %}
 {% load sri %}
 
-{% block app_help %}{% endblock %}
-
 {% block details %}
 
     <div class="card mb-3">
@@ -41,36 +39,7 @@
                 comes with the page - the others are fetched when opened, so
                 a visit that never leaves this tab pays for one reading.
             {% endcomment %}
-            <ul class="nav nav-tabs mb-3" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" type="button" role="tab"
-                            data-bs-toggle="tab" data-bs-target="#eos-tax-tab-hours"
-                            aria-controls="eos-tax-tab-hours" aria-selected="true">
-                        {% translate "Hours per day" %}
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" type="button" role="tab"
-                            data-bs-toggle="tab" data-bs-target="#eos-tax-tab-runs"
-                            aria-controls="eos-tax-tab-runs" aria-selected="false">
-                        {% translate "Unbroken runs" %}
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" type="button" role="tab"
-                            data-bs-toggle="tab" data-bs-target="#eos-tax-tab-rhythm"
-                            aria-controls="eos-tax-tab-rhythm" aria-selected="false">
-                        {% translate "Against the Corporation" %}
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" type="button" role="tab"
-                            data-bs-toggle="tab" data-bs-target="#eos-tax-tab-clock"
-                            aria-controls="eos-tax-tab-clock" aria-selected="false">
-                        {% translate "Off the Corporation clock" %}
-                    </button>
-                </li>
-            </ul>
+            {% include "eos_tax/partials/bot-tabs.html" %}
 
             <div class="tab-content">
             <div class="tab-pane fade show active" id="eos-tax-tab-hours" role="tabpanel">
@@ -155,25 +124,13 @@
             </div>
 
             <div class="tab-pane fade" id="eos-tax-tab-runs" role="tabpanel"
-                 data-eos-signal="runs">
-                <p class="text-body-secondary small">
-                    {% blocktranslate %}The game pays a ratter about every twenty minutes, so an uninterrupted stretch shows up as a chain of payouts and nothing else does. This says nothing about when somebody plays, which makes it the one reading that treats every timezone of the alliance alike.{% endblocktranslate %}
-                </p>
-            </div>
+                 data-eos-signal="runs"></div>
 
             <div class="tab-pane fade" id="eos-tax-tab-rhythm" role="tabpanel"
-                 data-eos-signal="rhythm">
-                <p class="text-body-secondary small">
-                    {% blocktranslate %}How much of a character's income falls inside the hours their own corporation is busy. The corporation is the yardstick and not the alliance: the alliance spans several timezones at once, so its day is flat and a script would look ordinary against it. A ranking, not a verdict.{% endblocktranslate %}
-                </p>
-            </div>
+                 data-eos-signal="rhythm"></div>
 
             <div class="tab-pane fade" id="eos-tax-tab-clock" role="tabpanel"
-                 data-eos-signal="clock">
-                <p class="text-body-secondary small">
-                    {% blocktranslate %}How far a character's day sits from their corporation's, averaged the way a clock wraps rather than read off the busiest hour, which out of a handful of payouts is wherever the noise landed. Somebody genuinely living elsewhere looks the same as an account played by somebody else - a hint, never an accusation.{% endblocktranslate %}
-                </p>
-            </div>
+                 data-eos-signal="clock"></div>
             </div>
         </div>
     </div>

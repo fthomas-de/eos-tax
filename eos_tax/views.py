@@ -217,7 +217,6 @@ def tax_change_detail(request, corp_id):
         "title": detail["corp_name"],
         "version": VERSION,
         "year": year,
-        "years": get_statistics_years(),
         "detail": detail,
         "series": [
             {"day": day["day"].isoformat(),

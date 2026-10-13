@@ -300,18 +300,12 @@ def get_rhythm_detail(character_id: int, year: int, month: int):
 
     # the same yardstick the list built, worked out the same way - a detail
     # page contradicting the list it was opened from would be worse than none
-    purge = _rhythm_purge(characters, corp_hours, config)
-    corp = corp_hours[entry["corp_id"]]
-    rest = None
-
-    if purge:
-        rest = _rest_of_corp(
-            corp, own, corp_min,
-            _purged_for(purge, entry["corp_id"], character_id, own),
-        )
-
-    if not rest:
-        rest = _rest_of_corp(corp, own, corp_min)
+    purge = _purge(
+        _profile_rows, config.bot_rhythm_purge_strong, characters, corp_hours, config
+    )
+    rest = _baseline(
+        corp_hours[entry["corp_id"]], own, corp_min, purge, entry["corp_id"], character_id
+    )
 
     if not rest:
         return {
@@ -355,18 +349,12 @@ def get_clock_detail(character_id: int, year: int, month: int):
     corp_min = config.bot_clock_corp_min_payouts
     own = Counter(moment.hour for moment in entry["moments"])
 
-    purge = _clock_purge(characters, corp_hours, config)
-    corp = corp_hours[entry["corp_id"]]
-    rest = None
-
-    if purge:
-        rest = _rest_of_corp(
-            corp, own, corp_min,
-            _purged_for(purge, entry["corp_id"], character_id, own),
-        )
-
-    if not rest:
-        rest = _rest_of_corp(corp, own, corp_min)
+    purge = _purge(
+        _clock_rows, config.bot_clock_purge_strong, characters, corp_hours, config
+    )
+    rest = _baseline(
+        corp_hours[entry["corp_id"]], own, corp_min, purge, entry["corp_id"], character_id
+    )
 
     if not rest:
         return {
@@ -561,12 +549,22 @@ def _rest_of_corp(corp_hours, own_hours, min_payouts: int, purged=None):
     return rest
 
 
-def _window_without(corp_hours, own_hours, busy_hours: int, min_payouts: int,
-                    purged=None):
-    """The busy window of the Corporation minus one character."""
+def _baseline(corp_hours, own_hours, min_payouts: int, purge, corp_id: int,
+              character_id: int):
+    """The yardstick one character is measured against.
+
+    The rest of their Corporation without the characters this reading already
+    calls bots - but only while enough is left: a Corporation that would fall
+    under its own floor keeps the plain baseline rather than losing its
+    members from the reading altogether.
+    """
+    purged = _purged_for(purge, corp_id, character_id, own_hours)
     rest = _rest_of_corp(corp_hours, own_hours, min_payouts, purged)
 
-    return _window(rest, busy_hours) if rest else None
+    if not rest and purged:
+        rest = _rest_of_corp(corp_hours, own_hours, min_payouts)
+
+    return rest
 
 
 def _flagged(rows):
@@ -616,10 +614,7 @@ def _profile_rows(characters, corp_hours, names, corp_names, config,
     """One scored row per character with enough of a day to describe.
 
     `purge` holds, per Corporation, the characters this reading already calls
-    bots. They come out of the baseline as well as the measured character -
-    but only while enough is left: a Corporation that would fall under its own
-    floor keeps the plain baseline rather than losing its members from the
-    reading altogether.
+    bots - see _baseline.
     """
     busy_hours = config.bot_rhythm_busy_hours
     min_payouts = config.bot_rhythm_min_payouts
@@ -635,21 +630,14 @@ def _profile_rows(characters, corp_hours, names, corp_names, config,
 
         corp_id = entry["corp_id"]
         hours = Counter(moment.hour for moment in entry["moments"])
-        window = None
+        rest = _baseline(
+            corp_hours[corp_id], hours, corp_min, purge, corp_id, character_id
+        )
 
-        if purge:
-            window = _window_without(
-                corp_hours[corp_id], hours, busy_hours, corp_min,
-                _purged_for(purge, corp_id, character_id, hours),
-            )
-
-        if not window:
-            window = _window_without(
-                corp_hours[corp_id], hours, busy_hours, corp_min
-            )
-
-        if not window:
+        if not rest:
             continue
+
+        window = _window(rest, busy_hours)
 
         corporations.add(corp_id)
         share = _busy_share(hours, window["hours"])
@@ -678,27 +666,28 @@ def _profile_rows(characters, corp_hours, names, corp_names, config,
     return rows, corporations
 
 
-def _rhythm_purge(characters, corp_hours, config):
-    """Who this reading calls a bot when nobody has been taken out yet."""
-    if not config.bot_rhythm_purge_strong:
+def _purge(rows_for, enabled: bool, characters, corp_hours, config):
+    """Who a reading calls a bot when nobody has been taken out yet."""
+    if not enabled:
         return None
 
-    rows, _ = _profile_rows(characters, corp_hours, {}, {}, config)
+    rows, _ = rows_for(characters, corp_hours, {}, {}, config)
     flagged = _flagged(rows)
 
     return _purge_index(characters, flagged) if flagged else None
 
 
-def get_daily_profile(year: int, month: int):
-    """Characters spread flatter over the day than their own Corporation.
+def _against_the_corporation(year: int, month: int, config, rows_for,
+                             purge_strong: bool, listed_if, stats: dict):
+    """The list both Corporation readings build, each with its own rows,
+    threshold and settings.
 
-    A ranking, not a verdict. There is no number that separates a night shift
-    worker from a script, so the list is ordered and the Corporation's own
-    figure sits next to each row for comparison.
+    A bot loud enough to be listed is also part of its Corporation's day, and
+    drags the yardstick towards itself - flat on the rhythm reading, its own
+    middle of the day on the clock - so the second pass measures everybody,
+    the bots included, against what is left without them.
     """
     started = time.perf_counter()
-    config = get_config()
-    min_difference = config.bot_rhythm_min_difference
 
     characters = _payouts(year, month)
     corp_hours = _corp_hours(characters)
@@ -706,30 +695,19 @@ def get_daily_profile(year: int, month: int):
         characters, {entry["corp_id"] for entry in characters.values()}
     )
 
-    rows, corporations = _profile_rows(
-        characters, corp_hours, names, corp_names, config
-    )
+    rows, corporations = rows_for(characters, corp_hours, names, corp_names, config)
 
-    # a bot loud enough to be listed is also part of its Corporation's day,
-    # and drags the yardstick flat with it - so the second pass measures
-    # everybody, the bots included, against what is left without them
-    purged = set()
-    if config.bot_rhythm_purge_strong:
-        purged = _flagged(rows)
+    purged = _flagged(rows) if purge_strong else set()
+    if purged:
+        rows, corporations = rows_for(
+            characters, corp_hours, names, corp_names, config,
+            _purge_index(characters, purged),
+        )
 
-        if purged:
-            rows, corporations = _profile_rows(
-                characters, corp_hours, names, corp_names, config,
-                _purge_index(characters, purged),
-            )
-
-    # ranked and then cut. Without the cut the table filled up with characters
-    # more concentrated than their own Corporation - the opposite of what this
-    # looks for - and the reader had to find the handful that were not
-    listed = [row for row in rows if row["difference"] >= min_difference]
+    listed = [row for row in rows if listed_if(row)]
 
     # nothing over the threshold says nothing about how close anyone came, so
-    # the largest differences are shown instead, the same way the runs tab
+    # the largest distances are shown instead, the same way the runs tab
     # falls back. Cut to ten mains, not ten rows - see group_limited_rows
     fallback = group_limited_rows(rows) if not listed else []
 
@@ -751,14 +729,37 @@ def get_daily_profile(year: int, month: int):
             "measured_characters": len(rows),
             # the rows on screen, in characters like the figure beside it
             "listed_characters": len(listed or fallback),
-            "busy_hours": config.bot_rhythm_busy_hours,
-            "min_payouts": config.bot_rhythm_min_payouts,
-            "corp_min_payouts": config.bot_rhythm_corp_min_payouts,
-            "min_difference": min_difference,
+            **stats,
             "purged": len(purged),
             "seconds": round(time.perf_counter() - started, 2),
         },
     }
+
+
+def get_daily_profile(year: int, month: int):
+    """Characters spread flatter over the day than their own Corporation.
+
+    A ranking, not a verdict. There is no number that separates a night shift
+    worker from a script, so the list is ordered and the Corporation's own
+    figure sits next to each row for comparison.
+    """
+    config = get_config()
+    min_difference = config.bot_rhythm_min_difference
+
+    return _against_the_corporation(
+        year, month, config, _profile_rows, config.bot_rhythm_purge_strong,
+        # ranked and then cut. Without the cut the table filled up with
+        # characters more concentrated than their own Corporation - the
+        # opposite of what this looks for - and the reader had to find the
+        # handful that were not
+        lambda row: row["difference"] >= min_difference,
+        {
+            "busy_hours": config.bot_rhythm_busy_hours,
+            "min_payouts": config.bot_rhythm_min_payouts,
+            "corp_min_payouts": config.bot_rhythm_corp_min_payouts,
+            "min_difference": min_difference,
+        },
+    )
 
 
 def _typical_hour(hours, min_concentration: float = 0.0):
@@ -805,9 +806,7 @@ def _clock_rows(characters, corp_hours, names, corp_names, config,
                 purge=None):
     """One scored row per character far enough described to place.
 
-    `purge` works as it does on the rhythm reading: the characters this one
-    already calls bots come out of the baseline too, and a Corporation that
-    would fall under its floor keeps the plain one.
+    `purge` works as it does on the rhythm reading - see _baseline.
     """
     min_payouts = config.bot_clock_min_payouts
     corp_min = config.bot_clock_corp_min_payouts
@@ -826,16 +825,9 @@ def _clock_rows(characters, corp_hours, names, corp_names, config,
         # the middle of a day is an average over every hour of it, so this
         # reading needs the rest of the Corporation and not its busy window -
         # which is what keeps it independent of the rhythm settings
-        rest = None
-
-        if purge:
-            rest = _rest_of_corp(
-                corp_hours[corp_id], hours, corp_min,
-                _purged_for(purge, corp_id, character_id, hours),
-            )
-
-        if not rest:
-            rest = _rest_of_corp(corp_hours[corp_id], hours, corp_min)
+        rest = _baseline(
+            corp_hours[corp_id], hours, corp_min, purge, corp_id, character_id
+        )
 
         if not rest:
             continue
@@ -876,17 +868,6 @@ def _clock_rows(characters, corp_hours, names, corp_names, config,
     return rows, corporations
 
 
-def _clock_purge(characters, corp_hours, config):
-    """Who this reading calls a bot when nobody has been taken out yet."""
-    if not config.bot_clock_purge_strong:
-        return None
-
-    rows, _ = _clock_rows(characters, corp_hours, {}, {}, config)
-    flagged = _flagged(rows)
-
-    return _purge_index(characters, flagged) if flagged else None
-
-
 def get_clock_offset(year: int, month: int):
     """Characters whose day peaks far from their Corporation's.
 
@@ -895,62 +876,18 @@ def get_clock_offset(year: int, month: int):
     or the account is not being played by the person it belongs to. A hint,
     never an accusation.
     """
-    started = time.perf_counter()
     config = get_config()
     min_apart = config.bot_clock_min_apart
 
-    characters = _payouts(year, month)
-    corp_hours = _corp_hours(characters)
-    names, corp_names = _names(
-        characters, {entry["corp_id"] for entry in characters.values()}
-    )
-
-    rows, corporations = _clock_rows(
-        characters, corp_hours, names, corp_names, config
-    )
-
-    # somebody far enough from their Corporation to be listed also pulls that
-    # Corporation's own middle of the day towards themselves, which shortens
-    # the distance for everybody else
-    purged = set()
-    if config.bot_clock_purge_strong:
-        purged = _flagged(rows)
-
-        if purged:
-            rows, corporations = _clock_rows(
-                characters, corp_hours, names, corp_names, config,
-                _purge_index(characters, purged),
-            )
-
-    # everybody sits some distance from their Corporation; most of it is the
-    # difference between playing after work and playing after dinner
-    listed = [row for row in rows if row["apart"] >= min_apart]
-    # cut to ten mains, not ten rows - see group_limited_rows
-    fallback = group_limited_rows(rows) if not listed else []
-
-    groups, total = grouped(listed or fallback)
-
-    return {
-        "rows": listed,
-        "longest": fallback,
-        # every character the reading could score, listed or not. The page
-        # shows what crossed the line; a caller asking how the line was drawn
-        # needs the ones that did not.
-        "measured": rows,
-        "groups": groups,
-        "stats": {
-            "groups_shown": len(groups),
-            "groups_total": total,
-            "characters": len(characters),
-            "corporations": len(corporations),
-            "measured_characters": len(rows),
-            # the rows on screen, in characters like the figure beside it
-            "listed_characters": len(listed or fallback),
+    return _against_the_corporation(
+        year, month, config, _clock_rows, config.bot_clock_purge_strong,
+        # everybody sits some distance from their Corporation; most of it is
+        # the difference between playing after work and playing after dinner
+        lambda row: row["apart"] >= min_apart,
+        {
             "min_payouts": config.bot_clock_min_payouts,
             "corp_min_payouts": config.bot_clock_corp_min_payouts,
             "max_apart": config.bot_clock_max_apart,
             "min_apart": min_apart,
-            "purged": len(purged),
-            "seconds": round(time.perf_counter() - started, 2),
         },
-    }
+    )

@@ -1,6 +1,11 @@
 {% load i18n %}
 {% load humanize %}
 
+{# here and not in bots.html: bots.js replaces the whole pane with this #}
+<p class="text-body-secondary small">
+    {% blocktranslate %}How far a character's day sits from their corporation's, averaged the way a clock wraps rather than read off the busiest hour, which out of a handful of payouts is wherever the noise landed. Somebody genuinely living elsewhere looks the same as an account played by somebody else - a hint, never an accusation.{% endblocktranslate %}
+</p>
+
 {% if groups %}
     {% if not rows %}
         {% comment %}
@@ -35,27 +40,7 @@
 
                     {% for row in group.characters %}
                     <tr>
-                        <th scope="row" class="ps-4">
-                            {# opens on the tab being read, the way the dropdown does #}
-                            <a data-eos-keep-tab
-                               href="{% url 'eos_tax:bot_detail' row.character_id %}?month={{ selected_month }}">
-                                {{ row.character_name }}
-                            </a>
-                        </th>
-                        <td class="d-none d-md-table-cell">{{ row.corporation_name }}</td>
-                        {% comment %}
-                            Empty when Alliance Auth does not know the
-                            character - a dash would read as "no main", which
-                            is a different thing from "not registered".
-                        {% endcomment %}
-                        <td class="d-none d-lg-table-cell">
-                            {% if row.main_name %}
-                                {{ row.main_name }}
-                            {% else %}
-                                <span class="text-body-secondary">{% translate "not registered" %}</span>
-                            {% endif %}
-                        </td>
-                        <td class="d-none d-lg-table-cell">{{ row.age|default:"&mdash;" }}</td>
+                        {% include "eos_tax/partials/bot-character-cells.html" %}
                         <td class="text-end text-nowrap">{{ row.middle_at }}</td>
                         <td class="text-end text-nowrap d-none d-md-table-cell text-body-secondary">{{ row.corp_middle_at }}</td>
                         <td class="text-end text-nowrap">{{ row.apart_for }}</td>

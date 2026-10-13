@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 from django.db.models import Q
 from django.utils.translation import gettext
 
-from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
+from allianceauth.eveonline.models import EveCorporationInfo
 from corptools.models import CorporationWalletJournalEntry
 
 from eos_tax.models import MonthlyTax
@@ -38,11 +38,6 @@ def get_corp_name(corp_id:int):
     corp_info = EveCorporationInfo.objects.filter(corporation_id=corp_id).first()
     if corp_info:
         return corp_info.corporation_name
-
-def get_eve_alliance_id(id:int):
-    alliance = EveAllianceInfo.objects.filter(id=id).first()
-    if alliance:
-        return alliance.alliance_id
 
 def get_pve_income(tax_value:int, corp_tax:float):
     """Gross bounty income the ingame corp tax was skimmed from."""
