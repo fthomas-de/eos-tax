@@ -19,6 +19,7 @@ pages for an hour.
 import html
 import json
 import pathlib
+from unittest import mock
 
 from django.test import TestCase, override_settings
 
@@ -36,6 +37,19 @@ TEST_CACHES = {
 @override_settings(SOLO_CACHE=None, CACHES=TEST_CACHES)
 class EosTaxTestCase(TestCase):
     """Base class for every test in this app."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # every recalculation that lists a character without wallet audit
+        # asks ESI where they are now - a test that does not care must not
+        # reach the real ESI. No answer keeps everyone listed, as before
+        patcher = mock.patch(
+            "eos_tax.db.payments.open_api_provider.get_affiliations",
+            return_value=([], None),
+        )
+        patcher.start()
+        cls.addClassCleanup(patcher.stop)
 
 
 def read_static(name):

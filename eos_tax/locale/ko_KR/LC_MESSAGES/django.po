@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-08 17:26+0000\n"
+"POT-Creation-Date: 2026-10-13 12:54+0000\n"
 "Language: ko-KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -912,13 +912,13 @@ msgid "Earned in total: %(value)s ISK"
 msgstr "총 수입: %(value)s ISK"
 
 #: templates/eos_tax/index.html:114
-#: templates/eos_tax/partials/recalculate-result.html:108
+#: templates/eos_tax/partials/recalculate-result.html:113
 #, python-format
 msgid "Paid %(value)s ISK more than owed."
 msgstr "납부할 금액보다 %(value)s ISK를 더 냈습니다."
 
 #: templates/eos_tax/index.html:118
-#: templates/eos_tax/partials/recalculate-result.html:113
+#: templates/eos_tax/partials/recalculate-result.html:118
 #, python-format
 msgid "%(value)s ISK short of the amount owed."
 msgstr "납부할 금액에 %(value)s ISK가 모자랍니다."
@@ -1545,26 +1545,38 @@ msgid ""
 "Without wallet audit, %(minimum)s million ISK or more - add their wallet:"
 msgstr "wallet 감사 없음, %(minimum)s백만 ISK 이상 - wallet을 추가하세요:"
 
-#: templates/eos_tax/partials/recalculate-result.html:68
+#: templates/eos_tax/partials/recalculate-result.html:67
+#, python-format
+msgid ""
+"%(counter)s character without wallet audit has left this corporation since, "
+"not listed"
+msgid_plural ""
+"%(counter)s characters without wallet audit have left this corporation "
+"since, not listed"
+msgstr[0] ""
+"그 사이 이 Corporation을 떠난 wallet 감사가 없는 Character %(counter)s명, "
+"목록에서 제외"
+
+#: templates/eos_tax/partials/recalculate-result.html:73
 #, python-format
 msgid "Gross PvE income, the corp tax backed out: %(value)s ISK"
 msgstr "PvE 총수입(corp tax 역산): %(value)s ISK"
 
-#: templates/eos_tax/partials/recalculate-result.html:71
+#: templates/eos_tax/partials/recalculate-result.html:76
 #, python-format
 msgid "Alliance tax rate applied: %(rate)s%%"
 msgstr "적용된 Alliance 세율: %(rate)s%%"
 
-#: templates/eos_tax/partials/recalculate-result.html:75
+#: templates/eos_tax/partials/recalculate-result.html:80
 #, python-format
 msgid "Amount owed to the alliance: %(value)s ISK"
 msgstr "Alliance에 납부할 금액: %(value)s ISK"
 
-#: templates/eos_tax/partials/recalculate-result.html:86
+#: templates/eos_tax/partials/recalculate-result.html:91
 msgid "A payment of exactly the amount owed was found."
 msgstr "납부할 금액과 정확히 같은 결제를 찾았습니다."
 
-#: templates/eos_tax/partials/recalculate-result.html:88
+#: templates/eos_tax/partials/recalculate-result.html:93
 #, python-format
 msgid ""
 "No payment of exactly the amount owed. %(counter)s payment with this reason "
@@ -1576,11 +1588,11 @@ msgstr[0] ""
 "납부할 금액과 정확히 같은 결제가 없습니다. 이 reason이 붙은 결제 %(counter)s"
 "건의 합계는 %(total)s ISK입니다."
 
-#: templates/eos_tax/partials/recalculate-result.html:90
+#: templates/eos_tax/partials/recalculate-result.html:95
 msgid "No payment with this reason found."
 msgstr "이 reason이 붙은 결제를 찾지 못했습니다."
 
-#: templates/eos_tax/partials/recalculate-result.html:92
+#: templates/eos_tax/partials/recalculate-result.html:97
 msgid ""
 "No payment of exactly the amount owed found. Without matching by reason only "
 "that amount can be told to belong to this corporation."
@@ -1588,24 +1600,24 @@ msgstr ""
 "납부할 금액과 정확히 같은 결제를 찾지 못했습니다. reason으로 매칭하지 않으면 "
 "그 금액만 이 corporation의 것으로 판단할 수 있습니다."
 
-#: templates/eos_tax/partials/recalculate-result.html:97
+#: templates/eos_tax/partials/recalculate-result.html:102
 msgid "Payments:"
 msgstr "결제:"
 
-#: templates/eos_tax/partials/recalculate-result.html:118
+#: templates/eos_tax/partials/recalculate-result.html:123
 msgid "Already marked as paid."
 msgstr "이미 납부완료로 표시됨."
 
-#: templates/eos_tax/partials/recalculate-result.html:120
+#: templates/eos_tax/partials/recalculate-result.html:125
 msgid "Not marked as paid yet."
 msgstr "아직 납부완료로 표시되지 않음."
 
-#: templates/eos_tax/partials/recalculate-result.html:128
+#: templates/eos_tax/partials/recalculate-result.html:133
 #, python-format
 msgid "Corporation %(corp_id)s is not known to Alliance Auth."
 msgstr "Alliance Auth에 Corporation %(corp_id)s 정보가 없습니다."
 
-#: templates/eos_tax/partials/recalculate-result.html:130
+#: templates/eos_tax/partials/recalculate-result.html:135
 #, python-format
 msgid ""
 "%(corp)s has no ingame tax rate in Alliance Auth, and ESI could not be "
@@ -1614,7 +1626,7 @@ msgstr ""
 "%(corp)s은(는) Alliance Auth에 게임 내 세율이 없으며, ESI에 연결할 수 없어 조"
 "회하지 못했습니다. 나중에 다시 시도하세요."
 
-#: templates/eos_tax/partials/recalculate-result.html:132
+#: templates/eos_tax/partials/recalculate-result.html:137
 #, python-format
 msgid ""
 "%(corp)s has no journal entries of the configured tax types for %(month)s/"
@@ -1622,7 +1634,7 @@ msgid ""
 msgstr ""
 "%(corp)s에는 %(month)s/%(year)s에 설정된 세금 유형의 journal 항목이 없습니다."
 
-#: templates/eos_tax/partials/recalculate-result.html:134
+#: templates/eos_tax/partials/recalculate-result.html:139
 #, python-format
 msgid ""
 "The alliance tax rate for %(month)s/%(year)s is 0, so nothing is owed and no "
@@ -1631,7 +1643,7 @@ msgstr ""
 "%(month)s/%(year)s의 alliance 세율이 0이므로 납부할 금액이 없고 행도 기록되"
 "지 않습니다."
 
-#: templates/eos_tax/partials/recalculate-result.html:136
+#: templates/eos_tax/partials/recalculate-result.html:141
 msgid "Nothing could be calculated for this selection."
 msgstr "이 선택 항목에 대해 계산할 수 있는 것이 없습니다."
 

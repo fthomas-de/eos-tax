@@ -62,6 +62,11 @@
                             </ul>
                         </li>
                     {% endif %}
+                    {% if breakdown.unaudited_left %}
+                        <li>
+                            {% blocktranslate count counter=breakdown.unaudited_left %}{{ counter }} character without wallet audit has left this corporation since, not listed{% plural %}{{ counter }} characters without wallet audit have left this corporation since, not listed{% endblocktranslate %}
+                        </li>
+                    {% endif %}
                 </ul>
             </li>
             <li>

@@ -3,6 +3,7 @@ import re
 from datetime import date
 from decimal import Decimal
 from importlib import import_module
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django import forms
@@ -562,6 +563,22 @@ class TestSettingsRecalculate(EosTaxTestCase):
 
         self.assertIn("Without wallet audit, 100 million ISK or more", body)
         self.assertIn(f"2100000001: {format_isk(10_000_000_000)} ISK", body)
+
+    def test_should_log_characters_without_wallet_audit_who_have_left(self):
+        self.journal_entry(1_000_000_000, day=15)
+        answer = [SimpleNamespace(character_id=2100000001, corporation_id=98999999)]
+
+        with patch(
+            "eos_tax.db.payments.open_api_provider.get_affiliations",
+            return_value=(answer, None),
+        ):
+            body = self.post(corp_id=str(BRAVO_CORP_ID), month="9", year="2026").content.decode()
+
+        self.assertNotIn("Without wallet audit", body)
+        self.assertIn(
+            "1 character without wallet audit has left this corporation since, not listed",
+            body,
+        )
 
     def test_should_explain_a_month_without_entries(self):
         response = self.post(corp_id=str(BRAVO_CORP_ID), month="9", year="2026")

@@ -493,8 +493,44 @@ def _reconciled_income(corp_id: int, start, end, tax_types, corp_rate: float) ->
     }
 
 
-def _unaudited_characters(unaudited: dict, minimum: int) -> list:
-    """The characters worth chasing for a wallet audit, highest earner first.
+# ESI takes at most this many ids in one affiliation request
+AFFILIATION_CHUNK = 1000
+
+
+def _current_corporations(character_ids) -> dict:
+    """Each character's corporation right now, as ESI's affiliation says.
+
+    These characters have no audit, so corptools holds no history for them,
+    and Alliance Auth only knows the ones registered with it. Empty when ESI
+    cannot be reached - nobody is then taken for having left.
+    """
+    character_ids = sorted(character_ids)
+    current = {}
+    try:
+        for index in range(0, len(character_ids), AFFILIATION_CHUNK):
+            affiliations, _response = open_api_provider.get_affiliations(
+                character_ids=character_ids[index:index + AFFILIATION_CHUNK],
+                use_etag=False,
+            )
+            for affiliation in affiliations:
+                current[affiliation.character_id] = affiliation.corporation_id
+    except Exception as exc:
+        # the list is a reminder, not part of the amount - the recalculation
+        # must not fail on an ESI outage, it only keeps everyone listed
+        logger.warning(f"dbcon update_corp: ESI affiliation lookup failed: {exc}")
+        return {}
+
+    return current
+
+
+def _unaudited_characters(unaudited: dict, minimum: int, corp_id: int) -> tuple:
+    """The characters worth chasing for a wallet audit, highest earner first,
+    and how many were left out because they have left the Corporation since.
+
+    A former member's slices still count towards the month - they were earned
+    while a member - but nobody can ask them to add a wallet any more, so
+    listing them only buried the ones that can still be chased. A character
+    ESI does not answer for stays listed.
 
     Named from corptools' EveName, Alliance Auth's EveCharacter second; an id
     neither knows is still listed - it earned the money all the same.
@@ -505,7 +541,17 @@ def _unaudited_characters(unaudited: dict, minimum: int) -> list:
         if gross >= minimum
     }
     if not listed:
-        return []
+        return [], 0
+
+    current = _current_corporations(listed)
+    left = [
+        character_id for character_id in listed
+        if current.get(character_id, corp_id) != corp_id
+    ]
+    for character_id in left:
+        del listed[character_id]
+    if not listed:
+        return [], len(left)
 
     names = dict(
         EveCharacter.objects.filter(character_id__in=listed)
@@ -521,7 +567,7 @@ def _unaudited_characters(unaudited: dict, minimum: int) -> list:
             for character_id, gross in listed.items()
         ),
         key=lambda character: (-character["gross"], character["name"]),
-    )
+    ), len(left)
 
 
 def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
@@ -612,8 +658,8 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
     logger.info(f"dbcon update_corp3: {corp_info.corporation_name} ({corp_id}): payed {payed} - {month}/{year}")
 
     gross_income = income["gross_income"]
-    unaudited_characters = _unaudited_characters(
-        income["unaudited"], config.unaudited_min_millions * 1_000_000,
+    unaudited_characters, unaudited_left = _unaudited_characters(
+        income["unaudited"], config.unaudited_min_millions * 1_000_000, corp_id,
     )
 
     amount_to_pay = set_corp_tax(
@@ -657,6 +703,7 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
         "corp_unmatched": income["corp_unmatched"],
         "corp_unrated": income["corp_unrated"],
         "unaudited_characters": unaudited_characters,
+        "unaudited_left": unaudited_left,
         "unaudited_min_millions": config.unaudited_min_millions,
         "alliance_tax_rate": alliance_tax_rate,
         "alliance_tax_percent": float("%.2f" % (alliance_tax_rate * 100)),

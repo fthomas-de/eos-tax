@@ -4,7 +4,7 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-10-08.
+Last updated 2026-10-13.
 
 ## Release
 
@@ -54,6 +54,23 @@ Last updated 2026-10-08.
   consistently in every place it occurs now, including `settings.html`
 - `CHANGELOG.md` is newest first; `[0.3.2]` and `[0.3.6]` were written from
   the commits that raised those versions
+
+## Decisions of the 2026-10-13 session
+
+- **Former members are not listed as "without wallet audit"**, the
+  user's request. Source of the current corporation is ESI's
+  `/characters/affiliation/` (the user's choice over AA's EveCharacter and
+  corptools' EveName, which rarely know an unregistered character), asked
+  in `update_corp` through `open_api_provider.get_affiliations`, only for
+  the characters above the threshold, in chunks of 1000. Not answered or
+  ESI down = stays listed (Claude's call). Their income still counts. Old
+  rows are cleaned on their next recalculation, not at display.
+  `EosTaxTestCase.setUpClass` patches `get_affiliations` to answer nobody,
+  so no test reaches the real ESI.
+- **Payments only while in the Corporation** was asked again: already
+  true since 0.3.15 (slices and taxed payouts prove membership, untaxed
+  ones go by the corptools history). The user wanted it secured only; a
+  test for leaving and coming back was added.
 
 ## Decisions of the 2026-10-08 sessions
 

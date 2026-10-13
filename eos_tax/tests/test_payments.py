@@ -414,12 +414,14 @@ def esi_answers(tax_rate):
     """Patch ESI's corporation endpoint to report this ingame tax rate."""
     provider = mock.Mock()
     provider.get_corporation.return_value = (SimpleNamespace(tax_rate=tax_rate), None)
+    provider.get_affiliations.return_value = ([], None)
     return mock.patch("eos_tax.db.payments.open_api_provider", provider)
 
 
 def esi_unreachable():
     provider = mock.Mock()
     provider.get_corporation.side_effect = OSError("ESI down")
+    provider.get_affiliations.return_value = ([], None)
     return mock.patch("eos_tax.db.payments.open_api_provider", provider)
 
 
@@ -475,6 +477,21 @@ class TestUpdateCorpWithoutStoredRate(PaymentsTestCase):
 
 
 OTHER_RATTER_ID = 2100000002
+
+
+def esi_affiliations(corporations):
+    """Patch ESI's affiliation endpoint: each character in the corporation
+    given, a character not named is one ESI does not answer for."""
+    def answer(character_ids, **_kwargs):
+        return [
+            SimpleNamespace(character_id=character_id, corporation_id=corporations[character_id])
+            for character_id in character_ids
+            if character_id in corporations
+        ], None
+
+    return mock.patch(
+        "eos_tax.db.payments.open_api_provider.get_affiliations", side_effect=answer,
+    )
 
 
 def at(day, hour=12):
@@ -685,6 +702,22 @@ class TestUpdateCorpReconcilesMemberWallets(PaymentsTestCase):
         self.assertEqual(breakdown["member_before_join"], 1)
         self.assertEqual(self.row().gross_income, 100_000_000)
 
+    def test_should_not_count_the_time_away_of_a_returning_member(self):
+        """Left and came back: only the two stretches as a member count, not
+        what was earned in the other corporation in between."""
+        add_member_payout(RATTER_ID, CORP_ID, at(5), amount=100_000_000, tax=0,
+                          joined=at(1))
+        add_corporation_history(RATTER_ID, OTHER_CORP_ID, at(10))
+        add_corporation_history(RATTER_ID, CORP_ID, at(20))
+        self.untaxed(15, 400_000_000)
+        self.untaxed(25, 100_000_000)
+
+        breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["member_before_join"], 1)
+        self.assertEqual(breakdown["member_entries"], 2)
+        self.assertEqual(self.row().gross_income, 200_000_000)
+
     def test_should_not_count_an_untaxed_payout_without_a_history(self):
         """Without a history nothing shows the character was a member then -
         not counted, the user's call."""
@@ -783,6 +816,75 @@ class TestUpdateCorpReconcilesMemberWallets(PaymentsTestCase):
         update_corp(CORP_ID, MONTH, YEAR)
 
         self.assertEqual(self.row().unaudited_characters, [])
+
+    def test_should_not_list_a_character_who_has_left_since(self):
+        """Nobody can ask a former member to add a wallet - the user's call.
+        What they earned while a member still counts."""
+        self.entry(20_000_000, at(5), character_id=OTHER_RATTER_ID)
+
+        with esi_affiliations({OTHER_RATTER_ID: OTHER_CORP_ID}):
+            breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(breakdown["unaudited_characters"], [])
+        self.assertEqual(breakdown["unaudited_left"], 1)
+        self.assertEqual(self.row().unaudited_characters, [])
+        self.assertEqual(self.row().gross_income, 200_000_000)
+
+    def test_should_list_a_character_still_in_the_corporation(self):
+        self.entry(20_000_000, at(5), character_id=OTHER_RATTER_ID)
+
+        with esi_affiliations({OTHER_RATTER_ID: CORP_ID}):
+            breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual([c["id"] for c in self.row().unaudited_characters], [OTHER_RATTER_ID])
+        self.assertEqual(breakdown["unaudited_left"], 0)
+
+    def test_should_keep_a_character_esi_does_not_answer_for(self):
+        self.entry(20_000_000, at(5), character_id=RATTER_ID)
+        self.entry(30_000_000, at(5), character_id=OTHER_RATTER_ID)
+
+        with esi_affiliations({OTHER_RATTER_ID: OTHER_CORP_ID}):
+            breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual([c["id"] for c in self.row().unaudited_characters], [RATTER_ID])
+        self.assertEqual(breakdown["unaudited_left"], 1)
+
+    def test_should_keep_listing_everyone_when_esi_is_unreachable(self):
+        """The list is a reminder; an ESI outage must neither fail the
+        recalculation nor make anyone look like they have left."""
+        self.entry(20_000_000, at(5), character_id=OTHER_RATTER_ID)
+
+        with mock.patch(
+            "eos_tax.db.payments.open_api_provider.get_affiliations",
+            side_effect=OSError("ESI down"),
+        ):
+            breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertTrue(breakdown["ok"])
+        self.assertEqual(len(self.row().unaudited_characters), 1)
+        self.assertEqual(breakdown["unaudited_left"], 0)
+
+    def test_should_ask_esi_for_every_chunk(self):
+        self.entry(20_000_000, at(5), character_id=RATTER_ID)
+        self.entry(30_000_000, at(5), character_id=OTHER_RATTER_ID)
+
+        with mock.patch("eos_tax.db.payments.AFFILIATION_CHUNK", 1), \
+                esi_affiliations({RATTER_ID: OTHER_CORP_ID, OTHER_RATTER_ID: OTHER_CORP_ID}) as ask:
+            breakdown = update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertEqual(
+            [call.kwargs["character_ids"] for call in ask.call_args_list],
+            [[RATTER_ID], [OTHER_RATTER_ID]],
+        )
+        self.assertEqual(breakdown["unaudited_left"], 2)
+
+    def test_should_not_ask_esi_without_anyone_to_list(self):
+        self.entry(9_900_000, at(5), character_id=OTHER_RATTER_ID)
+
+        with esi_affiliations({}) as ask:
+            update_corp(CORP_ID, MONTH, YEAR)
+
+        ask.assert_not_called()
 
     def test_should_store_how_long_the_calculation_took(self):
         self.untaxed(10, 100_000_000)

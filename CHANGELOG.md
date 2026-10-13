@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- "Characters without wallet audit" no longer lists a character who has
+  left the Corporation since. Nobody can ask a former member to add a
+  wallet, so they only buried the ones that can still be chased. Their
+  current corporation comes from ESI's character affiliation - these
+  characters have no audit, so corptools has no history for them, and
+  Alliance Auth only knows the registered ones. What they earned while a
+  member still counts towards the month. A character ESI does not answer
+  for stays listed, and an ESI outage keeps everyone listed rather than
+  failing the recalculation. The recalculate log says how many were left
+  out. A month already calculated is cleaned up on its next recalculation.
+- A test now covers a member who left and came back: what was earned in
+  the other corporation in between does not count. The calculation
+  already worked that way since 0.3.15.
+
 ## [0.4.2] - 2026-10-08
 
 ### Changed
