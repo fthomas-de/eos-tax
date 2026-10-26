@@ -89,13 +89,16 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             head.appendChild(reload);
 
-            const close = element("button", "btn btn-sm btn-outline-secondary", label("label-dismiss"));
-            close.type = "button";
-            close.addEventListener("click", function () {
-                close.disabled = true;
-                dismiss(run);
-            });
-            head.appendChild(close);
+            // the page leaves the url out for a viewer without manage_settings
+            if (label("progress-dismiss-url")) {
+                const close = element("button", "btn btn-sm btn-outline-secondary", label("label-dismiss"));
+                close.type = "button";
+                close.addEventListener("click", function () {
+                    close.disabled = true;
+                    dismiss(run);
+                });
+                head.appendChild(close);
+            }
         }
         wrapper.appendChild(head);
 

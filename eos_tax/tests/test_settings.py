@@ -54,15 +54,39 @@ class TestSettingsAccess(EosTaxTestCase):
 
         self.assertEqual(response.status_code, 302)
 
-    def test_should_allow_admin_view(self):
+    def test_should_show_admin_view_the_settings_read_only(self):
+        """An auditor reads every figure, so the configuration behind them as
+        well - but admin_view used to save it and recalculate with it too."""
         self.client.force_login(
             create_user("boss", 93000002, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
         )
 
         response = self.client.get(reverse("eos_tax:settings"))
+        body = response.content.decode()
 
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "You can view these settings, but not change them")
+        self.assertNotContains(response, "Save settings")
+        self.assertNotContains(response, 'id="eos-tax-recalc-run"')
+        tax_rate = re.search(r'<input[^>]*name="tax_rate"[^>]*>', body).group(0)
+        self.assertIn("disabled", tax_rate)
+
+    def test_should_offer_saving_and_recalculating_with_manage_settings(self):
+        self.client.force_login(
+            create_user(
+                "boss", 93000003, BRAVO_CORP_ID, "Bravo Corp",
+                ["admin_view", "manage_settings"],
+            )
+        )
+
+        response = self.client.get(reverse("eos_tax:settings"))
+        body = response.content.decode()
+
         self.assertContains(response, "Save settings")
+        self.assertContains(response, 'id="eos-tax-recalc-run"')
+        self.assertNotContains(response, "You can view these settings, but not change them")
+        tax_rate = re.search(r'<input[^>]*name="tax_rate"[^>]*>', body).group(0)
+        self.assertNotIn("disabled", tax_rate)
 
 
 class TestSettingsSeed(EosTaxTestCase):
@@ -111,7 +135,10 @@ class TestMigrationsAreComplete(EosTaxTestCase):
 class TestSettingsForm(EosTaxTestCase):
     def setUp(self):
         self.client.force_login(
-            create_user("boss", 93000010, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+            create_user(
+                "boss", 93000010, BRAVO_CORP_ID, "Bravo Corp",
+                ["admin_view", "manage_settings"],
+            )
         )
         self.alliance = EveAllianceInfo.objects.create(
             alliance_id=ALLIANCE_ID, alliance_name="Taxed Alliance", alliance_ticker="TAX"
@@ -168,6 +195,18 @@ class TestSettingsForm(EosTaxTestCase):
             config.bot_min_days_per_month,
             TaxConfiguration._meta.get_field("bot_min_days_per_month").default,
         )
+
+    def test_should_refuse_a_save_without_manage_settings(self):
+        self.client.force_login(
+            create_user("auditor", 93000011, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+        )
+        before = TaxConfiguration.get_solo().tax_rate
+
+        # a payload the form accepts, so only the permission can stop it
+        response = self.post(tax_rate="50")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(TaxConfiguration.get_solo().tax_rate, before)
 
     def test_should_reject_more_than_twentyfour_hours_per_day(self):
         response = self.post(bot_min_hours_per_day="30")
@@ -367,7 +406,10 @@ class TestSettingsTabs(EosTaxTestCase):
 
     def setUp(self):
         self.client.force_login(
-            create_user("boss", 93000040, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+            create_user(
+                "boss", 93000040, BRAVO_CORP_ID, "Bravo Corp",
+                ["admin_view", "manage_settings"],
+            )
         )
 
     def test_should_offer_a_tax_and_a_bot_tab(self):
@@ -441,7 +483,10 @@ class TestSettingsRecalculate(EosTaxTestCase):
 
     def setUp(self):
         self.client.force_login(
-            create_user("boss", 93000041, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+            create_user(
+                "boss", 93000041, BRAVO_CORP_ID, "Bravo Corp",
+                ["admin_view", "manage_settings"],
+            )
         )
         self.alliance = EveAllianceInfo.objects.create(
             alliance_id=99000041, alliance_name="Taxed Alliance", alliance_ticker="TAX"
@@ -496,6 +541,21 @@ class TestSettingsRecalculate(EosTaxTestCase):
         response = self.post(corp_id="all", month="9", year="2026")
 
         self.assertEqual(response.status_code, 302)
+
+    def test_should_refuse_admin_view_without_manage_settings(self):
+        self.client.force_login(
+            create_user("auditor", 93000043, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+        )
+        self.journal_entry(1_000_000, 3)
+
+        with patch("eos_tax.tasks.run_update_corporation.delay") as delay:
+            queued = self.post(corp_id="all", month="9", year="2026")
+        single = self.post(corp_id=str(BRAVO_CORP_ID), month="9", year="2026")
+
+        self.assertEqual(queued.status_code, 403)
+        self.assertEqual(single.status_code, 403)
+        delay.assert_not_called()
+        self.assertFalse(MonthlyTax.objects.exists())
 
     def test_should_queue_every_configured_corporation(self):
         second = EveCorporationInfo.objects.create(
@@ -702,7 +762,10 @@ class TestTaxRateSchedule(EosTaxTestCase):
 class TestTaxRateScheduleForm(EosTaxTestCase):
     def setUp(self):
         self.client.force_login(
-            create_user("boss", 93000030, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+            create_user(
+                "boss", 93000030, BRAVO_CORP_ID, "Bravo Corp",
+                ["admin_view", "manage_settings"],
+            )
         )
 
     def post(self, **overrides):
@@ -729,6 +792,24 @@ class TestTaxRateScheduleForm(EosTaxTestCase):
         self.assertContains(response, "Tax rate schedule")
         self.assertContains(response, 'name="form-0-valid_from"')
         self.assertContains(response, 'type="month"')
+
+    def test_should_offer_no_new_row_and_no_remove_read_only(self):
+        TaxRate.objects.create(valid_from=date(2031, 5, 1), rate=Decimal("0.12"))
+        self.client.force_login(
+            create_user("auditor", 93000031, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+        )
+
+        response = self.client.get(reverse("eos_tax:settings"))
+        body = response.content.decode()
+
+        # the stored rows only - no empty one to fill in
+        self.assertContains(
+            response,
+            f'name="form-TOTAL_FORMS" value="{TaxRate.objects.count()}"',
+        )
+        self.assertNotContains(response, "-DELETE")
+        valid_from = re.search(r'<input[^>]*name="form-0-valid_from"[^>]*>', body).group(0)
+        self.assertIn("disabled", valid_from)
 
     def test_should_plan_september_and_october_in_one_go(self):
         response = self.post(**{

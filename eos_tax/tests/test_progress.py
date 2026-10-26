@@ -188,7 +188,10 @@ class TestEndpoints(ProgressTestCase):
     def setUp(self):
         super().setUp()
         self.client.force_login(
-            create_user("boss", 93000051, BRAVO_CORP_ID, "Bravo Corp", ["basic_access", "admin_view"])
+            create_user(
+                "boss", 93000051, BRAVO_CORP_ID, "Bravo Corp",
+                ["basic_access", "admin_view", "manage_settings"],
+            )
         )
 
     def finished_run(self):
@@ -224,6 +227,18 @@ class TestEndpoints(ProgressTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(progress.get_runs(), [])
 
+    def test_should_not_dismiss_for_admin_view_alone(self):
+        """Taking a run off hides it from every admin, so it is a write."""
+        run_id = self.finished_run()
+        self.client.force_login(
+            create_user("auditor", 93000055, BRAVO_CORP_ID, "Bravo Corp", ["basic_access", "admin_view"])
+        )
+
+        response = self.client.post(reverse("eos_tax:progress_dismiss", args=[run_id]))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(len(progress.get_runs()), 1)
+
     def test_should_not_dismiss_a_run_still_going(self):
         run_id = progress.start_run(progress.MANUAL, two_jobs())
 
@@ -246,7 +261,10 @@ class TestRecalculateButton(ProgressTestCase):
     def setUp(self):
         super().setUp()
         self.client.force_login(
-            create_user("boss", 93000053, BRAVO_CORP_ID, "Bravo Corp", ["basic_access", "admin_view"])
+            create_user(
+                "boss", 93000053, BRAVO_CORP_ID, "Bravo Corp",
+                ["basic_access", "admin_view", "manage_settings"],
+            )
         )
         taxed = create_alliance(TAXED_ALLIANCE_ID, "Taxed Alliance")
         create_corporation(BRAVO_CORP_ID, "Bravo Corp", taxed)
@@ -297,6 +315,21 @@ class TestPageParts(ProgressTestCase):
 
         self.assertIn('id="eos-tax-progress"', body)
         self.assertIn("eos_tax/js/progress.", body)
+
+    def test_should_offer_dismiss_only_with_manage_settings(self):
+        # the script adds the Dismiss button only when the url is there
+        viewer = self.page(["basic_access", "admin_view"])
+        self.client.force_login(
+            create_user(
+                "manager", 93000056, BRAVO_CORP_ID, "Bravo Corp",
+                ["basic_access", "admin_view", "manage_settings"],
+            )
+        )
+        managing = self.client.get(reverse("eos_tax:index")).content.decode()
+
+        self.assertNotIn("data-eos-tax-progress-dismiss-url", viewer)
+        self.assertIn("data-eos-tax-progress-dismiss-url", managing)
+        self.assertIn('label("progress-dismiss-url")', read_static("progress.js"))
 
     def test_should_not_show_the_bar_to_a_member(self):
         body = self.page(["basic_access"])

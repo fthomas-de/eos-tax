@@ -197,7 +197,13 @@ ordered and each row carries the Corporation's own figure beside it.
 | Permission | Grants |
 |---|---|
 | `eos_tax.basic_access` | the Overview, limited to the user's own Corporations |
-| `eos_tax.admin_view` | all Corporations, plus Statistics, Bots and Settings |
+| `eos_tax.admin_view` | all Corporations, plus Statistics, Bots and Settings - Settings read only |
+| `eos_tax.manage_settings` | saving Settings, recalculating a month, dismissing a finished run from the progress bar; given together with `admin_view` |
+
+**Upgrading from 0.4.4 or earlier:** `admin_view` used to save Settings and
+recalculate as well. After `migrate`, give `eos_tax.manage_settings` to every
+group or state that should still change the configuration - until then
+nobody but a superuser can.
 
 ## Translations
 

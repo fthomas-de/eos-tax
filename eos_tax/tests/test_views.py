@@ -1094,7 +1094,10 @@ class TestYearsOutOfRange(EosTaxTestCase):
 
     def setUp(self):
         self.client.force_login(
-            create_user("ranger", 91000032, BRAVO_CORP_ID, "Bravo Corp", ["admin_view"])
+            create_user(
+                "ranger", 91000032, BRAVO_CORP_ID, "Bravo Corp",
+                ["admin_view", "manage_settings"],
+            )
         )
 
     def test_should_refuse_to_recalculate_beyond_the_last_year(self):

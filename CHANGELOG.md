@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Security
+
+- `admin_view` ("Can view all data") also saved the settings, recalculated
+  months and took finished runs off the progress bar, so a user meant to
+  only read every figure could change the tax rates, the blacklist and the
+  thresholds behind them, and rewrite the stored months. The three writes
+  now need the new permission `manage_settings` (migration 0027), checked
+  in the views themselves, not only by hiding their buttons. With
+  `admin_view` alone the settings page is read only: disabled fields, no
+  empty rate row, no Remove, Save or Recalculate, and no Dismiss on the
+  progress bar.
+- **After upgrading, give `eos_tax.manage_settings` to everyone who should
+  still change the settings** - until then only superusers can.
+
 ## [0.4.4] - 2026-10-13
 
 ### Fixed

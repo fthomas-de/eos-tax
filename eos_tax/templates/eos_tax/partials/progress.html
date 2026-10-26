@@ -7,7 +7,8 @@
 {% endcomment %}
 <div id="eos-tax-progress" class="mb-3 d-none"
      data-eos-tax-progress-url="{% url 'eos_tax:progress' %}"
-     data-eos-tax-progress-dismiss-url="{% url 'eos_tax:progress_dismiss' 'RUN_ID' %}"
+     {# without it the script offers no Dismiss - the endpoint would refuse it #}
+     {% if perms.eos_tax.manage_settings %}data-eos-tax-progress-dismiss-url="{% url 'eos_tax:progress_dismiss' 'RUN_ID' %}"{% endif %}
      data-eos-tax-label-automatic="{% translate 'Automatic recalculation' %}"
      data-eos-tax-label-manual="{% translate 'Manual recalculation' %}"
      data-eos-tax-label-count="{% translate '{finished} of {total} done' %}"

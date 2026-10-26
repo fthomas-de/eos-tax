@@ -330,7 +330,14 @@ alts from Alliance Auth, without assessments.
    Element September row (see below) showed the `-` badge; since 0.3.18
    only if it is 10M or more off. Worth one render with the seeded data
    before building on any of them.
-4. The affiliation filter (0.4.3) has never talked to the real ESI - only
+4. Unreleased: permission `manage_settings` (migration 0027, applied to
+   `aa_dev` on 2026-10-26). Saving settings, recalculating and dismissing a
+   run need it; `admin_view` alone sees the settings page read only. On
+   deploying, grant `manage_settings` to whoever changes the settings, or
+   only superusers can. The read-only page is tested, not yet looked at in
+   a browser. Its one new string ("You can view these settings, ...") is
+   not in the catalogues yet - that happens at `/commit`.
+5. The affiliation filter (0.4.3) has never talked to the real ESI - only
    to mocks. After deploying, recalculate a month with listed characters
    and check the log line "... has left this corporation since"; a
    "ESI affiliation lookup failed" warning in the worker log means

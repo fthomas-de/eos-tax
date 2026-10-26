@@ -17,6 +17,12 @@
                 here now, so editing local.py has no further effect.{% endblocktranslate %}
             </p>
 
+            {% if not can_manage %}
+                <div class="alert alert-info">
+                    {% translate "You can view these settings, but not change them or recalculate a month." %}
+                </div>
+            {% endif %}
+
             <div class="row justify-content-center">
                 <div class="col-lg-8">
                     <form role="form" action="" method="POST">
@@ -106,7 +112,9 @@
                                             <tr>
                                                 <th scope="col">{% translate "Valid from" %}</th>
                                                 <th scope="col">{% translate "Rate" %}</th>
-                                                <th scope="col" class="text-end">{% translate "Remove" %}</th>
+                                                {% if can_manage %}
+                                                    <th scope="col" class="text-end">{% translate "Remove" %}</th>
+                                                {% endif %}
                                             </tr>
                                         </thead>
 
@@ -118,11 +126,13 @@
                                                         {% bootstrap_field rate_form.valid_from show_label=False %}
                                                     </td>
                                                     <td>{% bootstrap_field rate_form.rate show_label=False %}</td>
-                                                    <td class="text-end">
-                                                        {% if rate_form.instance.pk %}
-                                                            {% bootstrap_field rate_form.DELETE show_label=False %}
-                                                        {% endif %}
-                                                    </td>
+                                                    {% if can_manage %}
+                                                        <td class="text-end">
+                                                            {% if rate_form.instance.pk %}
+                                                                {% bootstrap_field rate_form.DELETE show_label=False %}
+                                                            {% endif %}
+                                                        </td>
+                                                    {% endif %}
                                                 </tr>
                                             {% endfor %}
                                         </tbody>
@@ -150,6 +160,8 @@
                                 </p>
                                 {% bootstrap_field form.tax_change_min_points %}
 
+                                {# a write like the save, so manage_settings only #}
+                                {% if can_manage %}
                                 {% comment %}
                                     Outside both forms above on purpose: it posts to its own
                                     endpoint through settings.js rather than through this
@@ -201,6 +213,7 @@
                                 </div>
 
                                 <div id="eos-tax-recalc-result" class="mb-4"></div>
+                                {% endif %}
                             </div>
 
                             <div class="tab-pane fade{% if active_tab == 'bot' %} show active{% endif %}"
@@ -291,10 +304,12 @@
                             </div>
                         </div>
 
-                        <div class="form-group mt-3 clearfix">
-                            {% translate "Save settings" as button_text %}
-                            {% bootstrap_button button_class="btn btn-primary" content=button_text %}
-                        </div>
+                        {% if can_manage %}
+                            <div class="form-group mt-3 clearfix">
+                                {% translate "Save settings" as button_text %}
+                                {% bootstrap_button button_class="btn btn-primary" content=button_text %}
+                            </div>
+                        {% endif %}
                     </form>
                 </div>
             </div>

@@ -19,7 +19,13 @@ class General(models.Model):
     class Meta:
         managed = False
         default_permissions = ()
-        permissions = (("basic_access", "Can view his corp data"), ("admin_view", "Can view all data"))
+        # manage_settings apart from admin_view, so an auditor who may read
+        # every figure cannot also change the rates they are charged by
+        permissions = (
+            ("basic_access", "Can view his corp data"),
+            ("admin_view", "Can view all data"),
+            ("manage_settings", "Can change settings and recalculate"),
+        )
 
 
 class TaxConfiguration(SingletonModel):

@@ -241,6 +241,14 @@ TaxRateFormSet = forms.modelformset_factory(
     can_delete=True,
 )
 
+# for a viewer without manage_settings: an empty row to add and a box to
+# remove would offer a change the save then refuses
+TaxRateReadOnlyFormSet = forms.modelformset_factory(
+    TaxRate,
+    form=TaxRateForm,
+    extra=0,
+)
+
 
 class TaxConfigurationAdminForm(forms.ModelForm):
     """Keeps the admin fallback speaking percent as well - entering 7 there and

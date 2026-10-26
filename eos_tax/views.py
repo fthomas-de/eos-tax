@@ -2,6 +2,7 @@ import time
 from datetime import datetime
 
 from django.contrib.auth.decorators import login_required, permission_required
+from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.contrib import messages
 from django.shortcuts import redirect, render
@@ -17,7 +18,7 @@ from allianceauth.framework.api.user import get_all_characters_from_user
 
 from eos_tax import VERSION
 from eos_tax.app_settings import get_config
-from eos_tax.forms import TaxConfigurationForm, TaxRateFormSet
+from eos_tax.forms import TaxConfigurationForm, TaxRateFormSet, TaxRateReadOnlyFormSet
 from eos_tax.models import TaxRate
 from eos_tax.db.bots import (
     find_characters,
@@ -248,6 +249,12 @@ def settings(request):
     config = get_config()
     schedule = TaxRate.objects.all()
     active_tab = "tax"
+    # admin_view reads the page, only manage_settings writes it - a POST
+    # without it is refused here, not merely left without a save button
+    can_manage = request.user.has_perm("eos_tax.manage_settings")
+
+    if request.method == "POST" and not can_manage:
+        raise PermissionDenied
 
     if request.method == "POST":
         form = TaxConfigurationForm(request.POST, instance=config)
@@ -278,9 +285,15 @@ def settings(request):
             and not rates.non_form_errors()
         )
         active_tab = "bot" if bot_only else "tax"
-    else:
+    elif can_manage:
         form = TaxConfigurationForm(instance=config)
         rates = TaxRateFormSet(queryset=schedule)
+    else:
+        form = TaxConfigurationForm(instance=config)
+        rates = TaxRateReadOnlyFormSet(queryset=schedule)
+        for each in [form, *rates]:
+            for field in each.fields.values():
+                field.disabled = True
 
     now = datetime.now()
 
@@ -289,6 +302,7 @@ def settings(request):
         "version": VERSION,
         "form": form,
         "rates": rates,
+        "can_manage": can_manage,
         "active_tab": active_tab,
         "corporations": EveCorporationInfo.objects.filter(
             alliance__alliance_id__in=config.alliance_ids()
@@ -341,6 +355,9 @@ def _breakdown_for_display(breakdown):
 
 @login_required
 @permission_required("eos_tax.admin_view")
+# a 403 rather than the login redirect of the pages: this is fetched by a
+# script, which would otherwise swap the login page into the result
+@permission_required("eos_tax.manage_settings", raise_exception=True)
 @require_POST
 def settings_recalculate(request):
     """Recalculates one Corporation or every configured one, on demand.
@@ -422,6 +439,8 @@ def progress_state(request):
 
 @login_required
 @permission_required("eos_tax.admin_view")
+# taking a run off hides it from every admin, so it is a write as well
+@permission_required("eos_tax.manage_settings", raise_exception=True)
 @require_POST
 def progress_dismiss(request, run_id):
     """Takes a finished run off the bar - for every admin, not only this one."""
