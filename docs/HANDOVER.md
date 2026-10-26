@@ -4,12 +4,18 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-10-13.
+Last updated 2026-10-26.
 
 ## Release
 
-- Version **0.4.4** in `eos_tax/__init__.py`, released 2026-10-13
-- `[0.4.4]` in `CHANGELOG.md`: the introductions of the three fetched bot
+- Version **0.4.5** in `eos_tax/__init__.py`, released 2026-10-26
+- `[0.4.5]` in `CHANGELOG.md` (Security): new permission
+  `manage_settings` (migration 0027) for saving settings, recalculating
+  and dismissing a finished run; `admin_view` alone sees the settings
+  page read only (`TaxRateReadOnlyFormSet`, disabled fields, no Save /
+  Recalculate / Remove, no Dismiss on the bar). One new string, in all
+  six catalogues
+- `[0.4.4]`: the introductions of the three fetched bot
   tabs now show (they sat in panes the tab script replaces); otherwise
   less code for the same pages - rhythm and clock lists share
   `_against_the_corporation` and `_baseline` in `db/bot_signals.py`,
@@ -57,14 +63,26 @@ Last updated 2026-10-13.
   `MonthlyTax.calculation_seconds`)
 - `[0.3.13]`: a missing ingame rate is asked from ESI; `[0.3.12]`: what was
   paid is recorded ("Amount paid in ISK", payments added up by reason)
-- Migrations **0001-0026** applied to `aa_dev`
-- 614 tests, all green (599 without the translation tag, 15 with it)
+- Migrations **0001-0027** applied to `aa_dev`
+- 620 tests, all green (605 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
   consistently in every place it occurs now, including `settings.html`
 - `CHANGELOG.md` is newest first; `[0.3.2]` and `[0.3.6]` were written from
   the commits that raised those versions
+
+## Decisions of the 2026-10-26 session
+
+- **`admin_view` sees the settings page read only**, the user's choice
+  over hiding it: an auditor may read the configuration behind every
+  figure, but not change it. The writes need `manage_settings` on top of
+  `admin_view` (the decorators stack; `manage_settings` alone gets no
+  page). Came from a security review of the user's AA apps.
+- The two fetched endpoints (`settings_recalculate`, `progress_dismiss`)
+  answer a missing `manage_settings` with 403, not the login redirect the
+  pages use - a script would swap the login page into its result. The
+  settings POST raises `PermissionDenied` in the view.
 
 ## Decisions of the 2026-10-13 sessions
 
@@ -330,13 +348,10 @@ alts from Alliance Auth, without assessments.
    Element September row (see below) showed the `-` badge; since 0.3.18
    only if it is 10M or more off. Worth one render with the seeded data
    before building on any of them.
-4. Unreleased: permission `manage_settings` (migration 0027, applied to
-   `aa_dev` on 2026-10-26). Saving settings, recalculating and dismissing a
-   run need it; `admin_view` alone sees the settings page read only. On
-   deploying, grant `manage_settings` to whoever changes the settings, or
-   only superusers can. The read-only page is tested, not yet looked at in
-   a browser. Its one new string ("You can view these settings, ...") is
-   not in the catalogues yet - that happens at `/commit`.
+4. **On deploying 0.4.5, grant `eos_tax.manage_settings`** (migration
+   0027) to whoever changes the settings, or only superusers can. The
+   read-only settings page and the missing Dismiss are tested, not yet
+   looked at in a browser - one render with an `admin_view`-only user.
 5. The affiliation filter (0.4.3) has never talked to the real ESI - only
    to mocks. After deploying, recalculate a month with listed characters
    and check the log line "... has left this corporation since"; a
@@ -401,11 +416,6 @@ Three traps in that setup, each of which produced a wrong answer once:
   rather than guessing it: the app is mounted at `/eos_tax/`, not `/eos-tax/`.
 
 ## Traps recent sessions cost time on
-
-- **The `#:` locations in the `.po` files are stale since 0.4.4.** Strings
-  moved between templates without changing, so no catalogue was
-  regenerated; the next `makemessages` rewrites the locations - a large
-  but harmless diff, not a sign of lost translations.
 
 - **Static files are hashed in tests.** `sri_static` goes through the
   manifest storage: assert `"eos_tax/js/progress."`, never `progress.js`,

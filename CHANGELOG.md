@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-10-26
+
 ### Security
 
 - `admin_view` ("Can view all data") also saved the settings, recalculated
