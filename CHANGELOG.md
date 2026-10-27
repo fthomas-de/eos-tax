@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.10] - 2026-10-27
+
 ### Added
 
 - The bots page and GM Transactions each have a Recalculate button that

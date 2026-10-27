@@ -8,7 +8,28 @@ Last updated 2026-10-27.
 
 ## Release
 
-- Version **0.4.9** in `eos_tax/__init__.py`, released 2026-10-27
+- Version **0.4.10** in `eos_tax/__init__.py`, released 2026-10-27
+- `[0.4.10]` in `CHANGELOG.md`:
+  - **Recalculate buttons** on the bots page (the month on screen) and on
+    GM Transactions, `manage_settings` only: `bots_recalculate` /
+    `gm_transactions_recalculate` (POST, answer `{"queued": bool}`),
+    `partials/recalculate-button.html` in the card header,
+    `static/eos_tax/js/recalculate.js`. They queue only the page's job,
+    not the tax run
+  - **Step runs on the progress bar**: `queue_bot_reports` /
+    `queue_gm_report` go through `tasks._queue_steps`, which registers a
+    run of kind `bots` (period `YYYY-MM`, steps = `READINGS` keys) or `gm`
+    (steps = `GM_STEPS`: `transactions`, `characters`) and passes
+    `run_id` to the task. The store functions wrap each step in
+    `progress.tracked_job`; on failure `progress.skip_unstarted` marks the
+    rest skipped (reason `step_failed`). Broker down: run withdrawn, lock
+    freed. `progress.js` shows `job.step` via `data-eos-tax-step-*`
+    labels and `run.period` beside the name
+  - **"GM X"** red in the GM counterparty filter and, when present, the
+    only ticked box (`FLAGGED_PARTY`, `_parties_of` gives `flagged` /
+    `checked`); `gm-transactions.js` starts from the ticked boxes and
+    draws once on load
+  - 8 new strings, in all six catalogues
 - `[0.4.9]` in `CHANGELOG.md`, one fix on GM Transactions: the
   counterparty filter offered the characters themselves, because a GM
   taking ISK back books "between GM X and <character>". `sides()` (replaces
@@ -36,17 +57,35 @@ Last updated 2026-10-27.
   versions: see `CHANGELOG.md`. Still worth knowing from them:
   `manage_settings` (0.4.5, migration 0027) guards every settings write;
   `admin_view` alone sees the settings page read only
-- Migrations **0001-0029** applied to `aa_dev`; 0.4.8 and 0.4.9 have none
-- 683 tests, all green (668 without the translation tag, 15 with it)
+- Migrations **0001-0029** applied to `aa_dev`; 0.4.8 to 0.4.10 have none
+- 707 tests, all green (692 without the translation tag, 15 with it)
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the
   page's GM rows can only be seen in tests or on production data. The
-  0.4.9 fix is verified by tests only, not in the browser
+  0.4.9 fix and the 0.4.10 "GM X" filter are verified by tests only, not
+  in the browser
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
 
 ## Decisions of the 2026-10-27 sessions
+
+Recalculate buttons and step runs (0.4.10) - the user's choices unless
+marked:
+
+- **The jobs show in the existing bar above every page**, not on their
+  own page; **step by step**; **every run however started** (button, tax
+  task, settings change, first visit to a month); the button needs
+  **`manage_settings`**.
+- **"GM X" by its exact name** (the user's choice over "every counterparty
+  starting with GM "): red, and the only ticked box when it occurs; without
+  it every box is ticked as before.
+- Claude's calls: the bots button recalculates the month the page shows
+  (not the month field's unsubmitted value) and all four lists; a job
+  already locked is not queued again and the button says "Already being
+  calculated."; the page does not reload by itself - the bar offers it;
+  GM steps are the journal search and "balances and ages" (the search is
+  one query, so the bar stands still during it).
 
 Counterparty fix (0.4.9):
 
@@ -230,22 +269,13 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
-0. **Committed, not released: Recalculate buttons and step runs**
-   (2026-10-27, in `[Unreleased]`; version and push follow with `/push`). User's choices: the jobs show in the existing bar
-   above every page, step by step, every run however started; the button
-   needs `manage_settings`. Claude's calls: `bots_recalculate` /
-   `gm_transactions_recalculate` answer `{"queued": bool}`; the button
-   sits in the card header (`partials/recalculate-button.html`,
-   `recalculate.js`); runs of kind `bots`/`gm` carry `step` jobs and a
-   `period`; a failed step skips the rest (`progress.skip_unstarted`).
-   The 8 new strings are in all six catalogues. Checked in a browser on a
-   static snapshot with a stubbed fetch only. **Restart every Celery
-   worker on deploying**: both tasks take `run_id`.
-   In the same commit: "GM X" red and the only ticked box in the GM
-   counterparty filter (`FLAGGED_PARTY`, exact name - the user's choice
-   over "every GM ..."). Not rendered in a browser yet.
-1. **On deploying 0.4.6/0.4.7: apply migrations 0028 and 0029 and
-   restart every Celery worker** - a worker started before does not know
+1. **On deploying: restart every Celery worker.** 0.4.10: both bots and
+   GM tasks now take `run_id`; a worker on older code fails them with a
+   TypeError and their run stands at "Waiting" on the bar for an hour.
+   **0.4.10 has never run against a real worker** - after deploying, press
+   both buttons once and watch the bar step through. 0.4.6/0.4.7 also
+   needed migrations 0028 and 0029 and the restart - a worker started
+   before does not know
    `run_update_bot_reports` or `run_update_gm_report`, and the bots tabs
    and the GM page would wait forever. Until the first job ran, they show
    "being calculated". Check the beat cadence of `run_update_alliance` in
@@ -259,7 +289,11 @@ plain list of alts from Alliance Auth, without assessments.
    (which counterparties really occur?), does "Corporation at the time"
    match, and how long does the job's `description LIKE 'GM [%'` scan over
    the live character journal take (no index serves it)?
-3. Not looked at in a browser yet, only through the tests: the GM page
+3. Not looked at in a browser yet, only through the tests: the
+   Recalculate buttons and the step runs on the real pages (0.4.10 - only
+   a static snapshot with a stubbed fetch was rendered, where the steps,
+   badges and button message looked right); the "GM X" filter state
+   (0.4.10); the GM page
    with real rows - its counterparty filter was clicked through on a
    rendered snapshot with hand-made rows (DataTables 2.3.8, works); the
    red "Corporation at the time" column and the audit link were not
@@ -435,7 +469,14 @@ script runs there.
   read as `% i`). Write "without ingame tax" or "zero percent".
 - **gettext's fuzzy guesses are wrong almost every time**: for 0.4.6 it
   put "Wallet audit" on "no audit", for 0.4.7 "Taxation" on "GM
-  Transactions" and "Duration" on "Description", in all six catalogues.
+  Transactions" and "Duration" on "Description", in all six catalogues;
+  for 0.4.10 "Back to the list" on "Bots lists".
+- **Every bots or GM page visit in a test registers a progress run** now
+  (the view queues the job, and queueing registers the run). A test that
+  counts `progress.get_runs()` must `cache.clear()` first, as
+  `ProgressTestCase` does.
+- **`create_user` per login fails on the second call** with a duplicate
+  username - make the users once in `setUp` and `force_login` them.
 - **A stale `.git/CLAUDE_COMMIT_MSG` gets committed.** Read the file
   first, and check `git log -1` before anything is pushed.
 - **A fix with two guards needs a sabotage of both at once**, and **a
