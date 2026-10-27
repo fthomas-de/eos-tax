@@ -8,67 +8,65 @@ Last updated 2026-10-27.
 
 ## Release
 
-- Version **0.4.6** in `eos_tax/__init__.py`, released 2026-10-27
-- `[0.4.6]` in `CHANGELOG.md`:
-  - **The bots lists come from a Celery job** (`run_update_bot_reports`,
-    `db/bot_store.py`), stored in `BotReport` (migration 0028) - one row
-    per month and tab, with a fingerprint of the settings they depend on.
-    Live, "Hours per day" took ~30 s and "Unbroken runs" ~10 s per visit.
-  - **Fifth tab "Without current audit"** (`db/bot_audit.py`,
-    `partials/bot-audit.html`): characters shown on the four lists whose
-    corptools audit is missing or `active = False`, grouped by main
-  - 11 new strings, in all six catalogues
-- Earlier versions: see `CHANGELOG.md`. Still worth knowing from them:
+- Version **0.4.7** in `eos_tax/__init__.py`, released 2026-10-27
+- `[0.4.7]` in `CHANGELOG.md`:
+  - **New page "GM Transactions"** (`views.gm_transactions`,
+    `db/gm_transactions.py`, `gm-transactions.html`/`.js`): characters
+    with a "GM [" booking in their own wallet journal or a wallet below
+    zero now. The GM rows come from a Celery job (`run_update_gm_report`,
+    model `GmReport`, migration 0029), queued with the tax job
+  - **The audit tab sorts**: mains by name, the headings sort the
+    characters inside each main (`eosTaxSortGroups` in `bots.js`)
+  - 13 new strings, in all six catalogues
+- `[0.4.6]`, the same day: the four bots lists are computed by a job
+  (`BotReport`, migration 0028); fifth bots tab "Without current audit".
+  Earlier versions: see `CHANGELOG.md`. Still worth knowing from them:
   `manage_settings` (0.4.5, migration 0027) guards every settings write;
   `admin_view` alone sees the settings page read only
-- Migrations **0001-0028** applied to `aa_dev`
-- 645 tests, all green (630 without the translation tag, 15 with it)
+- Migrations **0001-0029** applied to `aa_dev`
+- 667 tests, all green (652 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
 
-## Unreleased: GM Transactions page (2026-10-27, not committed)
-
-`views.gm_transactions`, `db/gm_transactions.py`, `gm-transactions.html`,
-`gm-transactions.js`, model `GmReport` (migration 0029, applied to
-`aa_dev`), task `run_update_gm_report` queued by `run_update_alliance`.
-17 tests in `test_gm_transactions`, sabotage-checked. New strings are not
-in the catalogues yet (at `/commit`).
-
-The user's choices:
-
-- **Own page in the navigation**, not a bots tab.
-- **Criteria: wallet balance below zero now** (corptools
-  `CharacterAudit.balance`), **or a description starting with "GM ["**.
-  Empty `context_id`/`context_id_type` was dropped - it matches market
-  tax, broker fees, donations, clone fees.
-- **The whole journal**, no month selector.
-- **Computed by a job** to keep the page fast.
-
-Claude's calls: every character corptools has a journal for, not only the
-alliance's; the job stores only the GM rows, everything else is read at
-render; "Corporations in the Alliance" = corporation history against
-today's alliance corps plus every corp with a `MonthlyTax` row; named
-character = text after " between " up to the last " and "; one lock
-(`GM_REPORT_LOCK`, 15 min) like the bots job; the page reloads every 20 s
-while pending. Not rendered in a browser - `aa_dev` has no GM rows and no
-negative balance (6 character journal rows in total).
-
-### Sortable audit tab (same session, not committed)
-
-User's choice: the audit tab's groups always by main name, the columns
-sort inside the groups. GM Transactions was already sortable (DataTables).
-Claude's calls: `eosTaxSortGroups` in `bots.js` (no DataTables - no
-RowGroup in AA), headings from `partials/sort-header.html`, the Main
-heading reverses the group order, `age_days` added in `grouped()`. Checked
-in a browser on a rendered snapshot with hand-made rows, not on the live
-page; on narrow screens the Main column, and with it the group toggle, is
-hidden.
-
 ## Decisions of the 2026-10-27 session
 
-The audit tab - the user's choices unless marked:
+The GM Transactions page (0.4.7) - the user's choices unless marked:
+
+- **Own page in the navigation** (`admin_view`), not a bots tab.
+- **Criteria: wallet balance below zero now** (corptools
+  `CharacterAudit.balance`), **or a description starting with "GM ["**
+  (case-sensitive), e.g. "GM [16519715] issued transaction between
+  <character> and GM X" or "... and EVE Central Bank". Empty
+  `context_id`/`context_id_type` was **dropped** - in the dev corp journal
+  it matched 1702 of 13119 rows: market tax, broker fees, donations,
+  clone fees.
+- **The whole journal**, no month selector.
+- **Computed by a job** to keep the page fast.
+- Claude's calls: every character corptools has a journal for, not only
+  the alliance's; the job stores only the GM rows, balances, mains and
+  Corporations are read at render; "Corporations in the Alliance" =
+  corporation history against today's alliance corps plus every corp with
+  a `MonthlyTax` row (a corp that left still counts); "Transaction for" =
+  text after " between " up to the last " and "; one row per transaction,
+  characters only below zero after them, deepest first; lock
+  `GM_REPORT_LOCK` (15 min) like the bots job; the page reloads every
+  20 s while pending; DataTables, server order kept.
+
+The audit tab sorting (0.4.7):
+
+- **User**: groups always by main name; the columns sort inside the
+  groups.
+- Claude's calls: own JS (`eosTaxSortGroups`), not DataTables - AA ships
+  no RowGroup extension and DataTables would scatter the groups; headings
+  from `partials/sort-header.html`; the Main heading reverses the group
+  order; badge columns sort via `data-order`; `age_days` added in
+  `grouped()` (stored lists from before sort ages as unknown until
+  recomputed). On narrow screens the Main column, and with it the group
+  toggle, is hidden.
+
+The audit tab (0.4.6) - the user's choices unless marked:
 
 - **"Listed" means what a tab shows**: its first ten mains, or the
   fallback list when nobody crossed the threshold. Not every row a reading
@@ -87,7 +85,7 @@ The audit tab - the user's choices unless marked:
   the month; the character page does not get the tab
   (`bot-tabs.html` takes `audit_tab=True` from `bots.html` only).
 
-The job - the user's choices unless marked:
+The bots job (0.4.6) - the user's choices unless marked:
 
 - **Stored in an own DB table**, not the cache.
 - **A month never computed queues the job and the tab says so**
@@ -144,7 +142,8 @@ The job - the user's choices unless marked:
 
 ## The bots page
 
-Five tabs. The first four are readings of the same month that deliberately
+Five tabs (the GM Transactions page is a page of its own, not one of
+them). The first four are readings of the same month that deliberately
 disagree - a character at the top of one can be absent from the next, and
 that disagreement is the point. The fifth sums them up.
 
@@ -182,13 +181,22 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
-1. **On deploying 0.4.6: apply migration 0028 and restart every Celery
-   worker** - a worker started before it does not know
-   `run_update_bot_reports`, and the tabs would wait forever. Until the
-   first job ran, every tab shows "being calculated". Check the beat
-   cadence of `run_update_alliance` in production: the running month's
-   lists are only as fresh as its last run ("computed … EVE" says when).
-2. Not looked at in a browser yet, only through the tests: the audit tab,
+1. **On deploying 0.4.6/0.4.7: apply migrations 0028 and 0029 and
+   restart every Celery worker** - a worker started before does not know
+   `run_update_bot_reports` or `run_update_gm_report`, and the bots tabs
+   and the GM page would wait forever. Until the first job ran, they show
+   "being calculated". Check the beat cadence of `run_update_alliance` in
+   production: both are only as fresh as its last run ("computed … EVE"
+   says when).
+2. **GM Transactions has never seen real data** - `aa_dev` has 6
+   character journal rows, no GM booking and no negative balance. After
+   deploying: does the page list the expected characters, does
+   "Transaction for" read the names right, and how long does the job's
+   `description LIKE 'GM [%'` scan over the live character journal take
+   (no index serves it)?
+3. Not looked at in a browser yet, only through the tests: the GM page
+   with rows, the audit tab on the real page (its sorting was clicked
+   through on a rendered snapshot with hand-made rows only),
    the pending note with the 20 s retry (fetched tabs) and the page reload
    (first tab), the "computed … EVE" lines. From earlier versions also not
    rendered yet: the read-only settings page with an `admin_view`-only
@@ -198,36 +206,41 @@ plain list of alts from Alliance Auth, without assessments.
    "Amount paid in ISK" with its badges, and the "Payment differences"
    block on the settings page. One render with the seeded data before
    building on any of them.
-3. **Known limitation of the stored lists**: names, mains and ages are
-   taken when the job runs. A character moved to another main shows
+4. **Known limitation of the stored bots lists**: names, mains and ages
+   are taken when the job runs. A character moved to another main shows
    under the old one until the next run of that month; past months are
    only recomputed when a setting changes or someone asks after a
-   fingerprint change.
-4. **Worth a look in production**: the footer of "Hours per day" splits
+   fingerprint change. (The audit tab regroups live, so its mains are
+   current.)
+5. **Worth a look in production**: the footer of "Hours per day" splits
    its time into database and aggregation. If the ~30 s are mostly
    database, the query (grouping the whole month by character, day, hour
    and ref_type) may be worth an index or a rewrite - corptools' schema is
    not ours to change, so only the query.
-5. On deploying 0.4.5: grant `eos_tax.manage_settings` to whoever changes
+6. On deploying 0.4.5: grant `eos_tax.manage_settings` to whoever changes
    the settings, or only superusers can.
-6. After deploying 0.3.14/0.3.15, recalculate urex (your ex's) for every
+7. After deploying 0.3.14/0.3.15, recalculate urex (your ex's) for every
    month it ran at 0% and check that "added" in the log holds only untaxed
    payouts - the matching key has never seen real member wallet data.
-7. The affiliation filter (0.4.3) has never talked to the real ESI - check
+8. The affiliation filter (0.4.3) has never talked to the real ESI - check
    the log line "... has left this corporation since" after a
    recalculation; "ESI affiliation lookup failed" means everyone stayed
    listed.
-8. Rows written before 0023/0024 show no characters and no calculation
+9. Rows written before 0023/0024 show no characters and no calculation
    time until recalculated; rows paid before 0025 never get a "recorded
    as paid" time.
 
 ## State of the dev instance
 
-- Migrations 0001-0028 applied to `aa_dev`.
+- Migrations 0001-0029 applied to `aa_dev`.
 - `eos_tax_botreport` holds 8 rows from a trial run of the job (2026-09
   and 2026-10, all four tabs) - our own table, safe to overwrite or
-  delete. In the dev data nobody listed has a corptools audit, so the
-  audit tab lists everyone as "no audit".
+  delete. They predate `age_days`, so the audit tab sorts their ages as
+  unknown until recomputed. In the dev data nobody listed has a corptools
+  audit, so the audit tab lists everyone as "no audit".
+- `eos_tax_gmreport` is empty - the GM job never ran against `aa_dev`;
+  the first visit to the page queues it. It would find nothing: no GM
+  booking, no negative balance in the dev data.
 - No Celery worker was running at the end of the session.
 
 ## Seeded test data
@@ -283,12 +296,27 @@ Three traps in that setup, each of which produced a wrong answer once:
   mounted at `/eos_tax/`, not `/eos-tax/`.
 
 The bots tabs now need stored lists: run `store_bot_reports(year, month)`
-in `manage.py shell` first, or the snapshot shows "being calculated".
+in `manage.py shell` first, or the snapshot shows "being calculated". The
+GM page the same with `store_gm_report()`.
+
+For a fragment's JavaScript alone (the audit tab's sorting), quicker:
+`render_to_string` the partial with hand-made rows, wrap it in a page with
+the script inlined, and serve it with `python3 -m http.server` from WSL.
+The browser pane opens a `file://` page only as a static snapshot - no
+script runs there.
 
 ## Traps recent sessions cost time on
 
-- **The bots views need stored lists in tests.** `EosTaxTestCase` patches
-  `run_update_bot_reports.delay` to run the job in place. A test about the
+- **There is no Python on the Windows side.** Patch scripts and anything
+  else in Python run in WSL; the Bash tool's own `python3` is the Windows
+  Store stub.
+- **`pkill -f <pattern>` inside `wsl.exe ... bash -lc '...'` kills its own
+  shell** - the pattern is in that shell's command line, so everything
+  after it never runs (exit 15). Kill by PID, or run it in a call of its
+  own.
+- **The bots and GM views need stored lists in tests.** `EosTaxTestCase`
+  patches `run_update_bot_reports.delay` and `run_update_gm_report.delay`
+  to run the job in place. A test about the
   waiting state patches `delay` away again and must `cache.clear()` in its
   cleanup - the locmem cache is shared across tests, and a lock left
   behind makes every later bots page test show "being calculated". To feed
@@ -320,8 +348,8 @@ in `manage.py shell` first, or the snapshot shows "being calculated".
 - **A `%` in a translatable text breaks every catalogue** ("0% ingame" is
   read as `% i`). Write "without ingame tax" or "zero percent".
 - **gettext's fuzzy guesses are wrong almost every time**: for 0.4.6 it
-  put "Wallet audit" on "no audit" and "Character %(value)s" on
-  "computed %(value)s EVE" in all six catalogues.
+  put "Wallet audit" on "no audit", for 0.4.7 "Taxation" on "GM
+  Transactions" and "Duration" on "Description", in all six catalogues.
 - **A stale `.git/CLAUDE_COMMIT_MSG` gets committed.** Read the file
   first, and check `git log -1` before anything is pushed.
 - **A fix with two guards needs a sabotage of both at once**, and **a

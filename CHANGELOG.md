@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.7] - 2026-10-27
+
 ### Added
 
 - A new page "GM Transactions" (admins only): every character with a GM
