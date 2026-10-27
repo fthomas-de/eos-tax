@@ -46,14 +46,48 @@ def _parties(description):
     return (name, other) if found else ("", "")
 
 
-def named_character(description):
-    """The character a GM transaction is about - the first of the two."""
-    return _parties(description)[0]
+def sides(description, player_names):
+    """(the character a GM transaction is about, where the ISK came from or
+    went to), ("", "") without the pattern.
+
+    The order of the two parties says nothing: a GM taking ISK back books
+    "between GM X and <character>". So the side that is a known character
+    (`player_names`, casefolded) is the character's, the other one the
+    counterparty - and with both sides players there is no counterparty,
+    because the filter offers only the GM side.
+    """
+    first, second = _parties(description)
+
+    if second.casefold() not in player_names:
+        return first, second
+
+    if first.casefold() not in player_names:
+        return second, first
+
+    return first, ""
 
 
-def counterparty(description):
-    """Where the ISK came from or went to - the second of the two."""
-    return _parties(description)[1]
+def _player_names(transactions):
+    """The parties of the transactions that are characters Alliance Auth knows.
+
+    Every wallet owner is one, so a booking naming the owner second is caught
+    even when nobody else is registered.
+    """
+    names = {
+        party
+        for row in transactions
+        for party in _parties(row["description"])
+        if party
+    }
+
+    # casefolded: the database matches the names regardless of case, so the
+    # comparison afterwards has to as well
+    return {
+        name.casefold()
+        for name in EveCharacter.objects.filter(character_name__in=names).values_list(
+            "character_name", flat=True
+        )
+    }
 
 
 def find_gm_transactions():
@@ -256,6 +290,7 @@ def get_gm_page(stored):
     age_days = stored["age_days"]
     # only a transaction has a moment to look the Corporation up at
     periods, corporation_names = _corporation_periods(with_transaction)
+    player_names = _player_names(transactions)
 
     def corporation_then(character_id, transaction):
         if not transaction:
@@ -268,6 +303,9 @@ def get_gm_page(stored):
     def row_for(character_id, transaction=None):
         character = characters.get(character_id)
         main = mains.get(character_id)
+        named, other = (
+            sides(transaction["description"], player_names) if transaction else ("", "")
+        )
 
         return {
             "character_id": character_id,
@@ -286,8 +324,8 @@ def get_gm_page(stored):
             "balance": balances.get(character_id),
             "date": transaction["date"] if transaction else None,
             "amount": transaction["amount"] if transaction else None,
-            "named_character": named_character(transaction["description"]) if transaction else "",
-            "counterparty": counterparty(transaction["description"]) if transaction else "",
+            "named_character": named,
+            "counterparty": other,
             "description": transaction["description"] if transaction else "",
         }
 

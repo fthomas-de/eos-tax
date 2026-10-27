@@ -11,11 +11,10 @@ from allianceauth.eveonline.models import EveCharacter
 from corptools.models import CharacterAudit
 
 from eos_tax.db.gm_transactions import (
-    counterparty,
     find_gm_transactions,
     get_gm_page,
     get_stored_gm_report,
-    named_character,
+    sides,
     store_gm_report,
 )
 from eos_tax.models import GmReport
@@ -50,40 +49,52 @@ def _at(day, hour=12):
     return datetime(2026, 9, day, hour, tzinfo=timezone.utc)
 
 
-class TestNamedCharacter(EosTaxTestCase):
-    def test_should_read_the_first_party_of_either_counterpart(self):
-        self.assertEqual(named_character(GM_TEXT), "Mr Vaseline")
-        self.assertEqual(named_character(BANK_TEXT), "Hydra head4")
+class TestSides(EosTaxTestCase):
+    def test_should_read_the_character_first_and_the_counterparty_second(self):
+        self.assertEqual(sides(GM_TEXT, set()), ("Mr Vaseline", "GM X"))
+        self.assertEqual(sides(BANK_TEXT, set()), ("Hydra head4", "EVE Central Bank"))
         self.assertEqual(
-            named_character(
-                "GM [16519715] issued transaction between Women's clothing mountain and GM X"
+            sides(
+                "GM [16519715] issued transaction between Women's clothing mountain and GM X",
+                set(),
             ),
-            "Women's clothing mountain",
+            ("Women's clothing mountain", "GM X"),
         )
 
     def test_should_keep_an_and_inside_the_name(self):
         self.assertEqual(
-            named_character("GM [1] issued transaction between Salt and Pepper and GM X"),
-            "Salt and Pepper",
+            sides("GM [1] issued transaction between Salt and Pepper and GM X", set()),
+            ("Salt and Pepper", "GM X"),
         )
 
-    def test_should_be_empty_without_the_pattern(self):
-        self.assertEqual(named_character("GM [1] issued a refund"), "")
-        self.assertEqual(named_character("GM [1] issued transaction between nobody"), "")
-
-
-class TestCounterparty(EosTaxTestCase):
-    def test_should_read_the_second_party(self):
-        self.assertEqual(counterparty(GM_TEXT), "GM X")
-        self.assertEqual(counterparty(BANK_TEXT), "EVE Central Bank")
+    def test_should_take_the_player_side_wherever_it_stands(self):
+        # a GM taking ISK back names the character second
         self.assertEqual(
-            counterparty("GM [1] issued transaction between Salt and Pepper and GM X"),
-            "GM X",
+            sides("GM [1] issued transaction between GM X and Mr Vaseline",
+                  {"mr vaseline"}),
+            ("Mr Vaseline", "GM X"),
+        )
+        self.assertEqual(sides(GM_TEXT, {"mr vaseline"}), ("Mr Vaseline", "GM X"))
+
+    def test_should_compare_player_names_regardless_of_case(self):
+        self.assertEqual(
+            sides("GM [1] issued transaction between GM X and MR VASELINE",
+                  {"mr vaseline"}),
+            ("MR VASELINE", "GM X"),
+        )
+
+    def test_should_offer_no_counterparty_between_two_players(self):
+        self.assertEqual(
+            sides("GM [1] issued transaction between Mr Vaseline and Hydra head4",
+                  {"mr vaseline", "hydra head4"}),
+            ("Mr Vaseline", ""),
         )
 
     def test_should_be_empty_without_the_pattern(self):
-        self.assertEqual(counterparty("GM [1] issued a refund"), "")
-        self.assertEqual(counterparty("GM [1] issued transaction between nobody"), "")
+        self.assertEqual(sides("GM [1] issued a refund", set()), ("", ""))
+        self.assertEqual(
+            sides("GM [1] issued transaction between nobody", set()), ("", "")
+        )
 
 
 class GmTestCase(EosTaxTestCase):
@@ -258,6 +269,27 @@ class TestGmPage(GmTestCase):
         self.assertEqual(
             {row["counterparty"] for row in page["rows"] if row["character_id"] == BROKE_ID},
             {""},
+        )
+
+    def test_should_never_offer_a_character_as_counterparty(self):
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        # the GM takes ISK back: the wallet owner stands second
+        add_wallet_entry(self.gm, "GM [1] issued transaction between GM X and Mr Vaseline",
+                         Decimal("2"), _at(4))
+        # another registered character moved by the GM
+        add_character_audit(DEEPER_ID, True, name="Deep Pockets")
+        add_wallet_entry(self.gm, "GM [1] issued transaction between EVE Central Bank "
+                                  "and Deep Pockets", Decimal("3"), _at(5))
+
+        page = self.page()
+
+        self.assertEqual(
+            [(party["name"], party["count"]) for party in page["parties"]],
+            [("EVE Central Bank", 1), ("GM X", 2)],
+        )
+        self.assertEqual(
+            [row["named_character"] for row in page["rows"]],
+            ["Deep Pockets", "Mr Vaseline", "Mr Vaseline"],
         )
 
     def test_should_list_a_wallet_below_zero_without_a_transaction(self):

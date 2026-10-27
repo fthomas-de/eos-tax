@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The counterparty filter on GM Transactions offered the characters
+  themselves as counterparties. It took whatever stood after the last
+  " and " of the description, but a GM taking ISK back books "between GM X
+  and <character>", the character second. The two sides are now told apart
+  by name: the one that is a character Alliance Auth knows - every wallet
+  owner is - is the character's, the other one the counterparty, so the
+  filter only ever offers the GM side. "Transaction for" follows the same
+  rule and names the character for those rows instead of the GM. A booking
+  between two registered characters has no GM side and counts as "No
+  counterparty".
+
 ## [0.4.8] - 2026-10-27
 
 ### Added
