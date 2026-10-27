@@ -65,6 +65,10 @@ def get_unaudited_mains(reports):
     # every main, not the first ten: this list is already the cut of four
     # cut lists, and a main left off it is a missing audit nobody chases
     groups, total = grouped(rows, limit=None)
+    # by name, not by the strongest member like the four lists: this one is
+    # worked through main by main, and a name is where a reader looks one up.
+    # The rows inside keep their order, and the columns sort them in place
+    groups.sort(key=lambda group: group["main_name"].casefold())
 
     return {
         "listed": bool(rows),

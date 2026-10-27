@@ -20,4 +20,5 @@
         <span class="text-body-secondary">{% translate "not registered" %}</span>
     {% endif %}
 </td>
-<td class="d-none d-lg-table-cell">{{ row.age|default:"&mdash;" }}</td>
+{# data-order for the sortable audit tab; empty in lists stored before it existed #}
+<td class="d-none d-lg-table-cell" data-order="{{ row.age_days|default_if_none:'' }}">{{ row.age|default:"&mdash;" }}</td>

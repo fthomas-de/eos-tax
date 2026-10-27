@@ -60,6 +60,118 @@ function eosTaxOpenRequestedTab() {
     }
 }
 
+/* Make the column headings of a grouped table sort it - the audit tab, one
+ * tbody per main with its heading row on top.
+ *
+ * DataTables sorts rows and would scatter a main's characters over the whole
+ * table, and Alliance Auth ships no RowGroup extension for it. So the column
+ * marked "groups" orders the tbody elements by the main's name, and every
+ * other column orders the rows inside each tbody, heading row left on top.
+ */
+function eosTaxSortGroups(root) {
+    const ICONS = ["fa-sort", "fa-sort-up", "fa-sort-down"];
+
+    // data-order where the words do not sort (ages, badges), else the text;
+    // null for a cell with nothing to sort by, an age nobody knows
+    function valueOf(cell) {
+        if (cell.hasAttribute("data-order")) {
+            const order = cell.dataset.order;
+
+            if (order === "") {
+                return null;
+            }
+
+            return isNaN(Number(order)) ? order : Number(order);
+        }
+
+        return cell.textContent.trim();
+    }
+
+    function compare(a, b, sign) {
+        // the unknown stay at the bottom whichever way round
+        if (a === null || b === null) {
+            return (a === null) - (b === null);
+        }
+
+        if (typeof a === "number" && typeof b === "number") {
+            return sign * (a - b);
+        }
+
+        return sign * String(a).localeCompare(String(b), undefined, {
+            sensitivity: "base",
+            numeric: true
+        });
+    }
+
+    function show(heading, direction) {
+        heading.setAttribute("aria-sort", direction);
+
+        const icon = heading.querySelector("i");
+        if (icon) {
+            icon.classList.remove(...ICONS);
+            icon.classList.add(
+                direction === "ascending" ? "fa-sort-up"
+                    : direction === "descending" ? "fa-sort-down" : "fa-sort"
+            );
+        }
+    }
+
+    root.querySelectorAll("table[data-eos-sortable-groups]").forEach(function (table) {
+        const headings = Array.from(table.tHead.rows[0].cells);
+
+        headings.forEach(function (heading, index) {
+            const button = heading.querySelector("[data-eos-sort]");
+
+            if (!button) {
+                return;
+            }
+
+            button.addEventListener("click", function () {
+                const direction = heading.getAttribute("aria-sort") === "ascending"
+                    ? "descending" : "ascending";
+                const sign = direction === "ascending" ? 1 : -1;
+
+                if (button.dataset.eosSort === "groups") {
+                    Array.from(table.tBodies)
+                        .sort(function (a, b) {
+                            return compare(a.dataset.eosGroup, b.dataset.eosGroup, sign);
+                        })
+                        .forEach(function (body) {
+                            table.appendChild(body);
+                        });
+                } else {
+                    Array.from(table.tBodies).forEach(function (body) {
+                        Array.from(body.rows)
+                            .filter(function (row) {
+                                return !row.querySelector("[scope='rowgroup']");
+                            })
+                            // stable: rows equal here keep the order they had
+                            .sort(function (a, b) {
+                                return compare(
+                                    valueOf(a.cells[index]), valueOf(b.cells[index]), sign
+                                );
+                            })
+                            .forEach(function (row) {
+                                body.appendChild(row);
+                            });
+                    });
+
+                    // one row column at a time; the groups keep their own
+                    headings.forEach(function (other) {
+                        const sorter = other.querySelector("[data-eos-sort='rows']");
+
+                        if (sorter && other !== heading) {
+                            show(other, "none");
+                        }
+                    });
+                }
+
+                show(heading, direction);
+            });
+        });
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     "use strict";
 
@@ -118,6 +230,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (typeof eosTaxDrawChart === "function") {
                         eosTaxDrawChart(pane);
                     }
+
+                    // the same for the sortable headings of the audit tab
+                    eosTaxSortGroups(pane);
 
                     // the job is still computing the month: ask again while
                     // the tab stays open, and on the next visit to it

@@ -51,18 +51,20 @@ class EosTaxTestCase(TestCase):
         patcher.start()
         cls.addClassCleanup(patcher.stop)
 
-        # the bots page reads lists a Celery job computes; here the job runs
-        # in place, the way an eager Celery would, so a page test sees its
-        # fixtures without queueing anything. A test about the waiting
-        # state patches it away again
-        from eos_tax.tasks import run_update_bot_reports
+        # the bots and GM pages read lists a Celery job computes; here the
+        # job runs in place, the way an eager Celery would, so a page test
+        # sees its fixtures without queueing anything. A test about the
+        # waiting state patches it away again
+        from eos_tax.tasks import run_update_bot_reports, run_update_gm_report
 
-        patcher = mock.patch.object(
-            run_update_bot_reports, "delay",
-            side_effect=lambda **kwargs: run_update_bot_reports(**kwargs),
-        )
-        patcher.start()
-        cls.addClassCleanup(patcher.stop)
+        for task in (run_update_bot_reports, run_update_gm_report):
+            patcher = mock.patch.object(
+                task, "delay",
+                # bound now: a plain closure would run the last task twice
+                side_effect=lambda task=task, **kwargs: task(**kwargs),
+            )
+            patcher.start()
+            cls.addClassCleanup(patcher.stop)
 
 
 def read_static(name):

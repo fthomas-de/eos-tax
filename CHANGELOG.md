@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- A new page "GM Transactions" (admins only): every character with a GM
+  transaction in their own wallet journal - a description starting with
+  "GM [", as in "GM [16519715] issued transaction between <character> and
+  GM X" or "... and EVE Central Bank" - and every character whose wallet
+  is below zero right now. One row per transaction with its amount, date,
+  the character it names and the description; a character below zero
+  without one gets a row of its own after them, deepest wallet first.
+  Each row shows the current Corporation and Alliance, the main, the
+  current wallet balance and the character's Corporations inside the
+  configured alliances - those Alliance Auth puts there today plus every
+  Corporation with a tax row, so a Corporation that has left since still
+  counts. Finding the transactions reads every description of every
+  character journal, which no index serves, so a Celery job does it
+  (`run_update_gm_report`, stored in `GmReport`, migration 0029) with the
+  tax job, and a page that finds nothing stored queues it and reloads
+  itself every 20 seconds. Balances, mains and Corporations are read when
+  the page loads, so they are never older than the page. An empty
+  `context_id` or `context_id_type` is not a criterion: it is also how
+  market tax, broker fees, donations and clone fees are booked.
+
+### Changed
+
+- The "Without current audit" tab of the bots page sorts. Its mains are
+  listed by name instead of strongest first - the list is worked through
+  main by main, and a name is where a reader looks one up - and the Main
+  heading turns that order round. Every other heading sorts the characters
+  inside each main, so a main's characters stay together under it; the
+  badge columns sort by what they mean (no audit before not current,
+  strong before unremarkable, most tabs last), Age by days with unknown
+  ages at the bottom. Its own few lines in `bots.js` rather than
+  DataTables, which sorts rows only and would scatter the groups -
+  Alliance Auth ships no RowGroup extension for it. The rows of the four
+  lists now carry `age_days` beside the written age; lists stored before
+  that sort their ages as unknown until recomputed.
+
 ## [0.4.6] - 2026-10-27
 
 ### Added

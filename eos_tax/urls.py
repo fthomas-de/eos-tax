@@ -26,4 +26,5 @@ urlpatterns = [
     ),
     path("tax-changes/", views.tax_changes, name="tax_changes"),
     path("tax-changes/<int:corp_id>/", views.tax_change_detail, name="tax_change_detail"),
+    path("gm-transactions/", views.gm_transactions, name="gm_transactions"),
 ]

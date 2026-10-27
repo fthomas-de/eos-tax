@@ -28,6 +28,44 @@ Last updated 2026-10-27.
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
 
+## Unreleased: GM Transactions page (2026-10-27, not committed)
+
+`views.gm_transactions`, `db/gm_transactions.py`, `gm-transactions.html`,
+`gm-transactions.js`, model `GmReport` (migration 0029, applied to
+`aa_dev`), task `run_update_gm_report` queued by `run_update_alliance`.
+17 tests in `test_gm_transactions`, sabotage-checked. New strings are not
+in the catalogues yet (at `/commit`).
+
+The user's choices:
+
+- **Own page in the navigation**, not a bots tab.
+- **Criteria: wallet balance below zero now** (corptools
+  `CharacterAudit.balance`), **or a description starting with "GM ["**.
+  Empty `context_id`/`context_id_type` was dropped - it matches market
+  tax, broker fees, donations, clone fees.
+- **The whole journal**, no month selector.
+- **Computed by a job** to keep the page fast.
+
+Claude's calls: every character corptools has a journal for, not only the
+alliance's; the job stores only the GM rows, everything else is read at
+render; "Corporations in the Alliance" = corporation history against
+today's alliance corps plus every corp with a `MonthlyTax` row; named
+character = text after " between " up to the last " and "; one lock
+(`GM_REPORT_LOCK`, 15 min) like the bots job; the page reloads every 20 s
+while pending. Not rendered in a browser - `aa_dev` has no GM rows and no
+negative balance (6 character journal rows in total).
+
+### Sortable audit tab (same session, not committed)
+
+User's choice: the audit tab's groups always by main name, the columns
+sort inside the groups. GM Transactions was already sortable (DataTables).
+Claude's calls: `eosTaxSortGroups` in `bots.js` (no DataTables - no
+RowGroup in AA), headings from `partials/sort-header.html`, the Main
+heading reverses the group order, `age_days` added in `grouped()`. Checked
+in a browser on a rendered snapshot with hand-made rows, not on the live
+page; on narrow screens the Main column, and with it the group toggle, is
+hidden.
+
 ## Decisions of the 2026-10-27 session
 
 The audit tab - the user's choices unless marked:

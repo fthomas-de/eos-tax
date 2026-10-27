@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 09:12+0000\n"
+"POT-Creation-Date: 2026-10-27 09:44+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: auth_hooks.py:19 templates/eos_tax/base.html:5
-#: templates/eos_tax/base.html:45
+#: templates/eos_tax/base.html:49
 msgid "Alliance PvE Tax"
 msgstr "Alliance PvE Tax"
 
@@ -590,19 +590,23 @@ msgstr ""
 msgid "Overview"
 msgstr "Resumen"
 
-#: templates/eos_tax/base.html:15 views.py:120
+#: templates/eos_tax/base.html:15 views.py:121
 msgid "Statistics"
 msgstr "Estadísticas"
 
-#: templates/eos_tax/base.html:19 views.py:546
+#: templates/eos_tax/base.html:19 views.py:573
 msgid "Bots"
 msgstr "Bots"
 
-#: templates/eos_tax/base.html:23 views.py:194
+#: templates/eos_tax/base.html:23 views.py:195
 msgid "Corp Tax Changes"
 msgstr "Corp Tax Changes"
 
-#: templates/eos_tax/base.html:27 views.py:308
+#: templates/eos_tax/base.html:27 views.py:221
+msgid "GM Transactions"
+msgstr "Transacciones de GM"
+
+#: templates/eos_tax/base.html:31 views.py:335
 msgid "Settings"
 msgstr "Ajustes"
 
@@ -716,7 +720,8 @@ msgstr "total"
 msgid "This character had no active hour in the selected month."
 msgstr "Este character no tuvo ninguna hora activa en el mes seleccionado."
 
-#: templates/eos_tax/bots.html:24 templates/eos_tax/partials/bot-audit.html:13
+#: templates/eos_tax/bots.html:24 templates/eos_tax/gm-transactions.html:29
+#: templates/eos_tax/partials/bot-audit.html:14
 #: templates/eos_tax/partials/bot-clock-detail.html:32
 #: templates/eos_tax/partials/bot-clock.html:26
 #: templates/eos_tax/partials/bot-rhythm-detail.html:27
@@ -794,6 +799,113 @@ msgstr "base de datos"
 msgid "aggregation"
 msgstr "agregación"
 
+#: templates/eos_tax/gm-transactions.html:15
+msgid ""
+"Characters with a GM transaction in their own wallet journal, and characters "
+"whose wallet is below zero right now. The transactions are looked up by a "
+"background job over the whole journal; wallet balances, mains and "
+"Corporations are read when the page loads."
+msgstr ""
+"Characters con una transacción de GM en su propio wallet journal, y "
+"characters cuyo wallet está ahora mismo por debajo de cero. Un proceso en "
+"segundo plano busca las transacciones en todo el journal; los saldos del "
+"wallet, los mains y las Corporations se leen al cargar la página."
+
+#: templates/eos_tax/gm-transactions.html:21
+msgid ""
+"The GM transactions are being looked up in the background. This page reloads "
+"by itself once they are ready."
+msgstr ""
+"Las transacciones de GM se están buscando en segundo plano. Esta página se "
+"recarga por sí sola en cuanto estén listas."
+
+#: templates/eos_tax/gm-transactions.html:30 templates/eos_tax/index.html:49
+#: templates/eos_tax/partials/bot-audit.html:16
+#: templates/eos_tax/partials/bot-clock-detail.html:33
+#: templates/eos_tax/partials/bot-clock.html:27
+#: templates/eos_tax/partials/bot-rhythm-detail.html:28
+#: templates/eos_tax/partials/bot-rhythm.html:27
+#: templates/eos_tax/partials/bot-runs.html:27
+#: templates/eos_tax/partials/bot-table.html:8
+#: templates/eos_tax/settings.html:186 templates/eos_tax/statistics.html:85
+#: templates/eos_tax/tax-changes.html:69
+msgid "Corporation"
+msgstr "Corporation"
+
+#: templates/eos_tax/gm-transactions.html:31
+#: templates/eos_tax/statistics.html:26
+msgid "Alliance"
+msgstr "Alliance"
+
+#: templates/eos_tax/gm-transactions.html:32
+msgid "Corporations in the Alliance"
+msgstr "Corporations de la Alliance"
+
+#: templates/eos_tax/gm-transactions.html:33
+#: templates/eos_tax/partials/bot-audit.html:18
+#: templates/eos_tax/partials/bot-clock.html:28
+#: templates/eos_tax/partials/bot-rhythm.html:28
+#: templates/eos_tax/partials/bot-runs.html:28
+#: templates/eos_tax/partials/bot-table.html:9
+msgid "Main"
+msgstr "Main"
+
+#: templates/eos_tax/gm-transactions.html:34
+msgid "Amount"
+msgstr "Importe"
+
+#: templates/eos_tax/gm-transactions.html:35
+msgid "Date"
+msgstr "Fecha"
+
+#: templates/eos_tax/gm-transactions.html:36
+msgid "Transaction for"
+msgstr "Transacción para"
+
+#: templates/eos_tax/gm-transactions.html:37
+msgid "Wallet balance"
+msgstr "Saldo del wallet"
+
+#: templates/eos_tax/gm-transactions.html:38
+msgid "Description"
+msgstr "Descripción"
+
+#: templates/eos_tax/gm-transactions.html:59
+#: templates/eos_tax/partials/bot-character-cells.html:20
+msgid "not registered"
+msgstr "sin registrar"
+
+#: templates/eos_tax/gm-transactions.html:86
+msgid "No GM transaction in any character journal, and no wallet below zero."
+msgstr ""
+"Ninguna transacción de GM en el journal de ningún character, y ningún wallet "
+"por debajo de cero."
+
+#: templates/eos_tax/gm-transactions.html:92
+#, python-format
+msgid "%(counter)s GM transaction"
+msgid_plural "%(counter)s GM transactions"
+msgstr[0] "%(counter)s transacción de GM"
+msgstr[1] "%(counter)s transacciones de GM"
+
+#: templates/eos_tax/gm-transactions.html:93
+#, python-format
+msgid "%(counter)s wallet below zero"
+msgid_plural "%(counter)s wallets below zero"
+msgstr[0] "%(counter)s wallet por debajo de cero"
+msgstr[1] "%(counter)s wallets por debajo de cero"
+
+#: templates/eos_tax/gm-transactions.html:94
+#: templates/eos_tax/partials/bot-clock.html:72
+#: templates/eos_tax/partials/bot-group-header.html:14
+#: templates/eos_tax/partials/bot-rhythm.html:72
+#: templates/eos_tax/partials/bot-runs.html:86
+#, python-format
+msgid "%(counter)s character"
+msgid_plural "%(counter)s characters"
+msgstr[0] "%(counter)s character"
+msgstr[1] "%(counter)s characters"
+
 #: templates/eos_tax/help.html:4
 msgid "How to pay taxes?"
 msgstr "¿Cómo pagar los impuestos?"
@@ -840,18 +952,6 @@ msgstr "En curso"
 #: templates/eos_tax/index.html:39 templates/eos_tax/tax-changes.html:44
 msgid "All"
 msgstr "Todos"
-
-#: templates/eos_tax/index.html:49 templates/eos_tax/partials/bot-audit.html:14
-#: templates/eos_tax/partials/bot-clock-detail.html:33
-#: templates/eos_tax/partials/bot-clock.html:27
-#: templates/eos_tax/partials/bot-rhythm-detail.html:28
-#: templates/eos_tax/partials/bot-rhythm.html:27
-#: templates/eos_tax/partials/bot-runs.html:27
-#: templates/eos_tax/partials/bot-table.html:8
-#: templates/eos_tax/settings.html:186 templates/eos_tax/statistics.html:85
-#: templates/eos_tax/tax-changes.html:69
-msgid "Corporation"
-msgstr "Corporation"
 
 #: templates/eos_tax/index.html:50
 msgid "Ingame Corp Tax"
@@ -956,15 +1056,7 @@ msgstr ""
 "de corptools falta o ya no está al día. Solo se comprueban los characters "
 "que muestran esas pestañas, no el resto de la cuenta."
 
-#: templates/eos_tax/partials/bot-audit.html:15
-#: templates/eos_tax/partials/bot-clock.html:28
-#: templates/eos_tax/partials/bot-rhythm.html:28
-#: templates/eos_tax/partials/bot-runs.html:28
-#: templates/eos_tax/partials/bot-table.html:9
-msgid "Main"
-msgstr "Main"
-
-#: templates/eos_tax/partials/bot-audit.html:16
+#: templates/eos_tax/partials/bot-audit.html:20
 #: templates/eos_tax/partials/bot-clock.html:29
 #: templates/eos_tax/partials/bot-rhythm.html:29
 #: templates/eos_tax/partials/bot-runs.html:29
@@ -972,15 +1064,15 @@ msgstr "Main"
 msgid "Age"
 msgstr "Edad"
 
-#: templates/eos_tax/partials/bot-audit.html:17
+#: templates/eos_tax/partials/bot-audit.html:22
 msgid "Listed on"
 msgstr "Listado en"
 
-#: templates/eos_tax/partials/bot-audit.html:18
+#: templates/eos_tax/partials/bot-audit.html:24
 msgid "Audit"
 msgstr "Auditoría"
 
-#: templates/eos_tax/partials/bot-audit.html:19
+#: templates/eos_tax/partials/bot-audit.html:26
 #: templates/eos_tax/partials/bot-clock.html:34
 #: templates/eos_tax/partials/bot-rhythm.html:34
 #: templates/eos_tax/partials/bot-runs.html:34
@@ -988,61 +1080,57 @@ msgstr "Auditoría"
 msgid "Assessment"
 msgstr "Valoración"
 
-#: templates/eos_tax/partials/bot-audit.html:40
+#: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:8
-#: templates/eos_tax/settings.html:243 views.py:590
+#: templates/eos_tax/settings.html:243 views.py:617
 msgid "Hours per day"
 msgstr "Horas por día"
 
-#: templates/eos_tax/partials/bot-audit.html:40
+#: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:15
-#: templates/eos_tax/settings.html:258 views.py:591
+#: templates/eos_tax/settings.html:258 views.py:618
 msgid "Unbroken runs"
 msgstr "Rachas ininterrumpidas"
 
-#: templates/eos_tax/partials/bot-audit.html:40
+#: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:22
-#: templates/eos_tax/settings.html:275 views.py:592
+#: templates/eos_tax/settings.html:275 views.py:619
 msgid "Against the Corporation"
 msgstr "Al ritmo de la Corporation"
 
-#: templates/eos_tax/partials/bot-audit.html:40
+#: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:29
-#: templates/eos_tax/settings.html:293 views.py:593
+#: templates/eos_tax/settings.html:293 views.py:620
 msgid "Off the Corporation clock"
 msgstr "Fuera del horario de la Corporation"
 
-#: templates/eos_tax/partials/bot-audit.html:46
+#: templates/eos_tax/partials/bot-audit.html:56
 msgid "not current"
 msgstr "desactualizada"
 
-#: templates/eos_tax/partials/bot-audit.html:48
+#: templates/eos_tax/partials/bot-audit.html:58
 msgid "no audit"
 msgstr "sin auditoría"
 
-#: templates/eos_tax/partials/bot-audit.html:63
+#: templates/eos_tax/partials/bot-audit.html:73
 msgid "Every character on the other four tabs has a current audit."
 msgstr ""
 "Todos los characters de las otras cuatro pestañas tienen una auditoría al "
 "día."
 
-#: templates/eos_tax/partials/bot-audit.html:68
+#: templates/eos_tax/partials/bot-audit.html:78
 #, python-format
 msgid "%(counter)s character on the other tabs"
 msgid_plural "%(counter)s characters on the other tabs"
 msgstr[0] "%(counter)s character en las otras pestañas"
 msgstr[1] "%(counter)s characters en las otras pestañas"
 
-#: templates/eos_tax/partials/bot-audit.html:69
+#: templates/eos_tax/partials/bot-audit.html:79
 #, python-format
 msgid "%(counter)s without current audit"
 msgid_plural "%(counter)s without current audit"
 msgstr[0] "%(counter)s sin auditoría al día"
 msgstr[1] "%(counter)s sin auditoría al día"
-
-#: templates/eos_tax/partials/bot-character-cells.html:20
-msgid "not registered"
-msgstr "sin registrar"
 
 #: templates/eos_tax/partials/bot-clock-detail.html:12
 msgid ""
@@ -1166,7 +1254,7 @@ msgstr "Diferencia"
 
 #: templates/eos_tax/partials/bot-clock.html:33
 #: templates/eos_tax/partials/bot-rhythm.html:33
-#: templates/eos_tax/tax-changes.html:73 views.py:231
+#: templates/eos_tax/tax-changes.html:73 views.py:258
 msgid "Payouts"
 msgstr "Pagos"
 
@@ -1180,16 +1268,6 @@ msgstr ""
 "Nadie pudo medirse este mes. Un character necesita %(own)s pagos propios, el "
 "resto de su corporation %(rest)s, y ambos días necesitan un centro que "
 "situar."
-
-#: templates/eos_tax/partials/bot-clock.html:72
-#: templates/eos_tax/partials/bot-group-header.html:14
-#: templates/eos_tax/partials/bot-rhythm.html:72
-#: templates/eos_tax/partials/bot-runs.html:86
-#, python-format
-msgid "%(counter)s character"
-msgid_plural "%(counter)s characters"
-msgstr[0] "%(counter)s character"
-msgstr[1] "%(counter)s characters"
 
 #: templates/eos_tax/partials/bot-clock.html:74
 #: templates/eos_tax/partials/bot-rhythm.html:74
@@ -1489,7 +1567,7 @@ msgstr "Día promedio (horas)"
 msgid "Contributed tax"
 msgstr "Impuesto aportado"
 
-#: templates/eos_tax/partials/bot-tabs.html:38 views.py:594
+#: templates/eos_tax/partials/bot-tabs.html:38 views.py:621
 msgid "Without current audit"
 msgstr "Sin auditoría al día"
 
@@ -1982,10 +2060,6 @@ msgstr ""
 msgid "Save settings"
 msgstr "Guardar ajustes"
 
-#: templates/eos_tax/statistics.html:26
-msgid "Alliance"
-msgstr "Alliance"
-
 #: templates/eos_tax/statistics.html:28
 msgid "All alliances"
 msgstr "Todas las Alliances"
@@ -2127,7 +2201,7 @@ msgstr "Cambio en la parte"
 msgid "On"
 msgstr "El"
 
-#: templates/eos_tax/tax-changes.html:72 views.py:232
+#: templates/eos_tax/tax-changes.html:72 views.py:259
 msgid "Systems"
 msgstr "Sistemas"
 
@@ -2183,84 +2257,88 @@ msgstr "m"
 msgid "y"
 msgstr "a"
 
-#: views.py:99
+#: views.py:100
 #, python-format
 msgid "Taxes to pay: %(rate)s%%"
 msgstr "Impuesto a pagar: %(rate)s%%"
 
-#: views.py:108
+#: views.py:109
 msgid "Corporation:"
 msgstr "Corporation:"
 
-#: views.py:109
+#: views.py:110
 msgid "Filter by corporation name"
 msgstr "Filtrar por nombre de Corporation"
 
-#: views.py:128 views.py:513 views.py:567
+#: views.py:129 views.py:540 views.py:594
 msgid "Loading…"
 msgstr "Cargando…"
 
-#: views.py:129
+#: views.py:130
 msgid "No data for this selection."
 msgstr "No hay datos para esta selección."
 
-#: views.py:130
+#: views.py:131
 msgid "Could not load the statistics."
 msgstr "No se pudieron cargar las estadísticas."
 
-#: views.py:131
+#: views.py:132
 msgid "corporations"
 msgstr "Corporations"
 
-#: views.py:132
+#: views.py:133
 msgid "Other"
 msgstr "Otras"
 
-#: views.py:133
+#: views.py:134
 #, python-brace-format
 msgid "{shown} of {total} corporations drawn"
 msgstr "{shown} de {total} corporations dibujadas"
 
-#: views.py:134
+#: views.py:135
 #, python-brace-format
 msgid "{value} of the tax covered"
 msgstr "{value} del impuesto cubierto"
 
-#: views.py:135
+#: views.py:136
 #, python-brace-format
 msgid "{value} ISK income"
 msgstr "{value} ISK de ingreso"
 
-#: views.py:136
+#: views.py:137
 #, python-brace-format
 msgid "{value} ISK tax"
 msgstr "{value} ISK de impuesto"
 
-#: views.py:201
+#: views.py:202 views.py:225
 msgid "Search:"
 msgstr "Buscar:"
 
-#: views.py:202
+#: views.py:203
 msgid "Corporation name, or a rate such as 0 or 100"
 msgstr "Nombre de la corporation o un tipo como 0 o 100"
 
-#: views.py:230
+#: views.py:226
+msgid "Character, Corporation or Main"
+msgstr "Character, Corporation o Main"
+
+#: views.py:257
 msgid "Share of the bounty in percent"
 msgstr "Parte de la bounty en por ciento"
 
-#: views.py:273
+#: views.py:300
 msgid "Settings saved."
 msgstr "Ajustes guardados."
 
-#: views.py:321
+#: views.py:348
 msgid "Calculating…"
 msgstr "Calculando…"
 
-#: views.py:322
+#: views.py:349
 msgid "Could not recalculate this month."
 msgstr "No se pudo recalcular este mes."
 
-#: views.py:514 views.py:568
+#: views.py:541 views.py:595
 msgid "Could not load this view."
 msgstr "No se pudo cargar esta vista."
 

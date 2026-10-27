@@ -1,14 +1,16 @@
 """The fifth tab of the bots page: listed characters without a current audit."""
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
+from django.template.loader import render_to_string
 from django.urls import reverse
 
+from allianceauth.eveonline.models import EveCharacter
 from corptools.models import EveName
 
 from eos_tax.db.bot_audit import AUDIT_INACTIVE, AUDIT_MISSING, get_unaudited_mains
 from eos_tax.db.bot_store import get_stored_reports, store_bot_reports
-from eos_tax.tests.base import EosTaxTestCase
+from eos_tax.tests.base import EosTaxTestCase, read_static
 
 from .factories import (
     BRAVO_CORP_ID,
@@ -146,6 +148,37 @@ class TestWhatTheTabsShow(EosTaxTestCase):
 
         self.assertEqual(len(get_unaudited_mains(reports)["groups"]), 12)
 
+    def test_should_order_the_mains_by_name_not_by_assessment(self):
+        """Worked through main by main - the strongest first would put the
+        name a reader is looking for anywhere."""
+        reports = {"hours": _report(groups=[
+            [{**_row(2100001001, "high"), "character_name": "zeta"}],
+            [{**_row(2100001002, "low"), "character_name": "Alpha"}],
+            [{**_row(2100001003, "medium"), "character_name": "beta"}],
+        ])}
+
+        self.assertEqual(
+            [group["main_name"] for group in get_unaudited_mains(reports)["groups"]],
+            ["Alpha", "beta", "zeta"],
+        )
+
+    def test_should_carry_the_age_in_days_for_sorting(self):
+        EveCharacter.objects.create(
+            character_id=RATTER_ID,
+            character_name="Busy Ratter",
+            corporation_id=BRAVO_CORP_ID,
+            corporation_name="Bravo Corp",
+            corporation_ticker="BRAVO",
+            birthday=date.today() - timedelta(days=400),
+        )
+        reports = {"hours": _report(groups=[[_row(RATTER_ID), _row(CASUAL_ID)]])}
+
+        ages = {row["character_id"]: row["age_days"] for row in self.rows(reports)}
+
+        # within a day: the test may straddle midnight UTC
+        self.assertAlmostEqual(ages[RATTER_ID], 400, delta=1)
+        self.assertIsNone(ages[CASUAL_ID])
+
     def test_should_be_as_old_as_its_oldest_list(self):
         """The list is only as fresh as the stalest of the four it reads."""
         older = datetime(YEAR, MONTH, 3, tzinfo=timezone.utc)
@@ -183,6 +216,46 @@ class TestAuditTab(EosTaxTestCase):
         self.assertContains(
             response, f"{reverse('eos_tax:bots')}?month={month}&amp;tab=hours"
         )
+
+    def test_should_render_sortable_headings_and_sort_values(self):
+        for day in (1, 2):
+            add_entries(self.divisions[BRAVO_CORP_ID], RATTER_ID, day, (0, 6, 12, 18))
+
+        response = self.client.get(
+            reverse("eos_tax:bot_signal", args=["audit"]),
+            {"month": f"{YEAR}-{MONTH:02d}"},
+        )
+
+        self.assertContains(response, "data-eos-sortable-groups")
+        # the mains column orders the groups and starts out sorted A to Z
+        self.assertContains(response, 'aria-sort="ascending"', count=1)
+        self.assertContains(response, 'data-eos-sort="groups"', count=1)
+        self.assertContains(response, 'data-eos-sort="rows"', count=6)
+        self.assertContains(response, 'data-eos-group="Busy Ratter"')
+
+    def test_should_give_the_badge_columns_a_value_to_sort_by(self):
+        reports = {
+            "hours": _report(groups=[[_row(RATTER_ID, "medium")]]),
+            "runs": _report(groups=[[_row(RATTER_ID, "low")]]),
+        }
+        report = get_unaudited_mains(reports)
+
+        body = render_to_string("eos_tax/partials/bot-audit.html", {
+            "groups": report["groups"],
+            "stats": report["stats"],
+            "selected_month": f"{YEAR}-{MONTH:02d}",
+        })
+
+        self.assertEqual(body.count('<td data-order="2">'), 1)  # listed on two tabs
+        self.assertEqual(body.count('<td data-order="0">'), 1)  # no audit at all
+        self.assertEqual(body.count('<td data-order="1">'), 1)  # worth a look
+
+    def test_script_should_sort_inside_the_groups_once_the_tab_lands(self):
+        script = read_static("bots.js")
+
+        self.assertIn("eosTaxSortGroups(pane);", script)
+        self.assertIn("[scope='rowgroup']", script)
+        self.assertIn("a.dataset.eosGroup", script)
 
     def test_should_say_so_when_everybody_has_a_current_audit(self):
         response = self.client.get(

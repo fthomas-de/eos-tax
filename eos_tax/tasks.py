@@ -7,6 +7,7 @@ from allianceauth.eveonline.models import EveCorporationInfo
 
 from eos_tax import progress
 from eos_tax.db.bot_store import store_bot_reports
+from eos_tax.db.gm_transactions import store_gm_report
 from eos_tax.db.payments import update_corp
 from eos_tax.app_settings import get_config
 from eos_tax.util import get_dates
@@ -30,6 +31,18 @@ def queue_bot_reports(dates):
                      BOT_REPORT_LOCK_SECONDS):
             logger.info(f"queueing bot lists: {month}/{year}")
             run_update_bot_reports.delay(month=month, year=year)
+
+
+# The same for the GM transactions page, which reads every character journal
+# at once and has no month.
+GM_REPORT_LOCK = "eos_tax_gm_report_queued"
+
+
+def queue_gm_report():
+    if cache.add(GM_REPORT_LOCK, 1, BOT_REPORT_LOCK_SECONDS):
+        logger.info("queueing GM transactions")
+        run_update_gm_report.delay()
+
 
 def queue_corporations(corporations, dates, kind):
     """Queues one subtask per Corporation and month, as one run of the
@@ -77,6 +90,7 @@ def run_update_alliance():
     queue_corporations(corporations, get_dates(), progress.AUTOMATIC)
     # the same months, so the bots page keeps pace with the tax rows
     queue_bot_reports(get_dates())
+    queue_gm_report()
 
 # helper task
 @shared_task
@@ -94,3 +108,11 @@ def run_update_bot_reports(month: int, year: int):
     finally:
         # also after a failure, so the next visit can queue it again
         cache.delete(BOT_REPORT_LOCK.format(year=year, month=month))
+
+
+@shared_task
+def run_update_gm_report():
+    try:
+        store_gm_report()
+    finally:
+        cache.delete(GM_REPORT_LOCK)

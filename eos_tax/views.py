@@ -31,6 +31,7 @@ from eos_tax.db.bot_signals import (
     get_rhythm_detail,
     get_run_detail,
 )
+from eos_tax.db.gm_transactions import get_gm_page, get_stored_gm_report
 from eos_tax.db.payments import (
     STATE_OPEN,
     STATE_PAID,
@@ -48,7 +49,7 @@ from eos_tax.db.statistics import (
 )
 from eos_tax.db.tax_changes import get_corp_tax_changes, get_corp_tax_detail
 from eos_tax import progress
-from eos_tax.tasks import queue_bot_reports, queue_corporations
+from eos_tax.tasks import queue_bot_reports, queue_corporations, queue_gm_report
 from eos_tax.util import get_dates, format_isk
 
 logger = get_extension_logger(__name__)
@@ -203,6 +204,32 @@ def tax_changes(request):
         },
     }
     return render(request, "eos_tax/tax-changes.html", context)
+
+
+@login_required
+@permission_required("eos_tax.admin_view")
+def gm_transactions(request):
+    """Characters with a GM transaction in their journal, or a wallet below zero."""
+    stored = get_stored_gm_report()
+
+    if stored is None:
+        queue_gm_report()
+        # an eager Celery - the tests - has found them by now
+        stored = get_stored_gm_report()
+
+    context = {
+        "title": _("GM Transactions"),
+        "version": VERSION,
+        "pending": stored is None,
+        "js_config": {
+            "searchLabel": _("Search:"),
+            "searchPlaceholder": _("Character, Corporation or Main"),
+        },
+    }
+    if stored is not None:
+        context.update(get_gm_page(stored))
+
+    return render(request, "eos_tax/gm-transactions.html", context)
 
 
 @login_required

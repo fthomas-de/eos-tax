@@ -7,27 +7,36 @@
 
 {% if groups %}
     <div class="table-responsive">
-        <table class="table table-striped table-hover align-middle w-100">
+        {# bots.js sorts it: the mains by name, the characters inside each main by any column #}
+        <table class="table table-striped table-hover align-middle w-100" data-eos-sortable-groups>
             <thead>
                 <tr>
-                    <th scope="col">{% translate "Character" %}</th>
-                    <th scope="col" class="d-none d-md-table-cell">{% translate "Corporation" %}</th>
-                    <th scope="col" class="d-none d-lg-table-cell">{% translate "Main" %}</th>
-                    <th scope="col" class="d-none d-lg-table-cell">{% translate "Age" %}</th>
-                    <th scope="col">{% translate "Listed on" %}</th>
-                    <th scope="col">{% translate "Audit" %}</th>
-                    <th scope="col">{% translate "Assessment" %}</th>
+                    {% translate "Character" as heading %}
+                    {% include "eos_tax/partials/sort-header.html" with title=heading css="" %}
+                    {% translate "Corporation" as heading %}
+                    {% include "eos_tax/partials/sort-header.html" with title=heading css="d-none d-md-table-cell" %}
+                    {% translate "Main" as heading %}
+                    {% include "eos_tax/partials/sort-header.html" with title=heading css="d-none d-lg-table-cell" sort_groups=True %}
+                    {% translate "Age" as heading %}
+                    {% include "eos_tax/partials/sort-header.html" with title=heading css="d-none d-lg-table-cell" %}
+                    {% translate "Listed on" as heading %}
+                    {% include "eos_tax/partials/sort-header.html" with title=heading css="" %}
+                    {% translate "Audit" as heading %}
+                    {% include "eos_tax/partials/sort-header.html" with title=heading css="" %}
+                    {% translate "Assessment" as heading %}
+                    {% include "eos_tax/partials/sort-header.html" with title=heading css="" %}
                 </tr>
             </thead>
 
             {% for group in groups %}
-                <tbody>
+                <tbody data-eos-group="{{ group.main_name }}">
                     {% include "eos_tax/partials/bot-group-header.html" with group=group columns=7 %}
 
                     {% for row in group.characters %}
                     <tr>
                         {% include "eos_tax/partials/bot-character-cells.html" %}
-                        <td>
+                        {# data-order: what the column sorts by when the words do not #}
+                        <td data-order="{{ row.signals|length }}">
                             {% comment %}
                                 The tab's own words, and a link that reopens it
                                 for this month - the reason the character is
@@ -40,14 +49,15 @@
                                 </a>
                             {% endfor %}
                         </td>
-                        <td>
+                        {# no audit at all first, the way the badges rank them #}
+                        <td data-order="{% if row.audit == 'inactive' %}1{% else %}0{% endif %}">
                             {% if row.audit == "inactive" %}
                                 <span class="badge text-bg-warning">{% translate "not current" %}</span>
                             {% else %}
                                 <span class="badge text-bg-danger">{% translate "no audit" %}</span>
                             {% endif %}
                         </td>
-                        <td>
+                        <td data-order="{% if row.level == 'high' %}0{% elif row.level == 'medium' %}1{% else %}2{% endif %}">
                             {# the strongest of the readings that listed the character #}
                             {% include "eos_tax/partials/bot-level-badge.html" with level=row.level %}
                         </td>

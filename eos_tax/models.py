@@ -528,3 +528,20 @@ class BotReport(models.Model):
                 name="eos_tax_one_bot_report_per_tab_and_month",
             ),
         ]
+
+
+class GmReport(models.Model):
+    """The GM transactions page, as the job last found it.
+
+    Finding them means reading every description of every character wallet
+    journal - no index serves a text prefix there - so the job does it and
+    the page reads what it left. One row; the job replaces it.
+    """
+
+    # the GM transactions only - balances, mains and Corporations are read
+    # live, being cheap and what the page is about right now
+    report = models.JSONField(encoder=DjangoJSONEncoder)
+    computed_at = models.DateTimeField()
+
+    class Meta:
+        default_permissions = ()

@@ -205,6 +205,7 @@ def grouped(rows, limit: int = GROUP_LIMIT):
     character_ids = [row["character_id"] for row in rows]
     mains = main_characters(character_ids)
     ages = character_ages(character_ids)
+    today = datetime.now(timezone.utc).date()
 
     groups = {}
     for row in rows:
@@ -222,6 +223,10 @@ def grouped(rows, limit: int = GROUP_LIMIT):
         # must not claim one
         row["main_name"] = main[1] if main else ""
         row["age"] = format_age(ages.get(row["character_id"]))
+        # what a sortable Age column orders by - "2 y" and "5 mo" do not
+        # sort as text
+        birthday = ages.get(row["character_id"])
+        row["age_days"] = (today - birthday).days if birthday else None
         group["characters"].append(row)
 
     for group in groups.values():

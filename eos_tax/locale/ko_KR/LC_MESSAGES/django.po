@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 09:12+0000\n"
+"POT-Creation-Date: 2026-10-27 09:44+0000\n"
 "Language: ko-KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #: auth_hooks.py:19 templates/eos_tax/base.html:5
-#: templates/eos_tax/base.html:45
+#: templates/eos_tax/base.html:49
 msgid "Alliance PvE Tax"
 msgstr "Alliance PvE Tax"
 
@@ -571,19 +571,23 @@ msgstr ""
 msgid "Overview"
 msgstr "개요"
 
-#: templates/eos_tax/base.html:15 views.py:120
+#: templates/eos_tax/base.html:15 views.py:121
 msgid "Statistics"
 msgstr "통계"
 
-#: templates/eos_tax/base.html:19 views.py:546
+#: templates/eos_tax/base.html:19 views.py:573
 msgid "Bots"
 msgstr "봇"
 
-#: templates/eos_tax/base.html:23 views.py:194
+#: templates/eos_tax/base.html:23 views.py:195
 msgid "Corp Tax Changes"
 msgstr "Corp Tax Changes"
 
-#: templates/eos_tax/base.html:27 views.py:308
+#: templates/eos_tax/base.html:27 views.py:221
+msgid "GM Transactions"
+msgstr "GM 거래"
+
+#: templates/eos_tax/base.html:31 views.py:335
 msgid "Settings"
 msgstr "설정"
 
@@ -690,7 +694,8 @@ msgstr "합계"
 msgid "This character had no active hour in the selected month."
 msgstr "이 character는 선택한 달에 활동 시간이 없습니다."
 
-#: templates/eos_tax/bots.html:24 templates/eos_tax/partials/bot-audit.html:13
+#: templates/eos_tax/bots.html:24 templates/eos_tax/gm-transactions.html:29
+#: templates/eos_tax/partials/bot-audit.html:14
 #: templates/eos_tax/partials/bot-clock-detail.html:32
 #: templates/eos_tax/partials/bot-clock.html:26
 #: templates/eos_tax/partials/bot-rhythm-detail.html:27
@@ -766,6 +771,107 @@ msgstr "데이터베이스"
 msgid "aggregation"
 msgstr "집계"
 
+#: templates/eos_tax/gm-transactions.html:15
+msgid ""
+"Characters with a GM transaction in their own wallet journal, and characters "
+"whose wallet is below zero right now. The transactions are looked up by a "
+"background job over the whole journal; wallet balances, mains and "
+"Corporations are read when the page loads."
+msgstr ""
+"자신의 wallet journal에 GM 거래가 있는 Character와 현재 wallet 잔액이 0 미만"
+"인 Character입니다. 거래는 백그라운드 작업이 전체 journal에서 찾고, wallet "
+"잔액, Main, Corporation은 페이지를 불러올 때 읽습니다."
+
+#: templates/eos_tax/gm-transactions.html:21
+msgid ""
+"The GM transactions are being looked up in the background. This page reloads "
+"by itself once they are ready."
+msgstr ""
+"GM 거래를 백그라운드에서 찾고 있습니다. 준비되면 이 페이지가 자동으로 새로고"
+"침됩니다."
+
+#: templates/eos_tax/gm-transactions.html:30 templates/eos_tax/index.html:49
+#: templates/eos_tax/partials/bot-audit.html:16
+#: templates/eos_tax/partials/bot-clock-detail.html:33
+#: templates/eos_tax/partials/bot-clock.html:27
+#: templates/eos_tax/partials/bot-rhythm-detail.html:28
+#: templates/eos_tax/partials/bot-rhythm.html:27
+#: templates/eos_tax/partials/bot-runs.html:27
+#: templates/eos_tax/partials/bot-table.html:8
+#: templates/eos_tax/settings.html:186 templates/eos_tax/statistics.html:85
+#: templates/eos_tax/tax-changes.html:69
+msgid "Corporation"
+msgstr "Corporation"
+
+#: templates/eos_tax/gm-transactions.html:31
+#: templates/eos_tax/statistics.html:26
+msgid "Alliance"
+msgstr "Alliance"
+
+#: templates/eos_tax/gm-transactions.html:32
+msgid "Corporations in the Alliance"
+msgstr "Alliance 내 Corporation"
+
+#: templates/eos_tax/gm-transactions.html:33
+#: templates/eos_tax/partials/bot-audit.html:18
+#: templates/eos_tax/partials/bot-clock.html:28
+#: templates/eos_tax/partials/bot-rhythm.html:28
+#: templates/eos_tax/partials/bot-runs.html:28
+#: templates/eos_tax/partials/bot-table.html:9
+msgid "Main"
+msgstr "Main"
+
+#: templates/eos_tax/gm-transactions.html:34
+msgid "Amount"
+msgstr "금액"
+
+#: templates/eos_tax/gm-transactions.html:35
+msgid "Date"
+msgstr "날짜"
+
+#: templates/eos_tax/gm-transactions.html:36
+msgid "Transaction for"
+msgstr "거래 대상"
+
+#: templates/eos_tax/gm-transactions.html:37
+msgid "Wallet balance"
+msgstr "Wallet 잔액"
+
+#: templates/eos_tax/gm-transactions.html:38
+msgid "Description"
+msgstr "설명"
+
+#: templates/eos_tax/gm-transactions.html:59
+#: templates/eos_tax/partials/bot-character-cells.html:20
+msgid "not registered"
+msgstr "미등록"
+
+#: templates/eos_tax/gm-transactions.html:86
+msgid "No GM transaction in any character journal, and no wallet below zero."
+msgstr "어떤 Character journal에도 GM 거래가 없고, 0 미만인 wallet도 없습니다."
+
+#: templates/eos_tax/gm-transactions.html:92
+#, python-format
+msgid "%(counter)s GM transaction"
+msgid_plural "%(counter)s GM transactions"
+msgstr[0] "GM 거래 %(counter)s건"
+
+#: templates/eos_tax/gm-transactions.html:93
+#, python-format
+msgid "%(counter)s wallet below zero"
+msgid_plural "%(counter)s wallets below zero"
+msgstr[0] "0 미만 wallet %(counter)s개"
+
+#: templates/eos_tax/gm-transactions.html:94
+#: templates/eos_tax/partials/bot-clock.html:72
+#: templates/eos_tax/partials/bot-group-header.html:14
+#: templates/eos_tax/partials/bot-rhythm.html:72
+#: templates/eos_tax/partials/bot-runs.html:86
+#, python-format
+msgid "%(counter)s character"
+msgid_plural "%(counter)s characters"
+msgstr[0] "character %(counter)s명"
+
 #: templates/eos_tax/help.html:4
 msgid "How to pay taxes?"
 msgstr "세금은 어떻게 내나요?"
@@ -812,18 +918,6 @@ msgstr "진행 중"
 #: templates/eos_tax/index.html:39 templates/eos_tax/tax-changes.html:44
 msgid "All"
 msgstr "전체"
-
-#: templates/eos_tax/index.html:49 templates/eos_tax/partials/bot-audit.html:14
-#: templates/eos_tax/partials/bot-clock-detail.html:33
-#: templates/eos_tax/partials/bot-clock.html:27
-#: templates/eos_tax/partials/bot-rhythm-detail.html:28
-#: templates/eos_tax/partials/bot-rhythm.html:27
-#: templates/eos_tax/partials/bot-runs.html:27
-#: templates/eos_tax/partials/bot-table.html:8
-#: templates/eos_tax/settings.html:186 templates/eos_tax/statistics.html:85
-#: templates/eos_tax/tax-changes.html:69
-msgid "Corporation"
-msgstr "Corporation"
 
 #: templates/eos_tax/index.html:50
 msgid "Ingame Corp Tax"
@@ -923,18 +1017,10 @@ msgid ""
 "are checked, not the rest of the account."
 msgstr ""
 "다른 네 탭에 표시된 character 중 corptools 감사가 없거나 더 이상 최신이 아닌 "
-"character가 하나 이상 있는 Main입니다. 해당 탭에 표시된 character만 확인하며, "
-"계정의 나머지 character는 확인하지 않습니다."
+"character가 하나 이상 있는 Main입니다. 해당 탭에 표시된 character만 확인하"
+"며, 계정의 나머지 character는 확인하지 않습니다."
 
-#: templates/eos_tax/partials/bot-audit.html:15
-#: templates/eos_tax/partials/bot-clock.html:28
-#: templates/eos_tax/partials/bot-rhythm.html:28
-#: templates/eos_tax/partials/bot-runs.html:28
-#: templates/eos_tax/partials/bot-table.html:9
-msgid "Main"
-msgstr "Main"
-
-#: templates/eos_tax/partials/bot-audit.html:16
+#: templates/eos_tax/partials/bot-audit.html:20
 #: templates/eos_tax/partials/bot-clock.html:29
 #: templates/eos_tax/partials/bot-rhythm.html:29
 #: templates/eos_tax/partials/bot-runs.html:29
@@ -942,15 +1028,15 @@ msgstr "Main"
 msgid "Age"
 msgstr "나이"
 
-#: templates/eos_tax/partials/bot-audit.html:17
+#: templates/eos_tax/partials/bot-audit.html:22
 msgid "Listed on"
 msgstr "표시된 탭"
 
-#: templates/eos_tax/partials/bot-audit.html:18
+#: templates/eos_tax/partials/bot-audit.html:24
 msgid "Audit"
 msgstr "감사"
 
-#: templates/eos_tax/partials/bot-audit.html:19
+#: templates/eos_tax/partials/bot-audit.html:26
 #: templates/eos_tax/partials/bot-clock.html:34
 #: templates/eos_tax/partials/bot-rhythm.html:34
 #: templates/eos_tax/partials/bot-runs.html:34
@@ -958,57 +1044,53 @@ msgstr "감사"
 msgid "Assessment"
 msgstr "평가"
 
-#: templates/eos_tax/partials/bot-audit.html:40
+#: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:8
-#: templates/eos_tax/settings.html:243 views.py:590
+#: templates/eos_tax/settings.html:243 views.py:617
 msgid "Hours per day"
 msgstr "하루 시간 수"
 
-#: templates/eos_tax/partials/bot-audit.html:40
+#: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:15
-#: templates/eos_tax/settings.html:258 views.py:591
+#: templates/eos_tax/settings.html:258 views.py:618
 msgid "Unbroken runs"
 msgstr "끊김 없는 연속 기록"
 
-#: templates/eos_tax/partials/bot-audit.html:40
+#: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:22
-#: templates/eos_tax/settings.html:275 views.py:592
+#: templates/eos_tax/settings.html:275 views.py:619
 msgid "Against the Corporation"
 msgstr "Corporation 리듬에 맞춰"
 
-#: templates/eos_tax/partials/bot-audit.html:40
+#: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:29
-#: templates/eos_tax/settings.html:293 views.py:593
+#: templates/eos_tax/settings.html:293 views.py:620
 msgid "Off the Corporation clock"
 msgstr "Corporation 시계 밖에서"
 
-#: templates/eos_tax/partials/bot-audit.html:46
+#: templates/eos_tax/partials/bot-audit.html:56
 msgid "not current"
 msgstr "최신 아님"
 
-#: templates/eos_tax/partials/bot-audit.html:48
+#: templates/eos_tax/partials/bot-audit.html:58
 msgid "no audit"
 msgstr "감사 없음"
 
-#: templates/eos_tax/partials/bot-audit.html:63
+#: templates/eos_tax/partials/bot-audit.html:73
 msgid "Every character on the other four tabs has a current audit."
 msgstr "다른 네 탭의 모든 character에 최신 감사가 있습니다."
 
-#: templates/eos_tax/partials/bot-audit.html:68
+#: templates/eos_tax/partials/bot-audit.html:78
 #, python-format
 msgid "%(counter)s character on the other tabs"
 msgid_plural "%(counter)s characters on the other tabs"
 msgstr[0] "다른 탭의 character %(counter)s명"
 
-#: templates/eos_tax/partials/bot-audit.html:69
+#: templates/eos_tax/partials/bot-audit.html:79
 #, python-format
 msgid "%(counter)s without current audit"
 msgid_plural "%(counter)s without current audit"
 msgstr[0] "최신 감사 없음 %(counter)s명"
-
-#: templates/eos_tax/partials/bot-character-cells.html:20
-msgid "not registered"
-msgstr "미등록"
 
 #: templates/eos_tax/partials/bot-clock-detail.html:12
 msgid ""
@@ -1122,7 +1204,7 @@ msgstr "차이"
 
 #: templates/eos_tax/partials/bot-clock.html:33
 #: templates/eos_tax/partials/bot-rhythm.html:33
-#: templates/eos_tax/tax-changes.html:73 views.py:231
+#: templates/eos_tax/tax-changes.html:73 views.py:258
 msgid "Payouts"
 msgstr "지급"
 
@@ -1136,15 +1218,6 @@ msgstr ""
 "이번 달에는 아무도 측정할 수 없었습니다. character는 자신의 지급 %(own)s건, "
 "나머지 corporation은 %(rest)s이 필요하며, 두 하루 모두 중심을 정할 수 있어야 "
 "합니다."
-
-#: templates/eos_tax/partials/bot-clock.html:72
-#: templates/eos_tax/partials/bot-group-header.html:14
-#: templates/eos_tax/partials/bot-rhythm.html:72
-#: templates/eos_tax/partials/bot-runs.html:86
-#, python-format
-msgid "%(counter)s character"
-msgid_plural "%(counter)s characters"
-msgstr[0] "character %(counter)s명"
 
 #: templates/eos_tax/partials/bot-clock.html:74
 #: templates/eos_tax/partials/bot-rhythm.html:74
@@ -1218,8 +1291,8 @@ msgid ""
 "The lists of this month are being calculated in the background. This tab "
 "loads them by itself once they are ready."
 msgstr ""
-"이번 달 목록을 백그라운드에서 계산하고 있습니다. 준비되면 이 탭이 자동으로 "
-"불러옵니다."
+"이번 달 목록을 백그라운드에서 계산하고 있습니다. 준비되면 이 탭이 자동으로 불"
+"러옵니다."
 
 #: templates/eos_tax/partials/bot-rhythm-detail.html:14
 msgid ""
@@ -1431,7 +1504,7 @@ msgstr "하루 평균 (시간)"
 msgid "Contributed tax"
 msgstr "기여한 세금"
 
-#: templates/eos_tax/partials/bot-tabs.html:38 views.py:594
+#: templates/eos_tax/partials/bot-tabs.html:38 views.py:621
 msgid "Without current audit"
 msgstr "최신 감사 없음"
 
@@ -1887,10 +1960,6 @@ msgstr ""
 msgid "Save settings"
 msgstr "설정 저장"
 
-#: templates/eos_tax/statistics.html:26
-msgid "Alliance"
-msgstr "Alliance"
-
 #: templates/eos_tax/statistics.html:28
 msgid "All alliances"
 msgstr "모든 Alliance"
@@ -2026,7 +2095,7 @@ msgstr "비율의 변화"
 msgid "On"
 msgstr "일자"
 
-#: templates/eos_tax/tax-changes.html:72 views.py:232
+#: templates/eos_tax/tax-changes.html:72 views.py:259
 msgid "Systems"
 msgstr "시스템"
 
@@ -2078,84 +2147,88 @@ msgstr "개월"
 msgid "y"
 msgstr "년"
 
-#: views.py:99
+#: views.py:100
 #, python-format
 msgid "Taxes to pay: %(rate)s%%"
 msgstr "납부할 세금: %(rate)s%%"
 
-#: views.py:108
+#: views.py:109
 msgid "Corporation:"
 msgstr "Corporation:"
 
-#: views.py:109
+#: views.py:110
 msgid "Filter by corporation name"
 msgstr "Corporation 이름으로 거르기"
 
-#: views.py:128 views.py:513 views.py:567
+#: views.py:129 views.py:540 views.py:594
 msgid "Loading…"
 msgstr "불러오는 중…"
 
-#: views.py:129
+#: views.py:130
 msgid "No data for this selection."
 msgstr "이 선택에 해당하는 데이터가 없습니다."
 
-#: views.py:130
+#: views.py:131
 msgid "Could not load the statistics."
 msgstr "통계를 불러오지 못했습니다."
 
-#: views.py:131
+#: views.py:132
 msgid "corporations"
 msgstr "Corporation"
 
-#: views.py:132
+#: views.py:133
 msgid "Other"
 msgstr "기타"
 
-#: views.py:133
+#: views.py:134
 #, python-brace-format
 msgid "{shown} of {total} corporations drawn"
 msgstr "{total}개 중 {shown}개 Corporation 표시"
 
-#: views.py:134
+#: views.py:135
 #, python-brace-format
 msgid "{value} of the tax covered"
 msgstr "전체 세금 중 {value} 차지"
 
-#: views.py:135
+#: views.py:136
 #, python-brace-format
 msgid "{value} ISK income"
 msgstr "수입 {value} ISK"
 
-#: views.py:136
+#: views.py:137
 #, python-brace-format
 msgid "{value} ISK tax"
 msgstr "세금 {value} ISK"
 
-#: views.py:201
+#: views.py:202 views.py:225
 msgid "Search:"
 msgstr "검색:"
 
-#: views.py:202
+#: views.py:203
 msgid "Corporation name, or a rate such as 0 or 100"
 msgstr "Corporation 이름 또는 0, 100 같은 비율"
 
-#: views.py:230
+#: views.py:226
+msgid "Character, Corporation or Main"
+msgstr "Character, Corporation 또는 Main"
+
+#: views.py:257
 msgid "Share of the bounty in percent"
 msgstr "bounty 대비 비율(퍼센트)"
 
-#: views.py:273
+#: views.py:300
 msgid "Settings saved."
 msgstr "설정을 저장했습니다."
 
-#: views.py:321
+#: views.py:348
 msgid "Calculating…"
 msgstr "계산 중…"
 
-#: views.py:322
+#: views.py:349
 msgid "Could not recalculate this month."
 msgstr "이번 달을 다시 계산할 수 없습니다."
 
-#: views.py:514 views.py:568
+#: views.py:541 views.py:595
 msgid "Could not load this view."
 msgstr "이 화면을 불러오지 못했습니다."
 

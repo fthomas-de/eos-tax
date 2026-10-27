@@ -1,0 +1,15 @@
+{% comment %}
+    One column heading of a table whose groups bots.js keeps together while
+    it sorts (eosTaxSortGroups). A button, so the keyboard reaches it and a
+    screen reader announces it as something to press; aria-sort on the
+    heading says how the column is sorted now. sort_groups marks the one
+    column that orders the groups themselves instead of the rows inside.
+{% endcomment %}
+<th scope="col" class="{{ css }}" aria-sort="{% if sort_groups %}ascending{% else %}none{% endif %}">
+    <button type="button" data-eos-sort="{% if sort_groups %}groups{% else %}rows{% endif %}"
+            class="btn btn-link p-0 fw-semibold link-body-emphasis text-decoration-none text-nowrap">
+        {{ title }}
+        <i class="fa-solid {% if sort_groups %}fa-sort-up{% else %}fa-sort{% endif %} text-body-secondary"
+           aria-hidden="true"></i>
+    </button>
+</th>

@@ -23,6 +23,10 @@
         {% translate "Corp Tax Changes" as tax_changes_title %}
         {% include "eos_tax/partials/nav-item.html" with nav_url=tax_changes_url nav_title=tax_changes_title nav_view="eos_tax:tax_changes eos_tax:tax_change_detail" %}
 
+        {% url "eos_tax:gm_transactions" as gm_transactions_url %}
+        {% translate "GM Transactions" as gm_transactions_title %}
+        {% include "eos_tax/partials/nav-item.html" with nav_url=gm_transactions_url nav_title=gm_transactions_title nav_view="eos_tax:gm_transactions" %}
+
         {% url "eos_tax:settings" as settings_url %}
         {% translate "Settings" as settings_title %}
         {% include "eos_tax/partials/nav-item.html" with nav_url=settings_url nav_title=settings_title nav_view="eos_tax:settings" %}
