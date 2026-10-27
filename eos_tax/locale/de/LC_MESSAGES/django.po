@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-26 12:57+0100\n"
+"POT-Creation-Date: 2026-10-27 09:12+0000\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -47,62 +47,62 @@ msgstr ""
 msgid "Rate (%)"
 msgstr "Satz (%)"
 
-#: models.py:43
+#: models.py:44
 msgid "Taxed alliances"
 msgstr "Besteuerte Alliances"
 
-#: models.py:44
+#: models.py:45
 msgid "Corporations of these alliances are taxed."
 msgstr "Corporations dieser Alliances werden besteuert."
 
-#: models.py:52
+#: models.py:53
 msgid "Holding corporation"
 msgstr "Holding Corporation"
 
-#: models.py:53
+#: models.py:54
 msgid "The single corporation that receives the tax payments."
 msgstr "Die eine Corporation, die die Steuerzahlungen erhält."
 
-#: models.py:59
+#: models.py:60
 msgid "Excluded corporations"
 msgstr "Ausgenommene Corporations"
 
-#: models.py:60
+#: models.py:61
 msgid "Never taxed and never listed, even inside a taxed alliance."
 msgstr ""
 "Wird nie besteuert und nie angezeigt, auch innerhalb einer besteuerten "
 "Alliance."
 
-#: models.py:63 models.py:365
+#: models.py:64 models.py:366
 msgid "Alliance tax rate"
 msgstr "Alliance-Steuersatz"
 
-#: models.py:68
+#: models.py:69
 msgid "Share of the gross PvE income a corporation owes. 0.1 means 10 percent."
 msgstr ""
 "Anteil am PvE-Bruttoertrag, den eine Corporation schuldet. 0,1 bedeutet 10 "
 "Prozent."
 
-#: models.py:71
+#: models.py:72
 msgid "Taxed journal types"
 msgstr "Besteuerte Journal-Typen"
 
-#: models.py:74
+#: models.py:75
 msgid ""
 "Wallet journal ref_types counted as PvE income, for example bounty_prizes."
 msgstr ""
 "Wallet-Journal-ref_types, die als PvE-Ertrag zählen, zum Beispiel "
 "bounty_prizes."
 
-#: models.py:78
+#: models.py:79
 msgid "Include the previous month in calculations and on the overview."
 msgstr "Vormonat in Berechnung und Übersicht einbeziehen."
 
-#: models.py:82
+#: models.py:83
 msgid "Include the running month in calculations and on the overview."
 msgstr "Laufenden Monat in Berechnung und Übersicht einbeziehen."
 
-#: models.py:87
+#: models.py:88
 msgid ""
 "Match payments by their reason code instead of by amount alone. With it "
 "every payment carrying the code counts, so a corporation can pay in parts, "
@@ -117,11 +117,11 @@ msgstr ""
 "derselben Schuld, oder eine Corporation mit derselben Schuld zweimal, nicht "
 "unterschieden werden können."
 
-#: models.py:96
+#: models.py:97
 msgid "Income that needs a wallet audit (million ISK)"
 msgstr "Einkommen, ab dem ein Wallet-Audit nötig ist (Mio. ISK)"
 
-#: models.py:100
+#: models.py:101
 msgid ""
 "A character whose bounties reach the corporation wallet but not through a "
 "member wallet is listed on the overview once this much gross income a month "
@@ -134,11 +134,11 @@ msgstr ""
 "Member-Wallet ist eine Zeit ohne Ingame-Steuer für diesen Character nicht zu "
 "sehen."
 
-#: models.py:108
+#: models.py:109
 msgid "Smallest payment difference worth flagging (million ISK)"
 msgstr "Kleinste markierte Zahlungsabweichung (Millionen ISK)"
 
-#: models.py:112
+#: models.py:113
 msgid ""
 "A payment at least this much above or below the amount owed gets a badge "
 "next to the amount paid on the overview; a smaller difference is shown "
@@ -148,11 +148,11 @@ msgstr ""
 "liegt, bekommt in der Übersicht ein Abzeichen neben dem gezahlten Betrag; "
 "eine kleinere Abweichung wird ohne angezeigt. 0 markiert jede Abweichung."
 
-#: models.py:118
+#: models.py:119
 msgid "Smallest move worth listing"
 msgstr "Kleinste gelistete Änderung"
 
-#: models.py:125
+#: models.py:126
 msgid ""
 "In percentage points of the share of the bounty that reaches the "
 "corporation. A move smaller than this is not listed, and days within it "
@@ -162,11 +162,11 @@ msgstr ""
 "kleinerer Wechsel wird nicht aufgeführt, und Tage innerhalb dieser Spanne "
 "gelten als eine Ebene. Neun Prozent auf zehn ist ein Punkt."
 
-#: models.py:131
+#: models.py:132
 msgid "Shortest run listed"
 msgstr "Kürzester gelisteter Lauf"
 
-#: models.py:135
+#: models.py:136
 msgid ""
 "How many payouts in a row a character has to collect without a break before "
 "the run is listed. The game pays a ratter about every twenty minutes, so "
@@ -176,11 +176,11 @@ msgstr ""
 "muss, bevor der Lauf gelistet wird. Das Spiel zahlt einem Ratter etwa alle "
 "zwanzig Minuten aus, achtzehn entsprechen also rund sechs Stunden."
 
-#: models.py:141
+#: models.py:142
 msgid "Interruptions allowed"
 msgstr "Erlaubte Unterbrechungen"
 
-#: models.py:145
+#: models.py:146
 msgid ""
 "How many breaks a run may contain and still count as one. A daily downtime "
 "would otherwise cut every long night in two. Only a break under an hour can "
@@ -191,11 +191,11 @@ msgstr ""
 "eine Unterbrechung unter einer Stunde wird verziehen; eine längere beendet "
 "den Lauf immer."
 
-#: models.py:152
+#: models.py:153
 msgid "Longest gap that still counts as the same tick"
 msgstr "Längste Lücke, die noch derselbe Tick ist"
 
-#: models.py:156
+#: models.py:157
 msgid ""
 "In minutes. The game pays about every twenty minutes and the tick slips, so "
 "a little more than twenty leaves room for that without calling an unbroken "
@@ -205,11 +205,11 @@ msgstr ""
 "verrutscht - etwas mehr als zwanzig lässt dafür Raum, ohne eine "
 "ununterbrochene Strecke als unterbrochen zu zählen."
 
-#: models.py:162
+#: models.py:163
 msgid "Longest break a run can survive"
 msgstr "Längste Pause, die ein Lauf übersteht"
 
-#: models.py:166
+#: models.py:167
 msgid ""
 "In minutes. A break longer than this ends the run whatever the allowance "
 "above says. Without a ceiling one allowance would weld a morning and an "
@@ -219,11 +219,11 @@ msgstr ""
 "Erlaubnis darüber sagt. Ohne Obergrenze würde eine einzige erlaubte Pause "
 "einen Vormittag und einen Abend zu einem zwölfstündigen Lauf verschweißen."
 
-#: models.py:172
+#: models.py:173
 msgid "Length of the busy window"
 msgstr "Länge des Aktivitätsfensters"
 
-#: models.py:176
+#: models.py:177
 msgid ""
 "How many hours of the day count as the corporation's busy window. A "
 "character spread evenly over the clock lands on this share of any window, "
@@ -234,11 +234,11 @@ msgstr ""
 "Anteil jedes Fensters - das ist die Untergrenze, bis zu der die Bewertung "
 "misst."
 
-#: models.py:182 models.py:256
+#: models.py:183 models.py:257
 msgid "Smallest character worth reading"
 msgstr "Kleinster auswertbarer Character"
 
-#: models.py:186
+#: models.py:187
 msgid ""
 "Below this many payouts in the month a character has too little of a day to "
 "describe, and is left out of this reading."
@@ -246,11 +246,11 @@ msgstr ""
 "Unter so vielen Auszahlungen im Monat hat ein Character zu wenig Tag, um ihn "
 "zu beschreiben, und bleibt aus dieser Auswertung heraus."
 
-#: models.py:191 models.py:265
+#: models.py:192 models.py:266
 msgid "Smallest usable yardstick"
 msgstr "Kleinster brauchbarer Maßstab"
 
-#: models.py:195
+#: models.py:196
 msgid ""
 "How many payouts have to be left in the corporation once the character's own "
 "are taken out. Below this there is no rhythm to compare against, only noise, "
@@ -260,11 +260,11 @@ msgstr ""
 "eigenen des Characters herausgenommen sind. Darunter gibt es keinen Rhythmus "
 "zum Vergleich, nur Rauschen, und der Character wird nicht bewertet."
 
-#: models.py:201 models.py:235
+#: models.py:202 models.py:236
 msgid "Leave flagged characters out of the yardstick"
 msgstr "Auffällige Characters aus dem Maßstab nehmen"
 
-#: models.py:204
+#: models.py:205
 msgid ""
 "A character flat enough to be listed is also part of their corporation's "
 "day, and drags it flat with them - which makes everybody else look ordinary. "
@@ -278,11 +278,11 @@ msgstr ""
 "um sie zu finden, einmal mit ihnen herausgenommen. Eine Corporation, die "
 "unter die Untergrenze oben fallen würde, behält die einfache Zahl."
 
-#: models.py:213
+#: models.py:214
 msgid "Smallest difference listed"
 msgstr "Kleinste gelistete Abweichung"
 
-#: models.py:217
+#: models.py:218
 msgid ""
 "In percentage points. How much flatter than the rest of their corporation a "
 "character has to be before the list mentions them. A negative difference "
@@ -294,11 +294,11 @@ msgstr ""
 "bedeutet konzentrierter als die Corporation, das Gegenteil dessen, wonach "
 "hier gesucht wird - solche werden nie gelistet, egal was hier steht."
 
-#: models.py:225
+#: models.py:226
 msgid "Distance counted as a full deviation"
 msgstr "Abstand, der als volle Abweichung gilt"
 
-#: models.py:229
+#: models.py:230
 msgid ""
 "In hours. Twelve is as far apart as two times of day can be, so the default "
 "treats the whole clock as the scale. A smaller value makes the colouring "
@@ -308,7 +308,7 @@ msgstr ""
 "Standard nimmt also die ganze Uhr als Maßstab. Ein kleinerer Wert lässt die "
 "Färbung früher Rot erreichen."
 
-#: models.py:238
+#: models.py:239
 msgid ""
 "The same for this reading: a character far enough from their corporation to "
 "be listed also pulls the corporation's own middle of the day towards "
@@ -318,11 +318,11 @@ msgstr ""
 "Corporation entfernt ist, um gelistet zu werden, zieht auch die eigene "
 "Tagesmitte der Corporation zu sich, was den Abstand aller anderen verkürzt."
 
-#: models.py:245
+#: models.py:246
 msgid "Smallest distance listed"
 msgstr "Kleinster gelisteter Abstand"
 
-#: models.py:249
+#: models.py:250
 msgid ""
 "In hours. How far from their corporation a character's day has to sit before "
 "the list mentions them. A third of the scale above is where the colouring "
@@ -335,7 +335,7 @@ msgstr ""
 "unauffällig zu bezeichnen - eine Schwelle darunter lässt also grüne Zeilen "
 "in die Liste."
 
-#: models.py:260
+#: models.py:261
 msgid ""
 "Below this many payouts in the month the middle of a character's day is "
 "wherever the noise landed, so they are left out."
@@ -343,7 +343,7 @@ msgstr ""
 "Unter so vielen Auszahlungen im Monat liegt die Tagesmitte eines Characters "
 "dort, wo das Rauschen hingefallen ist - er bleibt deshalb außen vor."
 
-#: models.py:269
+#: models.py:270
 msgid ""
 "How many payouts have to be left in the corporation once the character's own "
 "are taken out, before its middle of the day is worth comparing against."
@@ -352,11 +352,11 @@ msgstr ""
 "eigenen des Characters herausgenommen sind, bevor sich deren Tagesmitte zum "
 "Vergleich eignet."
 
-#: models.py:275
+#: models.py:276
 msgid "Least concentrated day with a middle"
 msgstr "Am wenigsten konzentrierter Tag mit einer Mitte"
 
-#: models.py:279
+#: models.py:280
 msgid ""
 "In percent. How closely the payouts have to gather around one time of day "
 "before that day has a middle: 100 when all of them fall into one hour, 0 for "
@@ -373,11 +373,11 @@ msgstr ""
 "die Rundung sie gesetzt hätte, also wird der Character aus dieser Lesart "
 "ausgeschlossen."
 
-#: models.py:289
+#: models.py:290
 msgid "Entries before an hour counts as active"
 msgstr "Einträge, ab denen eine Stunde als aktiv gilt"
 
-#: models.py:293
+#: models.py:294
 msgid ""
 "A single entry is noise - a stray bounty tick, one ESS payout. The game pays "
 "about every twenty minutes, so an hour of uninterrupted play holds three; "
@@ -390,11 +390,11 @@ msgstr ""
 "denn Spiel wird unterbrochen, und ein übersehener Fall kostet weniger als "
 "eine falsche Anschuldigung."
 
-#: models.py:301
+#: models.py:302
 msgid "Hours in a day before it counts"
 msgstr "Stunden an einem Tag, ab denen er zählt"
 
-#: models.py:305
+#: models.py:306
 msgid ""
 "A day counts as suspicious when a character earned taxed income in more than "
 "this many different hours of that day."
@@ -402,11 +402,11 @@ msgstr ""
 "Ein Tag gilt als auffällig, wenn ein Character in mehr als so vielen "
 "verschiedenen Stunden dieses Tages besteuerten Ertrag erzielt hat."
 
-#: models.py:310
+#: models.py:311
 msgid "Days in a month before a character is listed"
 msgstr "Tage in einem Monat, ab denen ein Character gelistet wird"
 
-#: models.py:314
+#: models.py:315
 msgid ""
 "A character is listed once it reaches this many suspicious days within the "
 "selected month."
@@ -414,64 +414,64 @@ msgstr ""
 "Ein Character wird gelistet, sobald er so viele auffällige Tage im gewählten "
 "Monat erreicht."
 
-#: models.py:320
+#: models.py:321
 msgid "Tax configuration"
 msgstr "Steuer-Konfiguration"
 
-#: models.py:360 templates/eos_tax/settings.html:115
+#: models.py:361 templates/eos_tax/settings.html:115
 msgid "Valid from"
 msgstr "Gültig ab"
 
-#: models.py:362
+#: models.py:363
 msgid "First month this rate applies to. Stored as the first of that month."
 msgstr "Erster Monat, für den dieser Satz gilt. Gespeichert als Monatserster."
 
-#: models.py:369
+#: models.py:370
 msgid "Share of the gross PvE income. 0.1 means 10 percent."
 msgstr "Anteil am PvE-Bruttoertrag. 0,1 bedeutet 10 Prozent."
 
-#: models.py:374
+#: models.py:375
 msgid "Tax rate"
 msgstr "Steuersatz"
 
-#: models.py:375 templates/eos_tax/settings.html:92
+#: models.py:376 templates/eos_tax/settings.html:92
 msgid "Tax rate schedule"
 msgstr "Steuersatz-Zeitplan"
 
-#: models.py:388
+#: models.py:389
 msgid "Corporation ID"
 msgstr "Corporation-ID"
 
-#: models.py:389
+#: models.py:390
 msgid "Taxed month"
 msgstr "Besteuerter Monat"
 
-#: models.py:390
+#: models.py:391
 msgid "Taxed year"
 msgstr "Besteuertes Jahr"
 
-#: models.py:391
+#: models.py:392
 msgid "Corporation name"
 msgstr "Corporation-Name"
 
-#: models.py:392
+#: models.py:393
 msgid "Tax value"
 msgstr "Steuerbetrag"
 
-#: models.py:393
+#: models.py:394
 msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
-#: models.py:394 templates/eos_tax/index.html:33
+#: models.py:395 templates/eos_tax/index.html:33
 #: templates/eos_tax/index.html:56 templates/eos_tax/index.html:172
 msgid "Paid"
 msgstr "Bezahlt"
 
-#: models.py:411
+#: models.py:412
 msgid "Applied alliance tax rate"
 msgstr "Angewandter Alliance-Steuersatz"
 
-#: models.py:414
+#: models.py:415
 msgid ""
 "Alliance rate in effect when this row was calculated. Stored per row so "
 "changing the rate does not rewrite what past months were owed."
@@ -480,11 +480,11 @@ msgstr ""
 "gespeichert, damit eine Satzänderung vergangene Monate nicht rückwirkend "
 "verändert."
 
-#: models.py:420
+#: models.py:421
 msgid "Amount to pay"
 msgstr "Zu zahlender Betrag"
 
-#: models.py:423
+#: models.py:424
 msgid ""
 "ISK owed to the alliance for this month, in whole ISK. Worked out from "
 "tax_value, tax_percentage and alliance_tax_rate whenever the row is written, "
@@ -496,11 +496,11 @@ msgstr ""
 "berechnet und bleibt danach bei ihnen - Übersicht, Diagramm und "
 "Zahlungsprüfung lesen ihn, statt neu zu rechnen."
 
-#: models.py:431
+#: models.py:432
 msgid "Amount paid"
 msgstr "Gezahlter Betrag"
 
-#: models.py:435
+#: models.py:436
 msgid ""
 "ISK the payment check found for this month, in whole ISK: with reason codes "
 "every payment carrying this row's code added up, without them the amount "
@@ -512,19 +512,19 @@ msgstr ""
 "ohne sie der geschuldete Betrag, sobald eine Zahlung über genau diesen "
 "aufgetaucht ist. Leer, bis eine Zahlung gesehen wurde."
 
-#: models.py:443 templates/eos_tax/settings.html:86
+#: models.py:444 templates/eos_tax/settings.html:86
 msgid "Payments"
 msgstr "Zahlungen"
 
-#: models.py:445
+#: models.py:446
 msgid "How many payments the amount paid is made of."
 msgstr "Aus wie vielen Zahlungen sich der gezahlte Betrag zusammensetzt."
 
-#: models.py:449
+#: models.py:450
 msgid "Gross PvE income"
 msgstr "PvE-Bruttoertrag"
 
-#: models.py:453
+#: models.py:454
 msgid ""
 "Bounties earned this month before any corp tax, in whole ISK: the "
 "corporation wallet reconciled with the member wallets, so a stretch without "
@@ -536,11 +536,11 @@ msgstr ""
 "Ingame-Steuer zählt. Daraus wird der zu zahlende Betrag berechnet. Leer bei "
 "Zeilen, die geschrieben wurden, bevor er gespeichert wurde."
 
-#: models.py:461 templates/eos_tax/index.html:57
+#: models.py:462 templates/eos_tax/index.html:57
 msgid "Characters without wallet audit"
 msgstr "Characters ohne Wallet-Audit"
 
-#: models.py:465
+#: models.py:466
 msgid ""
 "Characters whose bounties this month showed up in the corporation wallet "
 "only, at or above the configured income, as [{id, name, gross}], highest "
@@ -549,11 +549,11 @@ msgstr ""
 "Characters, deren Bounties in diesem Monat nur im Corp-Wallet auftauchten, "
 "ab dem eingestellten Einkommen, als [{id, name, gross}], der höchste zuerst."
 
-#: models.py:472 templates/eos_tax/index.html:58
+#: models.py:473 templates/eos_tax/index.html:58
 msgid "Calculation time"
 msgstr "Berechnungsdauer"
 
-#: models.py:476
+#: models.py:477
 msgid ""
 "How long the last calculation of this month took, in seconds - reading both "
 "journals, the reconciliation and the payment check. Empty on rows written "
@@ -563,11 +563,11 @@ msgstr ""
 "beide Journale lesen, der Abgleich und die Zahlungsprüfung. Leer bei Zeilen, "
 "die geschrieben wurden, bevor sie gespeichert wurde."
 
-#: models.py:483
+#: models.py:484
 msgid "Payment date"
 msgstr "Zahlungsdatum"
 
-#: models.py:487
+#: models.py:488
 msgid ""
 "Journal date of the transfer that settled this month: the one of exactly the "
 "amount owed, or the one that brought the payments up to it. Empty until a "
@@ -577,11 +577,11 @@ msgstr ""
 "den geschuldeten Betrag oder die, mit der die Zahlungen ihn erreicht haben. "
 "Leer, bis eine Zahlung die Zeile beglichen hat."
 
-#: models.py:494
+#: models.py:495
 msgid "Recorded as paid"
 msgstr "Als bezahlt erfasst"
 
-#: models.py:498
+#: models.py:499
 msgid ""
 "When the payment check first marked this month as paid. Empty on rows marked "
 "paid before it was stored."
@@ -594,19 +594,19 @@ msgstr ""
 msgid "Overview"
 msgstr "Übersicht"
 
-#: templates/eos_tax/base.html:15 views.py:122
+#: templates/eos_tax/base.html:15 views.py:120
 msgid "Statistics"
 msgstr "Statistik"
 
-#: templates/eos_tax/base.html:19 views.py:535
+#: templates/eos_tax/base.html:19 views.py:546
 msgid "Bots"
 msgstr "Bots"
 
-#: templates/eos_tax/base.html:23 views.py:196
+#: templates/eos_tax/base.html:23 views.py:194
 msgid "Corp Tax Changes"
 msgstr "Corp Tax Changes"
 
-#: templates/eos_tax/base.html:27 views.py:301
+#: templates/eos_tax/base.html:27 views.py:308
 msgid "Settings"
 msgstr "Einstellungen"
 
@@ -711,7 +711,7 @@ msgid_plural "%(value)s journal entries"
 msgstr[0] "%(value)s Journaleintrag"
 msgstr[1] "%(value)s Journaleinträge"
 
-#: templates/eos_tax/bot-detail.html:239 templates/eos_tax/bots.html:124
+#: templates/eos_tax/bot-detail.html:239 templates/eos_tax/bots.html:130
 #: templates/eos_tax/tax-change-detail.html:73
 #: templates/eos_tax/tax-changes.html:135
 msgid "total"
@@ -721,7 +721,7 @@ msgstr "gesamt"
 msgid "This character had no active hour in the selected month."
 msgstr "Dieser Character hatte im gewählten Monat keine aktive Stunde."
 
-#: templates/eos_tax/bots.html:24
+#: templates/eos_tax/bots.html:24 templates/eos_tax/partials/bot-audit.html:13
 #: templates/eos_tax/partials/bot-clock-detail.html:32
 #: templates/eos_tax/partials/bot-clock.html:26
 #: templates/eos_tax/partials/bot-rhythm-detail.html:27
@@ -735,7 +735,7 @@ msgstr "Character"
 msgid "Open a character directly"
 msgstr "Character direkt öffnen"
 
-#: templates/eos_tax/bots.html:55
+#: templates/eos_tax/bots.html:57
 #, python-format
 msgid ""
 "Characters that earned taxed income in more than %(min_hours)s different\n"
@@ -747,16 +747,16 @@ msgstr ""
 "besteuertes Einkommen verdient haben, an mindestens %(min_days)s Tagen des "
 "gewählten Monats. Beide Schwellen stehen auf der Einstellungsseite."
 
-#: templates/eos_tax/bots.html:63
+#: templates/eos_tax/bots.html:65
 msgid "Several characters match:"
 msgstr "Mehrere Characters passen:"
 
-#: templates/eos_tax/bots.html:76
+#: templates/eos_tax/bots.html:78
 #, python-format
 msgid "No character found for \"%(wanted)s\"."
 msgstr "Kein Character zu \"%(wanted)s\" gefunden."
 
-#: templates/eos_tax/bots.html:85
+#: templates/eos_tax/bots.html:89
 msgid ""
 "No character crossed both thresholds. The ten mains with the longest days of "
 "the month are shown instead, so the thresholds can be judged against real "
@@ -766,36 +766,36 @@ msgstr ""
 "zehn Mains mit den längsten Tagen des Monats gezeigt, damit sich die "
 "Schwellen an echten Zahlen beurteilen lassen."
 
-#: templates/eos_tax/bots.html:91
+#: templates/eos_tax/bots.html:95
 msgid "No character crossed both thresholds in this month."
 msgstr "Kein Character hat in diesem Monat beide Schwellen überschritten."
 
-#: templates/eos_tax/bots.html:114
+#: templates/eos_tax/bots.html:119
 msgid "slower than usual"
 msgstr "langsamer als sonst"
 
-#: templates/eos_tax/bots.html:117
+#: templates/eos_tax/bots.html:122
 #, python-format
 msgid "%(value)s hour blocks"
 msgstr "%(value)s Stundenblöcke"
 
-#: templates/eos_tax/bots.html:118
+#: templates/eos_tax/bots.html:123
 #, python-format
 msgid "%(value)s characters"
 msgstr "%(value)s Characters"
 
-#: templates/eos_tax/bots.html:119
+#: templates/eos_tax/bots.html:124
 #, python-format
 msgid "%(value)s hit"
 msgid_plural "%(value)s hits"
 msgstr[0] "%(value)s Treffer"
 msgstr[1] "%(value)s Treffer"
 
-#: templates/eos_tax/bots.html:122
+#: templates/eos_tax/bots.html:128
 msgid "database"
 msgstr "Datenbank"
 
-#: templates/eos_tax/bots.html:123
+#: templates/eos_tax/bots.html:129
 msgid "aggregation"
 msgstr "Auswertung"
 
@@ -847,7 +847,7 @@ msgstr "Läuft noch"
 msgid "All"
 msgstr "Alle"
 
-#: templates/eos_tax/index.html:49
+#: templates/eos_tax/index.html:49 templates/eos_tax/partials/bot-audit.html:14
 #: templates/eos_tax/partials/bot-clock-detail.html:33
 #: templates/eos_tax/partials/bot-clock.html:27
 #: templates/eos_tax/partials/bot-rhythm-detail.html:28
@@ -951,6 +951,98 @@ msgstr "Noch nichts bezahlt."
 #: templates/eos_tax/index.html:223
 msgid "Nothing in progress."
 msgstr "Kein laufender Monat."
+
+#: templates/eos_tax/partials/bot-audit.html:5
+msgid ""
+"Mains with at least one character on the other four tabs whose corptools "
+"audit is missing or no longer current. Only the characters those tabs show "
+"are checked, not the rest of the account."
+msgstr ""
+"Mains mit mindestens einem Character auf den anderen vier Tabs, dessen "
+"corptools-Audit fehlt oder nicht mehr aktuell ist. Geprüft werden nur die "
+"Characters, die diese Tabs zeigen, nicht der Rest des Accounts."
+
+#: templates/eos_tax/partials/bot-audit.html:15
+#: templates/eos_tax/partials/bot-clock.html:28
+#: templates/eos_tax/partials/bot-rhythm.html:28
+#: templates/eos_tax/partials/bot-runs.html:28
+#: templates/eos_tax/partials/bot-table.html:9
+msgid "Main"
+msgstr "Main"
+
+#: templates/eos_tax/partials/bot-audit.html:16
+#: templates/eos_tax/partials/bot-clock.html:29
+#: templates/eos_tax/partials/bot-rhythm.html:29
+#: templates/eos_tax/partials/bot-runs.html:29
+#: templates/eos_tax/partials/bot-table.html:10
+msgid "Age"
+msgstr "Alter"
+
+#: templates/eos_tax/partials/bot-audit.html:17
+msgid "Listed on"
+msgstr "Gelistet auf"
+
+#: templates/eos_tax/partials/bot-audit.html:18
+msgid "Audit"
+msgstr "Audit"
+
+#: templates/eos_tax/partials/bot-audit.html:19
+#: templates/eos_tax/partials/bot-clock.html:34
+#: templates/eos_tax/partials/bot-rhythm.html:34
+#: templates/eos_tax/partials/bot-runs.html:34
+#: templates/eos_tax/partials/bot-table.html:16
+msgid "Assessment"
+msgstr "Bewertung"
+
+#: templates/eos_tax/partials/bot-audit.html:40
+#: templates/eos_tax/partials/bot-tabs.html:8
+#: templates/eos_tax/settings.html:243 views.py:590
+msgid "Hours per day"
+msgstr "Stunden pro Tag"
+
+#: templates/eos_tax/partials/bot-audit.html:40
+#: templates/eos_tax/partials/bot-tabs.html:15
+#: templates/eos_tax/settings.html:258 views.py:591
+msgid "Unbroken runs"
+msgstr "Ununterbrochene Läufe"
+
+#: templates/eos_tax/partials/bot-audit.html:40
+#: templates/eos_tax/partials/bot-tabs.html:22
+#: templates/eos_tax/settings.html:275 views.py:592
+msgid "Against the Corporation"
+msgstr "Im Takt der Corporation"
+
+#: templates/eos_tax/partials/bot-audit.html:40
+#: templates/eos_tax/partials/bot-tabs.html:29
+#: templates/eos_tax/settings.html:293 views.py:593
+msgid "Off the Corporation clock"
+msgstr "Abseits der Corporation-Uhr"
+
+#: templates/eos_tax/partials/bot-audit.html:46
+msgid "not current"
+msgstr "nicht aktuell"
+
+#: templates/eos_tax/partials/bot-audit.html:48
+msgid "no audit"
+msgstr "kein Audit"
+
+#: templates/eos_tax/partials/bot-audit.html:63
+msgid "Every character on the other four tabs has a current audit."
+msgstr "Jeder Character auf den anderen vier Tabs hat ein aktuelles Audit."
+
+#: templates/eos_tax/partials/bot-audit.html:68
+#, python-format
+msgid "%(counter)s character on the other tabs"
+msgid_plural "%(counter)s characters on the other tabs"
+msgstr[0] "%(counter)s Character auf den anderen Tabs"
+msgstr[1] "%(counter)s Characters auf den anderen Tabs"
+
+#: templates/eos_tax/partials/bot-audit.html:69
+#, python-format
+msgid "%(counter)s without current audit"
+msgid_plural "%(counter)s without current audit"
+msgstr[0] "%(counter)s ohne aktuelles Audit"
+msgstr[1] "%(counter)s ohne aktuelles Audit"
 
 #: templates/eos_tax/partials/bot-character-cells.html:20
 msgid "not registered"
@@ -1065,20 +1157,6 @@ msgstr[1] ""
 "entfernt. Stattdessen werden die größten Abstände des Monats gezeigt, damit "
 "sich die Schwelle an echten Zahlen beurteilen lässt."
 
-#: templates/eos_tax/partials/bot-clock.html:28
-#: templates/eos_tax/partials/bot-rhythm.html:28
-#: templates/eos_tax/partials/bot-runs.html:28
-#: templates/eos_tax/partials/bot-table.html:9
-msgid "Main"
-msgstr "Main"
-
-#: templates/eos_tax/partials/bot-clock.html:29
-#: templates/eos_tax/partials/bot-rhythm.html:29
-#: templates/eos_tax/partials/bot-runs.html:29
-#: templates/eos_tax/partials/bot-table.html:10
-msgid "Age"
-msgstr "Alter"
-
 #: templates/eos_tax/partials/bot-clock.html:30
 msgid "Character's middle of the day"
 msgstr "Tagesmitte des Characters"
@@ -1093,16 +1171,9 @@ msgstr "Abstand"
 
 #: templates/eos_tax/partials/bot-clock.html:33
 #: templates/eos_tax/partials/bot-rhythm.html:33
-#: templates/eos_tax/tax-changes.html:73 views.py:233
+#: templates/eos_tax/tax-changes.html:73 views.py:231
 msgid "Payouts"
 msgstr "Auszahlungen"
-
-#: templates/eos_tax/partials/bot-clock.html:34
-#: templates/eos_tax/partials/bot-rhythm.html:34
-#: templates/eos_tax/partials/bot-runs.html:34
-#: templates/eos_tax/partials/bot-table.html:16
-msgid "Assessment"
-msgstr "Bewertung"
 
 #: templates/eos_tax/partials/bot-clock.html:67
 #, python-format
@@ -1175,6 +1246,11 @@ msgid_plural "%(counter)s flagged characters left out of the yardstick"
 msgstr[0] "%(counter)s auffälliger Character aus dem Maßstab genommen"
 msgstr[1] "%(counter)s auffällige Characters aus dem Maßstab genommen"
 
+#: templates/eos_tax/partials/bot-computed-at.html:6
+#, python-format
+msgid "computed %(value)s EVE"
+msgstr "berechnet %(value)s EVE"
+
 #: templates/eos_tax/partials/bot-group-header.html:17
 msgid "no main known"
 msgstr "kein Main bekannt"
@@ -1190,6 +1266,14 @@ msgstr "genauer ansehen"
 #: templates/eos_tax/partials/bot-level-badge.html:8
 msgid "unremarkable"
 msgstr "unauffällig"
+
+#: templates/eos_tax/partials/bot-pending.html:5
+msgid ""
+"The lists of this month are being calculated in the background. This tab "
+"loads them by itself once they are ready."
+msgstr ""
+"Die Listen dieses Monats werden im Hintergrund berechnet. Dieser Tab lädt "
+"sie von selbst, sobald sie fertig sind."
 
 #: templates/eos_tax/partials/bot-rhythm-detail.html:14
 msgid ""
@@ -1411,25 +1495,9 @@ msgstr "Durchschnittlicher Tag (Stunden)"
 msgid "Contributed tax"
 msgstr "Beigetragene Steuer"
 
-#: templates/eos_tax/partials/bot-tabs.html:8
-#: templates/eos_tax/settings.html:243 views.py:578
-msgid "Hours per day"
-msgstr "Stunden pro Tag"
-
-#: templates/eos_tax/partials/bot-tabs.html:15
-#: templates/eos_tax/settings.html:258 views.py:579
-msgid "Unbroken runs"
-msgstr "Ununterbrochene Läufe"
-
-#: templates/eos_tax/partials/bot-tabs.html:22
-#: templates/eos_tax/settings.html:275 views.py:580
-msgid "Against the Corporation"
-msgstr "Im Takt der Corporation"
-
-#: templates/eos_tax/partials/bot-tabs.html:29
-#: templates/eos_tax/settings.html:293 views.py:581
-msgid "Off the Corporation clock"
-msgstr "Abseits der Corporation-Uhr"
+#: templates/eos_tax/partials/bot-tabs.html:38 views.py:594
+msgid "Without current audit"
+msgstr "Ohne aktuelles Audit"
 
 #: templates/eos_tax/partials/progress.html:12
 msgid "Automatic recalculation"
@@ -2060,7 +2128,7 @@ msgstr "Wechsel im Anteil"
 msgid "On"
 msgstr "Am"
 
-#: templates/eos_tax/tax-changes.html:72 views.py:234
+#: templates/eos_tax/tax-changes.html:72 views.py:232
 msgid "Systems"
 msgstr "Systeme"
 
@@ -2116,84 +2184,84 @@ msgstr "Mon"
 msgid "y"
 msgstr "J"
 
-#: views.py:101
+#: views.py:99
 #, python-format
 msgid "Taxes to pay: %(rate)s%%"
 msgstr "Zu zahlende Steuer: %(rate)s%%"
 
-#: views.py:110
+#: views.py:108
 msgid "Corporation:"
 msgstr "Corporation:"
 
-#: views.py:111
+#: views.py:109
 msgid "Filter by corporation name"
 msgstr "Nach Corporation-Namen filtern"
 
-#: views.py:130 views.py:506 views.py:555
+#: views.py:128 views.py:513 views.py:567
 msgid "Loading…"
 msgstr "Wird geladen…"
 
-#: views.py:131
+#: views.py:129
 msgid "No data for this selection."
 msgstr "Keine Daten für diese Auswahl."
 
-#: views.py:132
+#: views.py:130
 msgid "Could not load the statistics."
 msgstr "Statistik konnte nicht geladen werden."
 
-#: views.py:133
+#: views.py:131
 msgid "corporations"
 msgstr "Corporations"
 
-#: views.py:134
+#: views.py:132
 msgid "Other"
 msgstr "Sonstige"
 
-#: views.py:135
+#: views.py:133
 #, python-brace-format
 msgid "{shown} of {total} corporations drawn"
 msgstr "{shown} von {total} Corporations gezeichnet"
 
-#: views.py:136
+#: views.py:134
 #, python-brace-format
 msgid "{value} of the tax covered"
 msgstr "{value} der Steuer abgedeckt"
 
-#: views.py:137
+#: views.py:135
 #, python-brace-format
 msgid "{value} ISK income"
 msgstr "{value} ISK Ertrag"
 
-#: views.py:138
+#: views.py:136
 #, python-brace-format
 msgid "{value} ISK tax"
 msgstr "{value} ISK Steuer"
 
-#: views.py:203
+#: views.py:201
 msgid "Search:"
 msgstr "Suche:"
 
-#: views.py:204
+#: views.py:202
 msgid "Corporation name, or a rate such as 0 or 100"
 msgstr "Corporation-Name oder ein Satz wie 0 oder 100"
 
-#: views.py:232
+#: views.py:230
 msgid "Share of the bounty in percent"
 msgstr "Anteil der bounty in Prozent"
 
-#: views.py:271
+#: views.py:273
 msgid "Settings saved."
 msgstr "Einstellungen gespeichert."
 
-#: views.py:314
+#: views.py:321
 msgid "Calculating…"
 msgstr "Wird berechnet …"
 
-#: views.py:315
+#: views.py:322
 msgid "Could not recalculate this month."
 msgstr "Dieser Monat konnte nicht neu berechnet werden."
 
-#: views.py:507 views.py:556
+#: views.py:514 views.py:568
 msgid "Could not load this view."
 msgstr "Diese Ansicht konnte nicht geladen werden."
 

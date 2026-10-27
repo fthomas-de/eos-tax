@@ -1,6 +1,7 @@
 from datetime import date
 from decimal import Decimal
 
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
@@ -499,3 +500,31 @@ class MonthlyTax(models.Model):
             "rows marked paid before it was stored."
         ),
     )
+
+
+class BotReport(models.Model):
+    """One tab of the bots page for one month, as the job last computed it.
+
+    A reading walks the whole month for the whole alliance - half a minute
+    for "Hours per day" on the live journal - so the page reads what the job
+    left here instead of computing it while the reader waits. `fingerprint`
+    names the settings the lists were computed with; a row whose settings
+    have changed since is treated as missing, not shown as if it were current.
+    """
+
+    year = models.PositiveSmallIntegerField()
+    month = models.PositiveSmallIntegerField()
+    signal = models.CharField(max_length=16)
+    # what the tab renders - groups and figures, not every scored row
+    report = models.JSONField(encoder=DjangoJSONEncoder)
+    fingerprint = models.CharField(max_length=64)
+    computed_at = models.DateTimeField()
+
+    class Meta:
+        default_permissions = ()
+        constraints = [
+            models.UniqueConstraint(
+                fields=["year", "month", "signal"],
+                name="eos_tax_one_bot_report_per_tab_and_month",
+            ),
+        ]

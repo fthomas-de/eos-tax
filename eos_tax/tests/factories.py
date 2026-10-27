@@ -304,6 +304,25 @@ def add_entries(
             )
 
 
+def add_character_audit(character_id, active, name=None):
+    """A corptools audit for a character, current or not.
+
+    The character is created on first use; one Alliance Auth already knows -
+    an alt from `create_alt` - keeps its owner.
+    """
+    character, _created = EveCharacter.objects.get_or_create(
+        character_id=character_id,
+        defaults={
+            "character_name": name or f"Audited {character_id}",
+            "corporation_id": BRAVO_CORP_ID,
+            "corporation_name": "Bravo Corp",
+            "corporation_ticker": "BRAVO",
+        },
+    )
+
+    return CharacterAudit.objects.create(character=character, active=active)
+
+
 LONG_AGO = datetime.datetime(2020, 1, 1, tzinfo=datetime.timezone.utc)
 
 

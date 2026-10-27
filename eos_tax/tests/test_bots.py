@@ -620,7 +620,11 @@ class TestSlowRuntimeIsSaidInWords(EosTaxTestCase):
         report = get_bot_report(YEAR, MONTH)
         report["stats"]["seconds_total"] = 3.0
 
-        with mock.patch("eos_tax.views.get_bot_report", return_value=report):
+        # the job computes the list the page reads, so the slow figure goes
+        # in where the job takes it from
+        with mock.patch.dict(
+            "eos_tax.db.bot_store.READINGS", {"hours": lambda year, month: report}
+        ):
             return self.page()
 
     def test_should_leave_the_line_in_the_ordinary_colour(self):

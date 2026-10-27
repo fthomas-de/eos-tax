@@ -1,0 +1,70 @@
+{% load i18n %}
+
+{# here and not in bots.html: bots.js replaces the whole pane with this #}
+<p class="text-body-secondary small">
+    {% blocktranslate %}Mains with at least one character on the other four tabs whose corptools audit is missing or no longer current. Only the characters those tabs show are checked, not the rest of the account.{% endblocktranslate %}
+</p>
+
+{% if groups %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle w-100">
+            <thead>
+                <tr>
+                    <th scope="col">{% translate "Character" %}</th>
+                    <th scope="col" class="d-none d-md-table-cell">{% translate "Corporation" %}</th>
+                    <th scope="col" class="d-none d-lg-table-cell">{% translate "Main" %}</th>
+                    <th scope="col" class="d-none d-lg-table-cell">{% translate "Age" %}</th>
+                    <th scope="col">{% translate "Listed on" %}</th>
+                    <th scope="col">{% translate "Audit" %}</th>
+                    <th scope="col">{% translate "Assessment" %}</th>
+                </tr>
+            </thead>
+
+            {% for group in groups %}
+                <tbody>
+                    {% include "eos_tax/partials/bot-group-header.html" with group=group columns=7 %}
+
+                    {% for row in group.characters %}
+                    <tr>
+                        {% include "eos_tax/partials/bot-character-cells.html" %}
+                        <td>
+                            {% comment %}
+                                The tab's own words, and a link that reopens it
+                                for this month - the reason the character is
+                                here is on that tab, not on this one.
+                            {% endcomment %}
+                            {% for signal in row.signals %}
+                                <a class="badge text-bg-secondary text-decoration-none"
+                                   href="{% url 'eos_tax:bots' %}?month={{ selected_month }}&amp;tab={{ signal }}">
+                                    {% if signal == "hours" %}{% translate "Hours per day" %}{% elif signal == "runs" %}{% translate "Unbroken runs" %}{% elif signal == "rhythm" %}{% translate "Against the Corporation" %}{% else %}{% translate "Off the Corporation clock" %}{% endif %}
+                                </a>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% if row.audit == "inactive" %}
+                                <span class="badge text-bg-warning">{% translate "not current" %}</span>
+                            {% else %}
+                                <span class="badge text-bg-danger">{% translate "no audit" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {# the strongest of the readings that listed the character #}
+                            {% include "eos_tax/partials/bot-level-badge.html" with level=row.level %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            {% endfor %}
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-success text-center">
+        {% translate "Every character on the other four tabs has a current audit." %}
+    </div>
+{% endif %}
+
+<div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
+    <span>{% blocktranslate count counter=stats.listed_characters %}{{ counter }} character on the other tabs{% plural %}{{ counter }} characters on the other tabs{% endblocktranslate %}</span>
+    <span>{% blocktranslate count counter=stats.unaudited_characters %}{{ counter }} without current audit{% plural %}{{ counter }} without current audit{% endblocktranslate %}</span>
+    <span class="ms-auto">{% include "eos_tax/partials/bot-computed-at.html" %}</span>
+</div>

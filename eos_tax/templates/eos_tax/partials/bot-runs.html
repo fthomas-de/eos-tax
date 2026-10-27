@@ -7,7 +7,7 @@
 </p>
 
 {% if groups %}
-    {% if not rows %}
+    {% if not listed %}
         {% comment %}
             An empty table says the threshold was not met. It does not say by
             how much, which is the thing worth knowing when the threshold is
@@ -88,5 +88,5 @@
     <span>{% blocktranslate count counter=stats.max_gaps %}{{ counter }} interruption allowed{% plural %}{{ counter }} interruptions allowed{% endblocktranslate %}</span>
     <span>{% blocktranslate with value=stats.tolerance %}same tick up to {{ value }} min{% endblocktranslate %}</span>
     <span>{% blocktranslate with value=stats.ceiling %}run ends past {{ value }} min{% endblocktranslate %}</span>
-    <span class="ms-auto">{{ stats.seconds|floatformat:2 }}&nbsp;s</span>
+    <span class="ms-auto">{% include "eos_tax/partials/bot-computed-at.html" %} &middot; {{ stats.seconds|floatformat:2 }}&nbsp;s</span>
 </div>

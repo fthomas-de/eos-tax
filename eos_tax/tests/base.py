@@ -51,6 +51,19 @@ class EosTaxTestCase(TestCase):
         patcher.start()
         cls.addClassCleanup(patcher.stop)
 
+        # the bots page reads lists a Celery job computes; here the job runs
+        # in place, the way an eager Celery would, so a page test sees its
+        # fixtures without queueing anything. A test about the waiting
+        # state patches it away again
+        from eos_tax.tasks import run_update_bot_reports
+
+        patcher = mock.patch.object(
+            run_update_bot_reports, "delay",
+            side_effect=lambda **kwargs: run_update_bot_reports(**kwargs),
+        )
+        patcher.start()
+        cls.addClassCleanup(patcher.stop)
+
 
 def read_static(name):
     """The source of one of the app's own script files.

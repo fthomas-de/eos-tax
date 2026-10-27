@@ -29,4 +29,14 @@
             {% translate "Off the Corporation clock" %}
         </button>
     </li>
+    {# the list page only: it sums up the four lists, which a single Character has none of #}
+    {% if audit_tab %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" type="button" role="tab"
+                    data-bs-toggle="tab" data-bs-target="#eos-tax-tab-audit"
+                    aria-controls="eos-tax-tab-audit" aria-selected="false">
+                {% translate "Without current audit" %}
+            </button>
+        </li>
+    {% endif %}
 </ul>

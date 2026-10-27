@@ -37,9 +37,11 @@
                 Character at the top of one can be absent from the next, and
                 that disagreement is the information. Only this first one
                 comes with the page - the others are fetched when opened, so
-                a visit that never leaves this tab pays for one reading.
+                a visit that never leaves this tab pays for one reading. The
+                fifth tab reads all four again, for the mains whose listed
+                Characters corptools no longer watches.
             {% endcomment %}
-            {% include "eos_tax/partials/bot-tabs.html" %}
+            {% include "eos_tax/partials/bot-tabs.html" with audit_tab=True %}
 
             <div class="tab-content">
             <div class="tab-pane fade show active" id="eos-tax-tab-hours" role="tabpanel">
@@ -76,9 +78,11 @@
                 {% endif %}
             {% endif %}
 
-            {% if candidates %}
+            {% if pending %}
+                {% include "eos_tax/partials/bot-pending.html" %}
+            {% elif listed %}
                 {% include "eos_tax/partials/bot-table.html" %}
-            {% elif longest_days %}
+            {% elif groups %}
                 <div class="alert alert-info">
                     {% blocktranslate %}No character crossed both thresholds. The ten mains with the longest days of the month are shown instead, so the thresholds can be judged against real numbers.{% endblocktranslate %}
                 </div>
@@ -96,6 +100,7 @@
                 and what the aggregation walks - the number to watch as the
                 journal grows.
             {% endcomment %}
+            {% if not pending %}
             <div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
                 {% comment %}
                     A reader who has never seen the normal colour cannot tell
@@ -115,11 +120,13 @@
                 <span>{% blocktranslate with value=stats.candidates|intcomma count counter=stats.candidates %}{{ value }} hit{% plural %}{{ value }} hits{% endblocktranslate %}</span>
 
                 <span class="ms-auto">
-                    {% translate "database" %} {{ stats.seconds_query|floatformat:2 }}&nbsp;s
+                    {% include "eos_tax/partials/bot-computed-at.html" %}
+                    &middot; {% translate "database" %} {{ stats.seconds_query|floatformat:2 }}&nbsp;s
                     &middot; {% translate "aggregation" %} {{ stats.seconds_aggregate|floatformat:2 }}&nbsp;s
                     &middot; {% translate "total" %} <strong>{{ stats.seconds_total|floatformat:2 }}&nbsp;s</strong>
                 </span>
             </div>
+            {% endif %}
 
             </div>
 
@@ -131,6 +138,9 @@
 
             <div class="tab-pane fade" id="eos-tax-tab-clock" role="tabpanel"
                  data-eos-signal="clock"></div>
+
+            <div class="tab-pane fade" id="eos-tax-tab-audit" role="tabpanel"
+                 data-eos-signal="audit"></div>
             </div>
         </div>
     </div>

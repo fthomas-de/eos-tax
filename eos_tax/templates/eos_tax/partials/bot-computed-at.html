@@ -1,0 +1,6 @@
+{% load i18n %}
+{% comment %}
+    The lists come from the job, so the running month is as old as its last
+    run - said beside every list rather than left to be guessed.
+{% endcomment %}
+{% if computed_at %}{% blocktranslate with value=computed_at|date:"Y-m-d H:i" %}computed {{ value }} EVE{% endblocktranslate %}{% endif %}

@@ -1,0 +1,6 @@
+{% load i18n %}
+
+{# bots.js looks for data-eos-pending and asks again until the lists are there #}
+<div class="alert alert-info" data-eos-pending>
+    {% translate "The lists of this month are being calculated in the background. This tab loads them by itself once they are ready." %}
+</div>

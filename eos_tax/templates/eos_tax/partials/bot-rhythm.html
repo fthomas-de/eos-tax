@@ -7,7 +7,7 @@
 </p>
 
 {% if groups %}
-    {% if not rows %}
+    {% if not listed %}
         {% comment %}
             An empty table says the threshold was not met. It does not say by
             how much, which is the thing worth knowing when the threshold is
@@ -84,5 +84,5 @@
     {% if stats.purged %}
         <span>{% blocktranslate count counter=stats.purged %}{{ counter }} flagged character left out of the yardstick{% plural %}{{ counter }} flagged characters left out of the yardstick{% endblocktranslate %}</span>
     {% endif %}
-    <span class="ms-auto">{{ stats.seconds|floatformat:2 }}&nbsp;s</span>
+    <span class="ms-auto">{% include "eos_tax/partials/bot-computed-at.html" %} &middot; {{ stats.seconds|floatformat:2 }}&nbsp;s</span>
 </div>

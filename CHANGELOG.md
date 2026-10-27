@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- A fifth tab on the bots page, "Without current audit": the mains with at
+  least one character on the other four tabs whose corptools audit is
+  missing or no longer current (corptools' own `active` flag). Only the
+  characters those tabs show are checked - their first ten mains, or the
+  fallback list - because that is the list a reader acts on, and an alt
+  that never ratted says nothing about the month. Every such main is
+  listed, not the first ten; each character names the tabs that listed
+  it, with a link back to them, and the strongest of their assessments.
+  Characters Alliance Auth does not know count as without audit and stay
+  a group of their own. It picks its characters out of the stored lists
+  (see below) and reads the audit state live, so a renewed token shows at
+  once; the character page does not get it.
+
+### Changed
+
+- The four lists of the bots page are computed by a Celery job and stored
+  (`BotReport`, migration 0028) instead of while the page loads. On the
+  live journal "Hours per day" took about thirty seconds and "Unbroken
+  runs" ten, every visit. The job runs with the tax job for the same
+  months, and again for the previous and the running month whenever a
+  save changes a bot threshold, the taxed types, the alliances or the
+  blacklist. Each list carries a fingerprint of those settings; one
+  computed under other values, or a month never computed, queues the job
+  (once per month at a time) and the tab says it is being calculated and
+  asks again by itself every twenty seconds. Every list says when it was
+  computed. Only what a tab shows is stored - the groups and their
+  figures - not every scored character of the month.
+- **After upgrading, restart the Celery workers** - the new task is unknown
+  to a worker started before it.
+
 ## [0.4.5] - 2026-10-26
 
 ### Security

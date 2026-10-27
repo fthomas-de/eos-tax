@@ -20,18 +20,16 @@ from eos_tax import VERSION
 from eos_tax.app_settings import get_config
 from eos_tax.forms import TaxConfigurationForm, TaxRateFormSet, TaxRateReadOnlyFormSet
 from eos_tax.models import TaxRate
+from eos_tax.db.bot_audit import get_unaudited_mains
+from eos_tax.db.bot_store import READINGS, get_stored_reports, settings_fingerprint
 from eos_tax.db.bots import (
     find_characters,
-    get_bot_report,
     get_character_month,
 )
 from eos_tax.db.bot_signals import (
     get_clock_detail,
-    get_clock_offset,
-    get_daily_profile,
     get_rhythm_detail,
     get_run_detail,
-    get_unbroken_runs,
 )
 from eos_tax.db.payments import (
     STATE_OPEN,
@@ -50,7 +48,7 @@ from eos_tax.db.statistics import (
 )
 from eos_tax.db.tax_changes import get_corp_tax_changes, get_corp_tax_detail
 from eos_tax import progress
-from eos_tax.tasks import queue_corporations
+from eos_tax.tasks import queue_bot_reports, queue_corporations
 from eos_tax.util import get_dates, format_isk
 
 logger = get_extension_logger(__name__)
@@ -257,6 +255,10 @@ def settings(request):
         raise PermissionDenied
 
     if request.method == "POST":
+        # before the form exists: validating it already writes the posted
+        # values into `config`, and a fingerprint taken after that would
+        # never differ from the saved one
+        before = settings_fingerprint(config)
         form = TaxConfigurationForm(request.POST, instance=config)
         rates = TaxRateFormSet(request.POST, queryset=schedule)
 
@@ -269,6 +271,11 @@ def settings(request):
             form.save()
             rates.save()
             messages.success(request, _("Settings saved."))
+
+            # the months the reader is most likely to look at next; any
+            # other month notices the change when it is opened
+            if settings_fingerprint(config) != before:
+                queue_bot_reports(_previous_and_running_month())
 
             return redirect("eos_tax:settings")
 
@@ -526,20 +533,25 @@ def bots(request):
 
         return redirect(f"{detail}?month={month}")
 
-    report = get_bot_report(selected.year, selected.month)
+    reports = _stored_reports(selected, ["hours"])
+    report = reports["hours"] if reports else {
+        "listed": False, "groups": [], "stats": {}, "computed_at": None,
+    }
     stats = report["stats"]
-    # a visible marker beats digging through logs once the journal grows
-    stats["slow"] = stats["seconds_total"] > 2
+    # a visible marker beats digging through logs once the journal grows -
+    # the job's time now, which is what the journal growing slows down
+    stats["slow"] = stats.get("seconds_total", 0) > 2
 
     context = {
         "title": _("Bots"),
         "version": VERSION,
         "selected_month": month,
-        "candidates": report["candidates"],
-        "longest_days": report["longest_days"],
+        "pending": reports is None,
+        "listed": report["listed"],
         "groups": report["groups"],
-        "groups_shown": report["groups_shown"],
-        "groups_total": report["groups_total"],
+        "groups_shown": stats.get("groups_shown", 0),
+        "groups_total": stats.get("groups_total", 0),
+        "computed_at": report["computed_at"],
         "stats": stats,
         "min_hours": config.bot_min_hours_per_day,
         "min_days": config.bot_min_days_per_month,
@@ -579,6 +591,7 @@ BOT_SIGNAL_LABELS = {
     "runs": _("Unbroken runs"),
     "rhythm": _("Against the Corporation"),
     "clock": _("Off the Corporation clock"),
+    "audit": _("Without current audit"),
 }
 
 
@@ -685,14 +698,40 @@ def _family_for(request, character_id, month):
     }
 
 
-# Which reading of the month each tab shows, and what renders it. Kept beside
-# the view rather than in the template so an unknown name is a 404 here
-# instead of an empty page there.
+# What renders each fetched tab. Kept beside the view rather than in the
+# template so an unknown name is a 404 here instead of an empty page there.
 BOT_SIGNALS = {
-    "runs": ("eos_tax/partials/bot-runs.html", get_unbroken_runs),
-    "rhythm": ("eos_tax/partials/bot-rhythm.html", get_daily_profile),
-    "clock": ("eos_tax/partials/bot-clock.html", get_clock_offset),
+    "runs": "eos_tax/partials/bot-runs.html",
+    "rhythm": "eos_tax/partials/bot-rhythm.html",
+    "clock": "eos_tax/partials/bot-clock.html",
+    # not a reading of its own: the characters of the four above whom
+    # corptools no longer watches, picked out of their stored lists
+    "audit": "eos_tax/partials/bot-audit.html",
 }
+
+
+def _previous_and_running_month():
+    now = datetime.now()
+    previous = (now.month - 1, now.year) if now.month > 1 else (12, now.year - 1)
+
+    return [previous, (now.month, now.year)]
+
+
+def _stored_reports(selected, signals):
+    """The month's stored lists, or None while the job computes them.
+
+    A missing or outdated list queues the job rather than being computed
+    here - half a minute is more than a page should take, and more than a
+    proxy in front of it may wait.
+    """
+    reports = get_stored_reports(selected.year, selected.month, signals)
+
+    if reports is None:
+        queue_bot_reports([(selected.month, selected.year)])
+        # an eager Celery - the tests - has computed them by now
+        reports = get_stored_reports(selected.year, selected.month, signals)
+
+    return reports
 
 
 @login_required
@@ -700,25 +739,33 @@ BOT_SIGNALS = {
 def bot_signal(request, signal):
     """One sub tab of the bots page, as a fragment.
 
-    The tabs fetch these when they are opened. Three of the four readings
-    would otherwise be computed on every visit to the page, and most visits
-    only ever look at the first.
+    The tabs fetch these when they are opened. The lists come from the
+    job; fetching them one at a time still keeps a visit that never leaves
+    the first tab from loading four more.
     """
     if signal not in BOT_SIGNALS:
         raise Http404(signal)
 
-    template, report_for = BOT_SIGNALS[signal]
     selected = _selected_month(request)
-    report = report_for(selected.year, selected.month)
-
     month = f"{selected.year}-{selected.month:02d}"
+
+    if signal == "audit":
+        reports = _stored_reports(selected, list(READINGS))
+        report = get_unaudited_mains(reports) if reports else None
+    else:
+        reports = _stored_reports(selected, [signal])
+        report = reports[signal] if reports else None
+
+    if report is None:
+        return render(request, "eos_tax/partials/bot-pending.html")
+
     _remember_groups(request, month, signal, report["groups"])
 
-    return render(request, template, {
-        "rows": report["rows"],
-        "longest": report.get("longest", []),
+    return render(request, BOT_SIGNALS[signal], {
+        "listed": report["listed"],
         "groups": report["groups"],
         "stats": report["stats"],
+        "computed_at": report["computed_at"],
         "selected_month": month,
     })
 

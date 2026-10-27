@@ -3,6 +3,10 @@
  * Computing all four readings on every page load would make the page pay for
  * three nobody asked to see, so a pane stays empty until its tab is shown.
  */
+/* How long a tab waits before asking again for a month the job is still
+ * computing - a month takes the better part of a minute. */
+const EOS_TAX_PENDING_RETRY_MS = 20000;
+
 /* The tab the reader is on, as the url spells it: the pane id minus its
  * prefix, so "eos-tax-tab-rhythm" travels as "rhythm". */
 function eosTaxTabName(pane) {
@@ -82,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        trigger.addEventListener("shown.bs.tab", function () {
+        function load() {
             // once: the fragment is a snapshot of the month in the form
             // above, and that form reloads the page when it changes
             if (pane.dataset.eosLoaded) {
@@ -114,6 +118,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (typeof eosTaxDrawChart === "function") {
                         eosTaxDrawChart(pane);
                     }
+
+                    // the job is still computing the month: ask again while
+                    // the tab stays open, and on the next visit to it
+                    if (pane.querySelector("[data-eos-pending]")) {
+                        delete pane.dataset.eosLoaded;
+                        window.setTimeout(function () {
+                            if (pane.classList.contains("active")) {
+                                load();
+                            }
+                        }, EOS_TAX_PENDING_RETRY_MS);
+                    }
                 })
                 .catch(function (error) {
                     // let it be tried again rather than leaving a dead pane
@@ -121,8 +136,22 @@ document.addEventListener("DOMContentLoaded", function () {
                     pane.textContent = config.error;
                     console.error("eos_tax: loading the tab failed", error);
                 });
-        });
+        }
+
+        trigger.addEventListener("shown.bs.tab", load);
     });
+
+    // the first tab comes with the page, so a month still being computed
+    // there is asked for again by reloading the page
+    const hours = document.getElementById("eos-tax-tab-hours");
+
+    if (hours && hours.querySelector("[data-eos-pending]")) {
+        window.setTimeout(function () {
+            if (hours.classList.contains("active")) {
+                window.location.reload();
+            }
+        }, EOS_TAX_PENDING_RETRY_MS);
+    }
 
     const open = document.querySelector(
         ".tab-pane.active[id^='eos-tax-tab-']"
