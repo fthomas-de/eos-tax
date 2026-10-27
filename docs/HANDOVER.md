@@ -8,29 +8,57 @@ Last updated 2026-10-27.
 
 ## Release
 
-- Version **0.4.7** in `eos_tax/__init__.py`, released 2026-10-27
-- `[0.4.7]` in `CHANGELOG.md`:
-  - **New page "GM Transactions"** (`views.gm_transactions`,
-    `db/gm_transactions.py`, `gm-transactions.html`/`.js`): characters
-    with a "GM [" booking in their own wallet journal or a wallet below
-    zero now. The GM rows come from a Celery job (`run_update_gm_report`,
-    model `GmReport`, migration 0029), queued with the tax job
-  - **The audit tab sorts**: mains by name, the headings sort the
-    characters inside each main (`eosTaxSortGroups` in `bots.js`)
-  - 13 new strings, in all six catalogues
-- `[0.4.6]`, the same day: the four bots lists are computed by a job
-  (`BotReport`, migration 0028); fifth bots tab "Without current audit".
-  Earlier versions: see `CHANGELOG.md`. Still worth knowing from them:
+- Version **0.4.8** in `eos_tax/__init__.py`, released 2026-10-27
+- `[0.4.8]` in `CHANGELOG.md`, all on GM Transactions
+  (`db/gm_transactions.py`, `gm-transactions.html`/`.js`):
+  - **Age column**: the GM job stores each listed character's age in days
+    (`report["age_days"]`, characters with a transaction and wallets below
+    zero at the job's run); the page formats it with `format_age_days`
+    (new in `util.py`, `format_age` uses it)
+  - **Character name links to the corptools Character Audit**
+    (`corptools:reactmain`)
+  - **Counterparty filter**: a checkbox per second party of the
+    descriptions (`counterparty()`, `_parties_of()`), filtered in the
+    browser via `DataTable.ext.search`
+  - **Column "Corporation at the time"**, red: the character's Corporation
+    at the transaction, via `payments._corporation_at`
+  - 3 new strings, in all six catalogues
+- `[0.4.7]` and `[0.4.6]`, the same day: the GM Transactions page itself
+  (`GmReport`, migration 0029); the bots lists computed by a job
+  (`BotReport`, migration 0028), the audit tab and its sorting. Earlier
+  versions: see `CHANGELOG.md`. Still worth knowing from them:
   `manage_settings` (0.4.5, migration 0027) guards every settings write;
   `admin_view` alone sees the settings page read only
-- Migrations **0001-0029** applied to `aa_dev`
-- 667 tests, all green (652 without the translation tag, 15 with it)
+- Migrations **0001-0029** applied to `aa_dev`; 0.4.8 has none
+- 681 tests, all green (666 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
 
-## Decisions of the 2026-10-27 session
+## Decisions of the 2026-10-27 sessions
+
+GM Transactions additions (0.4.8) - the user's choices unless marked:
+
+- **The age is computed by the GM job**, like the bots lists - as old as
+  the job's last run. Claude's calls: stored as days, not text, so the
+  unit is in the reader's language; a character gone below zero after the
+  run, or a report stored before 0.4.8, shows a dash until the next run.
+- **Counterparty = the text after the last " and " of the description**
+  ("GM X", "EVE Central Bank", ...), not corptools'
+  `first_party`/`second_party` (the user's choice over the ESI parties).
+  Claude's calls: the boxes are read off the rows on the page; sorted by
+  name ignoring case; one box "No counterparty" for wallets below zero
+  and descriptions of another shape, last; with only one counterparty no
+  filter at all; all ticked at first; client-side only, not in the URL.
+- **"Corporation at the time" is a column of its own** (the user's choice
+  over marking it in the existing columns). Claude's calls: read at
+  render from the whole corporation history, inside the alliance or not;
+  the tax calculation's rule (`_corporation_at`: the membership that
+  started last at or before the transaction, a tie to the higher
+  `record_id`); only the name is red, the dash is not.
+- **The audit link** goes to `corptools:reactmain`, as on the character
+  page; the whole name is the link (Claude's call).
 
 The GM Transactions page (0.4.7) - the user's choices unless marked:
 
@@ -45,8 +73,8 @@ The GM Transactions page (0.4.7) - the user's choices unless marked:
 - **The whole journal**, no month selector.
 - **Computed by a job** to keep the page fast.
 - Claude's calls: every character corptools has a journal for, not only
-  the alliance's; the job stores only the GM rows, balances, mains and
-  Corporations are read at render; "Corporations in the Alliance" =
+  the alliance's; the job stores the GM rows (and since 0.4.8 the ages),
+  balances, mains and Corporations are read at render; "Corporations in the Alliance" =
   corporation history against today's alliance corps plus every corp with
   a `MonthlyTax` row (a corp that left still counts); "Transaction for" =
   text after " between " up to the last " and "; one row per transaction,
@@ -187,15 +215,20 @@ plain list of alts from Alliance Auth, without assessments.
    and the GM page would wait forever. Until the first job ran, they show
    "being calculated". Check the beat cadence of `run_update_alliance` in
    production: both are only as fresh as its last run ("computed … EVE"
-   says when).
+   says when). **0.4.8 needs the restart too**: a worker on 0.4.7 code
+   stores GM reports without ages, and the Age column stays all dashes.
 2. **GM Transactions has never seen real data** - `aa_dev` has 6
    character journal rows, no GM booking and no negative balance. After
-   deploying: does the page list the expected characters, does
-   "Transaction for" read the names right, and how long does the job's
-   `description LIKE 'GM [%'` scan over the live character journal take
-   (no index serves it)?
+   deploying: does the page list the expected characters, do
+   "Transaction for" and the counterparty boxes read the names right
+   (which counterparties really occur?), does "Corporation at the time"
+   match, and how long does the job's `description LIKE 'GM [%'` scan over
+   the live character journal take (no index serves it)?
 3. Not looked at in a browser yet, only through the tests: the GM page
-   with rows, the audit tab on the real page (its sorting was clicked
+   with real rows - its counterparty filter was clicked through on a
+   rendered snapshot with hand-made rows (DataTables 2.3.8, works); the
+   red "Corporation at the time" column and the audit link were not
+   rendered at all. The audit tab on the real page (its sorting was clicked
    through on a rendered snapshot with hand-made rows only),
    the pending note with the 20 s retry (fetched tabs) and the page reload
    (first tab), the "computed … EVE" lines. From earlier versions also not
@@ -299,6 +332,15 @@ The bots tabs now need stored lists: run `store_bot_reports(year, month)`
 in `manage.py shell` first, or the snapshot shows "being calculated". The
 GM page the same with `store_gm_report()`.
 
+For a whole page with hand-made rows (used for the GM counterparty
+filter): `render(request, "eos_tax/gm-transactions.html", context)` in a
+script fed to `manage.py shell`, with a `RequestFactory` request whose
+`user` is `kaskade`, a `SessionStore()` session and `FallbackStorage`
+messages; strip `integrity`/`crossorigin`, symlink `static` to
+`/var/www/myauth/static` next to the file and serve the folder with
+`python3 -m http.server`. Writes nothing to `aa_dev`. The dev static
+files are not hashed, so the `?v=` trick needs the plain name.
+
 For a fragment's JavaScript alone (the audit tab's sorting), quicker:
 `render_to_string` the partial with hand-made rows, wrap it in a page with
 the script inlined, and serve it with `python3 -m http.server` from WSL.
@@ -306,6 +348,15 @@ The browser pane opens a `file://` page only as a static snapshot - no
 script runs there.
 
 ## Traps recent sessions cost time on
+
+- **`payments._corporation_at` bisects with a float sentinel**
+  (`(moment, inf)`): its periods must be `(start, corporation_id)` pairs.
+  A name as second element raises a TypeError the moment two records
+  start in the same second - look names up afterwards.
+- **A DataTables `columns` option shorter or longer than the header
+  breaks the table.** `test_script_should_describe_every_column` counts
+  both on the GM page; a new column needs its entry in
+  `gm-transactions.js`.
 
 - **There is no Python on the Windows side.** Patch scripts and anything
   else in Python run in WSL; the Bash tool's own `python3` is the Windows

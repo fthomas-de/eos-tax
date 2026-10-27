@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.8] - 2026-10-27
+
 ### Added
 
 - GM Transactions shows each character's age, the same column the bots
