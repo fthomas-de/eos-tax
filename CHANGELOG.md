@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.9] - 2026-10-27
+
 ### Fixed
 
 - The counterparty filter on GM Transactions offered the characters

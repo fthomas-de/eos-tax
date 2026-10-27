@@ -8,7 +8,14 @@ Last updated 2026-10-27.
 
 ## Release
 
-- Version **0.4.8** in `eos_tax/__init__.py`, released 2026-10-27
+- Version **0.4.9** in `eos_tax/__init__.py`, released 2026-10-27
+- `[0.4.9]` in `CHANGELOG.md`, one fix on GM Transactions: the
+  counterparty filter offered the characters themselves, because a GM
+  taking ISK back books "between GM X and <character>". `sides()` (replaces
+  `named_character()`/`counterparty()`) now takes the party that is a
+  character Alliance Auth knows (`_player_names`, casefolded; every wallet
+  owner is one) as the character, the other as the counterparty; both
+  players = "No counterparty". "Transaction for" follows the same rule
 - `[0.4.8]` in `CHANGELOG.md`, all on GM Transactions
   (`db/gm_transactions.py`, `gm-transactions.html`/`.js`):
   - **Age column**: the GM job stores each listed character's age in days
@@ -17,9 +24,9 @@ Last updated 2026-10-27.
     (new in `util.py`, `format_age` uses it)
   - **Character name links to the corptools Character Audit**
     (`corptools:reactmain`)
-  - **Counterparty filter**: a checkbox per second party of the
-    descriptions (`counterparty()`, `_parties_of()`), filtered in the
-    browser via `DataTable.ext.search`
+  - **Counterparty filter**: a checkbox per counterparty of the
+    descriptions (`_parties_of()`), filtered in the browser via
+    `DataTable.ext.search`
   - **Column "Corporation at the time"**, red: the character's Corporation
     at the transaction, via `payments._corporation_at`
   - 3 new strings, in all six catalogues
@@ -29,14 +36,28 @@ Last updated 2026-10-27.
   versions: see `CHANGELOG.md`. Still worth knowing from them:
   `manage_settings` (0.4.5, migration 0027) guards every settings write;
   `admin_view` alone sees the settings page read only
-- Migrations **0001-0029** applied to `aa_dev`; 0.4.8 has none
-- 681 tests, all green (666 without the translation tag, 15 with it)
+- Migrations **0001-0029** applied to `aa_dev`; 0.4.8 and 0.4.9 have none
+- 683 tests, all green (668 without the translation tag, 15 with it)
+- `aa_dev` has **no GM transactions** and no stored `GmReport`: the
+  page's GM rows can only be seen in tests or on production data. The
+  0.4.9 fix is verified by tests only, not in the browser
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
 
 ## Decisions of the 2026-10-27 sessions
+
+Counterparty fix (0.4.9):
+
+- **User**: the filter offers only the GM / non-player side, never a
+  character.
+- Claude's calls: "player" = a name Alliance Auth has an `EveCharacter`
+  for, not the ESI party ids; a booking between two registered characters
+  goes to "No counterparty". Open: a character Alliance Auth does not know,
+  named second and not the wallet owner, still shows as a box; so does the
+  tail of a player name with " and " in it when it stands second
+  (`_parties` splits at the last " and ").
 
 GM Transactions additions (0.4.8) - the user's choices unless marked:
 
