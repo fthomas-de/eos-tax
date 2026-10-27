@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.6] - 2026-10-27
+
 ### Added
 
 - A fifth tab on the bots page, "Without current audit": the mains with at

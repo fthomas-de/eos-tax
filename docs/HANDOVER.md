@@ -4,360 +4,193 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-10-26.
+Last updated 2026-10-27.
 
 ## Release
 
-- Version **0.4.5** in `eos_tax/__init__.py`, released 2026-10-26
-- `[0.4.5]` in `CHANGELOG.md` (Security): new permission
-  `manage_settings` (migration 0027) for saving settings, recalculating
-  and dismissing a finished run; `admin_view` alone sees the settings
-  page read only (`TaxRateReadOnlyFormSet`, disabled fields, no Save /
-  Recalculate / Remove, no Dismiss on the bar). One new string, in all
-  six catalogues
-- `[0.4.4]`: the introductions of the three fetched bot
-  tabs now show (they sat in panes the tab script replaces); otherwise
-  less code for the same pages - rhythm and clock lists share
-  `_against_the_corporation` and `_baseline` in `db/bot_signals.py`,
-  includes `partials/bot-tabs.html` and `partials/bot-character-cells.html`,
-  payment help included by `index.html` only, `get_tax_corp` one query,
-  `set_corp_tax` one write path (no migration, no new strings)
-- `[0.4.3]`: "Characters without wallet audit" leaves
-  out characters who have left the Corporation since, by ESI's character
-  affiliation at recalculation; the recalculate log counts them (no
-  migration, one new plural string in all six catalogues)
-- `[0.4.2]`: tooltip "Earned in total" (the stored
-  `gross_income`) on "Amount to pay in ISK"; a sum of several payments in
-  "Amount paid in ISK" is a badge instead of the grey "in N payments" line
-  (no migration)
-- `[0.4.1]`: the overview filters by state -
-  Outstanding / Paid / In progress / All (`?show=`), Outstanding the
-  default and now without the running month; "Not shown while in
-  progress" in the Reason of a month in progress (no migration)
-- `[0.4.0]` (a minor step, the user's choice): progress bar of every recalculation run above
-  each page, admins only (`eos_tax/progress.py`, cache only, no migration);
-  `run_update_corporation` takes an optional `run_id`; pages put their
-  scripts in `{% block eos_tax_javascript %}`; tests run on a local memory
-  cache
-- `[0.3.18]`: setting `paid_difference_min_millions`
-  (default 10, migration 0026) - the `+`/`-` badges in "Amount paid in ISK"
-  only from that difference on, 0 flags every difference
-- `[0.3.17]`: tooltip on the Paid tick with the
-  transfer date (`MonthlyTax.paid_at`, the transfer that settled the
-  month) and the moment the row was first marked paid
-  (`MonthlyTax.paid_recorded_at`), migration 0025; without reason codes
-  the earliest exact transfer counts
-- `[0.3.16]`: the over-/underpayment badges in "Amount
-  paid in ISK" only with `admin_view`; "Characters without wallet audit"
-  is one badge per row (count, names and gross in its `title` tooltip)
-  (no migration, no new strings)
-- `[0.3.15]`: untaxed member wallet entries only count
-  while the character was in the Corporation, by the corptools
-  corporation history (no migration)
-- `[0.3.14]`: member wallets reconciled with the
-  corporation wallet, so 0% ingame tax is taxed (migration 0022,
-  `MonthlyTax.gross_income`); overview column "Characters without wallet
-  audit" (migration 0023, `MonthlyTax.unaudited_characters`, threshold
-  `unaudited_min_millions`, default 100); green amounts when paid to the
-  ISK; own column "Calculation time" (migration 0024,
-  `MonthlyTax.calculation_seconds`)
-- `[0.3.13]`: a missing ingame rate is asked from ESI; `[0.3.12]`: what was
-  paid is recorded ("Amount paid in ISK", payments added up by reason)
-- Migrations **0001-0027** applied to `aa_dev`
-- 620 tests, all green (605 without the translation tag, 15 with it)
+- Version **0.4.6** in `eos_tax/__init__.py`, released 2026-10-27
+- `[0.4.6]` in `CHANGELOG.md`:
+  - **The bots lists come from a Celery job** (`run_update_bot_reports`,
+    `db/bot_store.py`), stored in `BotReport` (migration 0028) - one row
+    per month and tab, with a fingerprint of the settings they depend on.
+    Live, "Hours per day" took ~30 s and "Unbroken runs" ~10 s per visit.
+  - **Fifth tab "Without current audit"** (`db/bot_audit.py`,
+    `partials/bot-audit.html`): characters shown on the four lists whose
+    corptools audit is missing or `active = False`, grouped by main
+  - 11 new strings, in all six catalogues
+- Earlier versions: see `CHANGELOG.md`. Still worth knowing from them:
+  `manage_settings` (0.4.5, migration 0027) guards every settings write;
+  `admin_view` alone sees the settings page read only
+- Migrations **0001-0028** applied to `aa_dev`
+- 645 tests, all green (630 without the translation tag, 15 with it)
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
-  `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de,
-  consistently in every place it occurs now, including `settings.html`
-- `CHANGELOG.md` is newest first; `[0.3.2]` and `[0.3.6]` were written from
-  the commits that raised those versions
+  `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
+- `CHANGELOG.md` is newest first
 
-## Decisions of the 2026-10-26 session
+## Decisions of the 2026-10-27 session
 
-- **`admin_view` sees the settings page read only**, the user's choice
-  over hiding it: an auditor may read the configuration behind every
-  figure, but not change it. The writes need `manage_settings` on top of
-  `admin_view` (the decorators stack; `manage_settings` alone gets no
-  page). Came from a security review of the user's AA apps.
-- The two fetched endpoints (`settings_recalculate`, `progress_dismiss`)
-  answer a missing `manage_settings` with 403, not the login redirect the
-  pages use - a script would swap the login page into its result. The
-  settings POST raises `PermissionDenied` in the view.
+The audit tab - the user's choices unless marked:
 
-## Decisions of the 2026-10-13 sessions
+- **"Listed" means what a tab shows**: its first ten mains, or the
+  fallback list when nobody crossed the threshold. Not every row a reading
+  scored.
+- **Only the listed characters are checked**, not the rest of the account
+  (the user's choice over "every character of the main").
+- **Current = corptools' own `active` flag**; no `CharacterAudit` row
+  counts as "no audit", `active = False` as "not current". Read live at
+  render, not stored with the lists (Claude's call), so a renewed token
+  shows at once.
+- **Characters without an Alliance Auth account are listed** as a group of
+  their own ("no main known"), the way the tabs list them.
+- Claude's calls: every main is listed (no ten cap - it is already a cut of
+  four cut lists); a character carries the strongest assessment of the
+  tabs that listed it; each tab name is a link that reopens that tab for
+  the month; the character page does not get the tab
+  (`bot-tabs.html` takes `audit_tab=True` from `bots.html` only).
 
-- **The bot readings may share logic where it makes sense** - the user's
-  words, loosening the earlier "deliberately separate". What stays
-  separate are the thresholds and settings per reading (see "The bots
-  page"); structure - both passes, the yardstick, the fallback - is
-  shared since 0.4.4.
-- **Bloat review, not taken up yet** (offered, the user chose the bug and
-  the larger cuts only): `bot_signal` and `bot_signal_detail` in
-  `views.py` are near-identical; small idioms (`Counter` subtraction in
-  `_rest_of_corp`, `most_common` and the unread `middle`/`payouts` keys in
-  `_window`, `itertools.product` in `palette.py`, `**income` in
-  `update_corp`, `value_from_datadict` in `forms.py`, `columnDefs` with
-  `"_all"` in the DataTables scripts, an unused logger in `models.py`);
-  fallbacks only tests reach (`gross_income is None` in `set_corp_tax`,
-  `tax_rate=None` in `get_amount_to_pay`).
-- **Former members are not listed as "without wallet audit"**, the
-  user's request. Source of the current corporation is ESI's
-  `/characters/affiliation/` (the user's choice over AA's EveCharacter and
-  corptools' EveName, which rarely know an unregistered character), asked
-  in `update_corp` through `open_api_provider.get_affiliations`, only for
-  the characters above the threshold, in chunks of 1000. Not answered or
-  ESI down = stays listed (Claude's call). Their income still counts. Old
-  rows are cleaned on their next recalculation, not at display.
-  `EosTaxTestCase.setUpClass` patches `get_affiliations` to answer nobody,
-  so no test reaches the real ESI.
-- **Payments only while in the Corporation** was asked again: already
-  true since 0.3.15 (slices and taxed payouts prove membership, untaxed
-  ones go by the corptools history). The user wanted it secured only; a
-  test for leaving and coming back was added.
+The job - the user's choices unless marked:
 
-## Decisions of the 2026-10-08 sessions
+- **Stored in an own DB table**, not the cache.
+- **A month never computed queues the job and the tab says so**
+  (`partials/bot-pending.html`, `data-eos-pending`); `bots.js` asks again
+  every 20 s while the tab is open, the first tab reloads the page
+  (interval: Claude's call). Not computed live.
+- **Runs with the tax job** (`run_update_alliance` queues
+  `queue_bot_reports(get_dates())`), no own beat entry.
+- **A settings save recomputes the previous and the running month at
+  once** when the fingerprint changed; older months notice on their next
+  visit.
+- Claude's calls: the fingerprint covers every `bot_*` field, the taxed
+  types, the alliances and the blacklist; a list under another
+  fingerprint is treated as missing, not shown with a warning. One job per
+  month at a time via a cache lock (`BOT_REPORT_LOCK`, 15 min, deleted in
+  `finally`). Only `listed`, `groups` and `stats` are stored, not every
+  scored row. Run times (`started_at`, `ended_at`) are turned back into
+  datetimes on read (`DATETIME_KEYS`). Every list shows "computed … EVE".
 
-- **Gross income as tooltip on "Amount to pay in ISK"** (0.4.2), the
-  user's request; `gross_income` is the figure ("Earned in total: N ISK",
-  the user's choice over adding the arithmetic). Native `title` on a span,
-  rows without a gross keep the bare amount. **A sum of payments is a
-  badge** (`fa-layer-group` + count, "Sum of N payments" as tooltip) in
-  place of the grey "in N payments" line - the user had no preference,
-  Claude's call. Translated in all six; not looked at in a browser.
+## Earlier decisions still in force
 
-- **Overview filter by state** (0.4.1), the user's request: see open,
-  paid and in progress (running month) separately. Four links
-  Outstanding / Paid / In progress / All as `?show=open|paid|progress|all`,
-  **Outstanding the default** (the user's choice). In progress means "not
-  payable yet" by `is_payable`, so last month stays in progress on the
-  1st; paid wins over both (Claude's calls). `?paid=1` maps to All for old
-  bookmarks, an unknown value to Outstanding. The empty Reason of a month
-  in progress reads "Not shown while in progress", eos-invoices' wording -
-  the user's request. Translated in all six; "In progress" and the Reason
-  note take eos-invoices' de/ru wording. Not looked at in a browser yet.
-
-- **Progress bar for every recalculation**, the user's request: "like
-  eos-invoices" turned out to mean eos-auth-monitor's bar (eos-invoices
-  has none). It shows every run of eos-tax, automatic or manual, with bar,
-  counter and a list of Corporations (the user's choice over bar and counter
-  alone). **Admins only**, and **a finished run shows a "Reload" button**
-  instead of reloading by itself (both the user's choices). Cache, not
-  database; one key per job, because the subtasks run in parallel (Claude's
-  call). A finished run is only shown if it started after the page loaded
-  or has a failed job; dismissing removes it for every admin. The single
-  Corporation recalculation also appears as a run of one. A finished run
-  without failures disappears on reload - asked about, by design: the page
-  then shows its figures. Keeping it visible for some minutes was offered,
-  not taken up yet.
-
-- **Payment differences flagged from 10M on**, the user's request: small
-  differences need no extra hint, the threshold is a setting with 10M as
-  default. Integer millions like `unaudited_min_millions`; `>=` the
-  threshold is flagged, 0 flags every difference (Claude's calls). Only the
-  overview badges follow it - the recalculate log still states every
-  difference. The amount itself stays green only when paid to the ISK.
-
-- **Paid tooltip shows both times**, the user's choice over only the
-  transfer date or only the moment of recognition. Native `title` like the
-  other badges, times in UTC as "EVE". Written out in place, not through
-  `asvar` - that would leak a date into the next row of the loop. Rows paid
-  before 0025 get the transfer date on the next run, never a recorded time.
-
-- **Payment differences are for admins.** The user's request: the `+`/`-`
-  badges next to "Amount paid in ISK" only for admins
-  (`perms.eos_tax.admin_view` in the template). Members keep the amount
-  and the "in N payments" line.
-- **Unaudited characters as a badge with tooltip**, the user's request to
-  save space. Native `title` tooltip like the payment badges, not a
-  Bootstrap tooltip (Claude's call); the column header stays long.
-
-- **Member wallet entries count only from joining the Corporation.** The
-  user's request: record character wallet entries only after the
-  characters joined the corp. `_corporation_at` in `db/payments.py` reads
-  corptools' `CorporationHistory`; an untaxed entry counts while the
-  character was in the Corporation, so a former member also counts up to
-  leaving (before, the current corporation decided). **A character without
-  a history counts nothing** - the user's choice over "count as before".
-  A payout the Corporation taxed (`tax_receiver_id`) counts regardless -
-  Claude's call, the tax is proof of membership. The recalculate log
-  shows the left-out count (`member_before_join`). Test factory:
-  `add_member_payout(..., joined=LONG_AGO)` creates the history on first
-  use, `joined=None` leaves it empty, `add_corporation_history` adds more.
-- **0% ingame tax is still taxed, from the member wallets.** Production:
-  urex (your ex's) at 0% had no tax. The user's wording: the member
-  wallets have to be included even though it is more work, because a week
-  without tax does not show in a monthly figure; reconcile corp and member
-  entries and add what is missing, never count twice. Always reconciled,
-  not only when the current rate is 0. Matching key: character, second,
-  system (`context_id`), `reason`, `ref_type` - unverified against real
-  data, dev has no member bounty rows. A taxed member payout the key
-  misses falls back to the nearest slice of the same character, type and
-  amount within an hour (`LOOSE_MATCH_WINDOW`), so a key that does not
-  line up cannot double a taxed payout. Still worth a look at the
-  recalculate log after deploying: "added" should only be untaxed payouts.
-  A lone slice is backed out with the rate of the nearest matched pair
-  (Claude's call, the user rejected the question about it without
-  answering), a slice with no rate anywhere counts at its own value and is
-  flagged red in the log.
-- **Characters without a member wallet are listed per month.** The user's
-  choices: "without wallet audit" means slices without a member
-  counterpart (covers an audit lacking the wallet token too), threshold
-  settable with 100M a month default, a new overview column per month
-  with the same permissions as the row. Placed as the last column so the
-  DataTables indices in `overview.js` stay put. Rows written before 0023
-  show an empty list until recalculated.
-- **Calculation time is a duration in an own column**, the user's choice
-  over a timestamp and over a note in another column. Measured over all of
-  `update_corp` up to the write.
-- **Green when paid to the ISK** on both amounts; nothing paid is not a
-  match even though the difference is 0.
-- **A missing ingame rate is asked from ESI.** Production reported "no
-  ingame tax rate on file yet" for a Corporation whose `tax_rate` was
-  `None` with `last_updated` 2026-10-02. Cause is Alliance Auth itself
-  (5.2-5.5, `EveCorporationInfo.update_corporation`): `tax_rate if
-  tax_rate else None` turns 0% into `None` on every refresh. Of four
-  options (None = 0% when pulled, None = 0% always, ask ESI, only fix the
-  message) the user chose **ask ESI**. `_tax_rate_from_esi` in
-  `db/payments.py` uses AA's own `open_api_provider`; the answer is not
-  written back (AA's row, and AA would empty it again). ESI unreachable =
-  skipped as before, task keeps running. Tests patch
-  `eos_tax.db.payments.open_api_provider` - an unpatched test with a
-  `None` rate hits the real ESI.
-- **Paying more is recorded, not only accepted.** `MonthlyTax.amount_paid`
-  and `payment_count` (migration 0021, applied to `aa_dev`) hold what
-  `find_payment` (was `corp_has_payed`) found. Shown in the recalculate log
-  and in an own overview column "Amount paid in ISK" - the user's choice
-  over a note in the Paid column.
-- **With reason codes: the exact amount first, then the sum.** The user's
-  wording: look for the matching amount, if none fits add up and check
-  whether the amount was reached. Partial payments therefore settle a row
-  now; before, one transfer had to cover it alone.
-- **Without reason codes only the exact amount counts**, as before - the
-  user kept it on purpose.
-- **Paid rows are looked up again** on every run for the amount (the flag
-  stays). That is the backfill for rows paid before 0021, the user's
-  choice over leaving them empty; there is no data migration.
-- **One journal side only.** A transfer can be in the holding's and the
-  payer's journal; `_one_side` adds up the fuller side. The dev data has a
-  single payment to the holding, so whether both sides share an
-  `entry_id` could not be checked - the sign split does not depend on it.
-- **The new column is hidden on phones** (`d-none d-md-table-cell`), like
-  the two rate columns. Claude's call, told to the user, not objected to.
-
-## Decisions of the 2026-10-01 sessions
-
-- **Tests keep their database while working, `/commit` builds it fresh.**
-  `~/bin/eos-test` passes `--keepdb` unless given `--fresh`; the `## Release`
-  suite line carries `--fresh`. Building the database ran every migration of
-  the instance - 70-100 s of a 174 s run. One kept `test_aa_dev` serves all
-  apps of the instance (same schema). The same change went into
-  eos-auth-monitor, eos-invoices and discord_announcer.
-- **The suite runs serially.** `--parallel 4` saved 7 of 26 s with a kept
-  database, against clones that miss new migrations and a hang on a failing
-  subtest.
-- **The overview sorts by Month, then Corporation - nothing else.** The
-  user's explicit wording ("nichts anderes"): Reason and Paid no longer take
-  part in the default order, they stay sortable by click. The server side
-  order in `db/payments.py` was left as it is.
-- **Every group on the bots page has a heading, a group of one too**, on all
-  four tabs. The user chose this over a separator line with a badge.
-- **The average day divides by active days**, not by the days of the month.
-
-## Decisions of the 2026-09-25 session
-
-- **The DEBUG line in `help.html` is gone.** The 2026-09-25 review had kept
-  it on the user's call ("This should say Invidia Administrative - if not
-  tell Nah Vi in Discord"); later the same day the user asked for it to be
-  removed. The copy button added alongside it makes the eyeball check it
-  existed for redundant - the name now comes straight from
-  `get_tax_corp()`, never retyped.
-- **Paid is never taken back.** Once a row is marked paid no write may
-  clear it; `set_corp_tax` only ever adds the flag.
-- Recalculate keeps checking a payment against the stored amount before it
-  recalculates - not changed on purpose.
-- The blacklist is left as it is: corporations on it still get rows from
-  the task.
-- A month with alliance rate 0 gets no row.
-- The day threshold on "Hours per day" counts once reached (`>=`).
-- A character who moved counts with the last Corporation of the month.
-- `bot_clock_min_concentration` defaults to **12** (2026-09-25, the user's
-  own call, migration 0020 regenerated with it before it was ever applied).
+- **`admin_view` sees the settings page read only** (2026-10-26); the
+  writes need `manage_settings` on top. The fetched endpoints
+  (`settings_recalculate`, `progress_dismiss`) answer a missing
+  `manage_settings` with 403, not the login redirect.
+- **The bot readings may share logic where it makes sense**; the
+  thresholds per reading stay separate (see "The bots page").
+- **Former members are not listed as "without wallet audit"**: ESI
+  `/characters/affiliation/` at recalculation, only for characters above
+  the threshold, chunks of 1000. ESI down = stays listed.
+  `EosTaxTestCase.setUpClass` patches `get_affiliations` to answer nobody.
+- **Member wallet entries count only while in the Corporation**, by
+  corptools' `CorporationHistory`; no history = counts nothing; a payout
+  the Corporation taxed counts regardless.
+- **0% ingame tax is taxed from the member wallets**, reconciled with the
+  corporation wallet (key: character, second, system, reason, ref_type;
+  fallback within `LOOSE_MATCH_WINDOW`). Never verified against real
+  member data.
+- **A missing ingame rate is asked from ESI** (`_tax_rate_from_esi`) - AA
+  5.2-5.5 stores 0% as `None`. Not written back.
+- **Payments**: with reason codes the exact amount first, then the sum;
+  without reason codes only the exact amount. Paid is never taken back.
+  Paid rows are looked up again for the amount. One journal side only.
+- **Overview**: filter `?show=open|paid|progress|all`, Outstanding the
+  default; sorts by Month, then Corporation, nothing else; payment
+  difference badges only for admins and from `paid_difference_min_millions`
+  (default 10) on.
+- **Progress bar** of every recalculation, admins only, cache only, a
+  finished run shows "Reload".
+- Every group on the bots page has a heading, a group of one too. The
+  average day divides by active days. `bot_clock_min_concentration`
+  defaults to 12. The blacklist still gets rows from the task. A month
+  with alliance rate 0 gets no row.
 
 ## The bots page
 
-Four readings of the same month that deliberately disagree. A character at the
-top of one can be absent from the next, and that disagreement is the point.
+Five tabs. The first four are readings of the same month that deliberately
+disagree - a character at the top of one can be absent from the next, and
+that disagreement is the point. The fifth sums them up.
 
-| Tab | What it measures |
+| Tab | What it shows |
 |---|---|
 | Hours per day | different hours of a day, on enough days |
 | Unbroken runs | a chain of payouts at the game's twenty minute tick |
 | Against the Corporation | share of income inside the Corporation's busy hours |
 | Off the Corporation clock | distance between the two middles of the day |
+| Without current audit | characters on the four lists without a current corptools audit |
 
-Each has its own thresholds on the settings page, which is cut into chapters -
-one per page of the navigation, one sub-chapter per tab. The thresholds are
-**deliberately not shared** between readings, even where the numbers agree
-today: tuning one must not move another.
+**The page reads, the job computes.** `bots` and `bot_signal` in
+`views.py` go through `_stored_reports`: stored lists for the month and
+the current fingerprint, else queue the job and render the pending note.
+After queueing it looks once more - with an eager Celery (the tests) the
+lists are there by then. The readings themselves (`get_bot_report`,
+`get_unbroken_runs`, `get_daily_profile`, `get_clock_offset`) are
+unchanged and listed in `bot_store.READINGS`; the character page and its
+detail tabs still compute live (one character is cheap).
 
-Two things are worth knowing before changing any of it.
+Each reading has its own thresholds on the settings page, cut into
+chapters - one per page of the navigation, one sub-chapter per tab. The
+thresholds are **deliberately not shared** between readings.
 
-**The yardstick is purged.** The two Corporation comparisons run twice: once to
-find the characters they call bots, once with those characters taken out of the
-baseline. A script with volume is part of its own Corporation's day and drags
-it towards itself, which makes every other member look ordinary. Two passes and
-not a fixed point - removing the flat characters makes the Corporation look
-more concentrated, which would flag more of them, and where that ends says more
-about the iteration than about the month. A Corporation that would fall under
-its own floor keeps the plain yardstick. Both readings can be switched back to
-it on the settings page.
+**The yardstick is purged.** The two Corporation comparisons run twice: once
+to find the characters they call bots, once with those characters taken out
+of the baseline. Two passes and not a fixed point. A Corporation that would
+fall under its own floor keeps the plain yardstick. Both readings can be
+switched back to it on the settings page.
 
-**The character page does not compute its own grouping.** That would mean a
-second walk over the whole month for the whole alliance, which is the cost the
-tabs were split up to avoid. It takes the grouping from the list the reader
-clicked through from, carried in the session (`SESSION_FAMILY` in `views.py`).
-Opened cold - a bookmark, the search box - it falls back to the plain list of
-alts from Alliance Auth, without assessments.
+**The character page does not compute its own grouping.** It takes the
+grouping from the list the reader clicked through from, carried in the
+session (`SESSION_FAMILY` in `views.py`). Opened cold it falls back to the
+plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
-1. Nothing is blocked. After deploying 0.3.14/0.3.15 (migrations
-   0022-0024), recalculate urex (your ex's) for every month it ran at 0%
-   (settings page). The log shows member entries, matched, added and left
-   out before joining; it only works for members whose characters have a
-   corptools audit with wallet access and a pulled corporation history.
-   A paid row keeps its flag even when the new amount is higher. Check
-   that "added" holds only untaxed payouts - the matching key has never
-   seen real member wallet data.
-2. Rows written before 0023/0024 show no characters and no calculation
-   time until they are recalculated. Rows paid before 0025 get their
-   transfer date on the next run, but never a "recorded as paid" time.
-   A running Celery worker needs a restart to store either - it was not
-   restarted in the 0.3.17 session (may belong to someone's terminal).
-3. Not looked at in a browser yet, only through the tests: the 0.4.4
-   template moves (bot tab intros inside the fetched fragments, the tab
-   strip and character cells as includes, payment help on the overview
-   only), the overview's
-   four state links and the "Not shown while in progress" note, the
-   "Earned in total" tooltip and the sum badge (0.4.2), the Paid
-   tooltip, the overview
-   columns "Characters without wallet audit" (now a badge), "Calculation time", the
-   green amounts, "Amount paid in ISK" with its badges, "Average day
-   (hours)" and the heading rows for groups of one on the bots page, and
-   the new "Payment differences" block on the settings page. The Ether
-   Element September row (see below) showed the `-` badge; since 0.3.18
-   only if it is 10M or more off. Worth one render with the seeded data
-   before building on any of them.
-4. **On deploying 0.4.5, grant `eos_tax.manage_settings`** (migration
-   0027) to whoever changes the settings, or only superusers can. The
-   read-only settings page and the missing Dismiss are tested, not yet
-   looked at in a browser - one render with an `admin_view`-only user.
-5. The affiliation filter (0.4.3) has never talked to the real ESI - only
-   to mocks. After deploying, recalculate a month with listed characters
-   and check the log line "... has left this corporation since"; a
-   "ESI affiliation lookup failed" warning in the worker log means
-   everyone stayed listed. Months already calculated keep former members
-   until recalculated. The Celery worker needs a restart for the new code.
+1. **On deploying 0.4.6: apply migration 0028 and restart every Celery
+   worker** - a worker started before it does not know
+   `run_update_bot_reports`, and the tabs would wait forever. Until the
+   first job ran, every tab shows "being calculated". Check the beat
+   cadence of `run_update_alliance` in production: the running month's
+   lists are only as fresh as its last run ("computed … EVE" says when).
+2. Not looked at in a browser yet, only through the tests: the audit tab,
+   the pending note with the 20 s retry (fetched tabs) and the page reload
+   (first tab), the "computed … EVE" lines. From earlier versions also not
+   rendered yet: the read-only settings page with an `admin_view`-only
+   user (0.4.5), the 0.4.4 template moves, the overview's four state links,
+   the "Earned in total" tooltip and sum badge, the Paid tooltip, the
+   overview columns "Characters without wallet audit", "Calculation time",
+   "Amount paid in ISK" with its badges, and the "Payment differences"
+   block on the settings page. One render with the seeded data before
+   building on any of them.
+3. **Known limitation of the stored lists**: names, mains and ages are
+   taken when the job runs. A character moved to another main shows
+   under the old one until the next run of that month; past months are
+   only recomputed when a setting changes or someone asks after a
+   fingerprint change.
+4. **Worth a look in production**: the footer of "Hours per day" splits
+   its time into database and aggregation. If the ~30 s are mostly
+   database, the query (grouping the whole month by character, day, hour
+   and ref_type) may be worth an index or a rewrite - corptools' schema is
+   not ours to change, so only the query.
+5. On deploying 0.4.5: grant `eos_tax.manage_settings` to whoever changes
+   the settings, or only superusers can.
+6. After deploying 0.3.14/0.3.15, recalculate urex (your ex's) for every
+   month it ran at 0% and check that "added" in the log holds only untaxed
+   payouts - the matching key has never seen real member wallet data.
+7. The affiliation filter (0.4.3) has never talked to the real ESI - check
+   the log line "... has left this corporation since" after a
+   recalculation; "ESI affiliation lookup failed" means everyone stayed
+   listed.
+8. Rows written before 0023/0024 show no characters and no calculation
+   time until recalculated; rows paid before 0025 never get a "recorded
+   as paid" time.
+
+## State of the dev instance
+
+- Migrations 0001-0028 applied to `aa_dev`.
+- `eos_tax_botreport` holds 8 rows from a trial run of the job (2026-09
+  and 2026-10, all four tabs) - our own table, safe to overwrite or
+  delete. In the dev data nobody listed has a corptools audit, so the
+  audit tab lists everyone as "no audit".
+- No Celery worker was running at the end of the session.
 
 ## Seeded test data
 
@@ -372,16 +205,14 @@ Five characters under the main **Kaskade Prime**, all in Ether Element
 | Kaskade Gamma | Against the Corporation, Off the clock |
 | Kaskade Prime | nothing - it is the main |
 
-Beta holds 546 of Ether Element's 1249 payouts and covers 21 of 24 hours. That
-is the character the purged yardstick was found on: moving her into a real
-Corporation cost every other member of it about fifteen percentage points.
+Beta holds 546 of Ether Element's 1249 payouts and covers 21 of 24 hours -
+the character the purged yardstick was found on.
 
-The seed also counts as tax: it adds 636,000,000 ISK to Ether Element's
-September 2026 journal, so that row owes 1,497,770,014 instead of the
-1,200,970,014 the real entries make, and the real payment of exactly the
-latter (2026-10-02, reason `98633815/9/2026`) leaves it unpaid with
--296,800,000 in "Amount paid in ISK". Left that way on purpose (user's call,
-2026-10-08): the row is the test case for an underpayment.
+The seed also counts as tax: Ether Element's September 2026 row owes
+1,497,770,014 instead of 1,200,970,014, and the real payment of exactly the
+latter leaves it unpaid with -296,800,000 in "Amount paid in ISK". Left
+that way on purpose (user's call, 2026-10-08): the row is the test case for
+an underpayment.
 
 Removal and rollback records live outside the repo, next to the dev instance:
 
@@ -409,75 +240,69 @@ Three traps in that setup, each of which produced a wrong answer once:
 - **The browser cache** then serves the version from before the edit anyway.
   Append a `?v=<timestamp>` to the app's own script URLs.
 - **The obvious test user is the wrong one.** `force_login` on the seeded
-  superuser (`allianceserver`) 302s to `/dashboard/` with no error - it has
-  no main character, and `main_character_required` (every eos_tax URL goes
-  through it via the app's `UrlHook`) redirects there before the view ever
-  runs. Use a seeded user that has one, e.g. `kaskade`. Also reverse the URL
-  rather than guessing it: the app is mounted at `/eos_tax/`, not `/eos-tax/`.
+  superuser (`allianceserver`) 302s to `/dashboard/` - it has no main
+  character. Use a seeded user that has one, e.g. `kaskade`. The app is
+  mounted at `/eos_tax/`, not `/eos-tax/`.
+
+The bots tabs now need stored lists: run `store_bot_reports(year, month)`
+in `manage.py shell` first, or the snapshot shows "being calculated".
 
 ## Traps recent sessions cost time on
 
+- **The bots views need stored lists in tests.** `EosTaxTestCase` patches
+  `run_update_bot_reports.delay` to run the job in place. A test about the
+  waiting state patches `delay` away again and must `cache.clear()` in its
+  cleanup - the locmem cache is shared across tests, and a lock left
+  behind makes every later bots page test show "being calculated". To feed
+  a hand-made reading into the job, `mock.patch.dict` on
+  `eos_tax.db.bot_store.READINGS`; patching `eos_tax.views.get_bot_report`
+  no longer reaches anything.
+- **A ModelForm writes the posted values into its instance at
+  `is_valid()`**, before `save()`. The settings fingerprint is therefore
+  taken before the form is built; taken after validation it never differs
+  and a changed threshold would not recompute anything.
+- **Sabotages run together can hide each other.** The lock sabotage
+  (`True or cache.add`) made the `finally` sabotage pass. Run a sabotage
+  whose test depends on another guard in a run of its own.
+- **A command in Git Bash that reads stdin hangs until the timeout** - a
+  stray `cat > file` without input stopped one run for ten minutes. Feed
+  `< /dev/null` to test runs started through scripts.
 - **Static files are hashed in tests.** `sri_static` goes through the
   manifest storage: assert `"eos_tax/js/progress."`, never `progress.js`,
-  and run `collectstatic` before a test that renders a new script, or it
-  fails with "Missing staticfiles manifest entry".
-- **A `msgctxt` entry needs the context in the catalogue test.** The 0.4.0
-  strings are the first with a context; `read_po` keys them
-  `context\x04msgid` now, the way gettext stores them in the `.mo`.
+  and run `collectstatic` before a test that renders a new script.
+- **A `msgctxt` entry needs the context in the catalogue test**: `read_po`
+  keys them `context\x04msgid`.
 - **Celery task arguments are a contract with the running worker.** A new
-  keyword on a task fails in a worker started before the change - restart
-  it (on 2026-10-08 the user did, in the VS Code terminal).
-
-- **The overview shows only outstanding rows by default** - unpaid and
-  payable. `create_tax_row()` builds a running-month row, which is "in
-  progress": a view test about a row's markup requests `{"show": "all"}`,
-  or it finds "Nothing outstanding".
-- **A Python patch script inside a bash heredoc broke in Git Bash** on its
-  quotes (unexpected EOF) - write the script with the Write tool, as
-  `CLAUDE.md` says.
-
-- **A `%` in a translatable text breaks every catalogue.** "0% ingame" is
-  read by xgettext as the format directive `% i`, and msgfmt then rejects
-  any translation that does not repeat it. Write "without ingame tax" or
-  "zero percent" in model help texts and templates.
-- **A stale `.git/CLAUDE_COMMIT_MSG` gets committed.** The Write tool
-  refuses to overwrite it unless it was read in the session; `git commit
-  -F` then silently used the previous release message. Read the file
+  task or keyword fails in a worker started before the change - restart it.
+- **The overview shows only outstanding rows by default.** A view test
+  about a row's markup requests `{"show": "all"}`.
+- **A Python patch script inside a bash heredoc breaks on its quotes** -
+  write the script with the Write tool, as `CLAUDE.md` says. The same
+  goes for inline `python -c` through `wsl.exe ... bash -lc`.
+- **A `%` in a translatable text breaks every catalogue** ("0% ingame" is
+  read as `% i`). Write "without ingame tax" or "zero percent".
+- **gettext's fuzzy guesses are wrong almost every time**: for 0.4.6 it
+  put "Wallet audit" on "no audit" and "Character %(value)s" on
+  "computed %(value)s EVE" in all six catalogues.
+- **A stale `.git/CLAUDE_COMMIT_MSG` gets committed.** Read the file
   first, and check `git log -1` before anything is pushed.
-- **A fix with two guards needs a sabotage of both at once.** The history
-  filter sits in the query and in the loop; the "no history" test passed
-  against either half removed alone and only failed with both reverted.
-- **A sabotage check that does not compile proves nothing.** Deleting a
-  line inside a call left a syntax error, the module never imported, and
-  the run reported no failing test. Replace with valid code instead.
-
-- **`eos-test` takes one test label.** A second module after the first is
-  passed through as an option and `manage.py test` refuses it - run one
-  module per call.
-- **Someone else may migrate and start Celery meanwhile.** On 2026-10-08
-  migration 0021 was applied to `aa_dev` and a worker started from a VS Code
-  terminal a minute after the migration was generated, not by the session.
-  Check `showmigrations` before migrating, and leave a worker on someone's
+- **A fix with two guards needs a sabotage of both at once**, and **a
+  sabotage that does not compile proves nothing** - replace with valid
+  code.
+- **`eos-test` takes one test label** - run one module per call.
+- **Someone else may migrate and start Celery meanwhile.** Check
+  `showmigrations` before migrating, and leave a worker on someone's
   terminal alone.
-- **`compilemessages` has to run from `eos_tax/`, the same as
-  `makemessages`, not from `myauth/`.** Run from `myauth` it reported no
-  error and did nothing - all six `.mo` stayed at their old content,
-  silently. Only the `.mo`-newer-than-`.po` timestamp check caught it.
-- **`makemessages -a` from `eos_tax/` did nothing on 2026-10-01** - exit
-  code 0, no "processing locale" line, all six `.po` untouched. Naming the
-  locales works: `makemessages -l de -l es -l fr_FR -l it_IT -l ko_KR -l ru`.
-  It then put the translation of "Busiest day (hours)" onto the new "Average
-  day (hours)" as a fuzzy guess in all six - the trap `CLAUDE.md` warns about.
-- **Two sessions share `test_aa_dev`** - all the more now that it is kept.
-  With another session running tests in the same instance, `--parallel 4`
-  failed with "Can't create database 'test_aa_dev'; database exists" and a
-  missing `esi_token` table. Both sessions also edit the same working tree.
-  A second session runs with `EOS_TEST_DB=<own name>`.
-- **Editing `~/bin/eos-test` through `\\wsl.localhost` dropped its execute
+- **`compilemessages` and `makemessages` run from `eos_tax/`**, not from
+  `myauth/`, and `makemessages` with the locales named
+  (`-l de -l es -l fr_FR -l it_IT -l ko_KR -l ru`); `-a` did nothing.
+  Check `.mo` newer than `.po` afterwards.
+- **Two sessions share `test_aa_dev`** - a second session runs with
+  `EOS_TEST_DB=<own name>`.
+- **Editing `~/bin/eos-test` through `\\wsl.localhost` drops its execute
   bit** - `chmod +x` afterwards.
-- **Old test databases are lying around** in MySQL: `test_aa_dev_5` to `_8`,
-  `_a1`, `_fix`, `_lang`, `_pay`, `test_main_session_4` - clones and
-  `EOS_TEST_DB` names of earlier sessions. Not touched; dropping them needs
-  the user's yes.
-- **A kept `test_aa_dev` is new**: a migration rewritten after it was
-  applied there, or another branch's schema, needs `eos-test ... --fresh`.
+- **Old test databases are lying around** in MySQL (`test_aa_dev_5` to
+  `_8`, `_a1`, `_fix`, `_lang`, `_pay`, `test_main_session_4`). Not
+  touched; dropping them needs the user's yes.
+- **A kept `test_aa_dev`**: a migration rewritten after it was applied
+  there, or another branch's schema, needs `eos-test ... --fresh`.
