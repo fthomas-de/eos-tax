@@ -1,6 +1,7 @@
 {% load i18n %}
 {% comment %}
     The recalculation runs - the periodic task's and the settings page's -
+    and the jobs behind the bots lists and GM Transactions, step by step,
     above every page of the app, for admins. Filled by progress.js; empty
     and hidden while nothing runs. The texts sit here rather than in the
     script so they reach the catalogues.
@@ -11,11 +12,20 @@
      {% if perms.eos_tax.manage_settings %}data-eos-tax-progress-dismiss-url="{% url 'eos_tax:progress_dismiss' 'RUN_ID' %}"{% endif %}
      data-eos-tax-label-automatic="{% translate 'Automatic recalculation' %}"
      data-eos-tax-label-manual="{% translate 'Manual recalculation' %}"
+     data-eos-tax-label-bots="{% translate 'Bots lists' %}"
+     data-eos-tax-label-gm="{% translate 'GM Transactions' %}"
      data-eos-tax-label-count="{% translate '{finished} of {total} done' %}"
      data-eos-tax-label-complete="{% translate 'Finished. Reload the page to see the new figures.' %}"
      data-eos-tax-label-reload="{% translate 'Reload' %}"
      data-eos-tax-label-dismiss="{% translate 'Dismiss' %}"
      data-eos-tax-label-details="{% translate 'Corporations' context 'progress bar details' %}"
+     data-eos-tax-label-steps="{% translate 'Steps' context 'progress bar details' %}"
+     data-eos-tax-step-hours="{% translate 'Hours per day' %}"
+     data-eos-tax-step-runs="{% translate 'Unbroken runs' %}"
+     data-eos-tax-step-rhythm="{% translate 'Against the Corporation' %}"
+     data-eos-tax-step-clock="{% translate 'Off the Corporation clock' %}"
+     data-eos-tax-step-transactions="{% translate 'Search the wallet journals' %}"
+     data-eos-tax-step-characters="{% translate 'Wallet balances and ages' %}"
      data-eos-tax-label-failed-count="{% translate '{count} failed' %}"
      data-eos-tax-state-queued="{% translate 'Waiting' context 'progress bar job state' %}"
      data-eos-tax-state-running="{% translate 'Running' context 'progress bar job state' %}"
@@ -25,7 +35,8 @@
      data-eos-tax-reason-unknown_corp="{% translate 'Corporation not known to Alliance Auth' %}"
      data-eos-tax-reason-no_tax_rate="{% translate 'No ingame tax rate' %}"
      data-eos-tax-reason-no_alliance_rate="{% translate 'Alliance tax rate is 0' %}"
-     data-eos-tax-reason-no_entries="{% translate 'No journal entries' %}">
+     data-eos-tax-reason-no_entries="{% translate 'No journal entries' %}"
+     data-eos-tax-reason-step_failed="{% translate 'An earlier step failed' %}">
     {# the dismiss button posts; not every page of the app has a form of its own #}
     {% csrf_token %}
     <div class="eos-tax-progress-runs"></div>

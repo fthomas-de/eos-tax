@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The bots page and GM Transactions each have a Recalculate button that
+  queues the job behind the page and nothing else. Until now the only way
+  to get fresh lists was to wait for the tax task, which queues both along
+  with a run for every Corporation, or to change a setting. The bots
+  button recalculates the month on screen. It needs `manage_settings`, like
+  the recalculation on the settings page; a job already waiting or running
+  is not queued a second time, and the button says so.
+- The bots and GM jobs show on the progress bar above every page, however
+  they were started: by the button, the tax task, a settings change or the
+  first visit to a month. Each is a single Celery job, so a bar of one would
+  jump from nothing to done. Instead the bar lists the job's steps: the
+  four readings for the bots lists, the journal search and the balances and
+  ages for GM Transactions. The journal search is one query, so the bar
+  stands still while it runs. When a step fails, the steps after it are
+  marked skipped. Left waiting, they would keep the run open and the bar
+  polling for an hour. If the broker refuses the job, the run comes off the
+  bar and the lock is freed. Otherwise the button would answer "already
+  being calculated" for fifteen minutes about a job that was never queued.
+  Celery workers must be restarted on deploying, since both tasks take a
+  new `run_id` argument.
+
+### Changed
+
+- The counterparty filter on GM Transactions marks "GM X" in red. When it
+  occurs, its box is the only one ticked, so the page opens on those
+  transactions; the other boxes stay one click away. The name must match
+  exactly, so other GMs and "gm x" in other casing are not marked. Without
+  it on the page every box is ticked, as before. The script now reads the
+  ticked boxes the page sends and filters the table once on load. Before,
+  it started from every box, so the unticked rows would have stayed visible
+  until the first click.
+
 ## [0.4.9] - 2026-10-27
 
 ### Fixed

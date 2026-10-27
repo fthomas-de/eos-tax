@@ -1,9 +1,11 @@
 /* The progress bar of the recalculation runs, above every page of the app.
  *
+ * A tax run lists its Corporations and months; the bots and GM jobs list
+ * their steps instead (job.step), named by the page.
+ *
  * Asks the server every two seconds while a run is going, once on load
  * otherwise, and again whenever the page says it started one (the
- * "eos-tax:progress-poll" event the settings page sends after the
- * recalculate button). A finished run stays with a reload button instead of
+ * "eos-tax:progress-poll" event the recalculate buttons send). A finished run stays with a reload button instead of
  * reloading by itself - the settings page may hold an unsaved form - and a
  * finished run is only shown at all if it started after the page was loaded,
  * or if a job of it failed: otherwise the page already shows its result.
@@ -72,6 +74,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const head = element("div", "d-flex flex-wrap align-items-center gap-2 small mb-1");
         head.appendChild(element("span", "fw-semibold", label("label-" + run.kind)));
+        if (run.period) {
+            head.appendChild(element("span", "fw-semibold", run.period));
+        }
         head.appendChild(element("span", "text-body-secondary",
             format(label("label-count"), { finished: run.finished, total: run.total })));
         if (failed) {
@@ -127,14 +132,20 @@ document.addEventListener("DOMContentLoaded", function () {
                 openLists.delete(run.id);
             }
         });
-        details.appendChild(element("summary", "text-body-secondary", label("label-details")));
+        const steps = run.jobs.length > 0 && "step" in run.jobs[0];
+        details.appendChild(element("summary", "text-body-secondary",
+            label(steps ? "label-steps" : "label-details")));
 
         const table = element("table", "table table-sm mb-0");
         const body = element("tbody");
         run.jobs.forEach(function (job) {
             const row = element("tr");
-            row.appendChild(element("td", "", job.corp_name));
-            row.appendChild(element("td", "text-nowrap", job.month + "/" + job.year));
+            if (steps) {
+                row.appendChild(element("td", "", label("step-" + job.step) || job.step));
+            } else {
+                row.appendChild(element("td", "", job.corp_name));
+                row.appendChild(element("td", "text-nowrap", job.month + "/" + job.year));
+            }
 
             const stateCell = element("td");
             stateCell.appendChild(element("span", "badge " + (stateBadge[job.state] || "text-bg-secondary"),

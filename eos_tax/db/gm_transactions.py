@@ -20,6 +20,7 @@ from django.utils.dateparse import parse_datetime
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
+from eos_tax import progress
 from eos_tax.app_settings import get_config
 from eos_tax.db.payments import _corporation_at
 from eos_tax.db.shared import character_ages, main_characters
@@ -28,6 +29,15 @@ from eos_tax.util import format_age_days
 
 
 GM_PREFIX = "GM ["
+
+# The counterparty the page opens on: red in the filter, and when it is on
+# the page the only box ticked - the user's choice, by its exact name.
+FLAGGED_PARTY = "GM X"
+
+# The job's steps on the progress bar. The journal search is one query and
+# nearly all of the time; the rest is cheap, but it is where a failure
+# after the search would show.
+GM_STEPS = ("transactions", "characters")
 
 
 def _parties(description):
@@ -135,28 +145,36 @@ def find_age_days(character_ids):
     }
 
 
-def store_gm_report():
-    transactions = find_gm_transactions()
-    # every character the page can list: the wallets below zero now too, not
-    # only those with a transaction
-    character_ids = {row["character_id"] for row in transactions} | set(
-        _negative_balances()
-    )
+def store_gm_report(run_id=None):
+    """run_id: the progress bar's run, with the steps of GM_STEPS."""
+    try:
+        with progress.tracked_job(run_id, "transactions"):
+            transactions = find_gm_transactions()
 
-    GmReport.objects.update_or_create(
-        pk=1,
-        defaults={
-            "report": {
-                "transactions": transactions,
-                # JSON object keys are text
-                "age_days": {
-                    str(character_id): days
-                    for character_id, days in find_age_days(character_ids).items()
+        with progress.tracked_job(run_id, "characters"):
+            # every character the page can list: the wallets below zero now
+            # too, not only those with a transaction
+            character_ids = {row["character_id"] for row in transactions} | set(
+                _negative_balances()
+            )
+
+            GmReport.objects.update_or_create(
+                pk=1,
+                defaults={
+                    "report": {
+                        "transactions": transactions,
+                        # JSON object keys are text
+                        "age_days": {
+                            str(character_id): days
+                            for character_id, days in find_age_days(character_ids).items()
+                        },
+                    },
+                    "computed_at": timezone.now(),
                 },
-            },
-            "computed_at": timezone.now(),
-        },
-    )
+            )
+    except Exception:
+        progress.skip_unstarted(run_id)
+        raise
 
 
 def get_stored_gm_report():
@@ -255,11 +273,18 @@ def _parties_of(rows):
     Read off the rows rather than a fixed list: a GM may book against any
     name, and a box nobody can tick is no use. By name, the rows without
     one - a wallet below zero, a description of another shape - last.
+    Every box is ticked unless FLAGGED_PARTY is among them; then only its.
     """
     counts = Counter(row["counterparty"] for row in rows)
+    flagged = FLAGGED_PARTY in counts
 
     return [
-        {"name": name, "count": counts[name]}
+        {
+            "name": name,
+            "count": counts[name],
+            "flagged": name == FLAGGED_PARTY,
+            "checked": name == FLAGGED_PARTY or not flagged,
+        }
         for name in sorted(counts, key=lambda name: (name == "", name.casefold()))
     ]
 

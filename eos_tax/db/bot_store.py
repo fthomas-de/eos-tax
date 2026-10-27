@@ -12,6 +12,7 @@ import json
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
+from eos_tax import progress
 from eos_tax.app_settings import get_config
 from eos_tax.db.bot_signals import (
     get_clock_offset,
@@ -78,23 +79,31 @@ def _for_storage(signal, report):
     }
 
 
-def store_bot_reports(year: int, month: int):
-    """Compute the four lists of one month and keep them."""
+def store_bot_reports(year: int, month: int, run_id=None):
+    """Compute the four lists of one month and keep them.
+
+    run_id: the progress bar's run, one step per reading.
+    """
     # read before the readings run: a setting saved meanwhile leaves these
     # rows marked with the old values, and the next visit computes them again
     fingerprint = settings_fingerprint()
 
-    for signal, report_for in READINGS.items():
-        BotReport.objects.update_or_create(
-            year=year,
-            month=month,
-            signal=signal,
-            defaults={
-                "report": _for_storage(signal, report_for(year, month)),
-                "fingerprint": fingerprint,
-                "computed_at": timezone.now(),
-            },
-        )
+    try:
+        for signal, report_for in READINGS.items():
+            with progress.tracked_job(run_id, signal):
+                BotReport.objects.update_or_create(
+                    year=year,
+                    month=month,
+                    signal=signal,
+                    defaults={
+                        "report": _for_storage(signal, report_for(year, month)),
+                        "fingerprint": fingerprint,
+                        "computed_at": timezone.now(),
+                    },
+                )
+    except Exception:
+        progress.skip_unstarted(run_id)
+        raise
 
 
 def _restored(report):

@@ -234,6 +234,20 @@ def gm_transactions(request):
 
 @login_required
 @permission_required("eos_tax.admin_view")
+# a 403, not the login redirect: fetched by a script, like settings_recalculate
+@permission_required("eos_tax.manage_settings", raise_exception=True)
+@require_POST
+def gm_transactions_recalculate(request):
+    """Queues the GM job alone, not the tax run it normally comes with.
+
+    "queued" is False while a run of it is still waiting or going - the
+    bar shows that one.
+    """
+    return JsonResponse({"queued": queue_gm_report()})
+
+
+@login_required
+@permission_required("eos_tax.admin_view")
 def tax_change_detail(request, corp_id):
     """The daily curve behind one corporation."""
     year = _selected_year(request)
@@ -599,6 +613,28 @@ def bots(request):
     _remember_groups(request, month, "hours", report["groups"])
 
     return render(request, "eos_tax/bots.html", context)
+
+
+@login_required
+@permission_required("eos_tax.admin_view")
+@permission_required("eos_tax.manage_settings", raise_exception=True)
+@require_POST
+def bots_recalculate(request):
+    """Queues the bots job of one month alone - see
+    gm_transactions_recalculate."""
+    try:
+        selected = datetime.strptime(request.POST.get("month", ""), "%Y-%m")
+    except ValueError:
+        return HttpResponseBadRequest("month must be YYYY-MM")
+
+    # the readings build the range up to the following month, as in
+    # _selected_month
+    if not MIN_YEAR <= selected.year <= MAX_YEAR:
+        return HttpResponseBadRequest(f"year must be between {MIN_YEAR} and {MAX_YEAR}")
+
+    return JsonResponse({
+        "queued": bool(queue_bot_reports([(selected.month, selected.year)])),
+    })
 
 
 # What the list the reader came from already knew about a main.

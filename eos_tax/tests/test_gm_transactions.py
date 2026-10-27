@@ -11,6 +11,8 @@ from allianceauth.eveonline.models import EveCharacter
 from corptools.models import CharacterAudit
 
 from eos_tax.db.gm_transactions import (
+    FLAGGED_PARTY,
+    _parties_of,
     find_gm_transactions,
     get_gm_page,
     get_stored_gm_report,
@@ -440,6 +442,33 @@ class TestGmView(GmTestCase):
         self.assertIn('<tr data-eos-party="GM X">', content)
         self.assertIn('<tr data-eos-party="EVE Central Bank">', content)
 
+    def test_should_tick_only_gm_x_and_mark_it_red(self):
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        add_wallet_entry(self.gm, BANK_TEXT, Decimal("-2"), _at(4))
+
+        content = self.client.get(self.url).content.decode()
+        boxes = content.split("data-eos-party-filter", 1)[1].split("</fieldset>", 1)[0]
+        gm_box, bank_box = (
+            boxes.split(f'value="{name}"', 1)[0].rsplit("<input", 1)[1]
+            for name in ("GM X", "EVE Central Bank")
+        )
+
+        self.assertIn("checked", gm_box)
+        self.assertNotIn("checked", bank_box)
+        self.assertIn('class="form-check-label text-danger fw-semibold"', boxes)
+        self.assertEqual(boxes.count("text-danger"), 1)
+
+    def test_script_should_start_from_the_ticked_boxes(self):
+        """Started from every box, the script would show the rows of the
+        unticked ones until the first click."""
+        script = read_static("gm-transactions.js")
+
+        self.assertIn("let shownParties = ticked();", script)
+        self.assertIn("return each.checked;", script)
+        self.assertLess(
+            script.index("dataTable.draw();"), script.index('addEventListener("change"')
+        )
+
     def test_should_show_the_corporation_at_the_time_in_red(self):
         add_corporation_history(GM_ID, ALPHA_CORP_ID, LONG_AGO)
         add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
@@ -467,7 +496,7 @@ class TestGmView(GmTestCase):
         with mock.patch.object(run_update_gm_report, "delay") as delay:
             response = self.client.get(self.url)
 
-        delay.assert_called_once_with()
+        delay.assert_called_once_with(run_id=mock.ANY)
         self.assertContains(response, "data-eos-pending")
         self.assertNotContains(response, "table-eos-tax-gm")
 
@@ -484,3 +513,34 @@ class TestGmView(GmTestCase):
         self.assertIn("order: []", script)
         self.assertIn("[data-eos-pending]", script)
         self.assertIn("window.location.reload()", script)
+
+
+class TestFlaggedParty(EosTaxTestCase):
+    """_parties_of on hand-built rows: GM X alone ticked when it is there."""
+
+    def parties(self, *names):
+        return [
+            (party["name"], party["checked"], party["flagged"])
+            for party in _parties_of([{"counterparty": name} for name in names])
+        ]
+
+    def test_should_tick_only_gm_x_when_it_is_there(self):
+        self.assertEqual(FLAGGED_PARTY, "GM X")
+        self.assertEqual(
+            self.parties("EVE Central Bank", "GM X", "GM Y", ""),
+            [("EVE Central Bank", False, False), ("GM X", True, True),
+             ("GM Y", False, False), ("", False, False)],
+        )
+
+    def test_should_tick_every_box_without_gm_x(self):
+        self.assertEqual(
+            self.parties("EVE Central Bank", "GM Y", ""),
+            [("EVE Central Bank", True, False), ("GM Y", True, False), ("", True, False)],
+        )
+
+    def test_should_match_the_name_exactly(self):
+        """The user's choice: "GM X" itself, not every GM."""
+        self.assertEqual(
+            self.parties("gm x", "GM Xavier"),
+            [("gm x", True, False), ("GM Xavier", True, False)],
+        )

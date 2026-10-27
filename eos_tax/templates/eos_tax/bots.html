@@ -6,8 +6,11 @@
 {% block details %}
 
     <div class="card mb-3">
-        <div class="card-header">
+        <div class="card-header d-flex flex-wrap align-items-center gap-2">
             <div class="card-title mb-0">{{ title }}</div>
+            {# the four lists of the month on screen, the audit tab with them #}
+            {% url "eos_tax:bots_recalculate" as recalculate_url %}
+            {% include "eos_tax/partials/recalculate-button.html" with recalculate_month=selected_month %}
         </div>
 
         <div class="card-body">
@@ -151,4 +154,5 @@
     {{ js_config|json_script:"eos-tax-config" }}
 
     {% sri_static "eos_tax/js/bots.js" %}
+    {% sri_static "eos_tax/js/recalculate.js" %}
 {% endblock %}

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 10:29+0000\n"
+"POT-Creation-Date: 2026-10-27 11:07+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -593,7 +593,7 @@ msgstr "Обзор"
 msgid "Statistics"
 msgstr "Статистика"
 
-#: templates/eos_tax/base.html:19 views.py:573
+#: templates/eos_tax/base.html:19 views.py:587
 msgid "Bots"
 msgstr "Боты"
 
@@ -601,11 +601,12 @@ msgstr "Боты"
 msgid "Corp Tax Changes"
 msgstr "Corp Tax Changes"
 
-#: templates/eos_tax/base.html:27 views.py:221
+#: templates/eos_tax/base.html:27 templates/eos_tax/partials/progress.html:16
+#: views.py:221
 msgid "GM Transactions"
 msgstr "GM-транзакции"
 
-#: templates/eos_tax/base.html:31 views.py:335
+#: templates/eos_tax/base.html:31 views.py:349
 msgid "Settings"
 msgstr "Настройки"
 
@@ -634,13 +635,13 @@ msgstr "Откройте один из списков ботов, чтобы у�
 msgid "Back to the list"
 msgstr "Назад к списку"
 
-#: templates/eos_tax/bot-detail.html:136 templates/eos_tax/bots.html:18
+#: templates/eos_tax/bot-detail.html:136 templates/eos_tax/bots.html:21
 #: templates/eos_tax/index.html:54 templates/eos_tax/settings.html:199
 #: templates/eos_tax/statistics.html:49
 msgid "Month"
 msgstr "Месяц"
 
-#: templates/eos_tax/bot-detail.html:142 templates/eos_tax/bots.html:31
+#: templates/eos_tax/bot-detail.html:142 templates/eos_tax/bots.html:34
 #: templates/eos_tax/index.html:28 templates/eos_tax/tax-changes.html:35
 msgid "Show"
 msgstr "Показать"
@@ -714,7 +715,7 @@ msgstr[0] "%(value)s запись journal"
 msgstr[1] "%(value)s записи journal"
 msgstr[2] "%(value)s записей journal"
 
-#: templates/eos_tax/bot-detail.html:239 templates/eos_tax/bots.html:130
+#: templates/eos_tax/bot-detail.html:239 templates/eos_tax/bots.html:133
 #: templates/eos_tax/tax-change-detail.html:73
 #: templates/eos_tax/tax-changes.html:135
 msgid "total"
@@ -724,7 +725,7 @@ msgstr "всего"
 msgid "This character had no active hour in the selected month."
 msgstr "У этого character не было активных часов в выбранном месяце."
 
-#: templates/eos_tax/bots.html:24 templates/eos_tax/gm-transactions.html:50
+#: templates/eos_tax/bots.html:27 templates/eos_tax/gm-transactions.html:53
 #: templates/eos_tax/partials/bot-audit.html:14
 #: templates/eos_tax/partials/bot-clock-detail.html:32
 #: templates/eos_tax/partials/bot-clock.html:26
@@ -735,11 +736,11 @@ msgstr "У этого character не было активных часов в в�
 msgid "Character"
 msgstr "Character"
 
-#: templates/eos_tax/bots.html:27
+#: templates/eos_tax/bots.html:30
 msgid "Open a character directly"
 msgstr "Открыть character напрямую"
 
-#: templates/eos_tax/bots.html:57
+#: templates/eos_tax/bots.html:60
 #, python-format
 msgid ""
 "Characters that earned taxed income in more than %(min_hours)s different\n"
@@ -751,16 +752,16 @@ msgstr ""
 "часов суток, как минимум за %(min_days)s дней выбранного месяца. Оба порога "
 "настраиваются на странице настроек."
 
-#: templates/eos_tax/bots.html:65
+#: templates/eos_tax/bots.html:68
 msgid "Several characters match:"
 msgstr "Подходит несколько character:"
 
-#: templates/eos_tax/bots.html:78
+#: templates/eos_tax/bots.html:81
 #, python-format
 msgid "No character found for \"%(wanted)s\"."
 msgstr "По запросу «%(wanted)s» ни один character не найден."
 
-#: templates/eos_tax/bots.html:89
+#: templates/eos_tax/bots.html:92
 msgid ""
 "No character crossed both thresholds. The ten mains with the longest days of "
 "the month are shown instead, so the thresholds can be judged against real "
@@ -770,25 +771,25 @@ msgstr ""
 "с самыми длинными днями месяца, чтобы пороги можно было оценить по реальным "
 "числам."
 
-#: templates/eos_tax/bots.html:95
+#: templates/eos_tax/bots.html:98
 msgid "No character crossed both thresholds in this month."
 msgstr "В этом месяце ни один Character не превысил оба порога."
 
-#: templates/eos_tax/bots.html:119
+#: templates/eos_tax/bots.html:122
 msgid "slower than usual"
 msgstr "медленнее обычного"
 
-#: templates/eos_tax/bots.html:122
+#: templates/eos_tax/bots.html:125
 #, python-format
 msgid "%(value)s hour blocks"
 msgstr "часовых блоков: %(value)s"
 
-#: templates/eos_tax/bots.html:123
+#: templates/eos_tax/bots.html:126
 #, python-format
 msgid "%(value)s characters"
 msgstr "Characters: %(value)s"
 
-#: templates/eos_tax/bots.html:124
+#: templates/eos_tax/bots.html:127
 #, python-format
 msgid "%(value)s hit"
 msgid_plural "%(value)s hits"
@@ -796,15 +797,15 @@ msgstr[0] "%(value)s совпадение"
 msgstr[1] "%(value)s совпадения"
 msgstr[2] "%(value)s совпадений"
 
-#: templates/eos_tax/bots.html:128
+#: templates/eos_tax/bots.html:131
 msgid "database"
 msgstr "база данных"
 
-#: templates/eos_tax/bots.html:129
+#: templates/eos_tax/bots.html:132
 msgid "aggregation"
 msgstr "агрегация"
 
-#: templates/eos_tax/gm-transactions.html:15
+#: templates/eos_tax/gm-transactions.html:17
 msgid ""
 "Characters with a GM transaction in their own wallet journal, and characters "
 "whose wallet is below zero right now. The transactions are looked up by a "
@@ -816,7 +817,7 @@ msgstr ""
 "всему journal; балансы wallet, mains и Corporations читаются при загрузке "
 "страницы."
 
-#: templates/eos_tax/gm-transactions.html:21
+#: templates/eos_tax/gm-transactions.html:23
 msgid ""
 "The GM transactions are being looked up in the background. This page reloads "
 "by itself once they are ready."
@@ -824,15 +825,15 @@ msgstr ""
 "GM-транзакции ищутся в фоне. Страница перезагрузится сама, как только они "
 "будут готовы."
 
-#: templates/eos_tax/gm-transactions.html:27
+#: templates/eos_tax/gm-transactions.html:29
 msgid "Counterparty"
 msgstr "Контрагент"
 
-#: templates/eos_tax/gm-transactions.html:36
+#: templates/eos_tax/gm-transactions.html:39
 msgid "No counterparty"
 msgstr "Нет контрагента"
 
-#: templates/eos_tax/gm-transactions.html:51 templates/eos_tax/index.html:49
+#: templates/eos_tax/gm-transactions.html:54 templates/eos_tax/index.html:49
 #: templates/eos_tax/partials/bot-audit.html:16
 #: templates/eos_tax/partials/bot-clock-detail.html:33
 #: templates/eos_tax/partials/bot-clock.html:27
@@ -845,20 +846,20 @@ msgstr "Нет контрагента"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: templates/eos_tax/gm-transactions.html:52
+#: templates/eos_tax/gm-transactions.html:55
 msgid "Corporation at the time"
 msgstr "Corporation на тот момент"
 
-#: templates/eos_tax/gm-transactions.html:53
+#: templates/eos_tax/gm-transactions.html:56
 #: templates/eos_tax/statistics.html:26
 msgid "Alliance"
 msgstr "Alliance"
 
-#: templates/eos_tax/gm-transactions.html:54
+#: templates/eos_tax/gm-transactions.html:57
 msgid "Corporations in the Alliance"
 msgstr "Corporations в Alliance"
 
-#: templates/eos_tax/gm-transactions.html:55
+#: templates/eos_tax/gm-transactions.html:58
 #: templates/eos_tax/partials/bot-audit.html:18
 #: templates/eos_tax/partials/bot-clock.html:28
 #: templates/eos_tax/partials/bot-rhythm.html:28
@@ -867,7 +868,7 @@ msgstr "Corporations в Alliance"
 msgid "Main"
 msgstr "Main"
 
-#: templates/eos_tax/gm-transactions.html:56
+#: templates/eos_tax/gm-transactions.html:59
 #: templates/eos_tax/partials/bot-audit.html:20
 #: templates/eos_tax/partials/bot-clock.html:29
 #: templates/eos_tax/partials/bot-rhythm.html:29
@@ -876,37 +877,37 @@ msgstr "Main"
 msgid "Age"
 msgstr "Возраст"
 
-#: templates/eos_tax/gm-transactions.html:57
+#: templates/eos_tax/gm-transactions.html:60
 msgid "Amount"
 msgstr "Сумма"
 
-#: templates/eos_tax/gm-transactions.html:58
+#: templates/eos_tax/gm-transactions.html:61
 msgid "Date"
 msgstr "Дата"
 
-#: templates/eos_tax/gm-transactions.html:59
+#: templates/eos_tax/gm-transactions.html:62
 msgid "Transaction for"
 msgstr "Транзакция для"
 
-#: templates/eos_tax/gm-transactions.html:60
+#: templates/eos_tax/gm-transactions.html:63
 msgid "Wallet balance"
 msgstr "Баланс wallet"
 
-#: templates/eos_tax/gm-transactions.html:61
+#: templates/eos_tax/gm-transactions.html:64
 msgid "Description"
 msgstr "Описание"
 
-#: templates/eos_tax/gm-transactions.html:90
+#: templates/eos_tax/gm-transactions.html:93
 #: templates/eos_tax/partials/bot-character-cells.html:20
 msgid "not registered"
 msgstr "не зарегистрирован"
 
-#: templates/eos_tax/gm-transactions.html:118
+#: templates/eos_tax/gm-transactions.html:121
 msgid "No GM transaction in any character journal, and no wallet below zero."
 msgstr ""
 "Ни одной GM-транзакции в journal characters и ни одного wallet ниже нуля."
 
-#: templates/eos_tax/gm-transactions.html:124
+#: templates/eos_tax/gm-transactions.html:127
 #, python-format
 msgid "%(counter)s GM transaction"
 msgid_plural "%(counter)s GM transactions"
@@ -914,7 +915,7 @@ msgstr[0] "%(counter)s GM-транзакция"
 msgstr[1] "%(counter)s GM-транзакции"
 msgstr[2] "%(counter)s GM-транзакций"
 
-#: templates/eos_tax/gm-transactions.html:125
+#: templates/eos_tax/gm-transactions.html:128
 #, python-format
 msgid "%(counter)s wallet below zero"
 msgid_plural "%(counter)s wallets below zero"
@@ -922,7 +923,7 @@ msgstr[0] "%(counter)s wallet ниже нуля"
 msgstr[1] "%(counter)s wallet ниже нуля"
 msgstr[2] "%(counter)s wallet ниже нуля"
 
-#: templates/eos_tax/gm-transactions.html:126
+#: templates/eos_tax/gm-transactions.html:129
 #: templates/eos_tax/partials/bot-clock.html:72
 #: templates/eos_tax/partials/bot-group-header.html:14
 #: templates/eos_tax/partials/bot-rhythm.html:72
@@ -1104,25 +1105,29 @@ msgstr "Оценка"
 
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:8
-#: templates/eos_tax/settings.html:243 views.py:617
+#: templates/eos_tax/partials/progress.html:23
+#: templates/eos_tax/settings.html:243 views.py:653
 msgid "Hours per day"
 msgstr "Часов в сутки"
 
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:15
-#: templates/eos_tax/settings.html:258 views.py:618
+#: templates/eos_tax/partials/progress.html:24
+#: templates/eos_tax/settings.html:258 views.py:654
 msgid "Unbroken runs"
 msgstr "Непрерывные серии"
 
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:22
-#: templates/eos_tax/settings.html:275 views.py:619
+#: templates/eos_tax/partials/progress.html:25
+#: templates/eos_tax/settings.html:275 views.py:655
 msgid "Against the Corporation"
 msgstr "В такт Corporation"
 
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:29
-#: templates/eos_tax/settings.html:293 views.py:620
+#: templates/eos_tax/partials/progress.html:26
+#: templates/eos_tax/settings.html:293 views.py:656
 msgid "Off the Corporation clock"
 msgstr "Вне часов Corporation"
 
@@ -1279,7 +1284,7 @@ msgstr "Разница"
 
 #: templates/eos_tax/partials/bot-clock.html:33
 #: templates/eos_tax/partials/bot-rhythm.html:33
-#: templates/eos_tax/tax-changes.html:73 views.py:258
+#: templates/eos_tax/tax-changes.html:73 views.py:272
 msgid "Payouts"
 msgstr "Выплаты"
 
@@ -1599,85 +1604,123 @@ msgstr "Средний день (часов)"
 msgid "Contributed tax"
 msgstr "Внесённый налог"
 
-#: templates/eos_tax/partials/bot-tabs.html:38 views.py:621
+#: templates/eos_tax/partials/bot-tabs.html:38 views.py:657
 msgid "Without current audit"
 msgstr "Без актуального аудита"
 
-#: templates/eos_tax/partials/progress.html:12
+#: templates/eos_tax/partials/progress.html:13
 msgid "Automatic recalculation"
 msgstr "Автоматический пересчёт"
 
-#: templates/eos_tax/partials/progress.html:13
+#: templates/eos_tax/partials/progress.html:14
 msgid "Manual recalculation"
 msgstr "Ручной пересчёт"
 
-#: templates/eos_tax/partials/progress.html:14
+#: templates/eos_tax/partials/progress.html:15
+msgid "Bots lists"
+msgstr "Списки ботов"
+
+#: templates/eos_tax/partials/progress.html:17
 #, python-brace-format
 msgid "{finished} of {total} done"
 msgstr "Готово {finished} из {total}"
 
-#: templates/eos_tax/partials/progress.html:15
+#: templates/eos_tax/partials/progress.html:18
 msgid "Finished. Reload the page to see the new figures."
 msgstr "Готово. Обновите страницу, чтобы увидеть новые данные."
 
-#: templates/eos_tax/partials/progress.html:16
+#: templates/eos_tax/partials/progress.html:19
 msgid "Reload"
 msgstr "Обновить"
 
-#: templates/eos_tax/partials/progress.html:17
+#: templates/eos_tax/partials/progress.html:20
 msgid "Dismiss"
 msgstr "Закрыть"
 
-#: templates/eos_tax/partials/progress.html:18
+#: templates/eos_tax/partials/progress.html:21
 msgctxt "progress bar details"
 msgid "Corporations"
 msgstr "Corporations"
 
-#: templates/eos_tax/partials/progress.html:19
+#: templates/eos_tax/partials/progress.html:22
+msgctxt "progress bar details"
+msgid "Steps"
+msgstr "Шаги"
+
+#: templates/eos_tax/partials/progress.html:27
+msgid "Search the wallet journals"
+msgstr "Поиск по Journal wallet"
+
+#: templates/eos_tax/partials/progress.html:28
+msgid "Wallet balances and ages"
+msgstr "Балансы wallet и возраст"
+
+#: templates/eos_tax/partials/progress.html:29
 #, python-brace-format
 msgid "{count} failed"
 msgstr "С ошибкой: {count}"
 
-#: templates/eos_tax/partials/progress.html:20
+#: templates/eos_tax/partials/progress.html:30
 msgctxt "progress bar job state"
 msgid "Waiting"
 msgstr "Ожидает"
 
-#: templates/eos_tax/partials/progress.html:21
+#: templates/eos_tax/partials/progress.html:31
 msgctxt "progress bar job state"
 msgid "Running"
 msgstr "Выполняется"
 
-#: templates/eos_tax/partials/progress.html:22
+#: templates/eos_tax/partials/progress.html:32
 msgctxt "progress bar job state"
 msgid "Done"
 msgstr "Готово"
 
-#: templates/eos_tax/partials/progress.html:23
+#: templates/eos_tax/partials/progress.html:33
 msgctxt "progress bar job state"
 msgid "Skipped"
 msgstr "Пропущено"
 
-#: templates/eos_tax/partials/progress.html:24
+#: templates/eos_tax/partials/progress.html:34
 msgctxt "progress bar job state"
 msgid "Failed"
 msgstr "Ошибка"
 
-#: templates/eos_tax/partials/progress.html:25
+#: templates/eos_tax/partials/progress.html:35
 msgid "Corporation not known to Alliance Auth"
 msgstr "Alliance Auth не знает эту Corporation"
 
-#: templates/eos_tax/partials/progress.html:26
+#: templates/eos_tax/partials/progress.html:36
 msgid "No ingame tax rate"
 msgstr "Нет внутриигровой ставки налога"
 
-#: templates/eos_tax/partials/progress.html:27
+#: templates/eos_tax/partials/progress.html:37
 msgid "Alliance tax rate is 0"
 msgstr "Ставка налога Alliance равна 0"
 
-#: templates/eos_tax/partials/progress.html:28
+#: templates/eos_tax/partials/progress.html:38
 msgid "No journal entries"
 msgstr "Нет записей Journal"
+
+#: templates/eos_tax/partials/progress.html:39
+msgid "An earlier step failed"
+msgstr "Предыдущий шаг завершился ошибкой"
+
+#: templates/eos_tax/partials/recalculate-button.html:13
+msgid "Queued - the bar above shows how far it has got."
+msgstr "В очереди — полоса выше показывает ход выполнения."
+
+#: templates/eos_tax/partials/recalculate-button.html:14
+msgid "Already being calculated."
+msgstr "Уже вычисляется."
+
+#: templates/eos_tax/partials/recalculate-button.html:15
+msgid "Could not queue the calculation."
+msgstr "Не удалось поставить вычисление в очередь."
+
+#: templates/eos_tax/partials/recalculate-button.html:21
+#: templates/eos_tax/settings.html:174 templates/eos_tax/settings.html:213
+msgid "Recalculate"
+msgstr "Пересчитать"
 
 #: templates/eos_tax/partials/recalculate-queued.html:4
 #, python-format
@@ -2021,10 +2064,6 @@ msgstr ""
 "Насколько должна измениться собственная ставка налога corporation, прежде "
 "чем эта страница это покажет."
 
-#: templates/eos_tax/settings.html:174 templates/eos_tax/settings.html:213
-msgid "Recalculate"
-msgstr "Пересчитать"
-
 #: templates/eos_tax/settings.html:176
 msgid ""
 "Runs the calculation again for one month, outside the\n"
@@ -2249,7 +2288,7 @@ msgstr "Изменение доли"
 msgid "On"
 msgstr "Дата"
 
-#: templates/eos_tax/tax-changes.html:72 views.py:259
+#: templates/eos_tax/tax-changes.html:72 views.py:273
 msgid "Systems"
 msgstr "Системы"
 
@@ -2322,7 +2361,7 @@ msgstr "Corporation:"
 msgid "Filter by corporation name"
 msgstr "Фильтр по названию Corporation"
 
-#: views.py:129 views.py:540 views.py:594
+#: views.py:129 views.py:554 views.py:608
 msgid "Loading…"
 msgstr "Загрузка…"
 
@@ -2374,23 +2413,23 @@ msgstr "Название Corporation или ставка, например 0 и�
 msgid "Character, Corporation or Main"
 msgstr "Character, Corporation или Main"
 
-#: views.py:257
+#: views.py:271
 msgid "Share of the bounty in percent"
 msgstr "Доля bounty в процентах"
 
-#: views.py:300
+#: views.py:314
 msgid "Settings saved."
 msgstr "Настройки сохранены."
 
-#: views.py:348
+#: views.py:362
 msgid "Calculating…"
 msgstr "Вычисление…"
 
-#: views.py:349
+#: views.py:363
 msgid "Could not recalculate this month."
 msgstr "Не удалось пересчитать этот месяц."
 
-#: views.py:541 views.py:595
+#: views.py:555 views.py:609
 msgid "Could not load this view."
 msgstr "Не удалось загрузить этот раздел."
 

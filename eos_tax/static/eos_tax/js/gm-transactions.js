@@ -67,9 +67,18 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
     }
 
-    let shownParties = new Set(boxes.map(function (box) {
-        return box.value;
-    }));
+    // the ticked boxes, as the page sent them: GM X alone when it is there
+    const ticked = function () {
+        return new Set(
+            boxes.filter(function (each) {
+                return each.checked;
+            }).map(function (each) {
+                return each.value;
+            })
+        );
+    };
+
+    let shownParties = ticked();
 
     // ext.search is shared by every DataTable on the page, so it has to
     // leave the others alone
@@ -81,15 +90,12 @@ document.addEventListener("DOMContentLoaded", function () {
         return shownParties.has(dataTable.row(dataIndex).node().dataset.eosParty);
     });
 
+    // the table was drawn with every row before the filter existed
+    dataTable.draw();
+
     boxes.forEach(function (box) {
         box.addEventListener("change", function () {
-            shownParties = new Set(
-                boxes.filter(function (each) {
-                    return each.checked;
-                }).map(function (each) {
-                    return each.value;
-                })
-            );
+            shownParties = ticked();
             dataTable.draw();
         });
     });

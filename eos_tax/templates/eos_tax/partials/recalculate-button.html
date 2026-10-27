@@ -1,0 +1,24 @@
+{% load i18n %}
+{% comment %}
+    Queues the job behind the page alone, not the tax run it normally comes
+    with; recalculate.js posts it, and the progress bar above shows how far
+    it has got. Only offered with manage_settings - the endpoint refuses
+    everyone else. Takes recalculate_url, and recalculate_month on the bots
+    page: the month on screen, not whatever the month field says right now.
+{% endcomment %}
+{% if perms.eos_tax.manage_settings %}
+    <div class="d-flex align-items-center gap-2 ms-auto" data-eos-recalculate
+         data-eos-recalculate-url="{{ recalculate_url }}"
+         {% if recalculate_month %}data-eos-recalculate-month="{{ recalculate_month }}"{% endif %}
+         data-eos-label-queued="{% translate 'Queued - the bar above shows how far it has got.' %}"
+         data-eos-label-running="{% translate 'Already being calculated.' %}"
+         data-eos-label-error="{% translate 'Could not queue the calculation.' %}">
+        {# the bots page's own form is a GET, and the token must not end up in its url #}
+        {% csrf_token %}
+        <span class="small text-body-secondary" role="status" data-eos-recalculate-result></span>
+        <button type="button" class="btn btn-sm btn-outline-primary text-nowrap">
+            <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+            {% translate "Recalculate" %}
+        </button>
+    </div>
+{% endif %}

@@ -103,7 +103,7 @@ class TestQueueing(EosTaxTestCase):
             queue_bot_reports([(MONTH, YEAR)])
             queue_bot_reports([(MONTH, YEAR)])
 
-        delay.assert_called_once_with(month=MONTH, year=YEAR)
+        delay.assert_called_once_with(month=MONTH, year=YEAR, run_id=mock.ANY)
 
     def test_should_free_the_month_once_the_job_failed(self):
         """A month left locked would wait out the timeout before anyone
@@ -175,7 +175,7 @@ class TestWhileTheJobRuns(EosTaxTestCase):
         for signal in ("runs", "rhythm", "clock", "audit"):
             self.client.get(reverse("eos_tax:bot_signal", args=[signal]), self.month)
 
-        self.delay.assert_called_once_with(month=MONTH, year=YEAR)
+        self.delay.assert_called_once_with(month=MONTH, year=YEAR, run_id=mock.ANY)
 
 
 class TestSavingSettings(EosTaxTestCase):

@@ -6,8 +6,8 @@ from allianceauth.services.hooks import get_extension_logger
 from allianceauth.eveonline.models import EveCorporationInfo
 
 from eos_tax import progress
-from eos_tax.db.bot_store import store_bot_reports
-from eos_tax.db.gm_transactions import store_gm_report
+from eos_tax.db.bot_store import READINGS, store_bot_reports
+from eos_tax.db.gm_transactions import GM_STEPS, store_gm_report
 from eos_tax.db.payments import update_corp
 from eos_tax.app_settings import get_config
 from eos_tax.util import get_dates
@@ -24,13 +24,44 @@ BOT_REPORT_LOCK = "eos_tax_bot_report_queued_{year}_{month}"
 BOT_REPORT_LOCK_SECONDS = 15 * 60
 
 
+def _queue_steps(lock, kind, steps, period, task, **kwargs):
+    """Queues one job as a run of its steps on the progress bar, unless the
+    lock says it is queued already; True if it queued it.
+
+    The run is registered before the job is queued, for the same reason as
+    in queue_corporations.
+    """
+    if not cache.add(lock, 1, BOT_REPORT_LOCK_SECONDS):
+        return False
+
+    run_id = progress.start_run(kind, [{"step": step} for step in steps], period)
+
+    try:
+        task.delay(run_id=run_id, **kwargs)
+    except Exception:
+        # the broker is down: a bar that never moves, and a lock that would
+        # refuse the next try for fifteen minutes
+        progress.withdraw(run_id)
+        cache.delete(lock)
+        raise
+
+    return True
+
+
 def queue_bot_reports(dates):
-    """Queues the bots page lists of each (month, year), unless already queued."""
+    """Queues the bots page lists of each (month, year), unless already
+    queued; the number of months it queued."""
+    queued = 0
     for month, year in dates:
-        if cache.add(BOT_REPORT_LOCK.format(year=year, month=month), 1,
-                     BOT_REPORT_LOCK_SECONDS):
-            logger.info(f"queueing bot lists: {month}/{year}")
-            run_update_bot_reports.delay(month=month, year=year)
+        if _queue_steps(
+            BOT_REPORT_LOCK.format(year=year, month=month),
+            progress.BOTS, READINGS, f"{year}-{month:02d}",
+            run_update_bot_reports, month=month, year=year,
+        ):
+            logger.info(f"queued bot lists: {month}/{year}")
+            queued += 1
+
+    return queued
 
 
 # The same for the GM transactions page, which reads every character journal
@@ -39,9 +70,12 @@ GM_REPORT_LOCK = "eos_tax_gm_report_queued"
 
 
 def queue_gm_report():
-    if cache.add(GM_REPORT_LOCK, 1, BOT_REPORT_LOCK_SECONDS):
-        logger.info("queueing GM transactions")
-        run_update_gm_report.delay()
+    """Queues the GM transactions job unless already queued; True if it did."""
+    queued = _queue_steps(GM_REPORT_LOCK, progress.GM, GM_STEPS, "", run_update_gm_report)
+    if queued:
+        logger.info("queued GM transactions")
+
+    return queued
 
 
 def queue_corporations(corporations, dates, kind):
@@ -101,18 +135,19 @@ def run_update_corporation(corp_id:int, month: int = -1, year: int = -1, run_id:
         outcome["result"] = update_corp(corp_id=corp_id, month=month, year=year)
 
 
+# run_id defaults to None for the same reason as run_update_corporation's
 @shared_task
-def run_update_bot_reports(month: int, year: int):
+def run_update_bot_reports(month: int, year: int, run_id: str = None):
     try:
-        store_bot_reports(year, month)
+        store_bot_reports(year, month, run_id)
     finally:
         # also after a failure, so the next visit can queue it again
         cache.delete(BOT_REPORT_LOCK.format(year=year, month=month))
 
 
 @shared_task
-def run_update_gm_report():
+def run_update_gm_report(run_id: str = None):
     try:
-        store_gm_report()
+        store_gm_report(run_id)
     finally:
         cache.delete(GM_REPORT_LOCK)

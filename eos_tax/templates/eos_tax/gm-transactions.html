@@ -6,8 +6,10 @@
 {% block details %}
 
     <div class="card mb-3">
-        <div class="card-header">
+        <div class="card-header d-flex flex-wrap align-items-center gap-2">
             <div class="card-title mb-0">{{ title }}</div>
+            {% url "eos_tax:gm_transactions_recalculate" as recalculate_url %}
+            {% include "eos_tax/partials/recalculate-button.html" %}
         </div>
 
         <div class="card-body">
@@ -27,9 +29,10 @@
                         <legend class="col-form-label small fw-semibold pt-0">{% translate "Counterparty" %}</legend>
                         {% for party in parties %}
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" checked
+                                <input class="form-check-input" type="checkbox" {% if party.checked %}checked{% endif %}
                                        id="eos-tax-party-{{ forloop.counter }}" value="{{ party.name }}">
-                                <label class="form-check-label" for="eos-tax-party-{{ forloop.counter }}">
+                                <label class="form-check-label{% if party.flagged %} text-danger fw-semibold{% endif %}"
+                                       for="eos-tax-party-{{ forloop.counter }}">
                                     {% if party.name %}
                                         {{ party.name }}
                                     {% else %}
@@ -137,6 +140,7 @@
     {{ js_config|json_script:"eos-tax-config" }}
 
     {% sri_static "eos_tax/js/gm-transactions.js" %}
+    {% sri_static "eos_tax/js/recalculate.js" %}
 {% endblock %}
 
 {% block eos_tax_css %}

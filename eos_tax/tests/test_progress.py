@@ -7,12 +7,26 @@ from django.core.cache import cache
 from django.urls import reverse
 
 from eos_tax import progress
-from eos_tax.tasks import queue_corporations, run_update_alliance, run_update_corporation
+from eos_tax.db.bot_store import READINGS
+from eos_tax.db.gm_transactions import GM_STEPS
+from eos_tax.tasks import (
+    BOT_REPORT_LOCK,
+    GM_REPORT_LOCK,
+    queue_bot_reports,
+    queue_corporations,
+    queue_gm_report,
+    run_update_alliance,
+    run_update_bot_reports,
+    run_update_corporation,
+    run_update_gm_report,
+)
 from eos_tax.tests.base import EosTaxTestCase, read_static
 
 from .factories import (
     ALPHA_CORP_ID,
     BRAVO_CORP_ID,
+    MONTH,
+    YEAR,
     OTHER_ALLIANCE_ID,
     OUTSIDER_CORP_ID,
     TAXED_ALLIANCE_ID,
@@ -350,3 +364,245 @@ class TestPageParts(ProgressTestCase):
     def test_should_poll_again_after_the_recalculate_button(self):
         self.assertIn('"eos-tax:progress-poll"', read_static("settings.js"))
         self.assertIn('"eos-tax:progress-poll"', read_static("progress.js"))
+
+
+def failing(*args):
+    raise RuntimeError("boom")
+
+
+class TestStepRuns(ProgressTestCase):
+    """The bots and GM jobs show up step by step, however they were queued."""
+
+    def setUp(self):
+        super().setUp()
+        configure()
+
+    def only_run(self):
+        runs = progress.get_runs()
+        self.assertEqual(len(runs), 1)
+
+        return runs[0]
+
+    def states(self):
+        return [(job["step"], job["state"]) for job in self.only_run()["jobs"]]
+
+    def test_should_register_the_bots_job_as_its_four_readings(self):
+        with patch.object(run_update_bot_reports, "delay") as delay:
+            queue_bot_reports([(MONTH, YEAR)])
+
+        run = self.only_run()
+
+        self.assertEqual(run["kind"], progress.BOTS)
+        self.assertEqual(run["period"], f"{YEAR}-{MONTH:02d}")
+        self.assertEqual(
+            [job["step"] for job in run["jobs"]],
+            ["hours", "runs", "rhythm", "clock"],
+        )
+        delay.assert_called_once_with(month=MONTH, year=YEAR, run_id=run["id"])
+
+    def test_should_mark_every_reading_done(self):
+        # EosTaxTestCase runs the job in place
+        queue_bot_reports([(MONTH, YEAR)])
+
+        self.assertEqual(self.states(), [(step, "done") for step in READINGS])
+        self.assertTrue(self.only_run()["complete"])
+
+    def test_should_skip_the_readings_after_a_failed_one(self):
+        """Left queued they would keep the bar polling for an hour."""
+        with patch.object(run_update_bot_reports, "delay"):
+            queue_bot_reports([(MONTH, YEAR)])
+        run = self.only_run()
+
+        with patch.dict("eos_tax.db.bot_store.READINGS", {"runs": failing}):
+            with self.assertRaises(RuntimeError):
+                run_update_bot_reports(month=MONTH, year=YEAR, run_id=run["id"])
+
+        self.assertEqual(self.states(), [
+            ("hours", "done"), ("runs", "failed"),
+            ("rhythm", "skipped"), ("clock", "skipped"),
+        ])
+        self.assertEqual(self.only_run()["jobs"][2]["detail"], progress.STEP_FAILED)
+        self.assertTrue(self.only_run()["complete"])
+
+    def test_should_register_the_gm_job_as_its_steps(self):
+        queue_gm_report()
+
+        run = self.only_run()
+
+        self.assertEqual((run["kind"], run["period"]), (progress.GM, ""))
+        self.assertEqual(self.states(), [(step, "done") for step in GM_STEPS])
+
+    def test_should_skip_the_gm_steps_after_the_journal_search_failed(self):
+        with patch.object(run_update_gm_report, "delay"):
+            queue_gm_report()
+        run = self.only_run()
+
+        with patch("eos_tax.db.gm_transactions.find_gm_transactions", side_effect=failing):
+            with self.assertRaises(RuntimeError):
+                run_update_gm_report(run_id=run["id"])
+
+        self.assertEqual(self.states(), [("transactions", "failed"), ("characters", "skipped")])
+
+    def test_should_not_register_a_job_already_queued(self):
+        with patch.object(run_update_bot_reports, "delay"), \
+                patch.object(run_update_gm_report, "delay"):
+            self.assertEqual(queue_bot_reports([(MONTH, YEAR)]), 1)
+            self.assertEqual(queue_bot_reports([(MONTH, YEAR)]), 0)
+            self.assertTrue(queue_gm_report())
+            self.assertFalse(queue_gm_report())
+
+        self.assertEqual(len(progress.get_runs()), 2)
+
+    def test_should_take_the_run_off_and_free_the_lock_when_the_broker_is_down(self):
+        """Otherwise the button would answer "already being calculated" for
+        fifteen minutes about a job nobody ever got."""
+        for task, queue, lock in (
+            (run_update_bot_reports, lambda: queue_bot_reports([(MONTH, YEAR)]),
+             BOT_REPORT_LOCK.format(year=YEAR, month=MONTH)),
+            (run_update_gm_report, queue_gm_report, GM_REPORT_LOCK),
+        ):
+            with self.subTest(task=task.name):
+                with patch.object(task, "delay", side_effect=OSError("broker")):
+                    with self.assertRaises(OSError):
+                        queue()
+
+                self.assertEqual(progress.get_runs(), [])
+                self.assertIsNone(cache.get(lock))
+
+    def test_should_read_a_run_stored_without_a_period(self):
+        """Runs the version before left in the cache have none."""
+        run_id = progress.start_run(progress.MANUAL, two_jobs())
+        key = f"{progress.PREFIX}:run:{run_id}"
+        stored = cache.get(key)
+        del stored["period"]
+        cache.set(key, stored)
+
+        self.assertEqual(self.only_run()["period"], "")
+
+
+class TestJobButtons(ProgressTestCase):
+    """The recalculate buttons of the bots page and GM Transactions."""
+
+    def setUp(self):
+        super().setUp()
+        taxed = create_alliance(TAXED_ALLIANCE_ID, "Taxed Alliance")
+        create_corporation(BRAVO_CORP_ID, "Bravo Corp", taxed)
+        configure()
+        self.manager = create_user(
+            "boss", 93000057, BRAVO_CORP_ID, "Bravo Corp",
+            ["basic_access", "admin_view", "manage_settings"],
+        )
+        self.viewer = create_user(
+            "auditor", 93000059, BRAVO_CORP_ID, "Bravo Corp", ["basic_access", "admin_view"]
+        )
+        self.client.force_login(self.manager)
+        # no worker: the run stays queued, the way the button leaves it
+        for task in (run_update_bot_reports, run_update_gm_report):
+            patcher = patch.object(task, "delay")
+            patcher.start()
+            self.addCleanup(patcher.stop)
+
+    def post_bots(self, month=f"{YEAR}-{MONTH:02d}"):
+        return self.client.post(reverse("eos_tax:bots_recalculate"), {"month": month})
+
+    def post_gm(self):
+        return self.client.post(reverse("eos_tax:gm_transactions_recalculate"))
+
+    def test_should_queue_the_month_once(self):
+        first = self.post_bots().json()
+        second = self.post_bots().json()
+
+        self.assertEqual((first, second), ({"queued": True}, {"queued": False}))
+        self.assertEqual(
+            [(run["kind"], run["period"]) for run in progress.get_runs()],
+            [(progress.BOTS, f"{YEAR}-{MONTH:02d}")],
+        )
+
+    def test_should_queue_the_gm_job_once(self):
+        first = self.post_gm().json()
+        second = self.post_gm().json()
+
+        self.assertEqual((first, second), ({"queued": True}, {"queued": False}))
+        self.assertEqual([run["kind"] for run in progress.get_runs()], [progress.GM])
+
+    def test_should_not_start_the_tax_run(self):
+        """Only the page's own job - not run_update_alliance."""
+        with patch("eos_tax.tasks.run_update_corporation.delay") as corporation:
+            self.post_bots()
+            self.post_gm()
+
+        corporation.assert_not_called()
+
+    def test_should_refuse_a_month_it_cannot_read(self):
+        for month in ("", "2026-13", "september", "9999-12"):
+            with self.subTest(month=month):
+                self.assertEqual(self.post_bots(month).status_code, 400)
+
+        self.assertEqual(progress.get_runs(), [])
+
+    def test_should_refuse_admin_view_alone(self):
+        self.client.force_login(self.viewer)
+
+        self.assertEqual(self.post_bots().status_code, 403)
+        self.assertEqual(self.post_gm().status_code, 403)
+        self.assertEqual(progress.get_runs(), [])
+
+    def test_should_refuse_a_get(self):
+        self.assertEqual(self.client.get(reverse("eos_tax:bots_recalculate")).status_code, 405)
+        self.assertEqual(
+            self.client.get(reverse("eos_tax:gm_transactions_recalculate")).status_code, 405
+        )
+
+    def test_should_offer_the_button_only_with_manage_settings(self):
+        pages = {
+            "eos_tax:bots": reverse("eos_tax:bots_recalculate"),
+            "eos_tax:gm_transactions": reverse("eos_tax:gm_transactions_recalculate"),
+        }
+        for page, url in pages.items():
+            with self.subTest(page=page):
+                self.client.force_login(self.manager)
+                managing = self.client.get(reverse(page)).content.decode()
+                self.client.force_login(self.viewer)
+                viewing = self.client.get(reverse(page)).content.decode()
+
+                self.assertIn(f'data-eos-recalculate-url="{url}"', managing)
+                self.assertIn("eos_tax/js/recalculate.", managing)
+                self.assertNotIn("data-eos-recalculate-url", viewing)
+
+    def test_should_recalculate_the_month_on_screen(self):
+        body = self.client.get(
+            reverse("eos_tax:bots"), {"month": "2026-03"}
+        ).content.decode()
+
+        self.assertIn('data-eos-recalculate-month="2026-03"', body)
+
+    def test_script_should_post_the_month_and_wake_the_bar(self):
+        script = read_static("recalculate.js")
+
+        self.assertIn('body.set("month", box.dataset.eosRecalculateMonth)', script)
+        self.assertIn('"eos-tax:progress-poll"', script)
+
+
+class TestStepLabels(ProgressTestCase):
+    """The bar names every step of both jobs; a step without its label
+    would show its bare key."""
+
+    def test_should_name_every_step(self):
+        self.client.force_login(
+            create_user("viewer", 93000058, BRAVO_CORP_ID, "Bravo Corp",
+                        ["basic_access", "admin_view"])
+        )
+        body = self.client.get(reverse("eos_tax:index")).content.decode()
+
+        for step in [*READINGS, *GM_STEPS]:
+            with self.subTest(step=step):
+                self.assertIn(f"data-eos-tax-step-{step}=", body)
+        for kind in (progress.BOTS, progress.GM):
+            self.assertIn(f"data-eos-tax-label-{kind}=", body)
+        self.assertIn(f"data-eos-tax-reason-{progress.STEP_FAILED}=", body)
+
+    def test_script_should_list_steps_by_their_label(self):
+        script = read_static("progress.js")
+
+        self.assertIn('label("step-" + job.step)', script)
+        self.assertIn("run.period", script)

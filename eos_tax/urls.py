@@ -14,6 +14,8 @@ urlpatterns = [
     path("progress/", views.progress_state, name="progress"),
     path("progress/<slug:run_id>/dismiss/", views.progress_dismiss, name="progress_dismiss"),
     path("bots/", views.bots, name="bots"),
+    # the buttons that queue the bots or the GM job alone
+    path("bots/recalculate/", views.bots_recalculate, name="bots_recalculate"),
     path("bots/<int:character_id>/", views.bot_detail, name="bot_detail"),
     # the sub tabs of the bots page, fetched one at a time when opened
     path("bots/signal/<slug:signal>/", views.bot_signal, name="bot_signal"),
@@ -27,4 +29,9 @@ urlpatterns = [
     path("tax-changes/", views.tax_changes, name="tax_changes"),
     path("tax-changes/<int:corp_id>/", views.tax_change_detail, name="tax_change_detail"),
     path("gm-transactions/", views.gm_transactions, name="gm_transactions"),
+    path(
+        "gm-transactions/recalculate/",
+        views.gm_transactions_recalculate,
+        name="gm_transactions_recalculate",
+    ),
 ]

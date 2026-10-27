@@ -230,6 +230,20 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
+0. **Committed, not released: Recalculate buttons and step runs**
+   (2026-10-27, in `[Unreleased]`; version and push follow with `/push`). User's choices: the jobs show in the existing bar
+   above every page, step by step, every run however started; the button
+   needs `manage_settings`. Claude's calls: `bots_recalculate` /
+   `gm_transactions_recalculate` answer `{"queued": bool}`; the button
+   sits in the card header (`partials/recalculate-button.html`,
+   `recalculate.js`); runs of kind `bots`/`gm` carry `step` jobs and a
+   `period`; a failed step skips the rest (`progress.skip_unstarted`).
+   The 8 new strings are in all six catalogues. Checked in a browser on a
+   static snapshot with a stubbed fetch only. **Restart every Celery
+   worker on deploying**: both tasks take `run_id`.
+   In the same commit: "GM X" red and the only ticked box in the GM
+   counterparty filter (`FLAGGED_PARTY`, exact name - the user's choice
+   over "every GM ..."). Not rendered in a browser yet.
 1. **On deploying 0.4.6/0.4.7: apply migrations 0028 and 0029 and
    restart every Celery worker** - a worker started before does not know
    `run_update_bot_reports` or `run_update_gm_report`, and the bots tabs

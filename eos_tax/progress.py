@@ -4,6 +4,11 @@ A run is what one trigger queues: the periodic task, or the recalculate button
 on the settings page. It is made of jobs, one Corporation and month each, and
 those run on whichever Celery workers are free - in parallel, and in any order.
 
+The bots lists of a month and the GM transactions are one Celery job each,
+which would make a bar of one that jumps from nothing to everything. Their
+runs are made of the job's steps instead - the four readings, the journal
+search - which one worker walks in order.
+
 Everything lives in the cache, nothing in the database: the state is only worth
 something while the run lasts. Three kinds of keys keep parallel workers from
 writing over each other:
@@ -37,6 +42,8 @@ TIMEOUT = 60 * 60
 
 AUTOMATIC = "automatic"
 MANUAL = "manual"
+BOTS = "bots"
+GM = "gm"
 
 QUEUED = "queued"
 RUNNING = "running"
@@ -47,6 +54,9 @@ SKIPPED = "skipped"
 FAILED = "failed"
 
 FINISHED_STATES = (DONE, SKIPPED, FAILED)
+
+# why a step was skipped: the one before it failed, and the job stopped there
+STEP_FAILED = "step_failed"
 
 
 def _run_key(run_id):
@@ -89,18 +99,25 @@ def _index_lock():
             cache.delete(LOCK_KEY)
 
 
-def start_run(kind, jobs):
+def start_run(kind, jobs, period=""):
     """Registers a run and its jobs, all queued; returns the run id.
 
-    jobs: dicts with corp_id, corp_name, month and year.
+    jobs: dicts with corp_id, corp_name, month and year - a tax run - or with
+    a step, the steps of one bots or GM job in the order they run. period:
+    the month a run of steps is for, shown beside its name.
     """
     run_id = uuid.uuid4().hex
     run = {
         "id": run_id,
         "kind": kind,
+        "period": period,
         "started_at": time.time(),
         "jobs": [
-            {**job, "id": job_id(job["corp_id"], job["month"], job["year"])}
+            {
+                **job,
+                "id": job["step"] if "step" in job
+                else job_id(job["corp_id"], job["month"], job["year"]),
+            }
             for job in jobs
         ],
     }
@@ -142,14 +159,22 @@ def set_job(run_id, job, state, detail=""):
 
 @contextmanager
 def tracked(run_id, corp_id, month, year):
-    """Marks one job running for the length of the block.
+    """Marks one tax job running for the length of the block - see
+    tracked_job."""
+    with tracked_job(run_id, job_id(corp_id, month, year)) as outcome:
+        yield outcome
+
+
+@contextmanager
+def tracked_job(run_id, job):
+    """Marks one job or step running for the length of the block.
 
     The block hands back update_corp's result through the yielded dict's
     "result"; a result with "ok": False counts as skipped, with its reason as
     the detail. An exception marks the job failed and is raised on - the
     caller's logging and Celery's own record of the failure stay as they were.
+    A step leaves the result alone and is done when the block ends.
     """
-    job = job_id(corp_id, month, year)
     set_job(run_id, job, RUNNING)
     outcome = {"result": None}
 
@@ -164,6 +189,22 @@ def tracked(run_id, corp_id, month, year):
         set_job(run_id, job, DONE)
     else:
         set_job(run_id, job, SKIPPED, result.get("reason", ""))
+
+
+def skip_unstarted(run_id):
+    """Marks the steps a failed job never got to as skipped.
+
+    Left queued they would keep the run unfinished, and the bar polling
+    every two seconds, until the run expires an hour later.
+    """
+    run = cache.get(_run_key(run_id)) if run_id else None
+    if not run:
+        return
+
+    states = cache.get_many([_job_key(run_id, job["id"]) for job in run["jobs"]])
+    for job in run["jobs"]:
+        if _job_key(run_id, job["id"]) not in states:
+            set_job(run_id, job["id"], SKIPPED, STEP_FAILED)
 
 
 def get_runs():
@@ -209,6 +250,8 @@ def get_runs():
         result.append({
             "id": run["id"],
             "kind": run["kind"],
+            # a run stored by the version before has none
+            "period": run.get("period", ""),
             "started_at": run["started_at"],
             "jobs": jobs,
             "counts": counts,
