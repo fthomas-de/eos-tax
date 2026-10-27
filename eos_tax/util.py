@@ -101,9 +101,17 @@ def format_age(birthday: date, today: date = None) -> str:
         return ""
 
     today = today or datetime.now(timezone.utc).date()
-    days = (today - birthday).days
 
-    if days < 0:
+    return format_age_days((today - birthday).days)
+
+
+def format_age_days(days: int) -> str:
+    """format_age for an age already counted in days.
+
+    For an age a job worked out: storing the days rather than the text
+    keeps the unit in the reader's language, not the worker's.
+    """
+    if days is None or days < 0:
         return ""
 
     # named here rather than inside the f-strings below: xgettext reads the

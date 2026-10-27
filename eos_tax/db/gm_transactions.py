@@ -7,6 +7,7 @@ so a job does it (`store_gm_report`) and the page joins what it left with
 what is cheap to read now: balances, mains, Corporations.
 """
 
+from collections import Counter, defaultdict
 from decimal import Decimal
 
 from corptools.models import (
@@ -20,15 +21,17 @@ from django.utils.dateparse import parse_datetime
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
 from eos_tax.app_settings import get_config
-from eos_tax.db.shared import main_characters
+from eos_tax.db.payments import _corporation_at
+from eos_tax.db.shared import character_ages, main_characters
 from eos_tax.models import GmReport, MonthlyTax
+from eos_tax.util import format_age_days
 
 
 GM_PREFIX = "GM ["
 
 
-def named_character(description):
-    """The character a GM transaction is about - the first of the two.
+def _parties(description):
+    """The two parties of a GM transaction, ("", "") without the pattern.
 
     rpartition rather than partition: the second party is "GM X" or "EVE
     Central Bank", neither with an " and " in it, while a character name
@@ -36,11 +39,21 @@ def named_character(description):
     """
     _before, found, rest = description.partition(" between ")
     if not found:
-        return ""
+        return "", ""
 
-    name, found, _other = rest.rpartition(" and ")
+    name, found, other = rest.rpartition(" and ")
 
-    return name if found else ""
+    return (name, other) if found else ("", "")
+
+
+def named_character(description):
+    """The character a GM transaction is about - the first of the two."""
+    return _parties(description)[0]
+
+
+def counterparty(description):
+    """Where the ISK came from or went to - the second of the two."""
+    return _parties(description)[1]
 
 
 def find_gm_transactions():
@@ -69,11 +82,44 @@ def find_gm_transactions():
     ]
 
 
+def _negative_balances():
+    return dict(
+        CharacterAudit.objects.filter(balance__lt=0).values_list(
+            "character__character_id", "balance"
+        )
+    )
+
+
+def find_age_days(character_ids):
+    """Each character's age in days, as {character_id: days}; a character
+    without a known birthday is absent."""
+    today = timezone.now().date()
+
+    return {
+        character_id: (today - birthday).days
+        for character_id, birthday in character_ages(character_ids).items()
+    }
+
+
 def store_gm_report():
+    transactions = find_gm_transactions()
+    # every character the page can list: the wallets below zero now too, not
+    # only those with a transaction
+    character_ids = {row["character_id"] for row in transactions} | set(
+        _negative_balances()
+    )
+
     GmReport.objects.update_or_create(
         pk=1,
         defaults={
-            "report": {"transactions": find_gm_transactions()},
+            "report": {
+                "transactions": transactions,
+                # JSON object keys are text
+                "age_days": {
+                    str(character_id): days
+                    for character_id, days in find_age_days(character_ids).items()
+                },
+            },
             "computed_at": timezone.now(),
         },
     )
@@ -97,7 +143,15 @@ def get_stored_gm_report():
         for row in stored.report["transactions"]
     ]
 
-    return {"transactions": transactions, "computed_at": stored.computed_at}
+    return {
+        "transactions": transactions,
+        # a report stored before the job counted ages has none
+        "age_days": {
+            int(character_id): days
+            for character_id, days in stored.report.get("age_days", {}).items()
+        },
+        "computed_at": stored.computed_at,
+    }
 
 
 def _alliance_corporation_ids(config):
@@ -133,15 +187,54 @@ def _alliance_history(character_ids, corp_ids):
     return history
 
 
+def _corporation_periods(character_ids):
+    """Each character's whole corporation history, oldest first, and the
+    names of the Corporations in it.
+
+    (start, corporation_id) pairs, the shape `_corporation_at` searches -
+    not the name: two records starting the same second would make bisect
+    compare a name with its float sentinel.
+    """
+    periods = defaultdict(list)
+    names = {}
+    for character_id, start_date, corporation_id, corporation_name in (
+        CorporationHistory.objects.filter(
+            character__character__character_id__in=character_ids
+        )
+        .order_by("start_date", "record_id")
+        .values_list(
+            "character__character__character_id",
+            "start_date",
+            "corporation_id",
+            "corporation_name__name",
+        )
+    ):
+        periods[character_id].append((start_date, corporation_id))
+        names[corporation_id] = corporation_name
+
+    return periods, names
+
+
+def _parties_of(rows):
+    """One filter entry per counterparty on the page, with its row count.
+
+    Read off the rows rather than a fixed list: a GM may book against any
+    name, and a box nobody can tick is no use. By name, the rows without
+    one - a wallet below zero, a description of another shape - last.
+    """
+    counts = Counter(row["counterparty"] for row in rows)
+
+    return [
+        {"name": name, "count": counts[name]}
+        for name in sorted(counts, key=lambda name: (name == "", name.casefold()))
+    ]
+
+
 def get_gm_page(stored):
     """One row per GM transaction, and one per character below zero without one."""
     transactions = stored["transactions"]
 
-    balances = dict(
-        CharacterAudit.objects.filter(balance__lt=0).values_list(
-            "character__character_id", "balance"
-        )
-    )
+    balances = _negative_balances()
     with_transaction = {row["character_id"] for row in transactions}
     negative_only = set(balances) - with_transaction
     character_ids = with_transaction | negative_only
@@ -160,6 +253,17 @@ def get_gm_page(stored):
     history = _alliance_history(
         character_ids, _alliance_corporation_ids(get_config())
     )
+    age_days = stored["age_days"]
+    # only a transaction has a moment to look the Corporation up at
+    periods, corporation_names = _corporation_periods(with_transaction)
+
+    def corporation_then(character_id, transaction):
+        if not transaction:
+            return ""
+
+        return corporation_names.get(
+            _corporation_at(periods.get(character_id), transaction["date"]), ""
+        )
 
     def row_for(character_id, transaction=None):
         character = characters.get(character_id)
@@ -169,13 +273,21 @@ def get_gm_page(stored):
             "character_id": character_id,
             "character_name": character.character_name if character else str(character_id),
             "corporation_name": character.corporation_name if character else "",
+            # empty without a history reaching back that far
+            "corporation_then": corporation_then(character_id, transaction),
             "alliance_name": (character.alliance_name or "") if character else "",
             "alliance_corporations": history.get(character_id, []),
             "main_name": main[1] if main else "",
+            # as of the job's run, like the bots lists. Gone below zero since:
+            # no age until the next run
+            "age": format_age_days(age_days.get(character_id)),
+            # what the Age column sorts by - "2 y" and "5 mo" do not sort as text
+            "age_days": age_days.get(character_id),
             "balance": balances.get(character_id),
             "date": transaction["date"] if transaction else None,
             "amount": transaction["amount"] if transaction else None,
             "named_character": named_character(transaction["description"]) if transaction else "",
+            "counterparty": counterparty(transaction["description"]) if transaction else "",
             "description": transaction["description"] if transaction else "",
         }
 
@@ -188,6 +300,7 @@ def get_gm_page(stored):
 
     return {
         "rows": rows,
+        "parties": _parties_of(rows),
         "stats": {
             "transactions": len(transactions),
             "characters": len({row["character_id"] for row in rows}),

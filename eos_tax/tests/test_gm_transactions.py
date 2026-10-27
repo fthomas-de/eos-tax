@@ -1,6 +1,6 @@
 """The GM transactions page: GM bookings and wallets below zero."""
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from unittest import mock
 
@@ -11,12 +11,14 @@ from allianceauth.eveonline.models import EveCharacter
 from corptools.models import CharacterAudit
 
 from eos_tax.db.gm_transactions import (
+    counterparty,
     find_gm_transactions,
     get_gm_page,
     get_stored_gm_report,
     named_character,
     store_gm_report,
 )
+from eos_tax.models import GmReport
 from eos_tax.tasks import GM_REPORT_LOCK, run_update_gm_report
 from eos_tax.tests.base import EosTaxTestCase, read_static, table_body
 
@@ -68,6 +70,20 @@ class TestNamedCharacter(EosTaxTestCase):
     def test_should_be_empty_without_the_pattern(self):
         self.assertEqual(named_character("GM [1] issued a refund"), "")
         self.assertEqual(named_character("GM [1] issued transaction between nobody"), "")
+
+
+class TestCounterparty(EosTaxTestCase):
+    def test_should_read_the_second_party(self):
+        self.assertEqual(counterparty(GM_TEXT), "GM X")
+        self.assertEqual(counterparty(BANK_TEXT), "EVE Central Bank")
+        self.assertEqual(
+            counterparty("GM [1] issued transaction between Salt and Pepper and GM X"),
+            "GM X",
+        )
+
+    def test_should_be_empty_without_the_pattern(self):
+        self.assertEqual(counterparty("GM [1] issued a refund"), "")
+        self.assertEqual(counterparty("GM [1] issued transaction between nobody"), "")
 
 
 class GmTestCase(EosTaxTestCase):
@@ -133,6 +149,116 @@ class TestGmPage(GmTestCase):
         self.assertEqual(row["amount"], Decimal("-1000000"))
         self.assertEqual(row["balance"], Decimal("-250.00"))
         self.assertEqual(row["description"], BANK_TEXT)
+
+    def test_should_show_the_characters_age(self):
+        EveCharacter.objects.filter(character_id=GM_ID).update(
+            birthday=date.today() - timedelta(days=400)
+        )
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        broke = add_character_audit(BROKE_ID, True, name="Broke Pilot")
+        broke.balance = Decimal("-10.00")
+        broke.save()
+
+        rows = {row["character_id"]: row for row in self.page()["rows"]}
+
+        self.assertEqual(rows[GM_ID]["age"], "1 y")
+        self.assertEqual(rows[GM_ID]["age_days"], 400)
+        # no birthday known: nothing to show and nothing to sort by
+        self.assertEqual(rows[BROKE_ID]["age"], "")
+        self.assertIsNone(rows[BROKE_ID]["age_days"])
+
+    def test_should_take_the_age_from_the_job(self):
+        """For a wallet below zero as much as for a transaction - the job
+        finds both."""
+        broke = add_character_audit(BROKE_ID, True, name="Broke Pilot")
+        broke.balance = Decimal("-10.00")
+        broke.save()
+        EveCharacter.objects.filter(character_id=BROKE_ID).update(
+            birthday=date.today() - timedelta(days=400)
+        )
+        store_gm_report()
+        EveCharacter.objects.filter(character_id=BROKE_ID).update(
+            birthday=date.today() - timedelta(days=10)
+        )
+
+        row = get_gm_page(get_stored_gm_report())["rows"][0]
+
+        self.assertEqual((row["age"], row["age_days"]), ("1 y", 400))
+
+    def test_should_read_a_report_stored_before_ages(self):
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        GmReport.objects.create(
+            pk=1,
+            report={"transactions": find_gm_transactions()},
+            computed_at=_at(4),
+        )
+
+        row = get_gm_page(get_stored_gm_report())["rows"][0]
+
+        self.assertEqual((row["age"], row["age_days"]), ("", None))
+
+    def test_should_name_the_corporation_at_the_time_of_each_transaction(self):
+        add_corporation_history(GM_ID, ALPHA_CORP_ID, datetime(2022, 1, 1, tzinfo=timezone.utc))
+        # outside the alliance, and left since: shown all the same
+        add_corporation_history(GM_ID, OUTSIDER_CORP_ID, datetime(2023, 1, 1, tzinfo=timezone.utc))
+        add_corporation_history(GM_ID, BRAVO_CORP_ID, datetime(2024, 1, 1, tzinfo=timezone.utc))
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-2"),
+                         datetime(2023, 6, 1, tzinfo=timezone.utc))
+        # the very second a membership started belongs to it
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-3"),
+                         datetime(2022, 1, 1, tzinfo=timezone.utc))
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-4"),
+                         datetime(2021, 1, 1, tzinfo=timezone.utc))
+        broke = add_character_audit(BROKE_ID, True)
+        broke.balance = Decimal("-10.00")
+        broke.save()
+
+        page = self.page()
+
+        self.assertEqual(
+            [(row["amount"], row["corporation_then"]) for row in page["rows"]],
+            [(Decimal("-1"), f"Corp {BRAVO_CORP_ID}"),
+             (Decimal("-2"), f"Corp {OUTSIDER_CORP_ID}"),
+             (Decimal("-3"), f"Corp {ALPHA_CORP_ID}"),
+             # before the first record, and no transaction at all
+             (Decimal("-4"), ""),
+             (None, "")],
+        )
+
+    def test_should_survive_two_records_starting_the_same_second(self):
+        moment = datetime(2023, 1, 1, tzinfo=timezone.utc)
+        add_corporation_history(GM_ID, ALPHA_CORP_ID, moment)
+        add_corporation_history(GM_ID, BRAVO_CORP_ID, moment)
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), moment)
+
+        row = self.page()["rows"][0]
+
+        # the later record wins, as in the tax calculation
+        self.assertEqual(row["corporation_then"], f"Corp {BRAVO_CORP_ID}")
+
+    def test_should_offer_every_counterparty_on_the_page(self):
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-2"), _at(4))
+        add_wallet_entry(self.gm, BANK_TEXT, Decimal("-3"), _at(5))
+        add_wallet_entry(self.gm, "GM [1] issued transaction between Mr Vaseline and "
+                                  "secure commerce commission", Decimal("-4"), _at(6))
+        broke = add_character_audit(BROKE_ID, True, name="Broke Pilot")
+        broke.balance = Decimal("-10.00")
+        broke.save()
+
+        page = self.page()
+
+        # by name whatever the case, the rows without one last
+        self.assertEqual(
+            [(party["name"], party["count"]) for party in page["parties"]],
+            [("EVE Central Bank", 1), ("GM X", 2),
+             ("secure commerce commission", 1), ("", 1)],
+        )
+        self.assertEqual(
+            {row["counterparty"] for row in page["rows"] if row["character_id"] == BROKE_ID},
+            {""},
+        )
 
     def test_should_list_a_wallet_below_zero_without_a_transaction(self):
         broke = add_character_audit(BROKE_ID, True, name="Broke Pilot")
@@ -243,8 +369,67 @@ class TestGmView(GmTestCase):
         self.assertIn("Mr Vaseline", body)
         self.assertIn(GM_TEXT, body)
         self.assertIn('data-order="-5000000000.00"', body)
+        self.assertIn(reverse("corptools:reactmain", args=[GM_ID]), body)
         self.assertContains(response, "eos_tax/js/gm-transactions.")
         self.assertContains(response, f'href="{self.url}"')
+
+    def test_should_sort_the_age_by_days(self):
+        EveCharacter.objects.filter(character_id=GM_ID).update(
+            birthday=date.today() - timedelta(days=400)
+        )
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+
+        body = table_body(self.client.get(self.url))
+
+        self.assertIn('data-order="400">1 y</td>', body)
+
+    def test_script_should_describe_every_column(self):
+        """DataTables refuses a table whose columns option has a different
+        length than its header - the page would stay unsorted."""
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+
+        response = self.client.get(self.url)
+        header = response.content.decode().split("<thead>")[1].split("</thead>")[0]
+
+        self.assertEqual(
+            read_static("gm-transactions.js").count("searchable:"),
+            header.count("<th "),
+        )
+
+    def test_should_offer_a_box_per_counterparty(self):
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        add_wallet_entry(self.gm, BANK_TEXT, Decimal("-2"), _at(4))
+
+        content = self.client.get(self.url).content.decode()
+
+        self.assertIn("data-eos-party-filter", content)
+        self.assertIn('value="GM X"', content)
+        self.assertIn('value="EVE Central Bank"', content)
+        self.assertIn('<tr data-eos-party="GM X">', content)
+        self.assertIn('<tr data-eos-party="EVE Central Bank">', content)
+
+    def test_should_show_the_corporation_at_the_time_in_red(self):
+        add_corporation_history(GM_ID, ALPHA_CORP_ID, LONG_AGO)
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+
+        body = table_body(self.client.get(self.url))
+
+        self.assertIn(f'<td class="text-danger">Corp {ALPHA_CORP_ID}</td>', body)
+
+    def test_should_leave_the_filter_out_for_a_single_counterparty(self):
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+
+        response = self.client.get(self.url)
+
+        self.assertNotContains(response, "data-eos-party-filter")
+
+    def test_script_should_filter_only_its_own_table_by_the_ticked_boxes(self):
+        script = read_static("gm-transactions.js")
+
+        self.assertIn("DataTable.ext.search.push", script)
+        self.assertIn("settings.nTable !== table", script)
+        self.assertIn("dataset.eosParty", script)
+        self.assertIn("dataTable.draw()", script)
 
     def test_should_say_so_while_the_job_has_not_run(self):
         with mock.patch.object(run_update_gm_report, "delay") as delay:

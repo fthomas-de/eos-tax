@@ -1,4 +1,5 @@
-/* GM Transactions: the sortable table, and the wait for the job.
+/* GM Transactions: the sortable table, its counterparty filter, and the
+ * wait for the job.
  *
  * Loaded from gm-transactions.html, which hands over the translated strings
  * as json_script "eos-tax-config" - a .js file cannot reach {% translate %}.
@@ -26,14 +27,16 @@ document.addEventListener("DOMContentLoaded", function () {
         return;  // nothing found, nothing to sort
     }
 
-    new DataTable(table, {
+    const dataTable = new DataTable(table, {
         // one entry per column - the search box hits names, not numbers
         columns: [
             { searchable: true },   // Character
             { searchable: true },   // Corporation
+            { searchable: true },   // Corporation at the time
             { searchable: true },   // Alliance
             { searchable: true },   // Corporations in the Alliance
             { searchable: true },   // Main
+            { searchable: false },  // Age
             { searchable: false },  // Amount
             { searchable: false },  // Date
             { searchable: true },   // Transaction for
@@ -52,5 +55,42 @@ document.addEventListener("DOMContentLoaded", function () {
             search: labels.searchLabel,
             searchPlaceholder: labels.searchPlaceholder
         }
+    });
+
+    // one box per counterparty; the page leaves the boxes out when there
+    // is only one to tick
+    const boxes = Array.from(
+        document.querySelectorAll("[data-eos-party-filter] input[type=checkbox]")
+    );
+
+    if (!boxes.length) {
+        return;
+    }
+
+    let shownParties = new Set(boxes.map(function (box) {
+        return box.value;
+    }));
+
+    // ext.search is shared by every DataTable on the page, so it has to
+    // leave the others alone
+    DataTable.ext.search.push(function (settings, data, dataIndex) {
+        if (settings.nTable !== table) {
+            return true;
+        }
+
+        return shownParties.has(dataTable.row(dataIndex).node().dataset.eosParty);
+    });
+
+    boxes.forEach(function (box) {
+        box.addEventListener("change", function () {
+            shownParties = new Set(
+                boxes.filter(function (each) {
+                    return each.checked;
+                }).map(function (each) {
+                    return each.value;
+                })
+            );
+            dataTable.draw();
+        });
     });
 });

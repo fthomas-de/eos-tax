@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- GM Transactions shows each character's age, the same column the bots
+  lists have: a GM moving ISK onto a character a few days old reads
+  differently from one onto a veteran. The GM job counts it from Alliance
+  Auth's birthday, for the characters with a transaction and the wallets
+  below zero alike, so like the bots lists it is as old as the job's last
+  run. It stores days, not text, so "2 y" / "5 mo" come out in the reader's
+  language and the column sorts by days; a dash where Alliance Auth never
+  had a birthday, and for a report stored before this version until the
+  job runs again.
+- Each character on GM Transactions links to its corptools Character
+  Audit, the account and wallet data the page is built from.
+- GM Transactions filters by counterparty: a checkbox for every second
+  party the page's descriptions name - "GM X", "EVE Central Bank", "Secure
+  Commerce Commission" or whatever else a GM booked against - each with
+  its row count, plus one for the rows that name none (a wallet below zero
+  without a transaction). Read off the rows rather than a fixed list,
+  because a GM may book against any name and a box nobody can tick is no
+  use. The filter runs in the browser over the table already loaded; with
+  only one counterparty on the page there is nothing to filter and no box.
+- GM Transactions has a column "Corporation at the time", in red: the
+  Corporation the character was in when the GM moved the ISK, which is
+  often not where it sits today. Looked up in corptools' corporation
+  history with the same rule the tax calculation uses - the membership
+  that started last at or before the transaction - and shown whether or
+  not that Corporation is in the alliance. A dash for a wallet below zero
+  without a transaction, and for a transaction older than the history.
+
 ## [0.4.7] - 2026-10-27
 
 ### Added

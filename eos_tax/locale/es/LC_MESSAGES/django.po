@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 09:44+0000\n"
+"POT-Creation-Date: 2026-10-27 10:29+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -720,7 +720,7 @@ msgstr "total"
 msgid "This character had no active hour in the selected month."
 msgstr "Este character no tuvo ninguna hora activa en el mes seleccionado."
 
-#: templates/eos_tax/bots.html:24 templates/eos_tax/gm-transactions.html:29
+#: templates/eos_tax/bots.html:24 templates/eos_tax/gm-transactions.html:50
 #: templates/eos_tax/partials/bot-audit.html:14
 #: templates/eos_tax/partials/bot-clock-detail.html:32
 #: templates/eos_tax/partials/bot-clock.html:26
@@ -819,7 +819,15 @@ msgstr ""
 "Las transacciones de GM se están buscando en segundo plano. Esta página se "
 "recarga por sí sola en cuanto estén listas."
 
-#: templates/eos_tax/gm-transactions.html:30 templates/eos_tax/index.html:49
+#: templates/eos_tax/gm-transactions.html:27
+msgid "Counterparty"
+msgstr "Contraparte"
+
+#: templates/eos_tax/gm-transactions.html:36
+msgid "No counterparty"
+msgstr "Sin contraparte"
+
+#: templates/eos_tax/gm-transactions.html:51 templates/eos_tax/index.html:49
 #: templates/eos_tax/partials/bot-audit.html:16
 #: templates/eos_tax/partials/bot-clock-detail.html:33
 #: templates/eos_tax/partials/bot-clock.html:27
@@ -832,16 +840,20 @@ msgstr ""
 msgid "Corporation"
 msgstr "Corporation"
 
-#: templates/eos_tax/gm-transactions.html:31
+#: templates/eos_tax/gm-transactions.html:52
+msgid "Corporation at the time"
+msgstr "Corporation en ese momento"
+
+#: templates/eos_tax/gm-transactions.html:53
 #: templates/eos_tax/statistics.html:26
 msgid "Alliance"
 msgstr "Alliance"
 
-#: templates/eos_tax/gm-transactions.html:32
+#: templates/eos_tax/gm-transactions.html:54
 msgid "Corporations in the Alliance"
 msgstr "Corporations de la Alliance"
 
-#: templates/eos_tax/gm-transactions.html:33
+#: templates/eos_tax/gm-transactions.html:55
 #: templates/eos_tax/partials/bot-audit.html:18
 #: templates/eos_tax/partials/bot-clock.html:28
 #: templates/eos_tax/partials/bot-rhythm.html:28
@@ -850,52 +862,61 @@ msgstr "Corporations de la Alliance"
 msgid "Main"
 msgstr "Main"
 
-#: templates/eos_tax/gm-transactions.html:34
+#: templates/eos_tax/gm-transactions.html:56
+#: templates/eos_tax/partials/bot-audit.html:20
+#: templates/eos_tax/partials/bot-clock.html:29
+#: templates/eos_tax/partials/bot-rhythm.html:29
+#: templates/eos_tax/partials/bot-runs.html:29
+#: templates/eos_tax/partials/bot-table.html:10
+msgid "Age"
+msgstr "Edad"
+
+#: templates/eos_tax/gm-transactions.html:57
 msgid "Amount"
 msgstr "Importe"
 
-#: templates/eos_tax/gm-transactions.html:35
+#: templates/eos_tax/gm-transactions.html:58
 msgid "Date"
 msgstr "Fecha"
 
-#: templates/eos_tax/gm-transactions.html:36
+#: templates/eos_tax/gm-transactions.html:59
 msgid "Transaction for"
 msgstr "Transacción para"
 
-#: templates/eos_tax/gm-transactions.html:37
+#: templates/eos_tax/gm-transactions.html:60
 msgid "Wallet balance"
 msgstr "Saldo del wallet"
 
-#: templates/eos_tax/gm-transactions.html:38
+#: templates/eos_tax/gm-transactions.html:61
 msgid "Description"
 msgstr "Descripción"
 
-#: templates/eos_tax/gm-transactions.html:59
+#: templates/eos_tax/gm-transactions.html:90
 #: templates/eos_tax/partials/bot-character-cells.html:20
 msgid "not registered"
 msgstr "sin registrar"
 
-#: templates/eos_tax/gm-transactions.html:86
+#: templates/eos_tax/gm-transactions.html:118
 msgid "No GM transaction in any character journal, and no wallet below zero."
 msgstr ""
 "Ninguna transacción de GM en el journal de ningún character, y ningún wallet "
 "por debajo de cero."
 
-#: templates/eos_tax/gm-transactions.html:92
+#: templates/eos_tax/gm-transactions.html:124
 #, python-format
 msgid "%(counter)s GM transaction"
 msgid_plural "%(counter)s GM transactions"
 msgstr[0] "%(counter)s transacción de GM"
 msgstr[1] "%(counter)s transacciones de GM"
 
-#: templates/eos_tax/gm-transactions.html:93
+#: templates/eos_tax/gm-transactions.html:125
 #, python-format
 msgid "%(counter)s wallet below zero"
 msgid_plural "%(counter)s wallets below zero"
 msgstr[0] "%(counter)s wallet por debajo de cero"
 msgstr[1] "%(counter)s wallets por debajo de cero"
 
-#: templates/eos_tax/gm-transactions.html:94
+#: templates/eos_tax/gm-transactions.html:126
 #: templates/eos_tax/partials/bot-clock.html:72
 #: templates/eos_tax/partials/bot-group-header.html:14
 #: templates/eos_tax/partials/bot-rhythm.html:72
@@ -1055,14 +1076,6 @@ msgstr ""
 "Mains con al menos un character en las otras cuatro pestañas cuya auditoría "
 "de corptools falta o ya no está al día. Solo se comprueban los characters "
 "que muestran esas pestañas, no el resto de la cuenta."
-
-#: templates/eos_tax/partials/bot-audit.html:20
-#: templates/eos_tax/partials/bot-clock.html:29
-#: templates/eos_tax/partials/bot-rhythm.html:29
-#: templates/eos_tax/partials/bot-runs.html:29
-#: templates/eos_tax/partials/bot-table.html:10
-msgid "Age"
-msgstr "Edad"
 
 #: templates/eos_tax/partials/bot-audit.html:22
 msgid "Listed on"
@@ -2245,15 +2258,15 @@ msgstr "h"
 msgid "min"
 msgstr "min"
 
-#: util.py:113
+#: util.py:121
 msgid "d"
 msgstr "d"
 
-#: util.py:114
+#: util.py:122
 msgid "mo"
 msgstr "m"
 
-#: util.py:115
+#: util.py:123
 msgid "y"
 msgstr "a"
 
