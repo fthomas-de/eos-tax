@@ -50,7 +50,7 @@
                            class="table table-striped table-hover align-middle w-100">
                         <thead>
                             <tr>
-                                <th scope="col">{% translate "In the Alliance" %}</th>
+                                <th scope="col" title="{% translate 'This character or another character of the same Main is in the Alliance' %}">{% translate "In the Alliance" %}</th>
                                 <th scope="col">{% translate "Date" %}</th>
                                 <th scope="col">{% translate "Character" %}</th>
                                 <th scope="col" class="d-none d-lg-table-cell">{% translate "Age" %}</th>
@@ -69,12 +69,14 @@
                             {% for row in rows %}
                                 <tr data-eos-party="{{ row.counterparty }}">
                                     {% comment %}
-                                        As of the job's run. Left: an empty cell; not
-                                        known to the job: a dash, which is not "left".
+                                        As of the job's run, for the whole account: a
+                                        warning, not a tick - the player is still with
+                                        us. All left: an empty cell; not known to the
+                                        job: a dash, which is not "left".
                                     {% endcomment %}
                                     {% if row.in_alliance %}
                                         <td class="text-center" data-order="1">
-                                            <i class="fa-solid fa-check text-success" aria-hidden="true"></i>
+                                            <i class="fa-solid fa-circle-exclamation text-danger" aria-hidden="true"></i>
                                             <span class="visually-hidden">{% translate "In the Alliance" %}</span>
                                         </td>
                                     {% elif row.in_alliance is None %}

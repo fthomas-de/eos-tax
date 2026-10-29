@@ -7,12 +7,14 @@ from unittest import mock
 from django.core.cache import cache
 from django.urls import reverse
 
+from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter
 from corptools.models import CharacterAudit
 
 from eos_tax.db.gm_transactions import (
     FLAGGED_PARTY,
     _parties_of,
+    find_account_in_alliance,
     find_gm_transactions,
     find_in_alliance,
     get_gm_page,
@@ -45,6 +47,9 @@ GM_ID = 2100000101
 BROKE_ID = 2100000102
 DEEPER_ID = 2100000103
 CLEAN_ID = 2100000104
+MAIN_ID = 2100000105
+ALT_ID = 2100000106
+STRANGER_ID = 2100000107
 
 GM_TEXT = "GM [16519715] issued transaction between Mr Vaseline and GM X"
 BANK_TEXT = "GM [31365906] issued transaction between Hydra head4 and EVE Central Bank"
@@ -233,6 +238,21 @@ class TestGmPage(GmTestCase):
 
         self.assertIs(rows[GM_ID]["in_alliance"], True)
         self.assertIs(rows[BROKE_ID]["in_alliance"], True)
+
+    def test_should_take_the_whole_account_from_the_job(self):
+        """Out of the alliance on this character, still in on the main."""
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        user = create_user("vaseline", MAIN_ID, BRAVO_CORP_ID, "Bravo Corp")
+        CharacterOwnership.objects.create(
+            character=self.gm.character, user=user, owner_hash="gm-owner-hash"
+        )
+        EveCharacter.objects.filter(character_id=MAIN_ID).update(
+            alliance_id=TAXED_ALLIANCE_ID
+        )
+
+        row = self.page()["rows"][0]
+
+        self.assertIs(row["in_alliance"], True)
 
     def test_should_name_the_corporation_at_the_time_of_each_transaction(self):
         add_corporation_history(GM_ID, ALPHA_CORP_ID, datetime(2022, 1, 1, tzinfo=timezone.utc))
@@ -443,6 +463,52 @@ class TestInAlliance(GmTestCase):
         self.assertEqual(find_in_alliance([CLEAN_ID], self.config), {})
 
 
+class TestAccountInAlliance(GmTestCase):
+    """Any character of the account in the alliance counts for each of them."""
+
+    def setUp(self):
+        super().setUp()
+        self.config = configure()
+        user = create_user("vaseline", MAIN_ID, BRAVO_CORP_ID, "Bravo Corp")
+        create_alt(user, ALT_ID, "Vaseline Alt")
+
+    def alliance(self, character_id, alliance_id):
+        EveCharacter.objects.filter(character_id=character_id).update(
+            alliance_id=alliance_id, last_updated_affiliations=_at(1)
+        )
+
+    def test_should_count_the_account_in_when_another_character_is(self):
+        self.alliance(MAIN_ID, OTHER_ALLIANCE_ID)
+        self.alliance(ALT_ID, TAXED_ALLIANCE_ID)
+
+        self.assertEqual(
+            find_account_in_alliance([MAIN_ID, ALT_ID], self.config),
+            {MAIN_ID: True, ALT_ID: True},
+        )
+
+    def test_should_count_the_account_out_when_every_character_is(self):
+        self.alliance(MAIN_ID, OTHER_ALLIANCE_ID)
+        self.alliance(ALT_ID, None)
+
+        self.assertEqual(
+            find_account_in_alliance([ALT_ID], self.config), {ALT_ID: False}
+        )
+
+    def test_should_not_borrow_from_another_account(self):
+        create_user("stranger", STRANGER_ID, BRAVO_CORP_ID, "Bravo Corp")
+        self.alliance(STRANGER_ID, TAXED_ALLIANCE_ID)
+        # nobody owns the GM's character: an account of its own
+        self.alliance(GM_ID, None)
+
+        self.assertEqual(
+            find_account_in_alliance([GM_ID, MAIN_ID], self.config),
+            {GM_ID: False, MAIN_ID: False},
+        )
+
+    def test_should_leave_out_an_account_nobody_knows(self):
+        self.assertEqual(find_account_in_alliance([CLEAN_ID], self.config), {})
+
+
 class TestGmJob(GmTestCase):
     def tearDown(self):
         cache.clear()
@@ -533,7 +599,7 @@ class TestGmView(GmTestCase):
         self.assertIn('data-order="400">1 y', cells[0])
         self.assertIn("not registered", cells[1])
 
-    def test_should_tick_only_a_character_still_in_the_alliance(self):
+    def test_should_warn_only_for_a_character_still_in_the_alliance(self):
         add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
         broke = add_character_audit(BROKE_ID, True, name="Broke Pilot")
         broke.balance = Decimal("-10.00")
@@ -546,9 +612,12 @@ class TestGmView(GmTestCase):
 
         # the first cell of each row, the transaction before the wallet
         self.assertIn('data-order="1"', rows[0].split("</td>")[0])
-        self.assertIn("fa-check", rows[0].split("</td>")[0])
+        self.assertIn(
+            '<i class="fa-solid fa-circle-exclamation text-danger" aria-hidden="true"></i>',
+            rows[0].split("</td>")[0],
+        )
         self.assertIn('<td data-order="0">', rows[1].split("</td>")[0])
-        self.assertNotIn("fa-check", rows[1])
+        self.assertNotIn("fa-circle-exclamation", rows[1])
 
     def test_should_show_a_dash_when_the_job_did_not_look(self):
         add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))

@@ -18,6 +18,7 @@ from corptools.models import (
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
+from allianceauth.authentication.models import CharacterOwnership
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 
 from eos_tax import progress
@@ -192,6 +193,42 @@ def find_in_alliance(character_ids, config):
     return in_alliance
 
 
+def find_account_in_alliance(character_ids, config):
+    """Whether each character or another character on its account is in a
+    configured alliance, as {character_id: bool}; a character whose whole
+    account neither source knows is absent.
+
+    A GM booking or a wallet below zero matters while the player is still
+    with us on any of their characters - the user's choice.
+    """
+    owners = dict(
+        CharacterOwnership.objects.filter(
+            character__character_id__in=character_ids
+        ).values_list("character__character_id", "user_id")
+    )
+    accounts = defaultdict(set)
+    for character_id, user_id in CharacterOwnership.objects.filter(
+        user_id__in=set(owners.values())
+    ).values_list("character__character_id", "user_id"):
+        accounts[user_id].add(character_id)
+
+    # a character nobody registered is an account of its own
+    account_of = {
+        character_id: accounts[owners[character_id]] if character_id in owners else {character_id}
+        for character_id in character_ids
+    }
+    members = find_in_alliance(set().union(*account_of.values()), config)
+
+    in_alliance = {}
+    for character_id, account in account_of.items():
+        known = [members[eve_id] for eve_id in account if eve_id in members]
+        # one known character out and the rest unknown is "out", not a dash
+        if known:
+            in_alliance[character_id] = any(known)
+
+    return in_alliance
+
+
 def store_gm_report(run_id=None):
     """run_id: the progress bar's run, with the steps of GM_STEPS."""
     try:
@@ -215,10 +252,11 @@ def store_gm_report(run_id=None):
                             str(character_id): days
                             for character_id, days in find_age_days(character_ids).items()
                         },
-                        # as of this run, like the ages - the user's choice
+                        # as of this run, like the ages - the user's choice;
+                        # the whole account, not the character alone
                         "in_alliance": {
                             str(character_id): member
-                            for character_id, member in find_in_alliance(
+                            for character_id, member in find_account_in_alliance(
                                 character_ids, get_config()
                             ).items()
                         },

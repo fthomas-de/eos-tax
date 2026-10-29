@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- "In the Alliance" on GM Transactions now looks at the whole account, and
+  marks it with a red exclamation mark instead of a green tick. A GM
+  booking or a wallet below zero matters while the player is still with
+  us, and a character that left says nothing about the main or the alts
+  that stayed. So the mark shows when the character or any other
+  character of the same Alliance Auth account was in a taxed alliance at
+  the GM job's run, each judged as before by the newer of the two
+  sources. A character nobody registered stands for itself. The column
+  heading explains the mark in a tooltip. The job needs a run
+  (Recalculate) before the column changes.
+
 ## [0.4.11] - 2026-10-29
 
 ### Added

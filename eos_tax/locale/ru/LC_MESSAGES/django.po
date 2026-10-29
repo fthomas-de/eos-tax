@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-29 15:29+0000\n"
+"POT-Creation-Date: 2026-10-29 15:43+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -834,7 +834,11 @@ msgid "No counterparty"
 msgstr "Нет контрагента"
 
 #: templates/eos_tax/gm-transactions.html:53
-#: templates/eos_tax/gm-transactions.html:79
+msgid "This character or another character of the same Main is in the Alliance"
+msgstr "Этот character или другой character того же Main состоит в Alliance"
+
+#: templates/eos_tax/gm-transactions.html:53
+#: templates/eos_tax/gm-transactions.html:81
 msgid "In the Alliance"
 msgstr "В Alliance"
 
@@ -898,17 +902,17 @@ msgstr "Баланс wallet"
 msgid "Description"
 msgstr "Описание"
 
-#: templates/eos_tax/gm-transactions.html:106
+#: templates/eos_tax/gm-transactions.html:108
 #: templates/eos_tax/partials/bot-character-cells.html:20
 msgid "not registered"
 msgstr "не зарегистрирован"
 
-#: templates/eos_tax/gm-transactions.html:139
+#: templates/eos_tax/gm-transactions.html:141
 msgid "No GM transaction in any character journal, and no wallet below zero."
 msgstr ""
 "Ни одной GM-транзакции в journal characters и ни одного wallet ниже нуля."
 
-#: templates/eos_tax/gm-transactions.html:145
+#: templates/eos_tax/gm-transactions.html:147
 #, python-format
 msgid "%(counter)s GM transaction"
 msgid_plural "%(counter)s GM transactions"
@@ -916,7 +920,7 @@ msgstr[0] "%(counter)s GM-транзакция"
 msgstr[1] "%(counter)s GM-транзакции"
 msgstr[2] "%(counter)s GM-транзакций"
 
-#: templates/eos_tax/gm-transactions.html:146
+#: templates/eos_tax/gm-transactions.html:148
 #, python-format
 msgid "%(counter)s wallet below zero"
 msgid_plural "%(counter)s wallets below zero"
@@ -924,7 +928,7 @@ msgstr[0] "%(counter)s wallet ниже нуля"
 msgstr[1] "%(counter)s wallet ниже нуля"
 msgstr[2] "%(counter)s wallet ниже нуля"
 
-#: templates/eos_tax/gm-transactions.html:147
+#: templates/eos_tax/gm-transactions.html:149
 #: templates/eos_tax/partials/bot-clock.html:72
 #: templates/eos_tax/partials/bot-group-header.html:14
 #: templates/eos_tax/partials/bot-rhythm.html:72
