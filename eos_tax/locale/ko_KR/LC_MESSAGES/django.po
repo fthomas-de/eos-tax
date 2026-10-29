@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-27 11:07+0000\n"
+"POT-Creation-Date: 2026-10-29 15:29+0000\n"
 "Language: ko-KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -695,7 +695,7 @@ msgstr "합계"
 msgid "This character had no active hour in the selected month."
 msgstr "이 character는 선택한 달에 활동 시간이 없습니다."
 
-#: templates/eos_tax/bots.html:27 templates/eos_tax/gm-transactions.html:53
+#: templates/eos_tax/bots.html:27 templates/eos_tax/gm-transactions.html:55
 #: templates/eos_tax/partials/bot-audit.html:14
 #: templates/eos_tax/partials/bot-clock-detail.html:32
 #: templates/eos_tax/partials/bot-clock.html:26
@@ -799,7 +799,34 @@ msgstr "거래 상대방"
 msgid "No counterparty"
 msgstr "거래 상대방 없음"
 
-#: templates/eos_tax/gm-transactions.html:54 templates/eos_tax/index.html:49
+#: templates/eos_tax/gm-transactions.html:53
+#: templates/eos_tax/gm-transactions.html:79
+msgid "In the Alliance"
+msgstr "Alliance 소속"
+
+#: templates/eos_tax/gm-transactions.html:54
+msgid "Date"
+msgstr "날짜"
+
+#: templates/eos_tax/gm-transactions.html:56
+#: templates/eos_tax/partials/bot-audit.html:20
+#: templates/eos_tax/partials/bot-clock.html:29
+#: templates/eos_tax/partials/bot-rhythm.html:29
+#: templates/eos_tax/partials/bot-runs.html:29
+#: templates/eos_tax/partials/bot-table.html:10
+msgid "Age"
+msgstr "나이"
+
+#: templates/eos_tax/gm-transactions.html:57
+#: templates/eos_tax/partials/bot-audit.html:18
+#: templates/eos_tax/partials/bot-clock.html:28
+#: templates/eos_tax/partials/bot-rhythm.html:28
+#: templates/eos_tax/partials/bot-runs.html:28
+#: templates/eos_tax/partials/bot-table.html:9
+msgid "Main"
+msgstr "Main"
+
+#: templates/eos_tax/gm-transactions.html:58 templates/eos_tax/index.html:49
 #: templates/eos_tax/partials/bot-audit.html:16
 #: templates/eos_tax/partials/bot-clock-detail.html:33
 #: templates/eos_tax/partials/bot-clock.html:27
@@ -812,48 +839,22 @@ msgstr "거래 상대방 없음"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: templates/eos_tax/gm-transactions.html:55
+#: templates/eos_tax/gm-transactions.html:59
 msgid "Corporation at the time"
 msgstr "당시 Corporation"
 
-#: templates/eos_tax/gm-transactions.html:56
+#: templates/eos_tax/gm-transactions.html:60
 #: templates/eos_tax/statistics.html:26
 msgid "Alliance"
 msgstr "Alliance"
 
-#: templates/eos_tax/gm-transactions.html:57
+#: templates/eos_tax/gm-transactions.html:61
 msgid "Corporations in the Alliance"
 msgstr "Alliance 내 Corporation"
 
-#: templates/eos_tax/gm-transactions.html:58
-#: templates/eos_tax/partials/bot-audit.html:18
-#: templates/eos_tax/partials/bot-clock.html:28
-#: templates/eos_tax/partials/bot-rhythm.html:28
-#: templates/eos_tax/partials/bot-runs.html:28
-#: templates/eos_tax/partials/bot-table.html:9
-msgid "Main"
-msgstr "Main"
-
-#: templates/eos_tax/gm-transactions.html:59
-#: templates/eos_tax/partials/bot-audit.html:20
-#: templates/eos_tax/partials/bot-clock.html:29
-#: templates/eos_tax/partials/bot-rhythm.html:29
-#: templates/eos_tax/partials/bot-runs.html:29
-#: templates/eos_tax/partials/bot-table.html:10
-msgid "Age"
-msgstr "나이"
-
-#: templates/eos_tax/gm-transactions.html:60
+#: templates/eos_tax/gm-transactions.html:62
 msgid "Amount"
 msgstr "금액"
-
-#: templates/eos_tax/gm-transactions.html:61
-msgid "Date"
-msgstr "날짜"
-
-#: templates/eos_tax/gm-transactions.html:62
-msgid "Transaction for"
-msgstr "거래 대상"
 
 #: templates/eos_tax/gm-transactions.html:63
 msgid "Wallet balance"
@@ -863,28 +864,28 @@ msgstr "Wallet 잔액"
 msgid "Description"
 msgstr "설명"
 
-#: templates/eos_tax/gm-transactions.html:93
+#: templates/eos_tax/gm-transactions.html:106
 #: templates/eos_tax/partials/bot-character-cells.html:20
 msgid "not registered"
 msgstr "미등록"
 
-#: templates/eos_tax/gm-transactions.html:121
+#: templates/eos_tax/gm-transactions.html:139
 msgid "No GM transaction in any character journal, and no wallet below zero."
 msgstr "어떤 Character journal에도 GM 거래가 없고, 0 미만인 wallet도 없습니다."
 
-#: templates/eos_tax/gm-transactions.html:127
+#: templates/eos_tax/gm-transactions.html:145
 #, python-format
 msgid "%(counter)s GM transaction"
 msgid_plural "%(counter)s GM transactions"
 msgstr[0] "GM 거래 %(counter)s건"
 
-#: templates/eos_tax/gm-transactions.html:128
+#: templates/eos_tax/gm-transactions.html:146
 #, python-format
 msgid "%(counter)s wallet below zero"
 msgid_plural "%(counter)s wallets below zero"
 msgstr[0] "0 미만 wallet %(counter)s개"
 
-#: templates/eos_tax/gm-transactions.html:129
+#: templates/eos_tax/gm-transactions.html:147
 #: templates/eos_tax/partials/bot-clock.html:72
 #: templates/eos_tax/partials/bot-group-header.html:14
 #: templates/eos_tax/partials/bot-rhythm.html:72
@@ -2283,6 +2284,9 @@ msgstr "이번 달을 다시 계산할 수 없습니다."
 #: views.py:555 views.py:609
 msgid "Could not load this view."
 msgstr "이 화면을 불러오지 못했습니다."
+
+#~ msgid "Transaction for"
+#~ msgstr "거래 대상"
 
 #~ msgid "Including paid"
 #~ msgstr "납부완료 포함"

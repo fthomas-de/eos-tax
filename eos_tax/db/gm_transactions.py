@@ -145,6 +145,53 @@ def find_age_days(character_ids):
     }
 
 
+def find_in_alliance(character_ids, config):
+    """Whether each character is in a configured alliance, as
+    {character_id: bool}; a character neither source knows is absent.
+
+    Alliance Auth's character is as new as its last affiliation update,
+    corptools' history as its last record - each misses a move the other
+    has seen, so the newer one wins. A tie goes to Alliance Auth: it looked
+    at or after the moment the record starts.
+    """
+    alliance_ids = set(config.alliance_ids())
+    # the alliance of today, not `_alliance_corporation_ids`: a Corporation
+    # that left keeps its tax rows, and its members are out all the same
+    corp_ids = set(
+        EveCorporationInfo.objects.filter(
+            alliance__alliance_id__in=alliance_ids
+        ).values_list("corporation_id", flat=True)
+    )
+
+    latest_records = {}
+    for character_id, start_date, corporation_id in (
+        CorporationHistory.objects.filter(
+            character__character__character_id__in=character_ids
+        )
+        # the last one stands; the same second goes to the higher record_id,
+        # as in `_corporation_at`
+        .order_by("start_date", "record_id")
+        .values_list(
+            "character__character__character_id", "start_date", "corporation_id"
+        )
+    ):
+        latest_records[character_id] = (start_date, corporation_id)
+
+    in_alliance = {}
+    for character_id, alliance_id, updated in EveCharacter.objects.filter(
+        character_id__in=character_ids
+    ).values_list("character_id", "alliance_id", "last_updated_affiliations"):
+        in_alliance[character_id] = alliance_id in alliance_ids
+
+        # a history always has its character - corptools' audit hangs off it
+        record = latest_records.get(character_id)
+        # never updated: no moment to weigh the history against
+        if record and (updated is None or record[0] > updated):
+            in_alliance[character_id] = record[1] in corp_ids
+
+    return in_alliance
+
+
 def store_gm_report(run_id=None):
     """run_id: the progress bar's run, with the steps of GM_STEPS."""
     try:
@@ -167,6 +214,13 @@ def store_gm_report(run_id=None):
                         "age_days": {
                             str(character_id): days
                             for character_id, days in find_age_days(character_ids).items()
+                        },
+                        # as of this run, like the ages - the user's choice
+                        "in_alliance": {
+                            str(character_id): member
+                            for character_id, member in find_in_alliance(
+                                character_ids, get_config()
+                            ).items()
                         },
                     },
                     "computed_at": timezone.now(),
@@ -201,6 +255,11 @@ def get_stored_gm_report():
         "age_days": {
             int(character_id): days
             for character_id, days in stored.report.get("age_days", {}).items()
+        },
+        # nor one stored before it looked at the alliance
+        "in_alliance": {
+            int(character_id): member
+            for character_id, member in stored.report.get("in_alliance", {}).items()
         },
         "computed_at": stored.computed_at,
     }
@@ -313,6 +372,7 @@ def get_gm_page(stored):
         character_ids, _alliance_corporation_ids(get_config())
     )
     age_days = stored["age_days"]
+    in_alliance = stored["in_alliance"]
     # only a transaction has a moment to look the Corporation up at
     periods, corporation_names = _corporation_periods(with_transaction)
     player_names = _player_names(transactions)
@@ -334,6 +394,9 @@ def get_gm_page(stored):
 
         return {
             "character_id": character_id,
+            # as of the job's run; None for a character it did not know or
+            # did not see, which is not the same as "left"
+            "in_alliance": in_alliance.get(character_id),
             "character_name": character.character_name if character else str(character_id),
             "corporation_name": character.corporation_name if character else "",
             # empty without a history reaching back that far

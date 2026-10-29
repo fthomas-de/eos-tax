@@ -14,6 +14,7 @@ from eos_tax.db.gm_transactions import (
     FLAGGED_PARTY,
     _parties_of,
     find_gm_transactions,
+    find_in_alliance,
     get_gm_page,
     get_stored_gm_report,
     sides,
@@ -27,7 +28,9 @@ from .factories import (
     ALPHA_CORP_ID,
     BRAVO_CORP_ID,
     LONG_AGO,
+    OTHER_ALLIANCE_ID,
     OUTSIDER_CORP_ID,
+    TAXED_ALLIANCE_ID,
     add_character_audit,
     add_corporation_history,
     add_wallet_entry,
@@ -209,6 +212,27 @@ class TestGmPage(GmTestCase):
         row = get_gm_page(get_stored_gm_report())["rows"][0]
 
         self.assertEqual((row["age"], row["age_days"]), ("", None))
+        # unknown, not "left"
+        self.assertIsNone(row["in_alliance"])
+
+    def test_should_take_the_alliance_membership_from_the_job(self):
+        """As of the calculation, for a wallet below zero as much as for a
+        transaction."""
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        broke = add_character_audit(BROKE_ID, True, name="Broke Pilot")
+        broke.balance = Decimal("-10.00")
+        broke.save()
+        EveCharacter.objects.filter(character_id__in=[GM_ID, BROKE_ID]).update(
+            alliance_id=TAXED_ALLIANCE_ID
+        )
+        store_gm_report()
+        # left after the job ran: the page still shows the job's answer
+        EveCharacter.objects.filter(character_id=GM_ID).update(alliance_id=None)
+
+        rows = {row["character_id"]: row for row in get_gm_page(get_stored_gm_report())["rows"]}
+
+        self.assertIs(rows[GM_ID]["in_alliance"], True)
+        self.assertIs(rows[BROKE_ID]["in_alliance"], True)
 
     def test_should_name_the_corporation_at_the_time_of_each_transaction(self):
         add_corporation_history(GM_ID, ALPHA_CORP_ID, datetime(2022, 1, 1, tzinfo=timezone.utc))
@@ -350,6 +374,75 @@ class TestGmPage(GmTestCase):
         )
 
 
+class TestInAlliance(GmTestCase):
+    """Alliance Auth's character against corptools' history, the newer wins."""
+
+    def setUp(self):
+        super().setUp()
+        self.config = configure()
+
+    def character(self, character_id, alliance_id, updated):
+        if character_id != GM_ID:
+            add_character_audit(character_id, True)
+        EveCharacter.objects.filter(character_id=character_id).update(
+            alliance_id=alliance_id, last_updated_affiliations=updated
+        )
+
+    def test_should_take_alliance_auth_without_a_history(self):
+        self.character(GM_ID, TAXED_ALLIANCE_ID, _at(1))
+        self.character(BROKE_ID, OTHER_ALLIANCE_ID, _at(1))
+        self.character(DEEPER_ID, None, None)
+
+        self.assertEqual(
+            find_in_alliance([GM_ID, BROKE_ID, DEEPER_ID], self.config),
+            {GM_ID: True, BROKE_ID: False, DEEPER_ID: False},
+        )
+
+    def test_should_take_the_history_when_it_is_newer(self):
+        # Alliance Auth still has the old alliance; the move came after
+        self.character(GM_ID, TAXED_ALLIANCE_ID, _at(1))
+        add_corporation_history(GM_ID, BRAVO_CORP_ID, LONG_AGO)
+        add_corporation_history(GM_ID, OUTSIDER_CORP_ID, _at(2))
+        # and the way back in
+        self.character(BROKE_ID, OTHER_ALLIANCE_ID, _at(1))
+        add_corporation_history(BROKE_ID, BRAVO_CORP_ID, _at(2))
+
+        self.assertEqual(
+            find_in_alliance([GM_ID, BROKE_ID], self.config),
+            {GM_ID: False, BROKE_ID: True},
+        )
+
+    def test_should_take_alliance_auth_when_it_is_newer_or_as_new(self):
+        self.character(GM_ID, OTHER_ALLIANCE_ID, _at(3))
+        add_corporation_history(GM_ID, BRAVO_CORP_ID, _at(2))
+        # looked at the very second the record starts: it saw the move
+        self.character(BROKE_ID, TAXED_ALLIANCE_ID, _at(2))
+        add_corporation_history(BROKE_ID, OUTSIDER_CORP_ID, _at(2))
+
+        self.assertEqual(
+            find_in_alliance([GM_ID, BROKE_ID], self.config),
+            {GM_ID: False, BROKE_ID: True},
+        )
+
+    def test_should_take_the_history_when_alliance_auth_never_updated(self):
+        self.character(GM_ID, TAXED_ALLIANCE_ID, None)
+        add_corporation_history(GM_ID, OUTSIDER_CORP_ID, LONG_AGO)
+
+        self.assertEqual(find_in_alliance([GM_ID], self.config), {GM_ID: False})
+
+    def test_should_count_a_corporation_that_left_as_out(self):
+        """Its tax rows keep it under "Corporations in the Alliance"; its
+        members are out all the same."""
+        create_tax_row(ALPHA_CORP_ID, "Alpha Corp")
+        self.character(GM_ID, TAXED_ALLIANCE_ID, _at(1))
+        add_corporation_history(GM_ID, ALPHA_CORP_ID, _at(2))
+
+        self.assertEqual(find_in_alliance([GM_ID], self.config), {GM_ID: False})
+
+    def test_should_leave_out_a_character_nobody_knows(self):
+        self.assertEqual(find_in_alliance([CLEAN_ID], self.config), {})
+
+
 class TestGmJob(GmTestCase):
     def tearDown(self):
         cache.clear()
@@ -416,6 +509,58 @@ class TestGmView(GmTestCase):
         body = table_body(self.client.get(self.url))
 
         self.assertIn('data-order="400">1 y</td>', body)
+
+    def test_should_show_the_date_first_and_age_and_main_after_the_character(self):
+        """Header and cells move together - one without the other puts every
+        value under the wrong title."""
+        EveCharacter.objects.filter(character_id=GM_ID).update(
+            birthday=date.today() - timedelta(days=400)
+        )
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+
+        response = self.client.get(self.url)
+        header = response.content.decode().split("<thead>")[1].split("</thead>")[0]
+        titles = [cell.split(">", 1)[1].split("<", 1)[0] for cell in header.split("<th ")[1:]]
+        before_character, after_character = table_body(response).split("</th>", 1)
+        cells = after_character.split("</td>")
+
+        self.assertEqual(
+            titles[:6],
+            ["In the Alliance", "Date", "Character", "Age", "Main", "Corporation"],
+        )
+        self.assertNotIn("Transaction for", titles)
+        self.assertIn(_at(3).strftime("%Y-%m-%d %H:%M"), before_character)
+        self.assertIn('data-order="400">1 y', cells[0])
+        self.assertIn("not registered", cells[1])
+
+    def test_should_tick_only_a_character_still_in_the_alliance(self):
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        broke = add_character_audit(BROKE_ID, True, name="Broke Pilot")
+        broke.balance = Decimal("-10.00")
+        broke.save()
+        EveCharacter.objects.filter(character_id=GM_ID).update(
+            alliance_id=TAXED_ALLIANCE_ID
+        )
+
+        rows = table_body(self.client.get(self.url)).split("</tr>")
+
+        # the first cell of each row, the transaction before the wallet
+        self.assertIn('data-order="1"', rows[0].split("</td>")[0])
+        self.assertIn("fa-check", rows[0].split("</td>")[0])
+        self.assertIn('<td data-order="0">', rows[1].split("</td>")[0])
+        self.assertNotIn("fa-check", rows[1])
+
+    def test_should_show_a_dash_when_the_job_did_not_look(self):
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        GmReport.objects.create(
+            pk=1,
+            report={"transactions": find_gm_transactions()},
+            computed_at=_at(4),
+        )
+
+        first_cell = table_body(self.client.get(self.url)).split("</td>")[0]
+
+        self.assertIn('data-order="">&mdash;', first_cell)
 
     def test_script_should_describe_every_column(self):
         """DataTables refuses a table whose columns option has a different

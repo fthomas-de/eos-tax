@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- GM Transactions has a first column "In the Alliance", ticked for a
+  character still in one of the taxed alliances when the GM job ran. The
+  Alliance column only says where a character is when the page loads, and
+  says nothing about whether that is one of ours. Two sources decide, and
+  the newer one wins: Alliance Auth's character as of its last affiliation
+  update, and the last record of the corptools corporation history - each
+  misses a move the other has already seen. A Corporation that left the
+  alliance counts as out, even though its tax rows keep it under
+  "Corporations in the Alliance". A report stored before this column, or a
+  character neither source knows, shows a dash rather than an empty cell,
+  which would read as "left". The job needs a run (Recalculate) before the
+  column fills.
+
+### Changed
+
+- GM Transactions starts with the Date and shows Age and Main right after
+  the Character. Age and Main say who stands behind a character, and they
+  were the sixth and seventh column, after four columns of Corporations
+  and Alliance.
+
+### Removed
+
+- The "Transaction for" column on GM Transactions; it was not needed. The
+  page still reads the character from the description to tell it from the
+  counterparty, and the Description column still shows it.
+
 ## [0.4.10] - 2026-10-27
 
 ### Added

@@ -30,16 +30,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const dataTable = new DataTable(table, {
         // one entry per column - the search box hits names, not numbers
         columns: [
+            { searchable: false },  // In the Alliance
+            { searchable: false },  // Date
             { searchable: true },   // Character
+            { searchable: false },  // Age
+            { searchable: true },   // Main
             { searchable: true },   // Corporation
             { searchable: true },   // Corporation at the time
             { searchable: true },   // Alliance
             { searchable: true },   // Corporations in the Alliance
-            { searchable: true },   // Main
-            { searchable: false },  // Age
             { searchable: false },  // Amount
-            { searchable: false },  // Date
-            { searchable: true },   // Transaction for
             { searchable: false },  // Wallet balance
             { searchable: true }    // Description
         ],
