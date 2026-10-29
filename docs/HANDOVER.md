@@ -4,11 +4,23 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-10-29 (0.4.13).
+Last updated 2026-10-29 (0.4.14).
 
 ## Release
 
-- Version **0.4.13** in `eos_tax/__init__.py`, released 2026-10-29
+- Version **0.4.14** in `eos_tax/__init__.py`, released 2026-10-29
+- `[0.4.14]` in `CHANGELOG.md`, one addition on GM Transactions:
+  - **Alliance switch** above the table (`form-switch`,
+    `#eos-tax-in-alliance`, `data-eos-alliance-filter`), **on by
+    default**: hides rows whose `<tr data-eos-left="1">`, i.e.
+    `row.in_alliance is False` (the whole account out as of the GM job's
+    run). None (dash) is `0` and stays shown. In `gm-transactions.js` one
+    `DataTable.ext.search` function now checks the switch and the
+    counterparty boxes (`shownParties` is null without boxes, so the
+    switch also works on a page with a single counterparty). Not
+    remembered across page loads
+  - 1 new string ("Only characters still in the Alliance with a Main or
+    alt"), in all six catalogues
 - `[0.4.13]` in `CHANGELOG.md`, all on GM Transactions:
   - **Note per row**, second column: a `fa-note-sticky` button opens one
     shared Bootstrap modal (`#eos-tax-gm-note`, textarea `maxlength` 160,
@@ -105,17 +117,28 @@ Last updated 2026-10-29 (0.4.13).
   `admin_view` alone sees the settings page read only
 - Migrations **0001-0030** applied to `aa_dev`; 0.4.13 brought 0030
   (`GmNote`), 0.4.8 to 0.4.12 had none
-- 739 tests, all green (724 without the translation tag, 15 with it)
+- 742 tests, all green (727 without the translation tag, 15 with it)
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the
   page's GM rows can only be seen in tests or on production data. The
-  0.4.9 fix, the 0.4.10 "GM X" filter and the whole of 0.4.11 to 0.4.13
-  (the note popup included) are verified by tests only, not in the browser
+  0.4.9 fix, the 0.4.10 "GM X" filter and the whole of 0.4.11 to 0.4.14
+  (the note popup and the alliance switch included) are verified by
+  tests only, not in the browser
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
 
 ## Decisions of the 2026-10-29 sessions
+
+Alliance switch (0.4.14) - the user's choices unless marked:
+
+- **On by default**; hides every character whose account has no
+  character left in the alliance.
+- **A dash (unknown) stays shown** - only a known "left" is hidden.
+- Claude's calls: always shown above the counterparty boxes, even when
+  no row would be hidden; client-side only, state not kept in the URL or
+  storage; label "Only characters still in the Alliance with a Main or
+  alt"; it combines with the boxes (a row must pass both).
 
 Notes, whole ISK, column swap (0.4.13) - the user's choices unless marked:
 
@@ -388,7 +411,9 @@ plain list of alts from Alliance Auth, without assessments.
    show no mark. After the restart press Recalculate on GM Transactions
    once. **0.4.13 needs migration 0030** before the page loads - it reads
    `GmNote` for every row.
-2. **GM Transactions has never seen real data** - `aa_dev` has 6
+2. **GM Transactions has never seen real data** (0.4.14: with the
+   alliance switch on, check that the rows hidden are really the
+   accounts that left) - `aa_dev` has 6
    character journal rows, no GM booking and no negative balance. After
    deploying: does the page list the expected characters, do the
    counterparty boxes read the names right (which counterparties really

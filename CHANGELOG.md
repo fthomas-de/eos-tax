@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.14] - 2026-10-29
+
 ### Added
 
 - GM Transactions has a switch above the table, on by default, that
