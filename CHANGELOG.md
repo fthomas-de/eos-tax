@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.11] - 2026-10-29
+
 ### Added
 
 - GM Transactions has a first column "In the Alliance", ticked for a

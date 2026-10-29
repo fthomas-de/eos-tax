@@ -4,11 +4,23 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-10-27.
+Last updated 2026-10-29.
 
 ## Release
 
-- Version **0.4.10** in `eos_tax/__init__.py`, released 2026-10-27
+- Version **0.4.11** in `eos_tax/__init__.py`, released 2026-10-29
+- `[0.4.11]` in `CHANGELOG.md`, all on GM Transactions:
+  - **First column "In the Alliance"**: a tick when the character was in a
+    taxed alliance at the GM job's run. `find_in_alliance(character_ids,
+    config)` in `db/gm_transactions.py`, stored as `report["in_alliance"]`
+    (`{str(id): bool}`) in the job's `characters` step, read back by
+    `get_stored_gm_report`, row key `in_alliance` (True / False / None).
+    Cell: tick (`data-order="1"`), empty (`0`), dash for None (`""`)
+  - **Column order**: In the Alliance, Date, Character, Age, Main,
+    Corporation, ...; the **"Transaction for" column is gone** (`sides()`
+    still reads the character to tell it from the counterparty)
+  - 1 new string ("In the Alliance"), in all six catalogues; "Transaction
+    for" is obsolete (`#~`) there
 - `[0.4.10]` in `CHANGELOG.md`:
   - **Recalculate buttons** on the bots page (the month on screen) and on
     GM Transactions, `manage_settings` only: `bots_recalculate` /
@@ -36,7 +48,7 @@ Last updated 2026-10-27.
   `named_character()`/`counterparty()`) now takes the party that is a
   character Alliance Auth knows (`_player_names`, casefolded; every wallet
   owner is one) as the character, the other as the counterparty; both
-  players = "No counterparty". "Transaction for" follows the same rule
+  players = "No counterparty"
 - `[0.4.8]` in `CHANGELOG.md`, all on GM Transactions
   (`db/gm_transactions.py`, `gm-transactions.html`/`.js`):
   - **Age column**: the GM job stores each listed character's age in days
@@ -57,16 +69,38 @@ Last updated 2026-10-27.
   versions: see `CHANGELOG.md`. Still worth knowing from them:
   `manage_settings` (0.4.5, migration 0027) guards every settings write;
   `admin_view` alone sees the settings page read only
-- Migrations **0001-0029** applied to `aa_dev`; 0.4.8 to 0.4.10 have none
-- 707 tests, all green (692 without the translation tag, 15 with it)
+- Migrations **0001-0029** applied to `aa_dev`; 0.4.8 to 0.4.11 have none
+- 717 tests, all green (702 without the translation tag, 15 with it)
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the
   page's GM rows can only be seen in tests or on production data. The
-  0.4.9 fix and the 0.4.10 "GM X" filter are verified by tests only, not
-  in the browser
+  0.4.9 fix, the 0.4.10 "GM X" filter and the whole of 0.4.11 are verified
+  by tests only, not in the browser
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
+
+## Decisions of the 2026-10-29 session
+
+"In the Alliance" (0.4.11) - the user's choices unless marked:
+
+- **As of the calculation**, i.e. the GM job's run, not the page load.
+- **Two sources, the newer wins**: Alliance Auth's `EveCharacter.alliance_id`
+  dated by `last_updated_affiliations`, against corptools'
+  `CorporationHistory`, dated by the `start_date` of its last record.
+- Claude's calls: "the alliance" = the configured `tax_alliances`; the
+  history side checks the last record's Corporation against the
+  Corporations **in those alliances today** (`EveCorporationInfo`), not
+  `_alliance_corporation_ids` - a Corporation that left keeps its tax rows
+  but its members count as out. A tie goes to Alliance Auth (it looked at
+  or after the record's start); `last_updated_affiliations` None = the
+  history decides; last record by `start_date`, then `record_id`, as in
+  `_corporation_at`. Left = an empty cell, unknown (report before 0.4.11,
+  character neither source knows) = a dash. Tick with a visually hidden
+  "In the Alliance" for screen readers; column not searchable.
+- The column order and the removal of "Transaction for" came from an
+  earlier session that left them uncommitted; they went into
+  the same commit. Its reasons are in the CHANGELOG only.
 
 ## Decisions of the 2026-10-27 sessions
 
@@ -282,12 +316,17 @@ plain list of alts from Alliance Auth, without assessments.
    production: both are only as fresh as its last run ("computed … EVE"
    says when). **0.4.8 needs the restart too**: a worker on 0.4.7 code
    stores GM reports without ages, and the Age column stays all dashes.
+   **0.4.11 the same**: a worker on older code stores no `in_alliance`,
+   and the first column stays all dashes. After the restart press
+   Recalculate on GM Transactions once.
 2. **GM Transactions has never seen real data** - `aa_dev` has 6
    character journal rows, no GM booking and no negative balance. After
-   deploying: does the page list the expected characters, do
-   "Transaction for" and the counterparty boxes read the names right
-   (which counterparties really occur?), does "Corporation at the time"
-   match, and how long does the job's `description LIKE 'GM [%'` scan over
+   deploying: does the page list the expected characters, do the
+   counterparty boxes read the names right (which counterparties really
+   occur?), does "Corporation at the time" match, are the "In the
+   Alliance" ticks right (spot-check a character who left recently - is
+   `last_updated_affiliations` set in production, or does the history
+   always win?), and how long does the job's `description LIKE 'GM [%'` scan over
    the live character journal take (no index serves it)?
 3. Not looked at in a browser yet, only through the tests: the
    Recalculate buttons and the step runs on the real pages (0.4.10 - only
@@ -499,3 +538,10 @@ script runs there.
   touched; dropping them needs the user's yes.
 - **A kept `test_aa_dev`**: a migration rewritten after it was applied
   there, or another branch's schema, needs `eos-test ... --fresh`.
+- **corptools' `CorporationHistory` always has an `EveCharacter`** (it
+  hangs off `CharacterAudit`), so a lookup that starts from
+  `EveCharacter` misses no history - a fallback loop for "history
+  without a character" is dead code.
+- **The GM progress step `characters` is still labelled "Wallet balances
+  and ages"** (`partials/progress.html`), although it now also works out
+  the alliance membership. Left so on purpose to avoid a string change.
