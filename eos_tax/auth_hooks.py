@@ -23,8 +23,14 @@ class EosTaxMenuItem(MenuItemHook):
         )
 
     def render(self, request):
-        if not request.user.has_perm("eos_tax.basic_access"):
+        member = request.user.has_perm("eos_tax.basic_access")
+        if not member and not request.user.has_perm("eos_tax.gm_bots_access"):
             return ""
+
+        if not member:
+            # nothing owed to show to whoever only sees bots and GM bookings
+            self.count = None
+            return MenuItemHook.render(self, request)
 
         # `count` is Alliance Auth's own badge on the menu entry - the same one
         # hrapplications, srp and corptools use. None hides it, so a user with

@@ -1,7 +1,7 @@
 import time
 from datetime import datetime
 
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.contrib import messages
@@ -62,9 +62,32 @@ OVERVIEW_FILTERS = (STATE_OPEN, STATE_PAID, STATE_PROGRESS, "all")
 MIN_YEAR = 1
 MAX_YEAR = 9998
 
+# gm_bots_access opens the bots lists and GM Transactions alone, so every
+# view of those two pages takes either the old permission or the new one
+BOTS_GM_READ = ("eos_tax.admin_view", "eos_tax.gm_bots_access")
+BOTS_GM_WRITE = ("eos_tax.manage_settings", "eos_tax.gm_bots_access")
+
+
+def any_permission_required(perms, raise_exception=False):
+    """permission_required with one of perms instead of all of them."""
+    def check(user):
+        if any(user.has_perm(perm) for perm in perms):
+            return True
+        if raise_exception:
+            raise PermissionDenied
+        return False
+
+    return user_passes_test(check)
+
+
 @login_required
-@permission_required("eos_tax.basic_access")
+@any_permission_required(("eos_tax.basic_access", "eos_tax.gm_bots_access"))
 def index(request):
+    # the menu entry points here; without basic_access there is no overview,
+    # and the login redirect would only send them back
+    if not request.user.has_perm("eos_tax.basic_access"):
+        return redirect("eos_tax:bots")
+
     dates = get_dates()
     characters = get_all_characters_from_user(user=request.user)
     corps = get_all_corps_for_user(characters)
@@ -207,7 +230,7 @@ def tax_changes(request):
 
 
 @login_required
-@permission_required("eos_tax.admin_view")
+@any_permission_required(BOTS_GM_READ)
 def gm_transactions(request):
     """Characters with a GM transaction in their journal, or a wallet below zero."""
     stored = get_stored_gm_report()
@@ -233,9 +256,9 @@ def gm_transactions(request):
 
 
 @login_required
-@permission_required("eos_tax.admin_view")
+@any_permission_required(BOTS_GM_READ)
 # a 403, not the login redirect: fetched by a script, like settings_recalculate
-@permission_required("eos_tax.manage_settings", raise_exception=True)
+@any_permission_required(BOTS_GM_WRITE, raise_exception=True)
 @require_POST
 def gm_transactions_recalculate(request):
     """Queues the GM job alone, not the tax run it normally comes with.
@@ -247,9 +270,9 @@ def gm_transactions_recalculate(request):
 
 
 @login_required
-# a 403, not the login redirect: fetched by gm-transactions.js. admin_view alone -
-# whoever reads the page may annotate it, the user's choice
-@permission_required("eos_tax.admin_view", raise_exception=True)
+# a 403, not the login redirect: fetched by gm-transactions.js. Read access
+# alone - whoever reads the page may annotate it, the user's choice
+@any_permission_required(BOTS_GM_READ, raise_exception=True)
 @require_POST
 def gm_transactions_note(request):
     """Stores the note of one row; answers {"text": <as stored>}."""
@@ -495,7 +518,7 @@ def settings_recalculate(request):
 
 
 @login_required
-@permission_required("eos_tax.admin_view")
+@any_permission_required(BOTS_GM_READ)
 def progress_state(request):
     """The runs for the progress bar; polled while one of them is going.
 
@@ -503,17 +526,31 @@ def progress_state(request):
     was loaded from one it already shows the result of, and the browser's
     own clock may be minutes off.
     """
-    return JsonResponse({"now": time.time(), "runs": progress.get_runs()})
+    runs = progress.get_runs()
+    # the tax runs list every corporation with its outcome - beyond the two
+    # pages gm_bots_access opens
+    if not request.user.has_perm("eos_tax.admin_view"):
+        runs = [run for run in runs if run["kind"] in (progress.BOTS, progress.GM)]
+
+    return JsonResponse({"now": time.time(), "runs": runs})
 
 
 @login_required
-@permission_required("eos_tax.admin_view")
+@any_permission_required(BOTS_GM_READ)
 # taking a run off hides it from every admin, so it is a write as well
-@permission_required("eos_tax.manage_settings", raise_exception=True)
+@any_permission_required(BOTS_GM_WRITE, raise_exception=True)
 @require_POST
 def progress_dismiss(request, run_id):
     """Takes a finished run off the bar - for every admin, not only this one."""
-    if any(run["id"] == run_id and not run["complete"] for run in progress.get_runs()):
+    runs = progress.get_runs()
+    # gm_bots_access does not see the tax runs, so it cannot take one off
+    if not request.user.has_perm("eos_tax.manage_settings") and any(
+        run["id"] == run_id and run["kind"] not in (progress.BOTS, progress.GM)
+        for run in runs
+    ):
+        raise PermissionDenied
+
+    if any(run["id"] == run_id and not run["complete"] for run in runs):
         # a run still going would come back on the next poll of anyone else
         return HttpResponseBadRequest("the run is still going")
 
@@ -540,7 +577,7 @@ def _selected_month(request):
 
 
 @login_required
-@permission_required("eos_tax.admin_view")
+@any_permission_required(BOTS_GM_READ)
 def bot_detail(request, character_id):
     """One character's month, hour by hour, as a calendar."""
     config = get_config()
@@ -580,7 +617,7 @@ def bot_detail(request, character_id):
 
 
 @login_required
-@permission_required("eos_tax.admin_view")
+@any_permission_required(BOTS_GM_READ)
 def bots(request):
     config = get_config()
     selected = _selected_month(request)
@@ -637,8 +674,8 @@ def bots(request):
 
 
 @login_required
-@permission_required("eos_tax.admin_view")
-@permission_required("eos_tax.manage_settings", raise_exception=True)
+@any_permission_required(BOTS_GM_READ)
+@any_permission_required(BOTS_GM_WRITE, raise_exception=True)
 @require_POST
 def bots_recalculate(request):
     """Queues the bots job of one month alone - see
@@ -819,7 +856,7 @@ def _stored_reports(selected, signals):
 
 
 @login_required
-@permission_required("eos_tax.admin_view")
+@any_permission_required(BOTS_GM_READ)
 def bot_signal(request, signal):
     """One sub tab of the bots page, as a fragment.
 
@@ -863,7 +900,7 @@ BOT_SIGNAL_DETAILS = {
 
 
 @login_required
-@permission_required("eos_tax.admin_view")
+@any_permission_required(BOTS_GM_READ)
 def bot_signal_detail(request, signal, character_id):
     """One detection, read for one character, as a fragment.
 

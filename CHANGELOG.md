@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- A new permission `gm_bots_access` opens the bots lists and GM
+  Transactions with everything on them - notes, both Recalculate buttons
+  and the progress bar for those two jobs - and nothing else of the app.
+  Until now hunting bots and GM bookings took `admin_view`, which also
+  shows what every corporation owes, and the buttons took
+  `manage_settings`, which also changes the rates. The app's navigation
+  offers only the two pages, the overview the menu entry points at sends
+  them on to the bots page instead of a login redirect, the menu entry
+  shows no badge, and the progress bar leaves out the tax runs, which
+  list every corporation; a tax run cannot be dismissed with it either.
+  The Overview link now also needs `basic_access`, which its page always
+  did.
+
 ## [0.4.14] - 2026-10-29
 
 ### Added

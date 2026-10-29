@@ -5,28 +5,39 @@
 {% block page_title %}{% translate "Alliance PvE Tax" %}{% endblock %}
 
 {% block header_nav_collapse_left %}
-    {% url "eos_tax:index" as overview_url %}
-    {% translate "Overview" as overview_title %}
-    {% include "eos_tax/partials/nav-item.html" with nav_url=overview_url nav_title=overview_title nav_view="eos_tax:index" %}
+    {# do not offer links that would only redirect #}
+    {% if perms.eos_tax.basic_access %}
+        {% url "eos_tax:index" as overview_url %}
+        {% translate "Overview" as overview_title %}
+        {% include "eos_tax/partials/nav-item.html" with nav_url=overview_url nav_title=overview_title nav_view="eos_tax:index" %}
+    {% endif %}
 
-    {# admin only pages - do not offer links that would only redirect #}
     {% if perms.eos_tax.admin_view %}
         {% url "eos_tax:statistics" as statistics_url %}
         {% translate "Statistics" as statistics_title %}
         {% include "eos_tax/partials/nav-item.html" with nav_url=statistics_url nav_title=statistics_title nav_view="eos_tax:statistics" %}
+    {% endif %}
 
+    {# gm_bots_access opens these two and nothing else #}
+    {% if perms.eos_tax.admin_view or perms.eos_tax.gm_bots_access %}
         {% url "eos_tax:bots" as bots_url %}
         {% translate "Bots" as bots_title %}
         {% include "eos_tax/partials/nav-item.html" with nav_url=bots_url nav_title=bots_title nav_view="eos_tax:bots eos_tax:bot_detail eos_tax:bot_signal" %}
+    {% endif %}
 
+    {% if perms.eos_tax.admin_view %}
         {% url "eos_tax:tax_changes" as tax_changes_url %}
         {% translate "Corp Tax Changes" as tax_changes_title %}
         {% include "eos_tax/partials/nav-item.html" with nav_url=tax_changes_url nav_title=tax_changes_title nav_view="eos_tax:tax_changes eos_tax:tax_change_detail" %}
+    {% endif %}
 
+    {% if perms.eos_tax.admin_view or perms.eos_tax.gm_bots_access %}
         {% url "eos_tax:gm_transactions" as gm_transactions_url %}
         {% translate "GM Transactions" as gm_transactions_title %}
         {% include "eos_tax/partials/nav-item.html" with nav_url=gm_transactions_url nav_title=gm_transactions_title nav_view="eos_tax:gm_transactions" %}
+    {% endif %}
 
+    {% if perms.eos_tax.admin_view %}
         {% url "eos_tax:settings" as settings_url %}
         {% translate "Settings" as settings_title %}
         {% include "eos_tax/partials/nav-item.html" with nav_url=settings_url nav_title=settings_title nav_view="eos_tax:settings" %}
@@ -49,7 +60,7 @@
         {% translate "Alliance PvE Tax" as app_title %}
         {% include "framework/header/page-header.html" with title=app_title subtitle=version %}
 
-        {% if perms.eos_tax.admin_view %}
+        {% if perms.eos_tax.admin_view or perms.eos_tax.gm_bots_access %}
             {% include "eos_tax/partials/progress.html" %}
         {% endif %}
 
@@ -63,7 +74,7 @@
     extra_javascript itself would drop the bar without noticing.
 {% endcomment %}
 {% block extra_javascript %}
-    {% if perms.eos_tax.admin_view %}
+    {% if perms.eos_tax.admin_view or perms.eos_tax.gm_bots_access %}
         {% sri_static "eos_tax/js/progress.js" %}
     {% endif %}
     {% block eos_tax_javascript %}{% endblock %}

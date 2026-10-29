@@ -27,6 +27,10 @@ class General(models.Model):
             ("basic_access", "Can view his corp data"),
             ("admin_view", "Can view all data"),
             ("manage_settings", "Can change settings and recalculate"),
+            # the bots lists and GM Transactions with everything on them,
+            # nothing else of the app - for whoever hunts bots and GM
+            # bookings without seeing what each corporation owes
+            ("gm_bots_access", "Can use the bots and GM Transactions pages"),
         )
 
 

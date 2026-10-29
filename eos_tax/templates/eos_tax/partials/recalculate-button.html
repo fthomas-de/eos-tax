@@ -2,11 +2,11 @@
 {% comment %}
     Queues the job behind the page alone, not the tax run it normally comes
     with; recalculate.js posts it, and the progress bar above shows how far
-    it has got. Only offered with manage_settings - the endpoint refuses
+    it has got. Only offered with manage_settings or gm_bots_access - the endpoint refuses
     everyone else. Takes recalculate_url, and recalculate_month on the bots
     page: the month on screen, not whatever the month field says right now.
 {% endcomment %}
-{% if perms.eos_tax.manage_settings %}
+{% if perms.eos_tax.manage_settings or perms.eos_tax.gm_bots_access %}
     <div class="d-flex align-items-center gap-2 ms-auto" data-eos-recalculate
          data-eos-recalculate-url="{{ recalculate_url }}"
          {% if recalculate_month %}data-eos-recalculate-month="{{ recalculate_month }}"{% endif %}
