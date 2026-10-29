@@ -4,6 +4,7 @@
 {% load sri %}
 
 {% block details %}
+    {% translate "Add a note" as add_note_label %}
 
     <div class="card mb-3">
         <div class="card-header d-flex flex-wrap align-items-center gap-2">
@@ -51,14 +52,15 @@
                         <thead>
                             <tr>
                                 <th scope="col" title="{% translate 'This character or another character of the same Main is in the Alliance' %}">{% translate "In the Alliance" %}</th>
+                                <th scope="col">{% translate "Note" %}</th>
                                 <th scope="col">{% translate "Date" %}</th>
                                 <th scope="col">{% translate "Character" %}</th>
                                 <th scope="col" class="d-none d-lg-table-cell">{% translate "Age" %}</th>
                                 <th scope="col">{% translate "Main" %}</th>
                                 <th scope="col">{% translate "Corporation" %}</th>
                                 <th scope="col">{% translate "Corporation at the time" %}</th>
-                                <th scope="col" class="d-none d-md-table-cell">{% translate "Alliance" %}</th>
                                 <th scope="col" class="d-none d-lg-table-cell">{% translate "Corporations in the Alliance" %}</th>
+                                <th scope="col" class="d-none d-md-table-cell">{% translate "Alliance" %}</th>
                                 <th scope="col" class="text-end">{% translate "Amount" %}</th>
                                 <th scope="col" class="text-end">{% translate "Wallet balance" %}</th>
                                 <th scope="col" class="d-none d-lg-table-cell">{% translate "Description" %}</th>
@@ -84,6 +86,24 @@
                                     {% else %}
                                         <td data-order="0"></td>
                                     {% endif %}
+                                    {% comment %}
+                                        The note only ever reaches the page escaped, as an
+                                        attribute; gm-transactions.js reads and writes it as text.
+                                        The title is the tooltip, the stored note itself.
+                                    {% endcomment %}
+                                    <td data-order="{{ row.note }}" data-search="{{ row.note }}">
+                                        <button type="button"
+                                                class="btn btn-sm {% if row.note %}btn-secondary{% else %}btn-outline-secondary{% endif %}"
+                                                data-bs-toggle="modal" data-bs-target="#eos-tax-gm-note"
+                                                data-eos-note-character="{{ row.character_id }}"
+                                                data-eos-note-entry="{{ row.entry_id }}"
+                                                data-eos-note-name="{{ row.character_name }}"
+                                                data-eos-note="{{ row.note }}"
+                                                title="{% if row.note %}{{ row.note }}{% else %}{{ add_note_label }}{% endif %}">
+                                            <i class="fa-solid fa-note-sticky" aria-hidden="true"></i>
+                                            <span class="visually-hidden">{% translate "Note" %}</span>
+                                        </button>
+                                    </td>
                                     {# a wallet below zero without a GM transaction has no date #}
                                     {% if row.amount is not None %}
                                         <td class="text-nowrap" data-order="{{ row.date|date:'c' }}">{{ row.date|date:"Y-m-d H:i" }}</td>
@@ -113,18 +133,18 @@
                                     {% else %}
                                         <td>&mdash;</td>
                                     {% endif %}
-                                    <td class="d-none d-md-table-cell">{{ row.alliance_name }}</td>
                                     <td class="d-none d-lg-table-cell">{{ row.alliance_corporations|join:", " }}</td>
+                                    <td class="d-none d-md-table-cell">{{ row.alliance_name }}</td>
                                     {# data-order: DataTables cannot sort the grouped digits #}
                                     {% if row.amount is not None %}
                                         <td class="text-end text-nowrap {% if row.amount < 0 %}text-danger{% endif %}"
-                                            data-order="{{ row.amount|unlocalize }}">{{ row.amount|floatformat:"2g" }}</td>
+                                            data-order="{{ row.amount|unlocalize }}">{{ row.amount|floatformat:"0g" }}</td>
                                     {% else %}
                                         <td class="text-end" data-order="0">&mdash;</td>
                                     {% endif %}
                                     {% if row.balance is not None %}
                                         <td class="text-end text-nowrap {% if row.balance < 0 %}text-danger fw-semibold{% endif %}"
-                                            data-order="{{ row.balance|unlocalize }}">{{ row.balance|floatformat:"2g" }}</td>
+                                            data-order="{{ row.balance|unlocalize }}">{{ row.balance|floatformat:"0g" }}</td>
                                     {% else %}
                                         <td class="text-end" data-order="0">&mdash;</td>
                                     {% endif %}
@@ -133,6 +153,43 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                </div>
+
+                {# one popup for every row; gm-transactions.js fills it from the button that opened it #}
+                <div class="modal fade" id="eos-tax-gm-note" tabindex="-1"
+                     aria-labelledby="eos-tax-gm-note-title" aria-hidden="true"
+                     data-eos-note-url="{% url 'eos_tax:gm_transactions_note' %}"
+                     data-eos-label-empty="{{ add_note_label }}"
+                     data-eos-label-error="{% translate 'Could not save the note.' %}">
+                    {% csrf_token %}
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="eos-tax-gm-note-title">
+                                    {% translate "Note" %}: <span data-eos-note-name></span>
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="{% translate 'Cancel' %}"></button>
+                            </div>
+                            <div class="modal-body">
+                                <label for="eos-tax-gm-note-text" class="visually-hidden">{% translate "Note" %}</label>
+                                <textarea class="form-control" id="eos-tax-gm-note-text" rows="3"
+                                          maxlength="{{ note_length }}"></textarea>
+                                <div class="form-text">
+                                    <span data-eos-note-count>0</span> / {{ note_length }}
+                                </div>
+                                <div class="text-danger small" role="alert" data-eos-note-error></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    {% translate "Cancel" %}
+                                </button>
+                                <button type="button" class="btn btn-primary" data-eos-note-save>
+                                    {% translate "Save" %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             {% else %}
                 <div class="alert alert-success text-center">

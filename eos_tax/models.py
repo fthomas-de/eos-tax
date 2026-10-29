@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.conf import settings
 from django.db import models
 
 from django.utils.translation import gettext_lazy as _
@@ -545,3 +546,37 @@ class GmReport(models.Model):
 
     class Meta:
         default_permissions = ()
+
+
+# a short remark, not a case file - the user's limit
+GM_NOTE_LENGTH = 160
+
+
+class GmNote(models.Model):
+    """A reader's note on one row of the GM transactions page.
+
+    A row is a GM transaction, or a wallet below zero without one; the
+    latter has no journal entry and is stored with entry_id 0. Not kept in
+    GmReport: the job replaces that row, and a note must outlive it.
+    """
+
+    character_id = models.BigIntegerField()
+    # 0, not NULL: MySQL lets any number of NULLs past a unique constraint
+    entry_id = models.BigIntegerField(default=0)
+    text = models.CharField(max_length=GM_NOTE_LENGTH)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+
+    class Meta:
+        default_permissions = ()
+        constraints = [
+            models.UniqueConstraint(
+                fields=["character_id", "entry_id"],
+                name="eos_tax_one_gm_note_per_row",
+            ),
+        ]

@@ -14,6 +14,7 @@ from corptools.models import CharacterAudit
 from eos_tax.db.gm_transactions import (
     FLAGGED_PARTY,
     _parties_of,
+    clean_note,
     find_account_in_alliance,
     find_gm_transactions,
     find_in_alliance,
@@ -22,7 +23,7 @@ from eos_tax.db.gm_transactions import (
     sides,
     store_gm_report,
 )
-from eos_tax.models import GmReport
+from eos_tax.models import GM_NOTE_LENGTH, GmNote, GmReport
 from eos_tax.tasks import GM_REPORT_LOCK, run_update_gm_report
 from eos_tax.tests.base import EosTaxTestCase, read_static, table_body
 
@@ -576,7 +577,7 @@ class TestGmView(GmTestCase):
 
         self.assertIn('data-order="400">1 y</td>', body)
 
-    def test_should_show_the_date_first_and_age_and_main_after_the_character(self):
+    def test_should_show_the_note_second_and_age_and_main_after_the_character(self):
         """Header and cells move together - one without the other puts every
         value under the wrong title."""
         EveCharacter.objects.filter(character_id=GM_ID).update(
@@ -591,13 +592,38 @@ class TestGmView(GmTestCase):
         cells = after_character.split("</td>")
 
         self.assertEqual(
-            titles[:6],
-            ["In the Alliance", "Date", "Character", "Age", "Main", "Corporation"],
+            titles[:7],
+            ["In the Alliance", "Note", "Date", "Character", "Age", "Main", "Corporation"],
         )
         self.assertNotIn("Transaction for", titles)
-        self.assertIn(_at(3).strftime("%Y-%m-%d %H:%M"), before_character)
+        self.assertIn("data-eos-note-character", before_character.split("</td>")[1])
+        self.assertIn(_at(3).strftime("%Y-%m-%d %H:%M"), before_character.split("</td>")[2])
         self.assertIn('data-order="400">1 y', cells[0])
         self.assertIn("not registered", cells[1])
+
+    def test_should_show_the_corporations_in_the_alliance_before_the_alliance(self):
+        EveCharacter.objects.filter(character_id=GM_ID).update(alliance_name="Ours")
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+
+        response = self.client.get(self.url)
+        header = response.content.decode().split("<thead>")[1].split("</thead>")[0]
+        titles = [cell.split(">", 1)[1].split("<", 1)[0] for cell in header.split("<th ")[1:]]
+        cells = table_body(response).split("</th>", 1)[1].split("</td>")
+
+        self.assertEqual(titles[8:10], ["Corporations in the Alliance", "Alliance"])
+        # after the Character: Age, Main, Corporation, at the time, then these two
+        self.assertIn('class="d-none d-lg-table-cell">', cells[4])
+        self.assertIn('class="d-none d-md-table-cell">Ours', cells[5])
+
+    def test_should_show_isk_as_whole_numbers_and_sort_by_the_exact_value(self):
+        self.gm.balance = Decimal("1500.49")
+        self.gm.save()
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1234567.89"), _at(3))
+
+        body = table_body(self.client.get(self.url))
+
+        self.assertIn('data-order="-1234567.89">-1,234,568</td>', body)
+        self.assertIn('data-order="1500.49">1,500</td>', body)
 
     def test_should_warn_only_for_a_character_still_in_the_alliance(self):
         add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
@@ -758,3 +784,134 @@ class TestFlaggedParty(EosTaxTestCase):
             self.parties("gm x", "GM Xavier"),
             [("gm x", True, False), ("GM Xavier", True, False)],
         )
+
+
+class TestCleanNote(EosTaxTestCase):
+    def test_should_trim_and_keep_line_breaks(self):
+        self.assertEqual(clean_note("  paid back\r\nsee ticket  "), "paid back\nsee ticket")
+
+    def test_should_drop_control_and_direction_characters(self):
+        """A right-to-left override would make the tooltip read backwards."""
+        self.assertEqual(clean_note("paid\u202e 5\x00\u200b\t"), "paid 5")
+
+    def test_should_keep_markup_as_text(self):
+        """Escaping is the template's job - the note keeps what was typed."""
+        self.assertEqual(clean_note("<b>x</b>"), "<b>x</b>")
+
+    def test_should_refuse_more_than_the_limit(self):
+        self.assertEqual(len(clean_note("x" * GM_NOTE_LENGTH)), GM_NOTE_LENGTH)
+
+        with self.assertRaises(ValueError):
+            clean_note("x" * (GM_NOTE_LENGTH + 1))
+
+
+class TestGmNotes(GmTestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = create_user(
+            "admin", 2100000198, BRAVO_CORP_ID, "Bravo Corp",
+            ["basic_access", "admin_view"],
+        )
+        self.client.force_login(self.user)
+        self.url = reverse("eos_tax:gm_transactions")
+        self.note_url = reverse("eos_tax:gm_transactions_note")
+        self.first = add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        self.second = add_wallet_entry(self.gm, BANK_TEXT, Decimal("-2"), _at(4))
+        store_gm_report()
+
+    def tearDown(self):
+        cache.clear()
+
+    def save(self, text, entry_id=None, character_id=GM_ID):
+        return self.client.post(self.note_url, {
+            "character_id": character_id,
+            "entry_id": self.first.entry_id if entry_id is None else entry_id,
+            "text": text,
+        })
+
+    def note_cells(self):
+        """The second cell of each row, the newest transaction first."""
+        return [
+            row.split("</td>")[1]
+            for row in table_body(self.client.get(self.url)).split("</tr>")[:-1]
+        ]
+
+    def test_should_store_the_note_of_one_row_only(self):
+        response = self.save("refund asked")
+
+        self.assertEqual(response.json(), {"text": "refund asked"})
+        second, first = self.note_cells()
+        self.assertIn('title="refund asked"', first)
+        self.assertIn('data-eos-note="refund asked"', first)
+        self.assertIn('title="Add a note"', second)
+        self.assertEqual(GmNote.objects.get().updated_by, self.user)
+
+    def test_should_replace_the_note_and_remove_it_when_empty(self):
+        self.save("first")
+        self.save("second")
+
+        self.assertEqual(GmNote.objects.get().text, "second")
+
+        self.assertEqual(self.save("   ").json(), {"text": ""})
+        self.assertFalse(GmNote.objects.exists())
+
+    def test_should_escape_the_note_on_the_page(self):
+        self.save('"><script>alert(1)</script>')
+
+        cell = self.note_cells()[1]
+
+        self.assertNotIn("<script>", cell)
+        self.assertIn("&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;", cell)
+
+    def test_should_answer_with_the_cleaned_note(self):
+        """The page shows what was stored, not what was typed."""
+        self.assertEqual(self.save(" a\u202eb ").json(), {"text": "ab"})
+
+    def test_should_refuse_a_note_over_the_limit(self):
+        response = self.save("x" * (GM_NOTE_LENGTH + 1))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(GmNote.objects.exists())
+
+    def test_should_refuse_a_row_the_page_does_not_list(self):
+        self.assertEqual(self.save("x", entry_id=999999).status_code, 400)
+        # the wallet row of a character whose wallet is not below zero
+        self.assertEqual(self.save("x", entry_id=0).status_code, 400)
+        self.assertEqual(self.save("x", entry_id="abc").status_code, 400)
+        self.assertFalse(GmNote.objects.exists())
+
+    def test_should_note_a_wallet_below_zero_without_a_transaction(self):
+        broke = add_character_audit(BROKE_ID, True, name="Broke Pilot")
+        broke.balance = Decimal("-10.00")
+        broke.save()
+
+        self.assertEqual(self.save("owes", entry_id=0, character_id=BROKE_ID).status_code, 200)
+
+        self.assertIn('title="owes"', self.note_cells()[2])
+
+    def test_should_refuse_without_admin_view(self):
+        user = create_user("basic", 2100000197, BRAVO_CORP_ID, "Bravo Corp", ["basic_access"])
+        self.client.force_login(user)
+
+        self.assertEqual(self.save("x").status_code, 403)
+        self.assertFalse(GmNote.objects.exists())
+
+    def test_should_refuse_a_get(self):
+        self.assertEqual(self.client.get(self.note_url).status_code, 405)
+
+    def test_should_offer_the_popup_with_save_and_cancel(self):
+        body = self.client.get(self.url).content.decode()
+        popup = body.split('id="eos-tax-gm-note"')[1].split("</textarea>")[0]
+
+        self.assertIn(f'maxlength="{GM_NOTE_LENGTH}"', popup)
+        self.assertIn("data-eos-note-save", body)
+        self.assertIn('data-bs-dismiss="modal">', body)
+        self.assertIn(f'data-eos-note-url="{self.note_url}"', body)
+
+    def test_script_should_handle_the_note_as_text_only(self):
+        script = read_static("gm-transactions.js")
+
+        self.assertNotIn("innerHTML", script)
+        self.assertNotIn("insertAdjacentHTML", script)
+        self.assertIn("textContent = button.dataset.eosNoteName", script)
+        self.assertIn("button.title = data.text", script)

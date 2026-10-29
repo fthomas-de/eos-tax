@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- GM Transactions has a second column "Note": a button per row opens a
+  popup with a text field, Save and Cancel, for a short note of up to 160
+  characters. The note belongs to the row - one GM transaction, or the
+  wallet row of a character below zero without one - not to the
+  character, so two bookings of the same character carry their own. The
+  saved note is the button's tooltip and is found by the search box.
+  Anyone with `admin_view` may write one. Notes live in a table of their
+  own (migration 0030), because the GM job replaces its report on every
+  run. The note is someone's free text, so it is only ever handled as
+  text: the server trims it, drops control and format characters (a
+  right-to-left override would make the tooltip read backwards), refuses
+  more than 160 characters and any row the page does not list, the
+  template escapes it and the script never writes it as markup. An empty
+  note removes it.
+
+### Changed
+
+- GM Transactions shows "Corporations in the Alliance" before "Alliance",
+  and Amount and Wallet balance as whole ISK. The cents of a GM booking
+  in the billions only made the column wider to read; the sort still uses
+  the exact value.
+
 ## [0.4.12] - 2026-10-29
 
 ### Changed

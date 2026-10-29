@@ -7,6 +7,7 @@ so a job does it (`store_gm_report`) and the page joins what it left with
 what is cheap to read now: balances, mains, Corporations.
 """
 
+import unicodedata
 from collections import Counter, defaultdict
 from decimal import Decimal
 
@@ -25,7 +26,7 @@ from eos_tax import progress
 from eos_tax.app_settings import get_config
 from eos_tax.db.payments import _corporation_at
 from eos_tax.db.shared import character_ages, main_characters
-from eos_tax.models import GmReport, MonthlyTax
+from eos_tax.models import GM_NOTE_LENGTH, GmNote, GmReport, MonthlyTax
 from eos_tax.util import format_age_days
 
 
@@ -303,6 +304,64 @@ def get_stored_gm_report():
     }
 
 
+def clean_note(text):
+    """The note as stored: trimmed, line breaks kept, every other control
+    or format character dropped.
+
+    The template escapes it and the script only ever sets it as text, so
+    markup in a note stays text. What escaping does not catch is a
+    character that changes how the rest reads - a right-to-left override
+    turns "paid 5" into "5 diap" in the tooltip, a zero-width space hides
+    in a name. Those go here.
+    """
+    kept = "".join(
+        char for char in text.replace("\r\n", "\n")
+        if char == "\n" or unicodedata.category(char) not in ("Cc", "Cf")
+    ).strip()
+
+    if len(kept) > GM_NOTE_LENGTH:
+        raise ValueError(f"a note holds at most {GM_NOTE_LENGTH} characters")
+
+    return kept
+
+
+def _is_listed(character_id, entry_id):
+    """Whether the page can show this row - a note nobody can see is only
+    a way to fill the table."""
+    if entry_id:
+        stored = GmReport.objects.filter(pk=1).first()
+
+        return stored is not None and any(
+            row["character_id"] == character_id and row["entry_id"] == entry_id
+            for row in stored.report["transactions"]
+        )
+
+    # the wallet row: below zero now, as the page reads it
+    return character_id in _negative_balances()
+
+
+def save_gm_note(character_id, entry_id, text, user):
+    """Stores the note of one row and returns it as stored; an empty note
+    removes it. ValueError for a row the page does not list or a note too
+    long."""
+    if not _is_listed(character_id, entry_id):
+        raise ValueError("no such row on the page")
+
+    text = clean_note(text)
+
+    if not text:
+        GmNote.objects.filter(character_id=character_id, entry_id=entry_id).delete()
+        return ""
+
+    GmNote.objects.update_or_create(
+        character_id=character_id,
+        entry_id=entry_id,
+        defaults={"text": text, "updated_by": user},
+    )
+
+    return text
+
+
 def _alliance_corporation_ids(config):
     """Corporations of the configured alliances, now or in any taxed month.
 
@@ -414,6 +473,12 @@ def get_gm_page(stored):
     # only a transaction has a moment to look the Corporation up at
     periods, corporation_names = _corporation_periods(with_transaction)
     player_names = _player_names(transactions)
+    notes = {
+        (character_id, entry_id): text
+        for character_id, entry_id, text in GmNote.objects.filter(
+            character_id__in=character_ids
+        ).values_list("character_id", "entry_id", "text")
+    }
 
     def corporation_then(character_id, transaction):
         if not transaction:
@@ -432,6 +497,8 @@ def get_gm_page(stored):
 
         return {
             "character_id": character_id,
+            # 0 for the wallet row - see GmNote
+            "entry_id": transaction["entry_id"] if transaction else 0,
             # as of the job's run; None for a character it did not know or
             # did not see, which is not the same as "left"
             "in_alliance": in_alliance.get(character_id),
@@ -453,6 +520,9 @@ def get_gm_page(stored):
             "named_character": named,
             "counterparty": other,
             "description": transaction["description"] if transaction else "",
+            "note": notes.get(
+                (character_id, transaction["entry_id"] if transaction else 0), ""
+            ),
         }
 
     rows = [row_for(row["character_id"], row) for row in transactions]
@@ -465,6 +535,7 @@ def get_gm_page(stored):
     return {
         "rows": rows,
         "parties": _parties_of(rows),
+        "note_length": GM_NOTE_LENGTH,
         "stats": {
             "transactions": len(transactions),
             "characters": len({row["character_id"] for row in rows}),

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-29 15:43+0000\n"
+"POT-Creation-Date: 2026-10-29 16:04+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -50,61 +50,61 @@ msgstr ""
 msgid "Rate (%)"
 msgstr "Ставка (%)"
 
-#: models.py:44
+#: models.py:45
 msgid "Taxed alliances"
 msgstr "Облагаемые Alliances"
 
-#: models.py:45
+#: models.py:46
 msgid "Corporations of these alliances are taxed."
 msgstr "Corporations этих Alliances облагаются налогом."
 
-#: models.py:53
+#: models.py:54
 msgid "Holding corporation"
 msgstr "Holding Corporation"
 
-#: models.py:54
+#: models.py:55
 msgid "The single corporation that receives the tax payments."
 msgstr "Единственная Corporation, которая получает налоговые выплаты."
 
-#: models.py:60
+#: models.py:61
 msgid "Excluded corporations"
 msgstr "Исключённые Corporations"
 
-#: models.py:61
+#: models.py:62
 msgid "Never taxed and never listed, even inside a taxed alliance."
 msgstr ""
 "Никогда не облагаются и не отображаются, даже внутри облагаемой Alliance."
 
-#: models.py:64 models.py:366
+#: models.py:65 models.py:367
 msgid "Alliance tax rate"
 msgstr "Ставка налога Alliance"
 
-#: models.py:69
+#: models.py:70
 msgid "Share of the gross PvE income a corporation owes. 0.1 means 10 percent."
 msgstr ""
 "Доля валового дохода PvE, которую Corporation обязана уплатить. 0,1 означает "
 "10 процентов."
 
-#: models.py:72
+#: models.py:73
 msgid "Taxed journal types"
 msgstr "Облагаемые типы Journal"
 
-#: models.py:75
+#: models.py:76
 msgid ""
 "Wallet journal ref_types counted as PvE income, for example bounty_prizes."
 msgstr ""
 "Значения ref_type из Wallet Journal, считающиеся доходом PvE, например "
 "bounty_prizes."
 
-#: models.py:79
+#: models.py:80
 msgid "Include the previous month in calculations and on the overview."
 msgstr "Учитывать прошлый месяц в расчётах и в обзоре."
 
-#: models.py:83
+#: models.py:84
 msgid "Include the running month in calculations and on the overview."
 msgstr "Учитывать текущий месяц в расчётах и в обзоре."
 
-#: models.py:88
+#: models.py:89
 msgid ""
 "Match payments by their reason code instead of by amount alone. With it "
 "every payment carrying the code counts, so a corporation can pay in parts, "
@@ -118,11 +118,11 @@ msgstr ""
 "точной сумме, поэтому две corporation, должные одну и ту же сумму, или одна "
 "corporation, должная её дважды, неразличимы."
 
-#: models.py:97
+#: models.py:98
 msgid "Income that needs a wallet audit (million ISK)"
 msgstr "Доход, с которого нужен аудит wallet (млн ISK)"
 
-#: models.py:101
+#: models.py:102
 msgid ""
 "A character whose bounties reach the corporation wallet but not through a "
 "member wallet is listed on the overview once this much gross income a month "
@@ -134,11 +134,11 @@ msgstr ""
 "такой валовый доход за месяц. Без wallet участника период без ingame tax для "
 "этого Character не виден."
 
-#: models.py:109
+#: models.py:110
 msgid "Smallest payment difference worth flagging (million ISK)"
 msgstr "Наименьшее отмечаемое расхождение платежа (млн ISK)"
 
-#: models.py:113
+#: models.py:114
 msgid ""
 "A payment at least this much above or below the amount owed gets a badge "
 "next to the amount paid on the overview; a smaller difference is shown "
@@ -148,11 +148,11 @@ msgstr ""
 "получает значок рядом с уплаченной суммой в обзоре; меньшее расхождение "
 "показывается без него. 0 отмечает любое расхождение."
 
-#: models.py:119
+#: models.py:120
 msgid "Smallest move worth listing"
 msgstr "Наименьшее изменение в списке"
 
-#: models.py:126
+#: models.py:127
 msgid ""
 "In percentage points of the share of the bounty that reaches the "
 "corporation. A move smaller than this is not listed, and days within it "
@@ -162,11 +162,11 @@ msgstr ""
 "показывается, а дни в пределах этого диапазона считаются одним уровнем. С "
 "девяти процентов до десяти — один пункт."
 
-#: models.py:132
+#: models.py:133
 msgid "Shortest run listed"
 msgstr "Кратчайшая серия в списке"
 
-#: models.py:136
+#: models.py:137
 msgid ""
 "How many payouts in a row a character has to collect without a break before "
 "the run is listed. The game pays a ratter about every twenty minutes, so "
@@ -176,11 +176,11 @@ msgstr ""
 "серия попадёт в список. Игра платит охотнику на NPC примерно каждые двадцать "
 "минут, так что восемнадцать - это примерно шесть часов."
 
-#: models.py:142
+#: models.py:143
 msgid "Interruptions allowed"
 msgstr "Допустимые перерывы"
 
-#: models.py:146
+#: models.py:147
 msgid ""
 "How many breaks a run may contain and still count as one. A daily downtime "
 "would otherwise cut every long night in two. Only a break under an hour can "
@@ -190,11 +190,11 @@ msgstr ""
 "ежедневный технический перерыв разрезал бы пополам каждую долгую ночь. "
 "Прощается только перерыв короче часа; более длинный всегда обрывает серию."
 
-#: models.py:153
+#: models.py:154
 msgid "Longest gap that still counts as the same tick"
 msgstr "Наибольший промежуток, всё ещё считающийся тем же тиком"
 
-#: models.py:157
+#: models.py:158
 msgid ""
 "In minutes. The game pays about every twenty minutes and the tick slips, so "
 "a little more than twenty leaves room for that without calling an unbroken "
@@ -204,11 +204,11 @@ msgstr ""
 "поэтому чуть больше двадцати даёт запас, не считая непрерывную серию "
 "прерванной."
 
-#: models.py:163
+#: models.py:164
 msgid "Longest break a run can survive"
 msgstr "Наибольший перерыв, который переживает серия"
 
-#: models.py:167
+#: models.py:168
 msgid ""
 "In minutes. A break longer than this ends the run whatever the allowance "
 "above says. Without a ceiling one allowance would weld a morning and an "
@@ -218,11 +218,11 @@ msgstr ""
 "выше. Без потолка один разрешённый перерыв сварил бы утро и вечер в одну "
 "двенадцатичасовую серию."
 
-#: models.py:173
+#: models.py:174
 msgid "Length of the busy window"
 msgstr "Длина окна активности"
 
-#: models.py:177
+#: models.py:178
 msgid ""
 "How many hours of the day count as the corporation's busy window. A "
 "character spread evenly over the clock lands on this share of any window, "
@@ -232,11 +232,11 @@ msgstr ""
 "равномерно распределённый по циферблату, попадает в эту долю любого окна - "
 "это нижняя граница, до которой опускается оценка."
 
-#: models.py:183 models.py:257
+#: models.py:184 models.py:258
 msgid "Smallest character worth reading"
 msgstr "Наименьший character, пригодный для чтения"
 
-#: models.py:187
+#: models.py:188
 msgid ""
 "Below this many payouts in the month a character has too little of a day to "
 "describe, and is left out of this reading."
@@ -244,11 +244,11 @@ msgstr ""
 "Ниже этого числа выплат за месяц у character слишком мало суток, чтобы их "
 "описать, и он не попадает в это измерение."
 
-#: models.py:192 models.py:266
+#: models.py:193 models.py:267
 msgid "Smallest usable yardstick"
 msgstr "Наименьший пригодный эталон"
 
-#: models.py:196
+#: models.py:197
 msgid ""
 "How many payouts have to be left in the corporation once the character's own "
 "are taken out. Below this there is no rhythm to compare against, only noise, "
@@ -258,11 +258,11 @@ msgstr ""
 "выплат character. Ниже этого сравнивать не с чем, только шум, и character не "
 "оценивается."
 
-#: models.py:202 models.py:236
+#: models.py:203 models.py:237
 msgid "Leave flagged characters out of the yardstick"
 msgstr "Исключать отмеченных characters из эталона"
 
-#: models.py:205
+#: models.py:206
 msgid ""
 "A character flat enough to be listed is also part of their corporation's "
 "day, and drags it flat with them - which makes everybody else look ordinary. "
@@ -276,11 +276,11 @@ msgstr ""
 "дважды: один раз, чтобы их найти, один раз - без них. Corporation, которая "
 "опустилась бы ниже указанного выше порога, сохраняет простое значение."
 
-#: models.py:214
+#: models.py:215
 msgid "Smallest difference listed"
 msgstr "Наименьшее отклонение в списке"
 
-#: models.py:218
+#: models.py:219
 msgid ""
 "In percentage points. How much flatter than the rest of their corporation a "
 "character has to be before the list mentions them. A negative difference "
@@ -293,11 +293,11 @@ msgstr ""
 "corporation, - противоположность тому, что здесь ищут, поэтому такие никогда "
 "не попадают в список, что бы здесь ни стояло."
 
-#: models.py:226
+#: models.py:227
 msgid "Distance counted as a full deviation"
 msgstr "Расстояние, считающееся полным отклонением"
 
-#: models.py:230
+#: models.py:231
 msgid ""
 "In hours. Twelve is as far apart as two times of day can be, so the default "
 "treats the whole clock as the scale. A smaller value makes the colouring "
@@ -307,7 +307,7 @@ msgstr ""
 "поэтому по умолчанию шкалой служат целые сутки. Меньшее значение заставляет "
 "окраску раньше доходить до красного."
 
-#: models.py:239
+#: models.py:240
 msgid ""
 "The same for this reading: a character far enough from their corporation to "
 "be listed also pulls the corporation's own middle of the day towards "
@@ -317,11 +317,11 @@ msgstr ""
 "corporation, чтобы попасть в список, также притягивает к себе собственную "
 "середину дня corporation, что сокращает расстояние для всех остальных."
 
-#: models.py:246
+#: models.py:247
 msgid "Smallest distance listed"
 msgstr "Наименьшее расстояние в списке"
 
-#: models.py:250
+#: models.py:251
 msgid ""
 "In hours. How far from their corporation a character's day has to sit before "
 "the list mentions them. A third of the scale above is where the colouring "
@@ -333,7 +333,7 @@ msgstr ""
 "раскраска перестаёт называть расстояние незаметным, так что порог ниже неё "
 "пускает в список зелёные строки."
 
-#: models.py:261
+#: models.py:262
 msgid ""
 "Below this many payouts in the month the middle of a character's day is "
 "wherever the noise landed, so they are left out."
@@ -341,7 +341,7 @@ msgstr ""
 "Ниже этого числа выплат за месяц середина суток character оказывается там, "
 "куда лёг шум, поэтому он не учитывается."
 
-#: models.py:270
+#: models.py:271
 msgid ""
 "How many payouts have to be left in the corporation once the character's own "
 "are taken out, before its middle of the day is worth comparing against."
@@ -349,11 +349,11 @@ msgstr ""
 "Сколько выплат должно остаться у corporation после вычитания собственных "
 "выплат character, прежде чем её середину дня стоит сравнивать."
 
-#: models.py:276
+#: models.py:277
 msgid "Least concentrated day with a middle"
 msgstr "Наименее сконцентрированный день, у которого ещё есть середина"
 
-#: models.py:280
+#: models.py:281
 msgid ""
 "In percent. How closely the payouts have to gather around one time of day "
 "before that day has a middle: 100 when all of them fall into one hour, 0 for "
@@ -370,11 +370,11 @@ msgstr ""
 "corporation - середина оказалась бы там, куда её поставило округление, "
 "поэтому character исключается из этого показателя."
 
-#: models.py:290
+#: models.py:291
 msgid "Entries before an hour counts as active"
 msgstr "Записей, чтобы час считался активным"
 
-#: models.py:294
+#: models.py:295
 msgid ""
 "A single entry is noise - a stray bounty tick, one ESS payout. The game pays "
 "about every twenty minutes, so an hour of uninterrupted play holds three; "
@@ -386,11 +386,11 @@ msgstr ""
 "два выбрано намеренно мягким, потому что игру прерывают, а пропуск обходится "
 "дешевле, чем обвинение игрока."
 
-#: models.py:302
+#: models.py:303
 msgid "Hours in a day before it counts"
 msgstr "Часов в сутках, чтобы они засчитывались"
 
-#: models.py:306
+#: models.py:307
 msgid ""
 "A day counts as suspicious when a character earned taxed income in more than "
 "this many different hours of that day."
@@ -398,11 +398,11 @@ msgstr ""
 "День считается подозрительным, если Character получил облагаемый доход более "
 "чем в указанном числе разных часов этих суток."
 
-#: models.py:311
+#: models.py:312
 msgid "Days in a month before a character is listed"
 msgstr "Дней в месяце, чтобы character попал в список"
 
-#: models.py:315
+#: models.py:316
 msgid ""
 "A character is listed once it reaches this many suspicious days within the "
 "selected month."
@@ -410,65 +410,65 @@ msgstr ""
 "Character попадает в список, как только достигает этого числа подозрительных "
 "дней за выбранный месяц."
 
-#: models.py:321
+#: models.py:322
 msgid "Tax configuration"
 msgstr "Настройка налога"
 
-#: models.py:361 templates/eos_tax/settings.html:115
+#: models.py:362 templates/eos_tax/settings.html:115
 msgid "Valid from"
 msgstr "Действует с"
 
-#: models.py:363
+#: models.py:364
 msgid "First month this rate applies to. Stored as the first of that month."
 msgstr ""
 "Первый месяц действия ставки. Сохраняется как первое число этого месяца."
 
-#: models.py:370
+#: models.py:371
 msgid "Share of the gross PvE income. 0.1 means 10 percent."
 msgstr "Доля валового дохода PvE. 0,1 означает 10 процентов."
 
-#: models.py:375
+#: models.py:376
 msgid "Tax rate"
 msgstr "Ставка налога"
 
-#: models.py:376 templates/eos_tax/settings.html:92
+#: models.py:377 templates/eos_tax/settings.html:92
 msgid "Tax rate schedule"
 msgstr "Расписание ставок"
 
-#: models.py:389
+#: models.py:390
 msgid "Corporation ID"
 msgstr "ID Corporation"
 
-#: models.py:390
+#: models.py:391
 msgid "Taxed month"
 msgstr "Облагаемый месяц"
 
-#: models.py:391
+#: models.py:392
 msgid "Taxed year"
 msgstr "Облагаемый год"
 
-#: models.py:392
+#: models.py:393
 msgid "Corporation name"
 msgstr "Название Corporation"
 
-#: models.py:393
+#: models.py:394
 msgid "Tax value"
 msgstr "Сумма налога"
 
-#: models.py:394
+#: models.py:395
 msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
-#: models.py:395 templates/eos_tax/index.html:33
+#: models.py:396 templates/eos_tax/index.html:33
 #: templates/eos_tax/index.html:56 templates/eos_tax/index.html:172
 msgid "Paid"
 msgstr "Оплачено"
 
-#: models.py:412
+#: models.py:413
 msgid "Applied alliance tax rate"
 msgstr "Применённая ставка Alliance"
 
-#: models.py:415
+#: models.py:416
 msgid ""
 "Alliance rate in effect when this row was calculated. Stored per row so "
 "changing the rate does not rewrite what past months were owed."
@@ -476,11 +476,11 @@ msgstr ""
 "Ставка Alliance, действовавшая при расчёте этой строки. Хранится по строкам, "
 "чтобы изменение ставки не переписывало задолженность прошлых месяцев."
 
-#: models.py:421
+#: models.py:422
 msgid "Amount to pay"
 msgstr "Сумма к оплате"
 
-#: models.py:424
+#: models.py:425
 msgid ""
 "ISK owed to the alliance for this month, in whole ISK. Worked out from "
 "tax_value, tax_percentage and alliance_tax_rate whenever the row is written, "
@@ -492,11 +492,11 @@ msgstr ""
 "хранится вместе с ними - страница, график и проверка платежей читают его, а "
 "не пересчитывают."
 
-#: models.py:432
+#: models.py:433
 msgid "Amount paid"
 msgstr "Оплаченная сумма"
 
-#: models.py:436
+#: models.py:437
 msgid ""
 "ISK the payment check found for this month, in whole ISK: with reason codes "
 "every payment carrying this row's code added up, without them the amount "
@@ -507,19 +507,19 @@ msgstr ""
 "reason — сумма всех платежей с кодом этой строки, без них — сумма к оплате, "
 "как только появился платёж ровно на эту сумму. Пусто, пока платёж не замечен."
 
-#: models.py:444 templates/eos_tax/settings.html:86
+#: models.py:445 templates/eos_tax/settings.html:86
 msgid "Payments"
 msgstr "Платежи"
 
-#: models.py:446
+#: models.py:447
 msgid "How many payments the amount paid is made of."
 msgstr "Из скольких платежей состоит оплаченная сумма."
 
-#: models.py:450
+#: models.py:451
 msgid "Gross PvE income"
 msgstr "Валовый доход PvE"
 
-#: models.py:454
+#: models.py:455
 msgid ""
 "Bounties earned this month before any corp tax, in whole ISK: the "
 "corporation wallet reconciled with the member wallets, so a stretch without "
@@ -531,11 +531,11 @@ msgstr ""
 "ingame tax. Из него рассчитывается сумма к оплате. Пусто в строках, "
 "записанных до того, как он сохранялся."
 
-#: models.py:462 templates/eos_tax/index.html:57
+#: models.py:463 templates/eos_tax/index.html:57
 msgid "Characters without wallet audit"
 msgstr "Characters без аудита wallet"
 
-#: models.py:466
+#: models.py:467
 msgid ""
 "Characters whose bounties this month showed up in the corporation wallet "
 "only, at or above the configured income, as [{id, name, gross}], highest "
@@ -545,11 +545,11 @@ msgstr ""
 "начиная с заданного дохода, в виде [{id, name, gross}], сначала самый "
 "высокий."
 
-#: models.py:473 templates/eos_tax/index.html:58
+#: models.py:474 templates/eos_tax/index.html:58
 msgid "Calculation time"
 msgstr "Время расчёта"
 
-#: models.py:477
+#: models.py:478
 msgid ""
 "How long the last calculation of this month took, in seconds - reading both "
 "journals, the reconciliation and the payment check. Empty on rows written "
@@ -559,11 +559,11 @@ msgstr ""
 "journal, сверка и проверка платежей. Пусто в строках, записанных до того, "
 "как оно сохранялось."
 
-#: models.py:484
+#: models.py:485
 msgid "Payment date"
 msgstr "Дата платежа"
 
-#: models.py:488
+#: models.py:489
 msgid ""
 "Journal date of the transfer that settled this month: the one of exactly the "
 "amount owed, or the one that brought the payments up to it. Empty until a "
@@ -573,11 +573,11 @@ msgstr ""
 "причитающуюся сумму или того, с которым платежи её достигли. Пусто, пока "
 "строка не оплачена."
 
-#: models.py:495
+#: models.py:496
 msgid "Recorded as paid"
 msgstr "Записано как оплаченное"
 
-#: models.py:499
+#: models.py:500
 msgid ""
 "When the payment check first marked this month as paid. Empty on rows marked "
 "paid before it was stored."
@@ -593,7 +593,7 @@ msgstr "Обзор"
 msgid "Statistics"
 msgstr "Статистика"
 
-#: templates/eos_tax/base.html:19 views.py:587
+#: templates/eos_tax/base.html:19 views.py:608
 msgid "Bots"
 msgstr "Боты"
 
@@ -606,7 +606,7 @@ msgstr "Corp Tax Changes"
 msgid "GM Transactions"
 msgstr "GM-транзакции"
 
-#: templates/eos_tax/base.html:31 views.py:349
+#: templates/eos_tax/base.html:31 views.py:370
 msgid "Settings"
 msgstr "Настройки"
 
@@ -725,7 +725,7 @@ msgstr "всего"
 msgid "This character had no active hour in the selected month."
 msgstr "У этого character не было активных часов в выбранном месяце."
 
-#: templates/eos_tax/bots.html:27 templates/eos_tax/gm-transactions.html:55
+#: templates/eos_tax/bots.html:27 templates/eos_tax/gm-transactions.html:57
 #: templates/eos_tax/partials/bot-audit.html:14
 #: templates/eos_tax/partials/bot-clock-detail.html:32
 #: templates/eos_tax/partials/bot-clock.html:26
@@ -805,7 +805,11 @@ msgstr "база данных"
 msgid "aggregation"
 msgstr "агрегация"
 
-#: templates/eos_tax/gm-transactions.html:17
+#: templates/eos_tax/gm-transactions.html:7
+msgid "Add a note"
+msgstr "Добавить заметку"
+
+#: templates/eos_tax/gm-transactions.html:18
 msgid ""
 "Characters with a GM transaction in their own wallet journal, and characters "
 "whose wallet is below zero right now. The transactions are looked up by a "
@@ -817,7 +821,7 @@ msgstr ""
 "всему journal; балансы wallet, mains и Corporations читаются при загрузке "
 "страницы."
 
-#: templates/eos_tax/gm-transactions.html:23
+#: templates/eos_tax/gm-transactions.html:24
 msgid ""
 "The GM transactions are being looked up in the background. This page reloads "
 "by itself once they are ready."
@@ -825,28 +829,35 @@ msgstr ""
 "GM-транзакции ищутся в фоне. Страница перезагрузится сама, как только они "
 "будут готовы."
 
-#: templates/eos_tax/gm-transactions.html:29
+#: templates/eos_tax/gm-transactions.html:30
 msgid "Counterparty"
 msgstr "Контрагент"
 
-#: templates/eos_tax/gm-transactions.html:39
+#: templates/eos_tax/gm-transactions.html:40
 msgid "No counterparty"
 msgstr "Нет контрагента"
 
-#: templates/eos_tax/gm-transactions.html:53
+#: templates/eos_tax/gm-transactions.html:54
 msgid "This character or another character of the same Main is in the Alliance"
 msgstr "Этот character или другой character того же Main состоит в Alliance"
 
-#: templates/eos_tax/gm-transactions.html:53
-#: templates/eos_tax/gm-transactions.html:81
+#: templates/eos_tax/gm-transactions.html:54
+#: templates/eos_tax/gm-transactions.html:83
 msgid "In the Alliance"
 msgstr "В Alliance"
 
-#: templates/eos_tax/gm-transactions.html:54
+#: templates/eos_tax/gm-transactions.html:55
+#: templates/eos_tax/gm-transactions.html:106
+#: templates/eos_tax/gm-transactions.html:172
+#: templates/eos_tax/gm-transactions.html:178
+msgid "Note"
+msgstr "Заметка"
+
+#: templates/eos_tax/gm-transactions.html:56
 msgid "Date"
 msgstr "Дата"
 
-#: templates/eos_tax/gm-transactions.html:56
+#: templates/eos_tax/gm-transactions.html:58
 #: templates/eos_tax/partials/bot-audit.html:20
 #: templates/eos_tax/partials/bot-clock.html:29
 #: templates/eos_tax/partials/bot-rhythm.html:29
@@ -855,7 +866,7 @@ msgstr "Дата"
 msgid "Age"
 msgstr "Возраст"
 
-#: templates/eos_tax/gm-transactions.html:57
+#: templates/eos_tax/gm-transactions.html:59
 #: templates/eos_tax/partials/bot-audit.html:18
 #: templates/eos_tax/partials/bot-clock.html:28
 #: templates/eos_tax/partials/bot-rhythm.html:28
@@ -864,7 +875,7 @@ msgstr "Возраст"
 msgid "Main"
 msgstr "Main"
 
-#: templates/eos_tax/gm-transactions.html:58 templates/eos_tax/index.html:49
+#: templates/eos_tax/gm-transactions.html:60 templates/eos_tax/index.html:49
 #: templates/eos_tax/partials/bot-audit.html:16
 #: templates/eos_tax/partials/bot-clock-detail.html:33
 #: templates/eos_tax/partials/bot-clock.html:27
@@ -877,42 +888,55 @@ msgstr "Main"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: templates/eos_tax/gm-transactions.html:59
+#: templates/eos_tax/gm-transactions.html:61
 msgid "Corporation at the time"
 msgstr "Corporation на тот момент"
 
-#: templates/eos_tax/gm-transactions.html:60
+#: templates/eos_tax/gm-transactions.html:62
+msgid "Corporations in the Alliance"
+msgstr "Corporations в Alliance"
+
+#: templates/eos_tax/gm-transactions.html:63
 #: templates/eos_tax/statistics.html:26
 msgid "Alliance"
 msgstr "Alliance"
 
-#: templates/eos_tax/gm-transactions.html:61
-msgid "Corporations in the Alliance"
-msgstr "Corporations в Alliance"
-
-#: templates/eos_tax/gm-transactions.html:62
+#: templates/eos_tax/gm-transactions.html:64
 msgid "Amount"
 msgstr "Сумма"
 
-#: templates/eos_tax/gm-transactions.html:63
+#: templates/eos_tax/gm-transactions.html:65
 msgid "Wallet balance"
 msgstr "Баланс wallet"
 
-#: templates/eos_tax/gm-transactions.html:64
+#: templates/eos_tax/gm-transactions.html:66
 msgid "Description"
 msgstr "Описание"
 
-#: templates/eos_tax/gm-transactions.html:108
+#: templates/eos_tax/gm-transactions.html:129
 #: templates/eos_tax/partials/bot-character-cells.html:20
 msgid "not registered"
 msgstr "не зарегистрирован"
 
-#: templates/eos_tax/gm-transactions.html:141
+#: templates/eos_tax/gm-transactions.html:166
+msgid "Could not save the note."
+msgstr "Не удалось сохранить заметку."
+
+#: templates/eos_tax/gm-transactions.html:175
+#: templates/eos_tax/gm-transactions.html:188
+msgid "Cancel"
+msgstr "Отмена"
+
+#: templates/eos_tax/gm-transactions.html:191
+msgid "Save"
+msgstr "Сохранить"
+
+#: templates/eos_tax/gm-transactions.html:199
 msgid "No GM transaction in any character journal, and no wallet below zero."
 msgstr ""
 "Ни одной GM-транзакции в journal characters и ни одного wallet ниже нуля."
 
-#: templates/eos_tax/gm-transactions.html:147
+#: templates/eos_tax/gm-transactions.html:205
 #, python-format
 msgid "%(counter)s GM transaction"
 msgid_plural "%(counter)s GM transactions"
@@ -920,7 +944,7 @@ msgstr[0] "%(counter)s GM-транзакция"
 msgstr[1] "%(counter)s GM-транзакции"
 msgstr[2] "%(counter)s GM-транзакций"
 
-#: templates/eos_tax/gm-transactions.html:148
+#: templates/eos_tax/gm-transactions.html:206
 #, python-format
 msgid "%(counter)s wallet below zero"
 msgid_plural "%(counter)s wallets below zero"
@@ -928,7 +952,7 @@ msgstr[0] "%(counter)s wallet ниже нуля"
 msgstr[1] "%(counter)s wallet ниже нуля"
 msgstr[2] "%(counter)s wallet ниже нуля"
 
-#: templates/eos_tax/gm-transactions.html:149
+#: templates/eos_tax/gm-transactions.html:207
 #: templates/eos_tax/partials/bot-clock.html:72
 #: templates/eos_tax/partials/bot-group-header.html:14
 #: templates/eos_tax/partials/bot-rhythm.html:72
@@ -1111,28 +1135,28 @@ msgstr "Оценка"
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:8
 #: templates/eos_tax/partials/progress.html:23
-#: templates/eos_tax/settings.html:243 views.py:653
+#: templates/eos_tax/settings.html:243 views.py:674
 msgid "Hours per day"
 msgstr "Часов в сутки"
 
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:15
 #: templates/eos_tax/partials/progress.html:24
-#: templates/eos_tax/settings.html:258 views.py:654
+#: templates/eos_tax/settings.html:258 views.py:675
 msgid "Unbroken runs"
 msgstr "Непрерывные серии"
 
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:22
 #: templates/eos_tax/partials/progress.html:25
-#: templates/eos_tax/settings.html:275 views.py:655
+#: templates/eos_tax/settings.html:275 views.py:676
 msgid "Against the Corporation"
 msgstr "В такт Corporation"
 
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:29
 #: templates/eos_tax/partials/progress.html:26
-#: templates/eos_tax/settings.html:293 views.py:656
+#: templates/eos_tax/settings.html:293 views.py:677
 msgid "Off the Corporation clock"
 msgstr "Вне часов Corporation"
 
@@ -1289,7 +1313,7 @@ msgstr "Разница"
 
 #: templates/eos_tax/partials/bot-clock.html:33
 #: templates/eos_tax/partials/bot-rhythm.html:33
-#: templates/eos_tax/tax-changes.html:73 views.py:272
+#: templates/eos_tax/tax-changes.html:73 views.py:293
 msgid "Payouts"
 msgstr "Выплаты"
 
@@ -1609,7 +1633,7 @@ msgstr "Средний день (часов)"
 msgid "Contributed tax"
 msgstr "Внесённый налог"
 
-#: templates/eos_tax/partials/bot-tabs.html:38 views.py:657
+#: templates/eos_tax/partials/bot-tabs.html:38 views.py:678
 msgid "Without current audit"
 msgstr "Без актуального аудита"
 
@@ -2293,7 +2317,7 @@ msgstr "Изменение доли"
 msgid "On"
 msgstr "Дата"
 
-#: templates/eos_tax/tax-changes.html:72 views.py:273
+#: templates/eos_tax/tax-changes.html:72 views.py:294
 msgid "Systems"
 msgstr "Системы"
 
@@ -2366,7 +2390,7 @@ msgstr "Corporation:"
 msgid "Filter by corporation name"
 msgstr "Фильтр по названию Corporation"
 
-#: views.py:129 views.py:554 views.py:608
+#: views.py:129 views.py:575 views.py:629
 msgid "Loading…"
 msgstr "Загрузка…"
 
@@ -2418,23 +2442,23 @@ msgstr "Название Corporation или ставка, например 0 и�
 msgid "Character, Corporation or Main"
 msgstr "Character, Corporation или Main"
 
-#: views.py:271
+#: views.py:292
 msgid "Share of the bounty in percent"
 msgstr "Доля bounty в процентах"
 
-#: views.py:314
+#: views.py:335
 msgid "Settings saved."
 msgstr "Настройки сохранены."
 
-#: views.py:362
+#: views.py:383
 msgid "Calculating…"
 msgstr "Вычисление…"
 
-#: views.py:363
+#: views.py:384
 msgid "Could not recalculate this month."
 msgstr "Не удалось пересчитать этот месяц."
 
-#: views.py:555 views.py:609
+#: views.py:576 views.py:630
 msgid "Could not load this view."
 msgstr "Не удалось загрузить этот раздел."
 

@@ -31,7 +31,7 @@ from eos_tax.db.bot_signals import (
     get_rhythm_detail,
     get_run_detail,
 )
-from eos_tax.db.gm_transactions import get_gm_page, get_stored_gm_report
+from eos_tax.db.gm_transactions import get_gm_page, get_stored_gm_report, save_gm_note
 from eos_tax.db.payments import (
     STATE_OPEN,
     STATE_PAID,
@@ -244,6 +244,27 @@ def gm_transactions_recalculate(request):
     bar shows that one.
     """
     return JsonResponse({"queued": queue_gm_report()})
+
+
+@login_required
+# a 403, not the login redirect: fetched by gm-transactions.js. admin_view alone -
+# whoever reads the page may annotate it, the user's choice
+@permission_required("eos_tax.admin_view", raise_exception=True)
+@require_POST
+def gm_transactions_note(request):
+    """Stores the note of one row; answers {"text": <as stored>}."""
+    try:
+        character_id = int(request.POST.get("character_id", ""))
+        entry_id = int(request.POST.get("entry_id", ""))
+    except ValueError:
+        return HttpResponseBadRequest("character_id and entry_id must be numbers")
+
+    try:
+        text = save_gm_note(character_id, entry_id, request.POST.get("text", ""), request.user)
+    except ValueError as error:
+        return HttpResponseBadRequest(str(error))
+
+    return JsonResponse({"text": text})
 
 
 @login_required
