@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.12] - 2026-10-29
+
 ### Changed
 
 - "In the Alliance" on GM Transactions now looks at the whole account, and

@@ -8,14 +8,25 @@ Last updated 2026-10-29.
 
 ## Release
 
-- Version **0.4.11** in `eos_tax/__init__.py`, released 2026-10-29
+- Version **0.4.12** in `eos_tax/__init__.py`, released 2026-10-29
+- `[0.4.12]` in `CHANGELOG.md`, one change on GM Transactions:
+  - **"In the Alliance" covers the whole account**: a red
+    `fa-circle-exclamation text-danger` (no more green tick) when the
+    character or any other character of the same Alliance Auth account
+    (`CharacterOwnership.user`) was in a taxed alliance at the GM job's run.
+    `find_account_in_alliance(character_ids, config)` in
+    `db/gm_transactions.py` groups by owner and asks `find_in_alliance`
+    for every character of those accounts; `store_gm_report` stores its
+    answer under the same `report["in_alliance"]` key. Unregistered
+    character = an account of its own; no character of the account known
+    = absent (dash). Header tooltip "This character or another character
+    of the same Main is in the Alliance", in all six catalogues
 - `[0.4.11]` in `CHANGELOG.md`, all on GM Transactions:
-  - **First column "In the Alliance"**: a tick when the character was in a
-    taxed alliance at the GM job's run. `find_in_alliance(character_ids,
-    config)` in `db/gm_transactions.py`, stored as `report["in_alliance"]`
-    (`{str(id): bool}`) in the job's `characters` step, read back by
-    `get_stored_gm_report`, row key `in_alliance` (True / False / None).
-    Cell: tick (`data-order="1"`), empty (`0`), dash for None (`""`)
+  - **First column "In the Alliance"** as of the GM job's run,
+    `find_in_alliance` (per character, two sources, the newer wins),
+    stored as `report["in_alliance"]` (`{str(id): bool}`), row key
+    `in_alliance` (True / False / None). Cell: mark (`data-order="1"`),
+    empty (`0`), dash for None (`""`)
   - **Column order**: In the Alliance, Date, Character, Age, Main,
     Corporation, ...; the **"Transaction for" column is gone** (`sides()`
     still reads the character to tell it from the counterparty)
@@ -69,18 +80,32 @@ Last updated 2026-10-29.
   versions: see `CHANGELOG.md`. Still worth knowing from them:
   `manage_settings` (0.4.5, migration 0027) guards every settings write;
   `admin_view` alone sees the settings page read only
-- Migrations **0001-0029** applied to `aa_dev`; 0.4.8 to 0.4.11 have none
-- 717 tests, all green (702 without the translation tag, 15 with it)
+- Migrations **0001-0029** applied to `aa_dev`; 0.4.8 to 0.4.12 have none
+- 722 tests, all green (707 without the translation tag, 15 with it)
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the
   page's GM rows can only be seen in tests or on production data. The
-  0.4.9 fix, the 0.4.10 "GM X" filter and the whole of 0.4.11 are verified
-  by tests only, not in the browser
+  0.4.9 fix, the 0.4.10 "GM X" filter and the whole of 0.4.11 and 0.4.12
+  are verified by tests only, not in the browser
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
 
-## Decisions of the 2026-10-29 session
+## Decisions of the 2026-10-29 sessions
+
+"In the Alliance" for the whole account (0.4.12) - the user's choices
+unless marked:
+
+- **A red exclamation mark only**, no tick any more and no distinction
+  between "the character itself" and "another character of the main"; no
+  tooltip naming which characters are in (offered, not chosen).
+- **As of the GM job's run**, like 0.4.11, not live at page load.
+- Claude's calls: "the main's characters" = every character owned by the
+  same Alliance Auth user (`CharacterOwnership`), a main set or not; a
+  character nobody owns stands for itself; one known character out and
+  the rest unknown = out (empty), not a dash; the header gets a tooltip
+  explaining the mark (new string); the visually hidden cell text stays
+  "In the Alliance".
 
 "In the Alliance" (0.4.11) - the user's choices unless marked:
 
@@ -96,8 +121,8 @@ Last updated 2026-10-29.
   or after the record's start); `last_updated_affiliations` None = the
   history decides; last record by `start_date`, then `record_id`, as in
   `_corporation_at`. Left = an empty cell, unknown (report before 0.4.11,
-  character neither source knows) = a dash. Tick with a visually hidden
-  "In the Alliance" for screen readers; column not searchable.
+  character neither source knows) = a dash. The mark carries a visually
+  hidden "In the Alliance" for screen readers; column not searchable.
 - The column order and the removal of "Transaction for" came from an
   earlier session that left them uncommitted; they went into
   the same commit. Its reasons are in the CHANGELOG only.
@@ -317,14 +342,17 @@ plain list of alts from Alliance Auth, without assessments.
    says when). **0.4.8 needs the restart too**: a worker on 0.4.7 code
    stores GM reports without ages, and the Age column stays all dashes.
    **0.4.11 the same**: a worker on older code stores no `in_alliance`,
-   and the first column stays all dashes. After the restart press
-   Recalculate on GM Transactions once.
+   and the first column stays all dashes. **0.4.12 too**: a worker on
+   0.4.11 code stores the character alone, and alts of members that left
+   show no mark. After the restart press Recalculate on GM Transactions
+   once.
 2. **GM Transactions has never seen real data** - `aa_dev` has 6
    character journal rows, no GM booking and no negative balance. After
    deploying: does the page list the expected characters, do the
    counterparty boxes read the names right (which counterparties really
    occur?), does "Corporation at the time" match, are the "In the
-   Alliance" ticks right (spot-check a character who left recently - is
+   Alliance" marks right (spot-check a character who left recently while
+   an alt stayed, and one whose whole account left - is
    `last_updated_affiliations` set in production, or does the history
    always win?), and how long does the job's `description LIKE 'GM [%'` scan over
    the live character journal take (no index serves it)?
@@ -544,4 +572,11 @@ script runs there.
   without a character" is dead code.
 - **The GM progress step `characters` is still labelled "Wallet balances
   and ages"** (`partials/progress.html`), although it now also works out
-  the alliance membership. Left so on purpose to avoid a string change.
+  the alliance membership of whole accounts. Left so on purpose to avoid
+  a string change.
+- **The Edit tool refuses a file seen only through `grep`/`sed` in Bash** -
+  Read it (a few lines are enough) before the first Edit, or every edit
+  of a batch fails.
+- **`.git/CLAUDE_COMMIT_MSG` still held the last release's message** at
+  the 0.4.12 commit - the Write tool needs a Read of it before it may
+  overwrite it.
