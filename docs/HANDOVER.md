@@ -4,11 +4,32 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-10-29 (0.4.14).
+Last updated 2026-10-29 (0.4.15).
 
 ## Release
 
-- Version **0.4.14** in `eos_tax/__init__.py`, released 2026-10-29
+- Version **0.4.15** in `eos_tax/__init__.py`, released 2026-10-29
+- `[0.4.15]` in `CHANGELOG.md`, one new permission:
+  - **`gm_bots_access`** ("Can use the bots and GM Transactions pages",
+    migration 0031) opens the bots pages (list, signal tabs, character
+    page and its detail tabs) and GM Transactions with notes, both
+    Recalculate buttons and the progress bar - nothing else
+  - `views.py`: `any_permission_required(perms, raise_exception=False)`
+    (Django's `user_passes_test`, one of perms instead of all);
+    `BOTS_GM_READ` = admin_view or gm_bots_access, `BOTS_GM_WRITE` =
+    manage_settings or gm_bots_access. `index` lets basic_access or
+    gm_bots_access in and redirects the latter to `eos_tax:bots`
+    (the menu entry points at the overview)
+  - `progress_state` hands a user without `admin_view` only runs of kind
+    `bots` / `gm`; `progress_dismiss` answers 403 when a user without
+    `manage_settings` tries a tax run
+  - Menu entry (`auth_hooks.py`) shows for basic_access or gm_bots_access;
+    the badge only with basic_access
+  - `base.html`: Overview link only with `basic_access` (also hides it
+    from an `admin_view`-only user, whose click only redirected);
+    Bots / GM Transactions with admin_view or gm_bots_access; the rest
+    admin_view as before
+  - No new strings; tests in `tests/test_gm_bots_access.py`
 - `[0.4.14]` in `CHANGELOG.md`, one addition on GM Transactions:
   - **Alliance switch** above the table (`form-switch`,
     `#eos-tax-in-alliance`, `data-eos-alliance-filter`), **on by
@@ -115,9 +136,9 @@ Last updated 2026-10-29 (0.4.14).
   versions: see `CHANGELOG.md`. Still worth knowing from them:
   `manage_settings` (0.4.5, migration 0027) guards every settings write;
   `admin_view` alone sees the settings page read only
-- Migrations **0001-0030** applied to `aa_dev`; 0.4.13 brought 0030
-  (`GmNote`), 0.4.8 to 0.4.12 had none
-- 742 tests, all green (727 without the translation tag, 15 with it)
+- Migrations **0001-0031** applied to `aa_dev`; 0.4.15 brought 0031
+  (permission only), 0.4.13 brought 0030 (`GmNote`)
+- 757 tests, all green (742 without the translation tag, 15 with it)
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the
   page's GM rows can only be seen in tests or on production data. The
   0.4.9 fix, the 0.4.10 "GM X" filter and the whole of 0.4.11 to 0.4.14
@@ -129,6 +150,17 @@ Last updated 2026-10-29 (0.4.14).
 - `CHANGELOG.md` is newest first
 
 ## Decisions of the 2026-10-29 sessions
+
+`gm_bots_access` (0.4.15) - the user's choices unless marked:
+
+- **Name `gm_bots_access`**; it shows the bots and GM Transactions pages
+  **with every function**, including **both Recalculate buttons**
+  (which otherwise need `manage_settings`), and **nothing else**.
+- Claude's calls: GM notes count as part of "editing GM transactions";
+  the progress bar is shown (the buttons point at it) but only with the
+  bots and GM runs - the tax runs list every corporation; such a user
+  may dismiss those runs, not a tax run; the menu entry stays the app's
+  one entry and the overview redirects to the bots page; no badge.
 
 Alliance switch (0.4.14) - the user's choices unless marked:
 
@@ -344,7 +376,8 @@ The bots job (0.4.6) - the user's choices unless marked:
   default; sorts by Month, then Corporation, nothing else; payment
   difference badges only for admins and from `paid_difference_min_millions`
   (default 10) on.
-- **Progress bar** of every recalculation, admins only, cache only, a
+- **Progress bar** of every recalculation, admins only (since 0.4.15
+  also `gm_bots_access`, with the bots and GM runs alone), cache only, a
   finished run shows "Reload".
 - Every group on the bots page has a heading, a group of one too. The
   average day divides by active days. `bot_clock_min_concentration`
@@ -454,7 +487,11 @@ plain list of alts from Alliance Auth, without assessments.
    and ref_type) may be worth an index or a rewrite - corptools' schema is
    not ours to change, so only the query.
 6. On deploying 0.4.5: grant `eos_tax.manage_settings` to whoever changes
-   the settings, or only superusers can.
+   the settings, or only superusers can. On deploying 0.4.15: migration
+   0031, then grant `eos_tax.gm_bots_access` to the bot / GM hunters
+   (a group or state in Alliance Auth). Not yet looked at in a browser
+   with such a user - one render of the bots page and GM Transactions
+   (navigation, buttons, bar) is still due.
 7. After deploying 0.3.14/0.3.15, recalculate urex (your ex's) for every
    month it ran at 0% and check that "added" in the log holds only untaxed
    payouts - the matching key has never seen real member wallet data.
@@ -468,7 +505,8 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## State of the dev instance
 
-- Migrations 0001-0030 applied to `aa_dev`. `eos_tax_gmnote` is empty.
+- Migrations 0001-0031 applied to `aa_dev`. `eos_tax_gmnote` is empty.
+  Nobody holds `gm_bots_access` there yet.
 - `eos_tax_botreport` holds 8 rows from a trial run of the job (2026-09
   and 2026-10, all four tabs) - our own table, safe to overwrite or
   delete. They predate `age_days`, so the audit tab sorts their ages as
@@ -561,9 +599,12 @@ script runs there.
   both on the GM page; a new column needs its entry in
   `gm-transactions.js`.
 
-- **There is no Python on the Windows side.** Patch scripts and anything
-  else in Python run in WSL; the Bash tool's own `python3` is the Windows
-  Store stub.
+- **The Bash tool's `python3` is the Windows Store stub**, but `python`
+  worked on 2026-10-29 and patched files through `\\wsl.localhost`.
+  Anything that needs Django runs in WSL.
+- **A test that a guard was right needs the guarded case to exist.** The
+  menu badge test passed against its sabotage because nothing was due -
+  give it a due row first (`mid_month`, `last_month`, `create_tax_row`).
 - **`pkill -f <pattern>` inside `wsl.exe ... bash -lc '...'` kills its own
   shell** - the pattern is in that shell's command line, so everything
   after it never runs (exit 15). Kill by PID, or run it in a call of its
@@ -645,5 +686,7 @@ script runs there.
   Read it (a few lines are enough) before the first Edit, or every edit
   of a batch fails.
 - **`.git/CLAUDE_COMMIT_MSG` still held the last release's message** at
-  the 0.4.12 commit - the Write tool needs a Read of it before it may
-  overwrite it.
+  the 0.4.12 and the 0.4.15 commit - the Write tool needs a Read of it
+  before it may overwrite it, and a failed Write in the same batch as the
+  `git commit` commits the old message. Read it first, commit in a later
+  call.

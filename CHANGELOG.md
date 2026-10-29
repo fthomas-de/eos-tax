@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.15] - 2026-10-29
+
 ### Added
 
 - A new permission `gm_bots_access` opens the bots lists and GM
