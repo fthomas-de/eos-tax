@@ -24,6 +24,15 @@
                     {% translate "The GM transactions are being looked up in the background. This page reloads by itself once they are ready." %}
                 </div>
             {% elif rows %}
+                {# on by default, the user's choice: gm-transactions.js hides the accounts that left #}
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" role="switch" checked
+                           id="eos-tax-in-alliance" data-eos-alliance-filter>
+                    <label class="form-check-label" for="eos-tax-in-alliance">
+                        {% translate "Only characters still in the Alliance with a Main or alt" %}
+                    </label>
+                </div>
+
                 {# gm-transactions.js hides the rows of an unticked box; one box filters nothing #}
                 {% if parties|length > 1 %}
                     <fieldset class="mb-3" data-eos-party-filter>
@@ -69,7 +78,9 @@
 
                         <tbody>
                             {% for row in rows %}
-                                <tr data-eos-party="{{ row.counterparty }}">
+                                {# "left" only for a known False - a dash (not known) stays on, the user's choice #}
+                                <tr data-eos-party="{{ row.counterparty }}"
+                                    data-eos-left="{% if row.in_alliance is False %}1{% else %}0{% endif %}">
                                     {% comment %}
                                         As of the job's run, for the whole account: a
                                         warning, not a tick - the player is still with

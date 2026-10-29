@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-29 16:04+0000\n"
+"POT-Creation-Date: 2026-10-29 16:20+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -721,7 +721,7 @@ msgstr "total"
 msgid "This character had no active hour in the selected month."
 msgstr "Este character no tuvo ninguna hora activa en el mes seleccionado."
 
-#: templates/eos_tax/bots.html:27 templates/eos_tax/gm-transactions.html:57
+#: templates/eos_tax/bots.html:27 templates/eos_tax/gm-transactions.html:66
 #: templates/eos_tax/partials/bot-audit.html:14
 #: templates/eos_tax/partials/bot-clock-detail.html:32
 #: templates/eos_tax/partials/bot-clock.html:26
@@ -824,35 +824,39 @@ msgstr ""
 "Las transacciones de GM se están buscando en segundo plano. Esta página se "
 "recarga por sí sola en cuanto estén listas."
 
-#: templates/eos_tax/gm-transactions.html:30
+#: templates/eos_tax/gm-transactions.html:32
+msgid "Only characters still in the Alliance with a Main or alt"
+msgstr "Solo characters que siguen en la Alliance con su Main o un alt"
+
+#: templates/eos_tax/gm-transactions.html:39
 msgid "Counterparty"
 msgstr "Contraparte"
 
-#: templates/eos_tax/gm-transactions.html:40
+#: templates/eos_tax/gm-transactions.html:49
 msgid "No counterparty"
 msgstr "Sin contraparte"
 
-#: templates/eos_tax/gm-transactions.html:54
+#: templates/eos_tax/gm-transactions.html:63
 msgid "This character or another character of the same Main is in the Alliance"
 msgstr "Este character u otro character del mismo Main está en la Alliance"
 
-#: templates/eos_tax/gm-transactions.html:54
-#: templates/eos_tax/gm-transactions.html:83
+#: templates/eos_tax/gm-transactions.html:63
+#: templates/eos_tax/gm-transactions.html:94
 msgid "In the Alliance"
 msgstr "En la Alliance"
 
-#: templates/eos_tax/gm-transactions.html:55
-#: templates/eos_tax/gm-transactions.html:106
-#: templates/eos_tax/gm-transactions.html:172
-#: templates/eos_tax/gm-transactions.html:178
+#: templates/eos_tax/gm-transactions.html:64
+#: templates/eos_tax/gm-transactions.html:117
+#: templates/eos_tax/gm-transactions.html:183
+#: templates/eos_tax/gm-transactions.html:189
 msgid "Note"
 msgstr "Nota"
 
-#: templates/eos_tax/gm-transactions.html:56
+#: templates/eos_tax/gm-transactions.html:65
 msgid "Date"
 msgstr "Fecha"
 
-#: templates/eos_tax/gm-transactions.html:58
+#: templates/eos_tax/gm-transactions.html:67
 #: templates/eos_tax/partials/bot-audit.html:20
 #: templates/eos_tax/partials/bot-clock.html:29
 #: templates/eos_tax/partials/bot-rhythm.html:29
@@ -861,7 +865,7 @@ msgstr "Fecha"
 msgid "Age"
 msgstr "Edad"
 
-#: templates/eos_tax/gm-transactions.html:59
+#: templates/eos_tax/gm-transactions.html:68
 #: templates/eos_tax/partials/bot-audit.html:18
 #: templates/eos_tax/partials/bot-clock.html:28
 #: templates/eos_tax/partials/bot-rhythm.html:28
@@ -870,7 +874,7 @@ msgstr "Edad"
 msgid "Main"
 msgstr "Main"
 
-#: templates/eos_tax/gm-transactions.html:60 templates/eos_tax/index.html:49
+#: templates/eos_tax/gm-transactions.html:69 templates/eos_tax/index.html:49
 #: templates/eos_tax/partials/bot-audit.html:16
 #: templates/eos_tax/partials/bot-clock-detail.html:33
 #: templates/eos_tax/partials/bot-clock.html:27
@@ -883,70 +887,70 @@ msgstr "Main"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: templates/eos_tax/gm-transactions.html:61
+#: templates/eos_tax/gm-transactions.html:70
 msgid "Corporation at the time"
 msgstr "Corporation en ese momento"
 
-#: templates/eos_tax/gm-transactions.html:62
+#: templates/eos_tax/gm-transactions.html:71
 msgid "Corporations in the Alliance"
 msgstr "Corporations de la Alliance"
 
-#: templates/eos_tax/gm-transactions.html:63
+#: templates/eos_tax/gm-transactions.html:72
 #: templates/eos_tax/statistics.html:26
 msgid "Alliance"
 msgstr "Alliance"
 
-#: templates/eos_tax/gm-transactions.html:64
+#: templates/eos_tax/gm-transactions.html:73
 msgid "Amount"
 msgstr "Importe"
 
-#: templates/eos_tax/gm-transactions.html:65
+#: templates/eos_tax/gm-transactions.html:74
 msgid "Wallet balance"
 msgstr "Saldo del wallet"
 
-#: templates/eos_tax/gm-transactions.html:66
+#: templates/eos_tax/gm-transactions.html:75
 msgid "Description"
 msgstr "Descripción"
 
-#: templates/eos_tax/gm-transactions.html:129
+#: templates/eos_tax/gm-transactions.html:140
 #: templates/eos_tax/partials/bot-character-cells.html:20
 msgid "not registered"
 msgstr "sin registrar"
 
-#: templates/eos_tax/gm-transactions.html:166
+#: templates/eos_tax/gm-transactions.html:177
 msgid "Could not save the note."
 msgstr "No se pudo guardar la nota."
 
-#: templates/eos_tax/gm-transactions.html:175
-#: templates/eos_tax/gm-transactions.html:188
+#: templates/eos_tax/gm-transactions.html:186
+#: templates/eos_tax/gm-transactions.html:199
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: templates/eos_tax/gm-transactions.html:191
+#: templates/eos_tax/gm-transactions.html:202
 msgid "Save"
 msgstr "Guardar"
 
-#: templates/eos_tax/gm-transactions.html:199
+#: templates/eos_tax/gm-transactions.html:210
 msgid "No GM transaction in any character journal, and no wallet below zero."
 msgstr ""
 "Ninguna transacción de GM en el journal de ningún character, y ningún wallet "
 "por debajo de cero."
 
-#: templates/eos_tax/gm-transactions.html:205
+#: templates/eos_tax/gm-transactions.html:216
 #, python-format
 msgid "%(counter)s GM transaction"
 msgid_plural "%(counter)s GM transactions"
 msgstr[0] "%(counter)s transacción de GM"
 msgstr[1] "%(counter)s transacciones de GM"
 
-#: templates/eos_tax/gm-transactions.html:206
+#: templates/eos_tax/gm-transactions.html:217
 #, python-format
 msgid "%(counter)s wallet below zero"
 msgid_plural "%(counter)s wallets below zero"
 msgstr[0] "%(counter)s wallet por debajo de cero"
 msgstr[1] "%(counter)s wallets por debajo de cero"
 
-#: templates/eos_tax/gm-transactions.html:207
+#: templates/eos_tax/gm-transactions.html:218
 #: templates/eos_tax/partials/bot-clock.html:72
 #: templates/eos_tax/partials/bot-group-header.html:14
 #: templates/eos_tax/partials/bot-rhythm.html:72

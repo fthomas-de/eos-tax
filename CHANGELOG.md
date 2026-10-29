@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- GM Transactions has a switch above the table, on by default, that
+  hides every row whose account has no character left in a taxed
+  alliance - a GM booking or a wallet below zero of a player who is gone
+  is rarely what the page is opened for. It goes by the "In the Alliance"
+  column, as of the GM job's run: only a known "left" is hidden, a dash
+  (the job did not know the character) stays shown. It filters in the
+  browser, together with the counterparty boxes.
+
 ## [0.4.13] - 2026-10-29
 
 ### Added

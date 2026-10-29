@@ -679,8 +679,8 @@ class TestGmView(GmTestCase):
         self.assertIn("data-eos-party-filter", content)
         self.assertIn('value="GM X"', content)
         self.assertIn('value="EVE Central Bank"', content)
-        self.assertIn('<tr data-eos-party="GM X">', content)
-        self.assertIn('<tr data-eos-party="EVE Central Bank">', content)
+        self.assertIn('data-eos-party="GM X"', content)
+        self.assertIn('data-eos-party="EVE Central Bank"', content)
 
     def test_should_tick_only_gm_x_and_mark_it_red(self):
         add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
@@ -731,6 +731,51 @@ class TestGmView(GmTestCase):
         self.assertIn("settings.nTable !== table", script)
         self.assertIn("dataset.eosParty", script)
         self.assertIn("dataTable.draw()", script)
+
+    def test_should_offer_the_alliance_switch_switched_on(self):
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+
+        body = self.client.get(self.url).content.decode()
+        switch = body.split('id="eos-tax-in-alliance"')[0].rsplit("<input", 1)[1]
+
+        self.assertIn('role="switch" checked', switch)
+        self.assertIn("data-eos-alliance-filter", body)
+
+    def test_should_mark_only_an_account_known_to_have_left(self):
+        """A dash - the job did not know the character - stays shown."""
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        broke = add_character_audit(BROKE_ID, True, name="Broke Pilot")
+        broke.balance = Decimal("-10.00")
+        broke.save()
+        deeper = add_character_audit(DEEPER_ID, True, name="Deeper Pilot")
+        deeper.balance = Decimal("-20.00")
+        deeper.save()
+        EveCharacter.objects.filter(character_id=GM_ID).update(
+            alliance_id=TAXED_ALLIANCE_ID
+        )
+        store_gm_report()
+        stored = GmReport.objects.get()
+        # the job did not see the deeper wallet
+        del stored.report["in_alliance"][str(DEEPER_ID)]
+        stored.save()
+
+        rows = table_body(self.client.get(self.url)).split("</tr>")
+
+        # the transaction, then the deepest wallet first
+        self.assertIn('data-eos-left="0"', rows[0].split(">", 1)[0])
+        self.assertIn('data-eos-left="0"', rows[1].split(">", 1)[0])
+        self.assertIn("Deeper Pilot", rows[1])
+        self.assertIn('data-eos-left="1"', rows[2].split(">", 1)[0])
+        self.assertIn("Broke Pilot", rows[2])
+
+    def test_script_should_hide_the_accounts_that_left_while_switched_on(self):
+        script = read_static("gm-transactions.js")
+
+        self.assertIn(
+            'allianceSwitch.checked && row.dataset.eosLeft === "1"', script
+        )
+        self.assertIn("shownParties === null ||", script)
+        self.assertIn('allianceSwitch.addEventListener("change"', script)
 
     def test_should_say_so_while_the_job_has_not_run(self):
         with mock.patch.object(run_update_gm_report, "delay") as delay:

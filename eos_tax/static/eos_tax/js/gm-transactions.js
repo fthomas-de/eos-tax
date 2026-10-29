@@ -158,13 +158,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const boxes = Array.from(
         document.querySelectorAll("[data-eos-party-filter] input[type=checkbox]")
     );
+    // on as the page sent it: hides the rows whose whole account has left
+    const allianceSwitch = document.querySelector("[data-eos-alliance-filter]");
 
-    if (!boxes.length) {
-        return;
-    }
-
-    // the ticked boxes, as the page sent them: GM X alone when it is there
+    // the ticked boxes, as the page sent them: GM X alone when it is there;
+    // null without boxes - then no counterparty is hidden
     const ticked = function () {
+        if (!boxes.length) {
+            return null;
+        }
+
         return new Set(
             boxes.filter(function (each) {
                 return each.checked;
@@ -183,7 +186,13 @@ document.addEventListener("DOMContentLoaded", function () {
             return true;
         }
 
-        return shownParties.has(dataTable.row(dataIndex).node().dataset.eosParty);
+        const row = dataTable.row(dataIndex).node();
+
+        if (allianceSwitch && allianceSwitch.checked && row.dataset.eosLeft === "1") {
+            return false;
+        }
+
+        return shownParties === null || shownParties.has(row.dataset.eosParty);
     });
 
     // the table was drawn with every row before the filter existed
@@ -195,4 +204,10 @@ document.addEventListener("DOMContentLoaded", function () {
             dataTable.draw();
         });
     });
+
+    if (allianceSwitch) {
+        allianceSwitch.addEventListener("change", function () {
+            dataTable.draw();
+        });
+    }
 });

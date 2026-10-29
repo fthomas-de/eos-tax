@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-29 16:04+0000\n"
+"POT-Creation-Date: 2026-10-29 16:20+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -725,7 +725,7 @@ msgstr "всего"
 msgid "This character had no active hour in the selected month."
 msgstr "У этого character не было активных часов в выбранном месяце."
 
-#: templates/eos_tax/bots.html:27 templates/eos_tax/gm-transactions.html:57
+#: templates/eos_tax/bots.html:27 templates/eos_tax/gm-transactions.html:66
 #: templates/eos_tax/partials/bot-audit.html:14
 #: templates/eos_tax/partials/bot-clock-detail.html:32
 #: templates/eos_tax/partials/bot-clock.html:26
@@ -829,35 +829,39 @@ msgstr ""
 "GM-транзакции ищутся в фоне. Страница перезагрузится сама, как только они "
 "будут готовы."
 
-#: templates/eos_tax/gm-transactions.html:30
+#: templates/eos_tax/gm-transactions.html:32
+msgid "Only characters still in the Alliance with a Main or alt"
+msgstr "Только character, чей Main или alt ещё состоит в Alliance"
+
+#: templates/eos_tax/gm-transactions.html:39
 msgid "Counterparty"
 msgstr "Контрагент"
 
-#: templates/eos_tax/gm-transactions.html:40
+#: templates/eos_tax/gm-transactions.html:49
 msgid "No counterparty"
 msgstr "Нет контрагента"
 
-#: templates/eos_tax/gm-transactions.html:54
+#: templates/eos_tax/gm-transactions.html:63
 msgid "This character or another character of the same Main is in the Alliance"
 msgstr "Этот character или другой character того же Main состоит в Alliance"
 
-#: templates/eos_tax/gm-transactions.html:54
-#: templates/eos_tax/gm-transactions.html:83
+#: templates/eos_tax/gm-transactions.html:63
+#: templates/eos_tax/gm-transactions.html:94
 msgid "In the Alliance"
 msgstr "В Alliance"
 
-#: templates/eos_tax/gm-transactions.html:55
-#: templates/eos_tax/gm-transactions.html:106
-#: templates/eos_tax/gm-transactions.html:172
-#: templates/eos_tax/gm-transactions.html:178
+#: templates/eos_tax/gm-transactions.html:64
+#: templates/eos_tax/gm-transactions.html:117
+#: templates/eos_tax/gm-transactions.html:183
+#: templates/eos_tax/gm-transactions.html:189
 msgid "Note"
 msgstr "Заметка"
 
-#: templates/eos_tax/gm-transactions.html:56
+#: templates/eos_tax/gm-transactions.html:65
 msgid "Date"
 msgstr "Дата"
 
-#: templates/eos_tax/gm-transactions.html:58
+#: templates/eos_tax/gm-transactions.html:67
 #: templates/eos_tax/partials/bot-audit.html:20
 #: templates/eos_tax/partials/bot-clock.html:29
 #: templates/eos_tax/partials/bot-rhythm.html:29
@@ -866,7 +870,7 @@ msgstr "Дата"
 msgid "Age"
 msgstr "Возраст"
 
-#: templates/eos_tax/gm-transactions.html:59
+#: templates/eos_tax/gm-transactions.html:68
 #: templates/eos_tax/partials/bot-audit.html:18
 #: templates/eos_tax/partials/bot-clock.html:28
 #: templates/eos_tax/partials/bot-rhythm.html:28
@@ -875,7 +879,7 @@ msgstr "Возраст"
 msgid "Main"
 msgstr "Main"
 
-#: templates/eos_tax/gm-transactions.html:60 templates/eos_tax/index.html:49
+#: templates/eos_tax/gm-transactions.html:69 templates/eos_tax/index.html:49
 #: templates/eos_tax/partials/bot-audit.html:16
 #: templates/eos_tax/partials/bot-clock-detail.html:33
 #: templates/eos_tax/partials/bot-clock.html:27
@@ -888,55 +892,55 @@ msgstr "Main"
 msgid "Corporation"
 msgstr "Corporation"
 
-#: templates/eos_tax/gm-transactions.html:61
+#: templates/eos_tax/gm-transactions.html:70
 msgid "Corporation at the time"
 msgstr "Corporation на тот момент"
 
-#: templates/eos_tax/gm-transactions.html:62
+#: templates/eos_tax/gm-transactions.html:71
 msgid "Corporations in the Alliance"
 msgstr "Corporations в Alliance"
 
-#: templates/eos_tax/gm-transactions.html:63
+#: templates/eos_tax/gm-transactions.html:72
 #: templates/eos_tax/statistics.html:26
 msgid "Alliance"
 msgstr "Alliance"
 
-#: templates/eos_tax/gm-transactions.html:64
+#: templates/eos_tax/gm-transactions.html:73
 msgid "Amount"
 msgstr "Сумма"
 
-#: templates/eos_tax/gm-transactions.html:65
+#: templates/eos_tax/gm-transactions.html:74
 msgid "Wallet balance"
 msgstr "Баланс wallet"
 
-#: templates/eos_tax/gm-transactions.html:66
+#: templates/eos_tax/gm-transactions.html:75
 msgid "Description"
 msgstr "Описание"
 
-#: templates/eos_tax/gm-transactions.html:129
+#: templates/eos_tax/gm-transactions.html:140
 #: templates/eos_tax/partials/bot-character-cells.html:20
 msgid "not registered"
 msgstr "не зарегистрирован"
 
-#: templates/eos_tax/gm-transactions.html:166
+#: templates/eos_tax/gm-transactions.html:177
 msgid "Could not save the note."
 msgstr "Не удалось сохранить заметку."
 
-#: templates/eos_tax/gm-transactions.html:175
-#: templates/eos_tax/gm-transactions.html:188
+#: templates/eos_tax/gm-transactions.html:186
+#: templates/eos_tax/gm-transactions.html:199
 msgid "Cancel"
 msgstr "Отмена"
 
-#: templates/eos_tax/gm-transactions.html:191
+#: templates/eos_tax/gm-transactions.html:202
 msgid "Save"
 msgstr "Сохранить"
 
-#: templates/eos_tax/gm-transactions.html:199
+#: templates/eos_tax/gm-transactions.html:210
 msgid "No GM transaction in any character journal, and no wallet below zero."
 msgstr ""
 "Ни одной GM-транзакции в journal characters и ни одного wallet ниже нуля."
 
-#: templates/eos_tax/gm-transactions.html:205
+#: templates/eos_tax/gm-transactions.html:216
 #, python-format
 msgid "%(counter)s GM transaction"
 msgid_plural "%(counter)s GM transactions"
@@ -944,7 +948,7 @@ msgstr[0] "%(counter)s GM-транзакция"
 msgstr[1] "%(counter)s GM-транзакции"
 msgstr[2] "%(counter)s GM-транзакций"
 
-#: templates/eos_tax/gm-transactions.html:206
+#: templates/eos_tax/gm-transactions.html:217
 #, python-format
 msgid "%(counter)s wallet below zero"
 msgid_plural "%(counter)s wallets below zero"
@@ -952,7 +956,7 @@ msgstr[0] "%(counter)s wallet ниже нуля"
 msgstr[1] "%(counter)s wallet ниже нуля"
 msgstr[2] "%(counter)s wallet ниже нуля"
 
-#: templates/eos_tax/gm-transactions.html:207
+#: templates/eos_tax/gm-transactions.html:218
 #: templates/eos_tax/partials/bot-clock.html:72
 #: templates/eos_tax/partials/bot-group-header.html:14
 #: templates/eos_tax/partials/bot-rhythm.html:72
