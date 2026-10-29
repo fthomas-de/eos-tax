@@ -4,11 +4,34 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-10-29.
+Last updated 2026-10-29 (0.4.13).
 
 ## Release
 
-- Version **0.4.12** in `eos_tax/__init__.py`, released 2026-10-29
+- Version **0.4.13** in `eos_tax/__init__.py`, released 2026-10-29
+- `[0.4.13]` in `CHANGELOG.md`, all on GM Transactions:
+  - **Note per row**, second column: a `fa-note-sticky` button opens one
+    shared Bootstrap modal (`#eos-tax-gm-note`, textarea `maxlength` 160,
+    counter, Save / Cancel); the saved note is the button's `title` and
+    its cell's `data-search` / `data-order`. Model `GmNote` (migration
+    0030): `character_id`, `entry_id` (0 = the wallet-below-zero row -
+    MySQL lets NULLs past a unique constraint), `text`
+    (`GM_NOTE_LENGTH` = 160), `updated_at`, `updated_by`. Not in
+    `GmReport`, which the job replaces. POST `gm_transactions_note`
+    (`admin_view`, 403 not redirect) -> `save_gm_note` in
+    `db/gm_transactions.py`: `_is_listed` (entry in the stored report,
+    or the wallet below zero now), `clean_note` (trim, keep `\n`, drop
+    Unicode `Cc`/`Cf`, ValueError over 160), empty = delete; answers
+    `{"text": <as stored>}`. JS `setUpNotes(dataTable)` in
+    `gm-transactions.js` handles it as text only (no `innerHTML`, a test
+    checks) and `invalidate("dom")`s the row without a redraw
+  - **Column order** now: In the Alliance, Note, Date, Character, Age,
+    Main, Corporation, Corporation at the time, Corporations in the
+    Alliance, Alliance, Amount, Wallet balance, Description
+  - **Amount and Wallet balance as whole ISK** (`floatformat:"0g"`,
+    rounded, not truncated); `data-order` keeps the cents
+  - 5 new strings ("Note", "Add a note", "Could not save the note.",
+    "Cancel", "Save"), in all six catalogues
 - `[0.4.12]` in `CHANGELOG.md`, one change on GM Transactions:
   - **"In the Alliance" covers the whole account**: a red
     `fa-circle-exclamation text-danger` (no more green tick) when the
@@ -27,8 +50,8 @@ Last updated 2026-10-29.
     stored as `report["in_alliance"]` (`{str(id): bool}`), row key
     `in_alliance` (True / False / None). Cell: mark (`data-order="1"`),
     empty (`0`), dash for None (`""`)
-  - **Column order**: In the Alliance, Date, Character, Age, Main,
-    Corporation, ...; the **"Transaction for" column is gone** (`sides()`
+  - **Column order** (since changed in 0.4.13): In the Alliance first;
+    the **"Transaction for" column is gone** (`sides()`
     still reads the character to tell it from the counterparty)
   - 1 new string ("In the Alliance"), in all six catalogues; "Transaction
     for" is obsolete (`#~`) there
@@ -80,18 +103,36 @@ Last updated 2026-10-29.
   versions: see `CHANGELOG.md`. Still worth knowing from them:
   `manage_settings` (0.4.5, migration 0027) guards every settings write;
   `admin_view` alone sees the settings page read only
-- Migrations **0001-0029** applied to `aa_dev`; 0.4.8 to 0.4.12 have none
-- 722 tests, all green (707 without the translation tag, 15 with it)
+- Migrations **0001-0030** applied to `aa_dev`; 0.4.13 brought 0030
+  (`GmNote`), 0.4.8 to 0.4.12 had none
+- 739 tests, all green (724 without the translation tag, 15 with it)
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the
   page's GM rows can only be seen in tests or on production data. The
-  0.4.9 fix, the 0.4.10 "GM X" filter and the whole of 0.4.11 and 0.4.12
-  are verified by tests only, not in the browser
+  0.4.9 fix, the 0.4.10 "GM X" filter and the whole of 0.4.11 to 0.4.13
+  (the note popup included) are verified by tests only, not in the browser
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
 
 ## Decisions of the 2026-10-29 sessions
+
+Notes, whole ISK, column swap (0.4.13) - the user's choices unless marked:
+
+- **A note per row**, not per character: each GM transaction its own;
+  a character with two bookings has two notes.
+- **Anyone with `admin_view` may write notes**, not only
+  `manage_settings`.
+- **160 characters**, popup with a text field, Save and Cancel; the
+  stored note as the button's tooltip; the button second in the row.
+- **"Corporations in the Alliance" before "Alliance"**; **ISK as whole
+  numbers**.
+- Claude's calls: rounded, not truncated (the user was told and may want
+  truncation); the note searchable by the search box; empty saves delete;
+  line breaks kept, control/format characters dropped; native `title`
+  tooltip, no Bootstrap tooltip (would need `html: false` care and an
+  init); the filled button (`btn-secondary`) marks a row with a note; no
+  history of a note's edits, only `updated_by` of the last.
 
 "In the Alliance" for the whole account (0.4.12) - the user's choices
 unless marked:
@@ -345,7 +386,8 @@ plain list of alts from Alliance Auth, without assessments.
    and the first column stays all dashes. **0.4.12 too**: a worker on
    0.4.11 code stores the character alone, and alts of members that left
    show no mark. After the restart press Recalculate on GM Transactions
-   once.
+   once. **0.4.13 needs migration 0030** before the page loads - it reads
+   `GmNote` for every row.
 2. **GM Transactions has never seen real data** - `aa_dev` has 6
    character journal rows, no GM booking and no negative balance. After
    deploying: does the page list the expected characters, do the
@@ -401,7 +443,7 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## State of the dev instance
 
-- Migrations 0001-0029 applied to `aa_dev`.
+- Migrations 0001-0030 applied to `aa_dev`. `eos_tax_gmnote` is empty.
 - `eos_tax_botreport` holds 8 rows from a trial run of the job (2026-09
   and 2026-10, all four tabs) - our own table, safe to overwrite or
   delete. They predate `age_days`, so the audit tab sorts their ages as
