@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.16] - 2026-11-02
+
 ### Added
 
 - GM Transactions has a copy button beside each character name, the same

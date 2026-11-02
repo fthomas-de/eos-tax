@@ -4,11 +4,39 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-10-29 (0.4.15).
+Last updated 2026-11-02 (0.4.16).
 
 ## Release
 
-- Version **0.4.15** in `eos_tax/__init__.py`, released 2026-10-29
+- Version **0.4.16** in `eos_tax/__init__.py`, released 2026-11-02
+- `[0.4.16]` in `CHANGELOG.md`, GM Transactions reaches the bots pages:
+  - **Copy buttons** beside character names (GM Transactions, every bots
+    list, group headings, character page title) and main names (bots).
+    One template `partials/copy-button.html` (`text`, `main=True` for
+    the main's label); the ClipboardJS code moved from `overview.js` to
+    `static/eos_tax/js/copy-buttons.js`, which every page with a button
+    loads after `bundles/clipboard-js.html`. Character cells got
+    `text-nowrap` (`ps-4 text-nowrap` in `bot-character-cells.html`)
+  - **"Last login" column** on GM Transactions after Age: corptools
+    `CharacterAudit.last_known_login`, read in `get_gm_page` at render
+    (not by the job), shown as `Y-m-d (n days)`, `data-order` ISO, dash
+    when unknown; entry in `gm-transactions.js` `columns`
+  - **Red rows** (`table-danger`, title "Listed on GM Transactions") on
+    all five bots lists: `gm_listed_character_ids()` in
+    `db/gm_transactions.py` = character ids of the stored report's
+    transactions plus `_negative_balances()` now; passed as `gm_listed`
+    by `bots` and `bot_signal`
+  - **Tab "GM Transactions" on the character page**: `bot-tabs.html`
+    with `gm_tab=True`, pane `#eos-tax-tab-gm`, signal `gm` in
+    `BOT_SIGNAL_DETAILS` -> `_account_gm` in `views.py`:
+    `get_gm_page(stored, account_character_ids(id))` (every character
+    of the same `CharacterOwnership.user`, plus the character itself);
+    no stored report queues the job and shows the pending note
+    (`data-eos-pending`, `bots.js` retries). Fragment
+    `partials/bot-gm-detail.html`, notes read only, whole journal (not
+    the month)
+  - 8 new strings, in all six catalogues; tests in `tests/test_bots_gm.py`
+    and `tests/test_gm_transactions.py`
 - `[0.4.15]` in `CHANGELOG.md`, one new permission:
   - **`gm_bots_access`** ("Can use the bots and GM Transactions pages",
     migration 0031) opens the bots pages (list, signal tabs, character
@@ -138,16 +166,35 @@ Last updated 2026-10-29 (0.4.15).
   `admin_view` alone sees the settings page read only
 - Migrations **0001-0031** applied to `aa_dev`; 0.4.15 brought 0031
   (permission only), 0.4.13 brought 0030 (`GmNote`)
-- 757 tests, all green (742 without the translation tag, 15 with it)
+- 776 tests, all green (761 without the translation tag, 15 with it)
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the
   page's GM rows can only be seen in tests or on production data. The
-  0.4.9 fix, the 0.4.10 "GM X" filter and the whole of 0.4.11 to 0.4.14
-  (the note popup and the alliance switch included) are verified by
-  tests only, not in the browser
+  0.4.9 fix, the 0.4.10 "GM X" filter and the whole of 0.4.11 to 0.4.16
+  (the note popup, the alliance switch, the red bots rows and the GM tab
+  included) are verified by tests only, not in the browser
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
+
+## Decisions of the 2026-11-02 session
+
+GM Transactions on the bots pages (0.4.16) - the user's choices unless
+marked:
+
+- **Copy buttons**: on GM Transactions for the Character name only; on
+  the bots pages for both Character and Main names.
+- **Last login = the character's own** corptools `last_known_login`, not
+  the account's newest; the column **after Age**.
+- **Red rows by the GM page's rule**: a GM transaction in the stored
+  report **or** a wallet below zero now.
+- **The GM tab shows the whole account** (main plus alts), wallet-below-
+  zero rows included.
+- Claude's calls: the login is read at render, not stored by the job; the
+  red row's reason as a native `title`; the GM tab ignores the month on
+  screen; its notes are read only (edited on GM Transactions); every
+  bots list gets the red rows, the audit tab included; the copy button
+  sits in the same cell as the name, after the link.
 
 ## Decisions of the 2026-10-29 sessions
 
@@ -456,7 +503,10 @@ plain list of alts from Alliance Auth, without assessments.
    `last_updated_affiliations` set in production, or does the history
    always win?), and how long does the job's `description LIKE 'GM [%'` scan over
    the live character journal take (no index serves it)?
-3. Not looked at in a browser yet, only through the tests: the
+3. Not looked at in a browser yet, only through the tests: everything
+   of 0.4.16 (copy buttons on the bots pages, red rows, the GM tab and
+   its pending retry, the Last login column - the dev server at
+   `127.0.0.1:8000` was not running); the
    Recalculate buttons and the step runs on the real pages (0.4.10 - only
    a static snapshot with a stubbed fetch was rendered, where the steps,
    badges and button message looked right); the "GM X" filter state
@@ -652,8 +702,20 @@ script runs there.
   `ProgressTestCase` does.
 - **`create_user` per login fails on the second call** with a duplicate
   username - make the users once in `setUp` and `force_login` them.
-- **A stale `.git/CLAUDE_COMMIT_MSG` gets committed.** Read the file
-  first, and check `git log -1` before anything is pushed.
+- **A stale `.git/CLAUDE_COMMIT_MSG` gets committed** (0.4.12, 0.4.15
+  and 0.4.16 commits). The Write tool needs a Read before it may
+  overwrite the file, and a failed Write in the same batch as the
+  `git commit` commits the old message. `rm` the file after each
+  commit, commit in a later call, check `git log -1` before pushing.
+- **A test that a row is red on a bots tab needs the character on that
+  tab.** The rhythm and clock tabs did not list the seeded ratter, so
+  the first red-row tests passed against nothing; `test_bots_gm.py`
+  lowers their thresholds in `setUp` and adds a second character.
+- **A markup change reaches tests in other modules**: the `ps-4` class
+  assertions sat in `test_bots.py` and `test_bot_signals.py`, which
+  feature work did not run - grep the tests for the old markup.
+- **`/push` cannot be started by Claude** (the skill is user-only); the
+  user types it.
 - **A fix with two guards needs a sabotage of both at once**, and **a
   sabotage that does not compile proves nothing** - replace with valid
   code.
@@ -685,8 +747,3 @@ script runs there.
 - **The Edit tool refuses a file seen only through `grep`/`sed` in Bash** -
   Read it (a few lines are enough) before the first Edit, or every edit
   of a batch fails.
-- **`.git/CLAUDE_COMMIT_MSG` still held the last release's message** at
-  the 0.4.12 and the 0.4.15 commit - the Write tool needs a Read of it
-  before it may overwrite it, and a failed Write in the same batch as the
-  `git commit` commits the old message. Read it first, commit in a later
-  call.
