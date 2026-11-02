@@ -1,0 +1,75 @@
+{% load i18n %}
+
+{# here and not in bot-detail.html: bots.js replaces the whole pane with this #}
+<p class="text-body-secondary small">
+    {% blocktranslate %}What GM Transactions lists for every character of this account: GM transactions in their wallet journals, and wallets below zero right now. Not limited to the selected month.{% endblocktranslate %}
+    <a href="{% url 'eos_tax:gm_transactions' %}">{% translate "GM Transactions" %}</a>
+</p>
+
+{% if detail is None %}
+    {# bots.js looks for data-eos-pending and asks again until the job has run #}
+    <div class="alert alert-info" data-eos-pending>
+        {% translate "The GM transactions are being looked up in the background. This tab loads them by itself once they are ready." %}
+    </div>
+{% elif detail.rows %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle w-100">
+            <thead>
+                <tr>
+                    <th scope="col">{% translate "Date" %}</th>
+                    <th scope="col">{% translate "Character" %}</th>
+                    <th scope="col">{% translate "Corporation at the time" %}</th>
+                    <th scope="col" class="text-end">{% translate "Amount" %}</th>
+                    <th scope="col" class="text-end">{% translate "Wallet balance" %}</th>
+                    <th scope="col" class="d-none d-lg-table-cell">{% translate "Description" %}</th>
+                    <th scope="col" class="d-none d-md-table-cell">{% translate "Note" %}</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for row in detail.rows %}
+                    <tr>
+                        {# a wallet below zero without a GM transaction has no date #}
+                        <td class="text-nowrap">
+                            {% if row.amount is not None %}{{ row.date|date:"Y-m-d H:i" }}{% else %}&mdash;{% endif %}
+                        </td>
+                        <th scope="row" class="text-nowrap">
+                            {# the bots page of that character, for the month on screen #}
+                            <a data-eos-keep-tab
+                               href="{% url 'eos_tax:bot_detail' row.character_id %}?month={{ selected_month }}">{{ row.character_name }}</a>
+                            {% include "eos_tax/partials/copy-button.html" with text=row.character_name %}
+                        </th>
+                        {% if row.corporation_then %}
+                            <td class="text-danger">{{ row.corporation_then }}</td>
+                        {% else %}
+                            <td>&mdash;</td>
+                        {% endif %}
+                        {% if row.amount is not None %}
+                            <td class="text-end text-nowrap {% if row.amount < 0 %}text-danger{% endif %}">{{ row.amount|floatformat:"0g" }}</td>
+                        {% else %}
+                            <td class="text-end">&mdash;</td>
+                        {% endif %}
+                        {% if row.balance is not None %}
+                            <td class="text-end text-nowrap {% if row.balance < 0 %}text-danger fw-semibold{% endif %}">{{ row.balance|floatformat:"0g" }}</td>
+                        {% else %}
+                            <td class="text-end">&mdash;</td>
+                        {% endif %}
+                        <td class="d-none d-lg-table-cell small">{{ row.description }}</td>
+                        {# read only here; it is written on GM Transactions #}
+                        <td class="d-none d-md-table-cell small">{{ row.note|linebreaksbr }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
+        <span>{% blocktranslate count counter=detail.stats.transactions %}{{ counter }} GM transaction{% plural %}{{ counter }} GM transactions{% endblocktranslate %}</span>
+        <span>{% blocktranslate count counter=detail.stats.negative %}{{ counter }} wallet below zero{% plural %}{{ counter }} wallets below zero{% endblocktranslate %}</span>
+        <span class="ms-auto">{% include "eos_tax/partials/bot-computed-at.html" with computed_at=detail.computed_at %}</span>
+    </div>
+{% else %}
+    <div class="alert alert-success text-center">
+        {% translate "No GM transaction and no wallet below zero on this account." %}
+    </div>
+{% endif %}

@@ -1,11 +1,12 @@
 {% load i18n %}
 
-<th scope="row" class="ps-4">
+<th scope="row" class="ps-4 text-nowrap">
     {# opens on the tab being read, the way the dropdown does #}
     <a data-eos-keep-tab
        href="{% url 'eos_tax:bot_detail' row.character_id %}?month={{ selected_month }}">
         {{ row.character_name }}
     </a>
+    {% include "eos_tax/partials/copy-button.html" with text=row.character_name %}
 </th>
 <td class="d-none d-md-table-cell">{{ row.corporation_name }}</td>
 {% comment %}
@@ -16,6 +17,7 @@
 <td class="d-none d-lg-table-cell">
     {% if row.main_name %}
         {{ row.main_name }}
+        {% include "eos_tax/partials/copy-button.html" with text=row.main_name main=True %}
     {% else %}
         <span class="text-body-secondary">{% translate "not registered" %}</span>
     {% endif %}

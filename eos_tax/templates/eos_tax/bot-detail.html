@@ -9,6 +9,7 @@
         <div class="card-header d-flex align-items-center flex-wrap gap-3">
             <div class="card-title mb-0">
                 {{ detail.character_name }}
+                {% include "eos_tax/partials/copy-button.html" with text=detail.character_name %}
                 {% comment %}
                     Empty rather than a placeholder when Alliance Auth never
                     had a birthday for this character - a blank paren reads
@@ -143,7 +144,7 @@
                 three are fetched when opened, because most visits here are
                 about the matrix.
             {% endcomment %}
-            {% include "eos_tax/partials/bot-tabs.html" %}
+            {% include "eos_tax/partials/bot-tabs.html" with gm_tab=True %}
 
             <div class="tab-content">
             <div class="tab-pane fade show active" id="eos-tax-tab-hours" role="tabpanel">
@@ -244,6 +245,9 @@
 
             <div class="tab-pane fade" id="eos-tax-tab-clock" role="tabpanel"
                  data-eos-signal="clock"></div>
+
+            <div class="tab-pane fade" id="eos-tax-tab-gm" role="tabpanel"
+                 data-eos-signal="gm"></div>
             </div>
         </div>
     </div>
@@ -253,9 +257,11 @@
 
 {% block eos_tax_javascript %}
     {% include "bundles/chart-js.html" %}
+    {% include "bundles/clipboard-js.html" %}
 
     {{ js_config|json_script:"eos-tax-config" }}
 
+    {% sri_static "eos_tax/js/copy-buttons.js" %}
     {% sri_static "eos_tax/js/bot-charts.js" %}
     {% sri_static "eos_tax/js/bots.js" %}
 {% endblock %}

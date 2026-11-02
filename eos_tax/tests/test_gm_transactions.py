@@ -207,6 +207,32 @@ class TestGmPage(GmTestCase):
 
         self.assertEqual((row["age"], row["age_days"]), ("1 y", 400))
 
+    def test_should_read_the_last_login_when_the_page_loads(self):
+        """Not from the job: a login after its run is the newer news."""
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        broke = add_character_audit(BROKE_ID, True, name="Broke Pilot")
+        broke.balance = Decimal("-10.00")
+        broke.save()
+        store_gm_report()
+        three_days_ago = datetime.now(timezone.utc).date() - timedelta(days=3)
+        login = datetime(
+            three_days_ago.year, three_days_ago.month, three_days_ago.day, 12,
+            tzinfo=timezone.utc,
+        )
+        self.gm.last_known_login = login
+        self.gm.save()
+
+        rows = {
+            row["character_id"]: row
+            for row in get_gm_page(get_stored_gm_report())["rows"]
+        }
+
+        self.assertEqual(rows[GM_ID]["last_login"], login)
+        self.assertEqual(rows[GM_ID]["login_days"], 3)
+        # corptools never saw one: nothing to show, not "0 days"
+        self.assertIsNone(rows[BROKE_ID]["last_login"])
+        self.assertIsNone(rows[BROKE_ID]["login_days"])
+
     def test_should_read_a_report_stored_before_ages(self):
         add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
         GmReport.objects.create(
@@ -577,6 +603,30 @@ class TestGmView(GmTestCase):
 
         self.assertIn('data-order="400">1 y</td>', body)
 
+    def test_should_show_the_last_login_as_date_and_days_since(self):
+        login = datetime.now(timezone.utc) - timedelta(days=1)
+        self.gm.last_known_login = login
+        self.gm.save()
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+
+        body = " ".join(table_body(self.client.get(self.url)).split())
+
+        self.assertIn(
+            f'data-order="{login.isoformat()}"> {login:%Y-%m-%d} (1 day) </td>', body
+        )
+
+    def test_should_offer_a_copy_button_for_the_character(self):
+        """The name has to reach the ingame search letter for letter."""
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+
+        response = self.client.get(self.url)
+        character_cell = table_body(response).split('<th scope="row"', 1)[1].split("</th>")[0]
+
+        self.assertIn('data-clipboard-text="Mr Vaseline"', character_cell)
+        self.assertIn("eos-tax-copy", character_cell)
+        self.assertContains(response, "clipboard.min.js")
+        self.assertContains(response, "eos_tax/js/copy-buttons.")
+
     def test_should_show_the_note_second_and_age_and_main_after_the_character(self):
         """Header and cells move together - one without the other puts every
         value under the wrong title."""
@@ -592,14 +642,17 @@ class TestGmView(GmTestCase):
         cells = after_character.split("</td>")
 
         self.assertEqual(
-            titles[:7],
-            ["In the Alliance", "Note", "Date", "Character", "Age", "Main", "Corporation"],
+            titles[:8],
+            ["In the Alliance", "Note", "Date", "Character", "Age", "Last login", "Main",
+             "Corporation"],
         )
         self.assertNotIn("Transaction for", titles)
         self.assertIn("data-eos-note-character", before_character.split("</td>")[1])
         self.assertIn(_at(3).strftime("%Y-%m-%d %H:%M"), before_character.split("</td>")[2])
         self.assertIn('data-order="400">1 y', cells[0])
-        self.assertIn("not registered", cells[1])
+        # no login known: a dash
+        self.assertIn('data-order="">&mdash;', cells[1])
+        self.assertIn("not registered", cells[2])
 
     def test_should_show_the_corporations_in_the_alliance_before_the_alliance(self):
         EveCharacter.objects.filter(character_id=GM_ID).update(alliance_name="Ours")
@@ -610,10 +663,11 @@ class TestGmView(GmTestCase):
         titles = [cell.split(">", 1)[1].split("<", 1)[0] for cell in header.split("<th ")[1:]]
         cells = table_body(response).split("</th>", 1)[1].split("</td>")
 
-        self.assertEqual(titles[8:10], ["Corporations in the Alliance", "Alliance"])
-        # after the Character: Age, Main, Corporation, at the time, then these two
-        self.assertIn('class="d-none d-lg-table-cell">', cells[4])
-        self.assertIn('class="d-none d-md-table-cell">Ours', cells[5])
+        self.assertEqual(titles[9:11], ["Corporations in the Alliance", "Alliance"])
+        # after the Character: Age, Last login, Main, Corporation, at the
+        # time, then these two
+        self.assertIn('class="d-none d-lg-table-cell">', cells[5])
+        self.assertIn('class="d-none d-md-table-cell">Ours', cells[6])
 
     def test_should_show_isk_as_whole_numbers_and_sort_by_the_exact_value(self):
         self.gm.balance = Decimal("1500.49")

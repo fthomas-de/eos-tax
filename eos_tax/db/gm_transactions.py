@@ -445,11 +445,43 @@ def _parties_of(rows):
     ]
 
 
-def get_gm_page(stored):
-    """One row per GM transaction, and one per character below zero without one."""
-    transactions = stored["transactions"]
+def gm_listed_character_ids():
+    """Every character the GM Transactions page lists: a GM transaction in
+    the stored report, or a wallet below zero now - the same two sources
+    the page reads, so a red row on the bots page is one to be found there."""
+    stored = GmReport.objects.filter(pk=1).first()
+    transactions = stored.report["transactions"] if stored else []
 
+    return {row["character_id"] for row in transactions} | set(_negative_balances())
+
+
+def account_character_ids(character_id):
+    """Every character on the same Alliance Auth account; a character nobody
+    registered is an account of its own, as in find_account_in_alliance."""
+    owners = CharacterOwnership.objects.filter(
+        user__character_ownerships__character__character_id=character_id
+    ).values_list("character__character_id", flat=True)
+
+    return set(owners) | {character_id}
+
+
+def get_gm_page(stored, character_ids=None):
+    """One row per GM transaction, and one per character below zero without one.
+
+    character_ids: only these characters - one account on the bots page.
+    """
+    transactions = stored["transactions"]
     balances = _negative_balances()
+
+    if character_ids is not None:
+        transactions = [
+            row for row in transactions if row["character_id"] in character_ids
+        ]
+        balances = {
+            eve_id: balance for eve_id, balance in balances.items()
+            if eve_id in character_ids
+        }
+
     with_transaction = {row["character_id"] for row in transactions}
     negative_only = set(balances) - with_transaction
     character_ids = with_transaction | negative_only
@@ -460,6 +492,15 @@ def get_gm_page(stored):
             character__character_id__in=with_transaction
         ).values_list("character__character_id", "balance")
     )
+    # read now, like the balances: a login the job saw would be stale by
+    # the next one
+    logins = dict(
+        CharacterAudit.objects.filter(
+            character__character_id__in=character_ids,
+            last_known_login__isnull=False,
+        ).values_list("character__character_id", "last_known_login")
+    )
+    today = timezone.now().date()
     characters = {
         character.character_id: character
         for character in EveCharacter.objects.filter(character_id__in=character_ids)
@@ -491,6 +532,7 @@ def get_gm_page(stored):
     def row_for(character_id, transaction=None):
         character = characters.get(character_id)
         main = mains.get(character_id)
+        last_login = logins.get(character_id)
         named, other = (
             sides(transaction["description"], player_names) if transaction else ("", "")
         )
@@ -514,6 +556,10 @@ def get_gm_page(stored):
             "age": format_age_days(age_days.get(character_id)),
             # what the Age column sorts by - "2 y" and "5 mo" do not sort as text
             "age_days": age_days.get(character_id),
+            # None when corptools never saw one
+            "last_login": last_login,
+            # calendar days in UTC, the zone the date beside it is printed in
+            "login_days": (today - last_login.date()).days if last_login else None,
             "balance": balances.get(character_id),
             "date": transaction["date"] if transaction else None,
             "amount": transaction["amount"] if transaction else None,

@@ -151,8 +151,11 @@
 {% endblock %}
 
 {% block eos_tax_javascript %}
+    {% include "bundles/clipboard-js.html" %}
+
     {{ js_config|json_script:"eos-tax-config" }}
 
+    {% sri_static "eos_tax/js/copy-buttons.js" %}
     {% sri_static "eos_tax/js/bots.js" %}
     {% sri_static "eos_tax/js/recalculate.js" %}
 {% endblock %}

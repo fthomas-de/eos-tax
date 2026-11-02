@@ -22,16 +22,24 @@
                 {% include "eos_tax/partials/bot-group-header.html" with group=group columns=10 %}
 
                 {% for row in group.characters %}
-                <tr>
-                    <th scope="row" class="ps-4">
+                <tr{% if row.character_id in gm_listed %} class="table-danger" title="{% translate 'Listed on GM Transactions' %}"{% endif %}>
+                    <th scope="row" class="ps-4 text-nowrap">
                         {# opens on the tab being read, the way the dropdown does #}
                         <a data-eos-keep-tab
                            href="{% url 'eos_tax:bot_detail' row.character_id %}?month={{ selected_month }}">
                             {{ row.character_name }}
                         </a>
+                        {% include "eos_tax/partials/copy-button.html" with text=row.character_name %}
                     </th>
                     <td>{{ row.corporation_name|default:"&mdash;" }}</td>
-                    <td class="d-none d-md-table-cell">{{ row.main_name|default:"&mdash;" }}</td>
+                    <td class="d-none d-md-table-cell">
+                        {% if row.main_name %}
+                            {{ row.main_name }}
+                            {% include "eos_tax/partials/copy-button.html" with text=row.main_name main=True %}
+                        {% else %}
+                            &mdash;
+                        {% endif %}
+                    </td>
                     <td class="d-none d-lg-table-cell">{{ row.age|default:"&mdash;" }}</td>
                     <td class="text-end">{{ row.suspicious_days }}</td>
                     <td class="text-end d-none d-md-table-cell">{{ row.active_days }}</td>

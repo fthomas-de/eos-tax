@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- GM Transactions has a copy button beside each character name, the same
+  one the overview has for the Reason: looking a character up ingame
+  means typing the name letter for letter, and the link on the name
+  leads to the Character Audit, not to the clipboard. The clipboard
+  script both pages share now lives in a file of its own instead of the
+  overview's script.
+- GM Transactions has a column "Last login" after "Age": the date of the
+  character's last login, with the days since in brackets, sorted by the
+  moment itself. It is read from corptools when the page loads, like the
+  wallet balance, not from the GM job - a login after the job ran is the
+  newer news. A character corptools never saw log in gets a dash.
+- The bots pages have copy buttons too: beside every character name and
+  every main name in the five lists, in the group headings and in the
+  title of the character page. The button is one shared template now, so
+  GM Transactions and the bots pages cannot drift apart.
+- A row on the bots lists turns red when GM Transactions lists that
+  character - a GM transaction in the GM job's report, or a wallet below
+  zero right now, the same two sources that page reads. A bot that also
+  had ISK moved by a GM is the case worth opening first, and until now
+  it took a second page to notice. The tooltip of the row says why.
+- The character page of the bots has a new tab "GM Transactions": every
+  row GM Transactions lists for any character of the same Alliance Auth
+  account, with date, character, Corporation at the time, amount, wallet
+  balance, description and the note (read only). It is not limited to
+  the month on screen - a GM booking belongs to no month - and loads
+  when opened, like the other tabs. Before the GM job's first run it
+  queues the job and waits for it.
+
 ## [0.4.15] - 2026-10-29
 
 ### Added

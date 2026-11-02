@@ -39,7 +39,7 @@
                     {% include "eos_tax/partials/bot-group-header.html" with group=group columns=9 %}
 
                     {% for row in group.characters %}
-                    <tr>
+                    <tr{% if row.character_id in gm_listed %} class="table-danger" title="{% translate 'Listed on GM Transactions' %}"{% endif %}>
                         {% include "eos_tax/partials/bot-character-cells.html" %}
                         <td class="text-end">{{ row.share }}&nbsp;%</td>
                         <td class="text-end d-none d-md-table-cell text-body-secondary">{{ row.corp_share }}&nbsp;%</td>

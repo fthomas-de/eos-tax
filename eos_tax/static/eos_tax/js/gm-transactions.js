@@ -128,6 +128,7 @@ document.addEventListener("DOMContentLoaded", function () {
             { searchable: false },  // Date
             { searchable: true },   // Character
             { searchable: false },  // Age
+            { searchable: false },  // Last login
             { searchable: true },   // Main
             { searchable: true },   // Corporation
             { searchable: true },   // Corporation at the time

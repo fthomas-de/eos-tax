@@ -65,6 +65,7 @@
                                 <th scope="col">{% translate "Date" %}</th>
                                 <th scope="col">{% translate "Character" %}</th>
                                 <th scope="col" class="d-none d-lg-table-cell">{% translate "Age" %}</th>
+                                <th scope="col" class="d-none d-lg-table-cell">{% translate "Last login" %}</th>
                                 <th scope="col">{% translate "Main" %}</th>
                                 <th scope="col">{% translate "Corporation" %}</th>
                                 <th scope="col">{% translate "Corporation at the time" %}</th>
@@ -121,10 +122,20 @@
                                     {% else %}
                                         <td data-order="">&mdash;</td>
                                     {% endif %}
-                                    <th scope="row">
+                                    <th scope="row" class="text-nowrap">
                                         <a href="{% url 'corptools:reactmain' row.character_id %}">{{ row.character_name }}</a>
+                                        {% include "eos_tax/partials/copy-button.html" with text=row.character_name %}
                                     </th>
                                     <td class="d-none d-lg-table-cell" data-order="{{ row.age_days|default_if_none:'' }}">{{ row.age|default:"&mdash;" }}</td>
+                                    {# the date, and the days since in brackets - sorted by the moment itself #}
+                                    {% if row.last_login %}
+                                        <td class="d-none d-lg-table-cell text-nowrap" data-order="{{ row.last_login|date:'c' }}">
+                                            {{ row.last_login|date:"Y-m-d" }}
+                                            ({% blocktranslate count days=row.login_days %}{{ days }} day{% plural %}{{ days }} days{% endblocktranslate %})
+                                        </td>
+                                    {% else %}
+                                        <td class="d-none d-lg-table-cell" data-order="">&mdash;</td>
+                                    {% endif %}
                                     {% comment %}
                                         Empty when Alliance Auth knows no main - a dash
                                         would read as "no main", which is a different
@@ -223,9 +234,11 @@
 
 {% block eos_tax_javascript %}
     {% include "bundles/datatables-2-js-bs5.html" %}
+    {% include "bundles/clipboard-js.html" %}
 
     {{ js_config|json_script:"eos-tax-config" }}
 
+    {% sri_static "eos_tax/js/copy-buttons.js" %}
     {% sri_static "eos_tax/js/gm-transactions.js" %}
     {% sri_static "eos_tax/js/recalculate.js" %}
 {% endblock %}

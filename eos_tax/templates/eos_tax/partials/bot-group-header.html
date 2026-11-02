@@ -10,6 +10,7 @@
 <tr class="table-active">
     <th scope="rowgroup" colspan="{{ columns }}">
         {{ group.main_name }}
+        {% include "eos_tax/partials/copy-button.html" with text=group.main_name main=group.has_main %}
         <span class="badge text-bg-secondary ms-2">
             {% blocktranslate count counter=group.count %}{{ counter }} character{% plural %}{{ counter }} characters{% endblocktranslate %}
         </span>

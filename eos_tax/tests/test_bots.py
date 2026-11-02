@@ -514,7 +514,7 @@ class TestBotsPage(EosTaxTestCase):
 
         self.assertIn('scope="rowgroup"', body)
         self.assertIn("1 character", body)
-        self.assertIn('<th scope="row" class="ps-4">', body)
+        self.assertIn('<th scope="row" class="ps-4 text-nowrap">', body)
 
     def test_should_show_the_characters_age(self):
         """The character list and the character page read the same

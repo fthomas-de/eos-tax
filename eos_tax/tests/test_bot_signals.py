@@ -939,7 +939,7 @@ class TestBotSignalView(EosTaxTestCase):
 
                 self.assertContains(response, 'scope="rowgroup"')
                 self.assertContains(response, "1 character")
-                self.assertContains(response, '<th scope="row" class="ps-4">')
+                self.assertContains(response, '<th scope="row" class="ps-4 text-nowrap">')
 
 
 class TestBotsPageTabs(EosTaxTestCase):

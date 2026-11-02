@@ -1,0 +1,19 @@
+{% load i18n %}
+
+{% comment %}
+    A name to the clipboard, wired up by copy-buttons.js - the page loads it
+    with bundles/clipboard-js.html. text: what it copies; main: the label
+    says main name instead of character name.
+{% endcomment %}
+{% if main %}
+    {% translate "Copy main name to clipboard" as copy_label %}
+{% else %}
+    {% translate "Copy character name to clipboard" as copy_label %}
+{% endif %}
+<button type="button"
+        class="btn btn-link btn-sm p-0 ms-1 align-baseline eos-tax-copy"
+        data-clipboard-text="{{ text }}"
+        title="{{ copy_label }}"
+        aria-label="{{ copy_label }}">
+    <i class="fa-regular fa-copy" aria-hidden="true"></i>
+</button>

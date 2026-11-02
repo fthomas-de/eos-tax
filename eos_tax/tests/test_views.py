@@ -469,6 +469,8 @@ class TestOverviewTable(EosTaxTestCase):
 
         self.assertContains(response, f'data-clipboard-text="{reason}"')
         self.assertContains(response, "clipboard.min.js")
+        # the buttons do nothing without the script that wires them up
+        self.assertContains(response, "eos_tax/js/copy-buttons.")
 
     def test_should_not_offer_a_copy_button_without_a_reason(self):
         """The running month has no reason yet, so there is nothing to copy.
@@ -485,7 +487,7 @@ class TestOverviewTable(EosTaxTestCase):
         drew a placeholder box instead of a tick.
 
         Shallow guard on the emitted script, not on the browser behaviour."""
-        script = read_static("overview.js")
+        script = read_static("copy-buttons.js")
 
         self.assertIn('replace("fa-regular", "fa-solid")', script)
         self.assertIn('replace("fa-solid", "fa-regular")', script)

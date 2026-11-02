@@ -31,7 +31,13 @@ from eos_tax.db.bot_signals import (
     get_rhythm_detail,
     get_run_detail,
 )
-from eos_tax.db.gm_transactions import get_gm_page, get_stored_gm_report, save_gm_note
+from eos_tax.db.gm_transactions import (
+    account_character_ids,
+    get_gm_page,
+    get_stored_gm_report,
+    gm_listed_character_ids,
+    save_gm_note,
+)
 from eos_tax.db.payments import (
     STATE_OPEN,
     STATE_PAID,
@@ -654,6 +660,8 @@ def bots(request):
         "stats": stats,
         "min_hours": config.bot_min_hours_per_day,
         "min_days": config.bot_min_days_per_month,
+        # red rows: a bot with GM bookings or a wallet below zero
+        "gm_listed": gm_listed_character_ids(),
         "wanted": wanted,
         "matches": matches,
         # the month travels in the url, so a tab opened after the form was
@@ -888,7 +896,25 @@ def bot_signal(request, signal):
         "stats": report["stats"],
         "computed_at": report["computed_at"],
         "selected_month": month,
+        "gm_listed": gm_listed_character_ids(),
     })
+
+
+def _account_gm(character_id, _year, _month):
+    """The GM Transactions rows of the character's whole account, None while
+    the GM job has not run yet. A GM booking belongs to no month, so the
+    month on screen does not narrow it."""
+    stored = get_stored_gm_report()
+
+    if stored is None:
+        queue_gm_report()
+        # an eager Celery - the tests - has found them by now
+        stored = get_stored_gm_report()
+
+    if stored is None:
+        return None
+
+    return get_gm_page(stored, account_character_ids(character_id))
 
 
 # The same three detections, read for one character instead of for everyone.
@@ -896,6 +922,8 @@ BOT_SIGNAL_DETAILS = {
     "runs": ("eos_tax/partials/bot-run-detail.html", get_run_detail),
     "rhythm": ("eos_tax/partials/bot-rhythm-detail.html", get_rhythm_detail),
     "clock": ("eos_tax/partials/bot-clock-detail.html", get_clock_detail),
+    # not a reading: what GM Transactions lists for the whole account
+    "gm": ("eos_tax/partials/bot-gm-detail.html", _account_gm),
 }
 
 

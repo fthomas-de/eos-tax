@@ -231,6 +231,7 @@
     {% endcomment %}
     {{ js_config|json_script:"eos-tax-config" }}
 
+    {% sri_static "eos_tax/js/copy-buttons.js" %}
     {% sri_static "eos_tax/js/overview.js" %}
 {% endblock %}
 
