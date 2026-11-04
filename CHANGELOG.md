@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.17] - 2026-11-04
+
 ### Changed
 
 - The overview shows the amount owed and the amount paid in green also

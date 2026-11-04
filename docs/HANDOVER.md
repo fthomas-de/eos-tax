@@ -4,11 +4,27 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-02 (0.4.16).
+Last updated 2026-11-04 (0.4.17).
 
 ## Release
 
-- Version **0.4.16** in `eos_tax/__init__.py`, released 2026-11-02
+- Version **0.4.17** in `eos_tax/__init__.py`, released 2026-11-04
+- `[0.4.17]` in `CHANGELOG.md`, one change on the overview:
+  - **Green also for one exact payment among several**: the amount owed
+    and the amount paid turn `text-success` when the total equals the
+    amount owed (as before) **or** one payment with the row's reason code
+    was exactly that amount, whatever the rest adds up to. New field
+    `MonthlyTax.exact_payment` (migration 0032, default False), set by
+    `update_corp` from `find_payment`'s `match == "exact"` via
+    `set_corp_tax(exact_payment=...)`, written **together with
+    `amount_paid`** (a check that finds nothing keeps both).
+    `get_website_data` key `paid_exactly` = `amount_paid is not None and
+    (paid_difference == 0 or exact_payment)`; the template is unchanged
+    apart from its comment. The surplus badge (+) and the payment count
+    badge still show
+  - 2 new strings (field name and help text), in all six catalogues;
+    3 tests in `tests/test_payments.py` (`TestOverviewPaidAmount`,
+    `TestUpdateCorpRecordsThePayment`)
 - `[0.4.16]` in `CHANGELOG.md`, GM Transactions reaches the bots pages:
   - **Copy buttons** beside character names (GM Transactions, every bots
     list, group headings, character page title) and main names (bots).
@@ -164,9 +180,10 @@ Last updated 2026-11-02 (0.4.16).
   versions: see `CHANGELOG.md`. Still worth knowing from them:
   `manage_settings` (0.4.5, migration 0027) guards every settings write;
   `admin_view` alone sees the settings page read only
-- Migrations **0001-0031** applied to `aa_dev`; 0.4.15 brought 0031
-  (permission only), 0.4.13 brought 0030 (`GmNote`)
-- 776 tests, all green (761 without the translation tag, 15 with it)
+- Migrations **0001-0032** applied to `aa_dev`; 0.4.17 brought 0032
+  (`exact_payment`), 0.4.15 brought 0031 (permission only), 0.4.13
+  brought 0030 (`GmNote`)
+- 779 tests, all green (764 without the translation tag, 15 with it)
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the
   page's GM rows can only be seen in tests or on production data. The
   0.4.9 fix, the 0.4.10 "GM X" filter and the whole of 0.4.11 to 0.4.16
@@ -176,6 +193,19 @@ Last updated 2026-11-02 (0.4.16).
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
+
+## Decisions of the 2026-11-04 session
+
+Green for an exact payment among several (0.4.17):
+
+- **User**: when at least one of several payments to a reason code is
+  exactly the amount owed, colour the row green.
+- Claude's calls: both figures turn green, as for an exact total; the
+  flag is stored on the row, not worked out at render (the overview
+  reads no journal); rows checked before 0.4.17 stay as they were until
+  their next recalculation - no data migration, it would have to re-read
+  the journal; without reason codes nothing changes (only an exact
+  payment counts there anyway).
 
 ## Decisions of the 2026-11-02 session
 
@@ -472,6 +502,10 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
+0. **On deploying 0.4.17: migration 0032**, then restart the Celery
+   workers (`set_corp_tax` takes a new keyword). Older months show the
+   new green only after a recalculation; not looked at in a browser -
+   `aa_dev` has no row with an exact payment among several.
 1. **On deploying: restart every Celery worker.** 0.4.10: both bots and
    GM tasks now take `run_id`; a worker on older code fails them with a
    TypeError and their run stands at "Waiting" on the bar for an hour.
@@ -555,7 +589,8 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## State of the dev instance
 
-- Migrations 0001-0031 applied to `aa_dev`. `eos_tax_gmnote` is empty.
+- Migrations 0001-0032 applied to `aa_dev`; every `MonthlyTax` row has
+  `exact_payment` False until recalculated. `eos_tax_gmnote` is empty.
   Nobody holds `gm_bots_access` there yet.
 - `eos_tax_botreport` holds 8 rows from a trial run of the job (2026-09
   and 2026-10, all four tabs) - our own table, safe to overwrite or
@@ -702,6 +737,10 @@ script runs there.
   `ProgressTestCase` does.
 - **`create_user` per login fails on the second call** with a duplicate
   username - make the users once in `setUp` and `force_login` them.
+- **`eos-test ... | tail` can cut off the result line**: stderr and
+  stdout interleave, and in a short run (the translation tag) the
+  `Ran`/`OK` lines came before "Found 15 test(s)" and fell out of
+  `tail -5`. Grep for `^Ran|^OK|^FAILED` instead.
 - **A stale `.git/CLAUDE_COMMIT_MSG` gets committed** (0.4.12, 0.4.15
   and 0.4.16 commits). The Write tool needs a Read before it may
   overwrite the file, and a failed Write in the same batch as the
