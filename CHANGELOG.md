@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.18] - 2026-11-04
+
 ### Changed
 
 - The badge for an amount paid in several transfers names the transfers

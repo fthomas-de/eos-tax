@@ -4,11 +4,26 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-04 (0.4.17).
+Last updated 2026-11-04 (0.4.18).
 
 ## Release
 
-- Version **0.4.17** in `eos_tax/__init__.py`, released 2026-11-04
+- Version **0.4.18** in `eos_tax/__init__.py`, released 2026-11-04
+- `[0.4.18]` in `CHANGELOG.md`, one change on the overview:
+  - **The sum badge's tooltip names the transfers**: "Sum of 3 payments:
+    600.000.000 / 300.000.000 / 100.000.000 ISK", highest first; beyond
+    five "Sum of 7 payments, the 5 largest: ... ISK". New field
+    `MonthlyTax.largest_payments` (JSONField, migration 0033, default
+    `[]`), written by `update_corp` via `_largest_payments` in
+    `db/payments.py` (`LARGEST_PAYMENTS_SHOWN` = 5, each cut to whole ISK
+    like `amount_paid`) through `set_corp_tax(largest_payments=...)`,
+    **together with `amount_paid`** (a check that finds nothing keeps
+    it). `get_website_data` keys `isk_largest_payments` (formatted,
+    joined " / ") and `payments_shown`; empty = the old count-only text
+  - 4 new strings (field name, help text, two plural tooltips), in all
+    six catalogues; 5 tests in `tests/test_payments.py`
+    (`TestUpdateCorpRecordsThePayment`, `TestOverviewPaidAmount`) and
+    `tests/test_views.py`
 - `[0.4.17]` in `CHANGELOG.md`, one change on the overview:
   - **Green also for one exact payment among several**: the amount owed
     and the amount paid turn `text-success` when the total equals the
@@ -180,10 +195,10 @@ Last updated 2026-11-04 (0.4.17).
   versions: see `CHANGELOG.md`. Still worth knowing from them:
   `manage_settings` (0.4.5, migration 0027) guards every settings write;
   `admin_view` alone sees the settings page read only
-- Migrations **0001-0032** applied to `aa_dev`; 0.4.17 brought 0032
-  (`exact_payment`), 0.4.15 brought 0031 (permission only), 0.4.13
-  brought 0030 (`GmNote`)
-- 779 tests, all green (764 without the translation tag, 15 with it)
+- Migrations **0001-0033** applied to `aa_dev`; 0.4.18 brought 0033
+  (`largest_payments`), 0.4.17 brought 0032 (`exact_payment`), 0.4.15
+  brought 0031 (permission only), 0.4.13 brought 0030 (`GmNote`)
+- 784 tests, all green (769 without the translation tag, 15 with it)
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the
   page's GM rows can only be seen in tests or on production data. The
   0.4.9 fix, the 0.4.10 "GM X" filter and the whole of 0.4.11 to 0.4.16
@@ -194,7 +209,21 @@ Last updated 2026-11-04 (0.4.17).
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
 
-## Decisions of the 2026-11-04 session
+## Decisions of the 2026-11-04 sessions
+
+Payment amounts in the sum badge's tooltip (0.4.18) - the user's choices
+unless marked:
+
+- **The five highest**, highest first; **stored on the row** (migration
+  0033), not read from the journal at render - the overview stays
+  journal-free.
+- **Beyond five: the count plus "the 5 largest"** (chosen over one line
+  per amount with "and n more").
+- Claude's calls: amounts joined by " / " in one native `title`; each
+  transfer cut to whole ISK like `amount_paid`; written with the amount
+  paid, so a check finding nothing keeps them; rows checked before 0.4.18
+  keep the count-only tooltip until recalculated - no data migration;
+  French with a space before the colon, as the rest of its catalogue.
 
 Green for an exact payment among several (0.4.17):
 
@@ -502,17 +531,12 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
-00. **Unreleased, uncommitted: payment amounts in the sum badge's
-   tooltip** (user's choices: stored on the row, "Sum of n payments, the
-   5 largest: ... ISK" beyond five). `MonthlyTax.largest_payments`
-   (JSONField, migration 0033, applied to `aa_dev`), written with
-   `amount_paid` by `update_corp` via `_largest_payments` in
-   `db/payments.py` (`LARGEST_PAYMENTS_SHOWN` = 5, whole ISK cut, highest
-   first). Overview keys `isk_largest_payments` (joined " / ") and
-   `payments_shown`; empty = the old count-only text. 4 new strings,
-   not yet in the catalogues (at `/commit`). On deploying: migration
-   0033, restart Celery (`set_corp_tax` takes a new keyword). Not looked
-   at in a browser.
+00. **On deploying 0.4.18: migration 0033** before the overview loads
+   (it reads `largest_payments` on every row), then restart the Celery
+   workers (`set_corp_tax` takes a new keyword). The amounts appear only
+   on months recalculated afterwards. Not looked at in a browser, only
+   through the tests; check one tooltip in production (long amounts in
+   a native tooltip, the Korean and French wording).
 0. **On deploying 0.4.17: migration 0032**, then restart the Celery
    workers (`set_corp_tax` takes a new keyword). Older months show the
    new green only after a recalculation; not looked at in a browser -
@@ -600,8 +624,8 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## State of the dev instance
 
-- Migrations 0001-0032 applied to `aa_dev`; every `MonthlyTax` row has
-  `exact_payment` False until recalculated. `eos_tax_gmnote` is empty.
+- Migrations 0001-0033 applied to `aa_dev`; every `MonthlyTax` row has
+  `exact_payment` False and `largest_payments` `[]` until recalculated. `eos_tax_gmnote` is empty.
   Nobody holds `gm_bots_access` there yet.
 - `eos_tax_botreport` holds 8 rows from a trial run of the job (2026-09
   and 2026-10, all four tabs) - our own table, safe to overwrite or
