@@ -461,6 +461,17 @@ class MonthlyTax(models.Model):
         ),
     )
 
+    largest_payments = models.JSONField(
+        verbose_name=_("Largest payments"),
+        default=list,
+        blank=True,
+        help_text=_(
+            "The largest of the payments the amount paid is made of, in whole "
+            "ISK, highest first - at most five. Set by the payment check along "
+            "with the amount paid."
+        ),
+    )
+
     gross_income = models.BigIntegerField(
         verbose_name=_("Gross PvE income"),
         null=True,

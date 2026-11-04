@@ -30,7 +30,7 @@ from eos_tax.db.shared import _month_range
 logger = get_extension_logger(__name__)
 
 
-def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False, alliance_tax_rate: float = 0, amount_paid: int = None, payment_count: int = 0, exact_payment: bool = False, gross_income: int = None, unaudited_characters: list = None, calculation_seconds: float = None, paid_at: datetime = None):
+def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False, alliance_tax_rate: float = 0, amount_paid: int = None, payment_count: int = 0, exact_payment: bool = False, largest_payments: list = None, gross_income: int = None, unaudited_characters: list = None, calculation_seconds: float = None, paid_at: datetime = None):
     # a new row starts from the model defaults, which are what the
     # conditional writes below leave alone
     selected_corp = (
@@ -83,12 +83,28 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
         # with the amount, not on its own: it describes the payments that
         # amount is made of, and a check that found none keeps both
         selected_corp.exact_payment=exact_payment
+        selected_corp.largest_payments=largest_payments or []
     if paid_at is not None:
         selected_corp.paid_at=paid_at
 
     selected_corp.save()
 
     return amount_to_pay
+
+
+# how many single transfers the overview's tooltip names: a Corporation
+# paying in a dozen instalments would otherwise get a tooltip the width of
+# the screen, and the largest ones are what a treasurer looks for in the
+# journal
+LARGEST_PAYMENTS_SHOWN = 5
+
+
+def _largest_payments(payments: list) -> list:
+    """The largest transfers of a payment, in whole ISK, highest first."""
+    # cut like amount_paid, so no single transfer reads higher than the total
+    return sorted(
+        (int(payment["amount"]) for payment in payments), reverse=True,
+    )[:LARGEST_PAYMENTS_SHOWN]
 
 
 # a row's state on the overview, also the values of its ?show= filter
@@ -201,6 +217,12 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
                 # exact payment still is not, the template only badges a sign
                 "flag_paid_difference": abs(paid_difference) >= difference_min,
                 "payment_count": selected_corp.payment_count,
+                # empty on a row checked before the amounts were stored; the
+                # tooltip then names the count alone until the next recalculation
+                "isk_largest_payments": " / ".join(
+                    format_isk(amount) for amount in selected_corp.largest_payments or []
+                ),
+                "payments_shown": len(selected_corp.largest_payments or []),
                 # settled to the ISK - neither more nor less than owed - or
                 # one transfer of exactly the amount among several: a second
                 # transfer on top, a double payment or another month's code
@@ -665,6 +687,7 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
         amount_paid=payment["amount_paid"],
         payment_count=len(payment["payments"]),
         exact_payment=payment["match"] == "exact",
+        largest_payments=_largest_payments(payment["payments"]),
         paid_at=payment["paid_at"],
         gross_income=gross_income,
         unaudited_characters=unaudited_characters,

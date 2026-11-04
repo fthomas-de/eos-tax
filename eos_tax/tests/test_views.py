@@ -596,6 +596,31 @@ class TestOverviewTable(EosTaxTestCase):
         self.assertIn('title="Sum of 3 payments"', body)
         self.assertIn('fa-layer-group me-1"></i>3</span>', body)
 
+    def test_should_name_every_payment_of_a_sum_of_up_to_five(self):
+        self.paid(self.row.amount_to_pay, count=3)
+        self.row.largest_payments = [600_000_000, 300_000_000, 100_000_000]
+        self.row.save()
+
+        body = self.overview().content.decode()
+
+        self.assertIn(
+            'title="Sum of 3 payments: 600.000.000 / 300.000.000 / 100.000.000 ISK"',
+            body,
+        )
+
+    def test_should_name_the_five_largest_of_more_payments(self):
+        self.paid(self.row.amount_to_pay, count=7)
+        self.row.largest_payments = [50_000, 40_000, 30_000, 20_000, 10_000]
+        self.row.save()
+
+        body = self.overview().content.decode()
+
+        self.assertIn(
+            'title="Sum of 7 payments, the 5 largest: '
+            '50.000 / 40.000 / 30.000 / 20.000 / 10.000 ISK"',
+            body,
+        )
+
     def test_should_not_mark_a_single_payment_as_a_sum(self):
         self.paid(self.row.amount_to_pay, count=1)
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-04 10:57+0000\n"
+"POT-Creation-Date: 2026-11-04 15:11+0000\n"
 "Language: ko-KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -446,7 +446,7 @@ msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
 #: models.py:400 templates/eos_tax/index.html:33
-#: templates/eos_tax/index.html:56 templates/eos_tax/index.html:173
+#: templates/eos_tax/index.html:56 templates/eos_tax/index.html:183
 msgid "Paid"
 msgstr "납부완료"
 
@@ -509,14 +509,27 @@ msgid ""
 "Whether one of the payments was exactly the amount owed, whatever the others "
 "add up to. Set by the payment check along with the amount paid."
 msgstr ""
-"나머지 결제의 합계와 관계없이, 결제 중 하나가 납부할 금액과 정확히 일치했는지 "
-"여부입니다. 결제 확인이 납부된 금액과 함께 설정합니다."
+"나머지 결제의 합계와 관계없이, 결제 중 하나가 납부할 금액과 정확히 일치했는"
+"지 여부입니다. 결제 확인이 납부된 금액과 함께 설정합니다."
 
 #: models.py:465
+msgid "Largest payments"
+msgstr "가장 큰 결제"
+
+#: models.py:469
+msgid ""
+"The largest of the payments the amount paid is made of, in whole ISK, "
+"highest first - at most five. Set by the payment check along with the amount "
+"paid."
+msgstr ""
+"납부된 금액을 구성하는 결제 중 가장 큰 결제들로, 정수 ISK 단위이며 큰 금액"
+"순으로 최대 5건입니다. 결제 확인이 납부된 금액과 함께 설정합니다."
+
+#: models.py:476
 msgid "Gross PvE income"
 msgstr "PvE 총수입"
 
-#: models.py:469
+#: models.py:480
 msgid ""
 "Bounties earned this month before any corp tax, in whole ISK: the "
 "corporation wallet reconciled with the member wallets, so a stretch without "
@@ -527,11 +540,11 @@ msgstr ""
 "wallet과 대조한 값이므로 ingame tax가 없는 기간도 포함됩니다. 납부할 금액은 "
 "이 값으로 계산됩니다. 저장되기 전에 기록된 행에서는 비어 있습니다."
 
-#: models.py:477 templates/eos_tax/index.html:57
+#: models.py:488 templates/eos_tax/index.html:57
 msgid "Characters without wallet audit"
 msgstr "wallet 감사가 없는 Character"
 
-#: models.py:481
+#: models.py:492
 msgid ""
 "Characters whose bounties this month showed up in the corporation wallet "
 "only, at or above the configured income, as [{id, name, gross}], highest "
@@ -540,11 +553,11 @@ msgstr ""
 "이번 달 bounty가 Corporation wallet에만 나타난 Character 중 설정된 수입 이상"
 "인 Character, [{id, name, gross}] 형식, 높은 순."
 
-#: models.py:488 templates/eos_tax/index.html:58
+#: models.py:499 templates/eos_tax/index.html:58
 msgid "Calculation time"
 msgstr "계산 시간"
 
-#: models.py:492
+#: models.py:503
 msgid ""
 "How long the last calculation of this month took, in seconds - reading both "
 "journals, the reconciliation and the payment check. Empty on rows written "
@@ -553,11 +566,11 @@ msgstr ""
 "이번 달 마지막 계산에 걸린 시간(초) - 두 journal 읽기, 대조, 결제 확인 포함. "
 "저장되기 전에 기록된 행에서는 비어 있습니다."
 
-#: models.py:499
+#: models.py:510
 msgid "Payment date"
 msgstr "납부일"
 
-#: models.py:503
+#: models.py:514
 msgid ""
 "Journal date of the transfer that settled this month: the one of exactly the "
 "amount owed, or the one that brought the payments up to it. Empty until a "
@@ -567,11 +580,11 @@ msgstr ""
 "합계를 그 금액에 도달시킨 송금입니다. 납부로 행이 정산되기 전까지는 비어 있습"
 "니다."
 
-#: models.py:510
+#: models.py:521
 msgid "Recorded as paid"
 msgstr "납부완료로 기록됨"
 
-#: models.py:514
+#: models.py:525
 msgid ""
 "When the payment check first marked this month as paid. Empty on rows marked "
 "paid before it was stored."
@@ -1049,52 +1062,65 @@ msgstr "납부할 금액보다 %(value)s ISK를 더 냈습니다."
 msgid "%(value)s ISK short of the amount owed."
 msgstr "납부할 금액에 %(value)s ISK가 모자랍니다."
 
-#: templates/eos_tax/index.html:133
+#: templates/eos_tax/index.html:138
 #, python-format
 msgid "Sum of %(counter)s payment"
 msgid_plural "Sum of %(counter)s payments"
 msgstr[0] "%(counter)s건의 결제 합계"
 
-#: templates/eos_tax/index.html:149
+#: templates/eos_tax/index.html:140
+#, python-format
+msgid "Sum of %(counter)s payment, the %(shown)s largest: %(amounts)s ISK"
+msgid_plural ""
+"Sum of %(counter)s payments, the %(shown)s largest: %(amounts)s ISK"
+msgstr[0] "%(counter)s건의 결제 합계, 가장 큰 %(shown)s건: %(amounts)s ISK"
+
+#: templates/eos_tax/index.html:142
+#, python-format
+msgid "Sum of %(counter)s payment: %(amounts)s ISK"
+msgid_plural "Sum of %(counter)s payments: %(amounts)s ISK"
+msgstr[0] "%(counter)s건의 결제 합계: %(amounts)s ISK"
+
+#: templates/eos_tax/index.html:159
 msgid "Not shown while in progress"
 msgstr "월이 진행 중인 동안 표시되지 않음"
 
-#: templates/eos_tax/index.html:155 templates/eos_tax/index.html:156
+#: templates/eos_tax/index.html:165 templates/eos_tax/index.html:166
 msgid "Copy reason to clipboard"
 msgstr "Reason을 클립보드에 복사"
 
-#: templates/eos_tax/index.html:172 templates/eos_tax/index.html:173
+#: templates/eos_tax/index.html:182 templates/eos_tax/index.html:183
 #, python-format
 msgid "Transferred %(date)s EVE"
 msgstr "송금 %(date)s EVE"
 
-#: templates/eos_tax/index.html:172 templates/eos_tax/index.html:173
+#: templates/eos_tax/index.html:182 templates/eos_tax/index.html:183
 #, python-format
 msgid "Recorded as paid %(date)s EVE"
 msgstr "납부완료 기록 %(date)s EVE"
 
-#: templates/eos_tax/index.html:176
+#: templates/eos_tax/index.html:186
 msgid "Not paid"
 msgstr "미납"
 
-#: templates/eos_tax/index.html:207
+#: templates/eos_tax/index.html:217
 #, python-format
 msgid "%(seconds)s s"
 msgstr "%(seconds)s초"
 
-#: templates/eos_tax/index.html:218
+#: templates/eos_tax/index.html:228
 msgid "No tax data for the selected months."
 msgstr "선택한 달에 대한 세금 데이터가 없습니다."
 
-#: templates/eos_tax/index.html:220
+#: templates/eos_tax/index.html:230
 msgid "Nothing outstanding."
 msgstr "미납 없음."
 
-#: templates/eos_tax/index.html:222
+#: templates/eos_tax/index.html:232
 msgid "Nothing paid yet."
 msgstr "아직 납부된 항목 없음."
 
-#: templates/eos_tax/index.html:224
+#: templates/eos_tax/index.html:234
 msgid "Nothing in progress."
 msgstr "진행 중인 항목 없음."
 

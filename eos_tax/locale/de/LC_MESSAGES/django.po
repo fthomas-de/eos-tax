@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-04 10:57+0000\n"
+"POT-Creation-Date: 2026-11-04 15:11+0000\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -463,7 +463,7 @@ msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
 #: models.py:400 templates/eos_tax/index.html:33
-#: templates/eos_tax/index.html:56 templates/eos_tax/index.html:173
+#: templates/eos_tax/index.html:56 templates/eos_tax/index.html:183
 msgid "Paid"
 msgstr "Bezahlt"
 
@@ -534,10 +534,24 @@ msgstr ""
 "gezahlten Betrag gesetzt."
 
 #: models.py:465
+msgid "Largest payments"
+msgstr "Größte Zahlungen"
+
+#: models.py:469
+msgid ""
+"The largest of the payments the amount paid is made of, in whole ISK, "
+"highest first - at most five. Set by the payment check along with the amount "
+"paid."
+msgstr ""
+"Die größten der Zahlungen, aus denen der gezahlte Betrag besteht, in ganzen "
+"ISK, die höchste zuerst - höchstens fünf. Wird von der Zahlungsprüfung "
+"zusammen mit dem gezahlten Betrag gesetzt."
+
+#: models.py:476
 msgid "Gross PvE income"
 msgstr "PvE-Bruttoertrag"
 
-#: models.py:469
+#: models.py:480
 msgid ""
 "Bounties earned this month before any corp tax, in whole ISK: the "
 "corporation wallet reconciled with the member wallets, so a stretch without "
@@ -549,11 +563,11 @@ msgstr ""
 "Ingame-Steuer zählt. Daraus wird der zu zahlende Betrag berechnet. Leer bei "
 "Zeilen, die geschrieben wurden, bevor er gespeichert wurde."
 
-#: models.py:477 templates/eos_tax/index.html:57
+#: models.py:488 templates/eos_tax/index.html:57
 msgid "Characters without wallet audit"
 msgstr "Characters ohne Wallet-Audit"
 
-#: models.py:481
+#: models.py:492
 msgid ""
 "Characters whose bounties this month showed up in the corporation wallet "
 "only, at or above the configured income, as [{id, name, gross}], highest "
@@ -562,11 +576,11 @@ msgstr ""
 "Characters, deren Bounties in diesem Monat nur im Corp-Wallet auftauchten, "
 "ab dem eingestellten Einkommen, als [{id, name, gross}], der höchste zuerst."
 
-#: models.py:488 templates/eos_tax/index.html:58
+#: models.py:499 templates/eos_tax/index.html:58
 msgid "Calculation time"
 msgstr "Berechnungsdauer"
 
-#: models.py:492
+#: models.py:503
 msgid ""
 "How long the last calculation of this month took, in seconds - reading both "
 "journals, the reconciliation and the payment check. Empty on rows written "
@@ -576,11 +590,11 @@ msgstr ""
 "beide Journale lesen, der Abgleich und die Zahlungsprüfung. Leer bei Zeilen, "
 "die geschrieben wurden, bevor sie gespeichert wurde."
 
-#: models.py:499
+#: models.py:510
 msgid "Payment date"
 msgstr "Zahlungsdatum"
 
-#: models.py:503
+#: models.py:514
 msgid ""
 "Journal date of the transfer that settled this month: the one of exactly the "
 "amount owed, or the one that brought the payments up to it. Empty until a "
@@ -590,11 +604,11 @@ msgstr ""
 "den geschuldeten Betrag oder die, mit der die Zahlungen ihn erreicht haben. "
 "Leer, bis eine Zahlung die Zeile beglichen hat."
 
-#: models.py:510
+#: models.py:521
 msgid "Recorded as paid"
 msgstr "Als bezahlt erfasst"
 
-#: models.py:514
+#: models.py:525
 msgid ""
 "When the payment check first marked this month as paid. Empty on rows marked "
 "paid before it was stored."
@@ -1093,53 +1107,68 @@ msgstr "%(value)s ISK mehr gezahlt als geschuldet."
 msgid "%(value)s ISK short of the amount owed."
 msgstr "%(value)s ISK fehlen zum geschuldeten Betrag."
 
-#: templates/eos_tax/index.html:133
+#: templates/eos_tax/index.html:138
 #, python-format
 msgid "Sum of %(counter)s payment"
 msgid_plural "Sum of %(counter)s payments"
 msgstr[0] "Summe aus %(counter)s Zahlung"
 msgstr[1] "Summe aus %(counter)s Zahlungen"
 
-#: templates/eos_tax/index.html:149
+#: templates/eos_tax/index.html:140
+#, python-format
+msgid "Sum of %(counter)s payment, the %(shown)s largest: %(amounts)s ISK"
+msgid_plural ""
+"Sum of %(counter)s payments, the %(shown)s largest: %(amounts)s ISK"
+msgstr[0] "Summe aus %(counter)s Zahlung, die %(shown)s größten: %(amounts)s ISK"
+msgstr[1] "Summe aus %(counter)s Zahlungen, die %(shown)s größten: %(amounts)s ISK"
+
+#: templates/eos_tax/index.html:142
+#, python-format
+msgid "Sum of %(counter)s payment: %(amounts)s ISK"
+msgid_plural "Sum of %(counter)s payments: %(amounts)s ISK"
+msgstr[0] "Summe aus %(counter)s Zahlung: %(amounts)s ISK"
+msgstr[1] "Summe aus %(counter)s Zahlungen: %(amounts)s ISK"
+
+#: templates/eos_tax/index.html:159
 msgid "Not shown while in progress"
 msgstr "Nicht angezeigt, solange der Monat läuft"
 
-#: templates/eos_tax/index.html:155 templates/eos_tax/index.html:156
+#: templates/eos_tax/index.html:165 templates/eos_tax/index.html:166
 msgid "Copy reason to clipboard"
 msgstr "Reason in die Zwischenablage kopieren"
 
-#: templates/eos_tax/index.html:172 templates/eos_tax/index.html:173
+#: templates/eos_tax/index.html:182 templates/eos_tax/index.html:183
 #, python-format
 msgid "Transferred %(date)s EVE"
 msgstr "Überwiesen %(date)s EVE"
 
-#: templates/eos_tax/index.html:172 templates/eos_tax/index.html:173
+#: templates/eos_tax/index.html:182 templates/eos_tax/index.html:183
 #, python-format
 msgid "Recorded as paid %(date)s EVE"
 msgstr "Als bezahlt erfasst %(date)s EVE"
 
-#: templates/eos_tax/index.html:176
+#: templates/eos_tax/index.html:186
 msgid "Not paid"
 msgstr "Nicht bezahlt"
 
-#: templates/eos_tax/index.html:207
+#: templates/eos_tax/index.html:217
 #, python-format
 msgid "%(seconds)s s"
 msgstr "%(seconds)s s"
 
-#: templates/eos_tax/index.html:218
+#: templates/eos_tax/index.html:228
 msgid "No tax data for the selected months."
 msgstr "Keine Steuerdaten für die gewählten Monate."
 
-#: templates/eos_tax/index.html:220
+#: templates/eos_tax/index.html:230
 msgid "Nothing outstanding."
 msgstr "Nichts offen."
 
-#: templates/eos_tax/index.html:222
+#: templates/eos_tax/index.html:232
 msgid "Nothing paid yet."
 msgstr "Noch nichts bezahlt."
 
-#: templates/eos_tax/index.html:224
+#: templates/eos_tax/index.html:234
 msgid "Nothing in progress."
 msgstr "Kein laufender Monat."
 

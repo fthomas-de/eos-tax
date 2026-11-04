@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-04 10:57+0000\n"
+"POT-Creation-Date: 2026-11-04 15:11+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -460,7 +460,7 @@ msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
 #: models.py:400 templates/eos_tax/index.html:33
-#: templates/eos_tax/index.html:56 templates/eos_tax/index.html:173
+#: templates/eos_tax/index.html:56 templates/eos_tax/index.html:183
 msgid "Paid"
 msgstr "Оплачено"
 
@@ -528,10 +528,24 @@ msgstr ""
 "остальные. Устанавливается проверкой платежей вместе с оплаченной суммой."
 
 #: models.py:465
+msgid "Largest payments"
+msgstr "Крупнейшие платежи"
+
+#: models.py:469
+msgid ""
+"The largest of the payments the amount paid is made of, in whole ISK, "
+"highest first - at most five. Set by the payment check along with the amount "
+"paid."
+msgstr ""
+"Крупнейшие из платежей, составляющих оплаченную сумму, в целых ISK, по "
+"убыванию - не более пяти. Устанавливается проверкой платежей вместе с "
+"оплаченной суммой."
+
+#: models.py:476
 msgid "Gross PvE income"
 msgstr "Валовый доход PvE"
 
-#: models.py:469
+#: models.py:480
 msgid ""
 "Bounties earned this month before any corp tax, in whole ISK: the "
 "corporation wallet reconciled with the member wallets, so a stretch without "
@@ -543,11 +557,11 @@ msgstr ""
 "ingame tax. Из него рассчитывается сумма к оплате. Пусто в строках, "
 "записанных до того, как он сохранялся."
 
-#: models.py:477 templates/eos_tax/index.html:57
+#: models.py:488 templates/eos_tax/index.html:57
 msgid "Characters without wallet audit"
 msgstr "Characters без аудита wallet"
 
-#: models.py:481
+#: models.py:492
 msgid ""
 "Characters whose bounties this month showed up in the corporation wallet "
 "only, at or above the configured income, as [{id, name, gross}], highest "
@@ -557,11 +571,11 @@ msgstr ""
 "начиная с заданного дохода, в виде [{id, name, gross}], сначала самый "
 "высокий."
 
-#: models.py:488 templates/eos_tax/index.html:58
+#: models.py:499 templates/eos_tax/index.html:58
 msgid "Calculation time"
 msgstr "Время расчёта"
 
-#: models.py:492
+#: models.py:503
 msgid ""
 "How long the last calculation of this month took, in seconds - reading both "
 "journals, the reconciliation and the payment check. Empty on rows written "
@@ -571,11 +585,11 @@ msgstr ""
 "journal, сверка и проверка платежей. Пусто в строках, записанных до того, "
 "как оно сохранялось."
 
-#: models.py:499
+#: models.py:510
 msgid "Payment date"
 msgstr "Дата платежа"
 
-#: models.py:503
+#: models.py:514
 msgid ""
 "Journal date of the transfer that settled this month: the one of exactly the "
 "amount owed, or the one that brought the payments up to it. Empty until a "
@@ -585,11 +599,11 @@ msgstr ""
 "причитающуюся сумму или того, с которым платежи её достигли. Пусто, пока "
 "строка не оплачена."
 
-#: models.py:510
+#: models.py:521
 msgid "Recorded as paid"
 msgstr "Записано как оплаченное"
 
-#: models.py:514
+#: models.py:525
 msgid ""
 "When the payment check first marked this month as paid. Empty on rows marked "
 "paid before it was stored."
@@ -1094,7 +1108,7 @@ msgstr "Оплачено на %(value)s ISK больше, чем причита�
 msgid "%(value)s ISK short of the amount owed."
 msgstr "До суммы к оплате не хватает %(value)s ISK."
 
-#: templates/eos_tax/index.html:133
+#: templates/eos_tax/index.html:138
 #, python-format
 msgid "Sum of %(counter)s payment"
 msgid_plural "Sum of %(counter)s payments"
@@ -1102,46 +1116,63 @@ msgstr[0] "Сумма %(counter)s платежа"
 msgstr[1] "Сумма %(counter)s платежей"
 msgstr[2] "Сумма %(counter)s платежей"
 
-#: templates/eos_tax/index.html:149
+#: templates/eos_tax/index.html:140
+#, python-format
+msgid "Sum of %(counter)s payment, the %(shown)s largest: %(amounts)s ISK"
+msgid_plural ""
+"Sum of %(counter)s payments, the %(shown)s largest: %(amounts)s ISK"
+msgstr[0] "Сумма %(counter)s платежа, %(shown)s крупнейших: %(amounts)s ISK"
+msgstr[1] "Сумма %(counter)s платежей, %(shown)s крупнейших: %(amounts)s ISK"
+msgstr[2] "Сумма %(counter)s платежей, %(shown)s крупнейших: %(amounts)s ISK"
+
+#: templates/eos_tax/index.html:142
+#, python-format
+msgid "Sum of %(counter)s payment: %(amounts)s ISK"
+msgid_plural "Sum of %(counter)s payments: %(amounts)s ISK"
+msgstr[0] "Сумма %(counter)s платежа: %(amounts)s ISK"
+msgstr[1] "Сумма %(counter)s платежей: %(amounts)s ISK"
+msgstr[2] "Сумма %(counter)s платежей: %(amounts)s ISK"
+
+#: templates/eos_tax/index.html:159
 msgid "Not shown while in progress"
 msgstr "Не показывается, пока месяц не завершён"
 
-#: templates/eos_tax/index.html:155 templates/eos_tax/index.html:156
+#: templates/eos_tax/index.html:165 templates/eos_tax/index.html:166
 msgid "Copy reason to clipboard"
 msgstr "Скопировать Reason в буфер обмена"
 
-#: templates/eos_tax/index.html:172 templates/eos_tax/index.html:173
+#: templates/eos_tax/index.html:182 templates/eos_tax/index.html:183
 #, python-format
 msgid "Transferred %(date)s EVE"
 msgstr "Переведено %(date)s EVE"
 
-#: templates/eos_tax/index.html:172 templates/eos_tax/index.html:173
+#: templates/eos_tax/index.html:182 templates/eos_tax/index.html:183
 #, python-format
 msgid "Recorded as paid %(date)s EVE"
 msgstr "Записано как оплаченное %(date)s EVE"
 
-#: templates/eos_tax/index.html:176
+#: templates/eos_tax/index.html:186
 msgid "Not paid"
 msgstr "Не оплачено"
 
-#: templates/eos_tax/index.html:207
+#: templates/eos_tax/index.html:217
 #, python-format
 msgid "%(seconds)s s"
 msgstr "%(seconds)s с"
 
-#: templates/eos_tax/index.html:218
+#: templates/eos_tax/index.html:228
 msgid "No tax data for the selected months."
 msgstr "Нет данных по налогу за выбранные месяцы."
 
-#: templates/eos_tax/index.html:220
+#: templates/eos_tax/index.html:230
 msgid "Nothing outstanding."
 msgstr "Ничего не должны."
 
-#: templates/eos_tax/index.html:222
+#: templates/eos_tax/index.html:232
 msgid "Nothing paid yet."
 msgstr "Пока ничего не оплачено."
 
-#: templates/eos_tax/index.html:224
+#: templates/eos_tax/index.html:234
 msgid "Nothing in progress."
 msgstr "Нет незавершённых месяцев."
 

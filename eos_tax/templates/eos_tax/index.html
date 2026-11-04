@@ -122,10 +122,20 @@
                                                 A badge rather than a grey line below: a sum is
                                                 what tells a treasurer to look at the journal
                                                 before trusting the figure, and a line under
-                                                the amount was easy to read past.
+                                                the amount was easy to read past. The tooltip
+                                                names the largest transfers, so the one to look
+                                                up is known before opening the journal; a row
+                                                checked before they were stored names the count
+                                                alone.
                                             {% endcomment %}
                                             {% if data.payment_count > 1 %}
-                                                {% blocktranslate count counter=data.payment_count asvar summed %}Sum of {{ counter }} payment{% plural %}Sum of {{ counter }} payments{% endblocktranslate %}
+                                                {% if not data.isk_largest_payments %}
+                                                    {% blocktranslate count counter=data.payment_count asvar summed %}Sum of {{ counter }} payment{% plural %}Sum of {{ counter }} payments{% endblocktranslate %}
+                                                {% elif data.payment_count > data.payments_shown %}
+                                                    {% blocktranslate count counter=data.payment_count with shown=data.payments_shown amounts=data.isk_largest_payments asvar summed %}Sum of {{ counter }} payment, the {{ shown }} largest: {{ amounts }} ISK{% plural %}Sum of {{ counter }} payments, the {{ shown }} largest: {{ amounts }} ISK{% endblocktranslate %}
+                                                {% else %}
+                                                    {% blocktranslate count counter=data.payment_count with amounts=data.isk_largest_payments asvar summed %}Sum of {{ counter }} payment: {{ amounts }} ISK{% plural %}Sum of {{ counter }} payments: {{ amounts }} ISK{% endblocktranslate %}
+                                                {% endif %}
                                                 <span class="badge text-bg-secondary ms-1" title="{{ summed }}" aria-hidden="true"><i class="fa-solid fa-layer-group me-1"></i>{{ data.payment_count }}</span>
                                                 <span class="visually-hidden">{{ summed }}</span>
                                             {% endif %}

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- The badge for an amount paid in several transfers names the transfers
+  in its tooltip, not only how many there were: "Sum of 3 payments:
+  600.000.000 / 300.000.000 / 100.000.000 ISK", the largest first. With
+  more than five only the five largest, "Sum of 7 payments, the 5
+  largest: ...". The count alone sent a treasurer to the journal to find
+  out whether one transfer was the right amount and the rest a mistake,
+  or the amount was split on purpose. The payment check now stores the
+  five largest transfers with the amount paid (migration 0033); rows
+  checked before name the count alone until their next recalculation.
+
 ## [0.4.17] - 2026-11-04
 
 ### Changed

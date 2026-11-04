@@ -502,6 +502,17 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
+00. **Unreleased, uncommitted: payment amounts in the sum badge's
+   tooltip** (user's choices: stored on the row, "Sum of n payments, the
+   5 largest: ... ISK" beyond five). `MonthlyTax.largest_payments`
+   (JSONField, migration 0033, applied to `aa_dev`), written with
+   `amount_paid` by `update_corp` via `_largest_payments` in
+   `db/payments.py` (`LARGEST_PAYMENTS_SHOWN` = 5, whole ISK cut, highest
+   first). Overview keys `isk_largest_payments` (joined " / ") and
+   `payments_shown`; empty = the old count-only text. 4 new strings,
+   not yet in the catalogues (at `/commit`). On deploying: migration
+   0033, restart Celery (`set_corp_tax` takes a new keyword). Not looked
+   at in a browser.
 0. **On deploying 0.4.17: migration 0032**, then restart the Celery
    workers (`set_corp_tax` takes a new keyword). Older months show the
    new green only after a recalculation; not looked at in a browser -

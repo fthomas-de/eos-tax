@@ -1336,6 +1336,17 @@ class TestUpdateCorpRecordsThePayment(PaymentsTestCase):
         self.assertTrue(row.payed)
         self.assertFalse(row.exact_payment)
 
+    def test_should_store_the_five_largest_payments_highest_first(self):
+        for day, amount in enumerate((1_000, 6_000, 2_000, 5_000, 3_000, 4_000), start=12):
+            self.pay(amount, day=day)
+        self.pay(self.owed, day=20)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        row = self.row()
+        self.assertEqual(row.payment_count, 7)
+        self.assertEqual(row.largest_payments, [self.owed, 6_000, 5_000, 4_000, 3_000])
+
     def test_should_tell_the_log_how_much_too_much(self):
         self.pay(self.owed + 1_000, day=12)
 
@@ -1423,6 +1434,26 @@ class TestOverviewPaidAmount(PaymentsTestCase):
         self.assertTrue(data["paid_exactly"])
         # the surplus is still reported, green or not
         self.assertEqual(data["paid_difference"], 5_000_000)
+
+    def test_should_name_the_largest_payments(self):
+        row = create_tax_row(CORP_ID, "Bravo Corp", alliance_tax_rate=0.15)
+        row.amount_paid = 1_500_000_000
+        row.payment_count = 2
+        row.largest_payments = [1_000_000_000, 500_000_000]
+        row.save()
+
+        data = self.overview_row()
+
+        self.assertEqual(data["isk_largest_payments"], "1.000.000.000 / 500.000.000")
+        self.assertEqual(data["payments_shown"], 2)
+
+    def test_should_name_no_payments_on_a_row_checked_before_they_were_stored(self):
+        row = create_tax_row(CORP_ID, "Bravo Corp", alliance_tax_rate=0.15)
+        row.amount_paid = 1_500_000_000
+        row.payment_count = 2
+        row.save()
+
+        self.assertEqual(self.overview_row()["isk_largest_payments"], "")
 
     def test_should_list_the_characters_without_wallet_audit(self):
         row = create_tax_row(CORP_ID, "Bravo Corp", alliance_tax_rate=0.15)
