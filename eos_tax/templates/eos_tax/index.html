@@ -80,7 +80,8 @@
                                         class="d-none d-md-table-cell {% if not data.corp_tax_rate %}text-danger fw-semibold{% endif %}">{{ data.corp_tax_rate }}%</td>
                                     <td class="d-none d-md-table-cell" data-order="{{ data.alliance_tax_rate|unlocalize }}">{{ data.alliance_tax_rate }}%</td>
                                     {% comment %}
-                                        Green on both figures when they agree to the ISK, so a
+                                        Green on both figures when they agree to the ISK, or when
+                                        one of several payments was exactly the amount owed, so a
                                         settled row reads as settled without comparing digits.
                                         The tooltip names what the amount is a share of, so a
                                         surprising figure can be checked without the log.

@@ -451,6 +451,16 @@ class MonthlyTax(models.Model):
         help_text=_("How many payments the amount paid is made of."),
     )
 
+    exact_payment = models.BooleanField(
+        verbose_name=_("Exact payment"),
+        default=False,
+        help_text=_(
+            "Whether one of the payments was exactly the amount owed, whatever "
+            "the others add up to. Set by the payment check along with the "
+            "amount paid."
+        ),
+    )
+
     gross_income = models.BigIntegerField(
         verbose_name=_("Gross PvE income"),
         null=True,

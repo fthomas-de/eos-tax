@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-02 17:22+0000\n"
+"POT-Creation-Date: 2026-11-04 10:57+0000\n"
 "Language: fr-FR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -463,7 +463,7 @@ msgid "Tax percentage"
 msgstr "Ingame Corp Tax"
 
 #: models.py:400 templates/eos_tax/index.html:33
-#: templates/eos_tax/index.html:56 templates/eos_tax/index.html:172
+#: templates/eos_tax/index.html:56 templates/eos_tax/index.html:173
 msgid "Paid"
 msgstr "Payé"
 
@@ -521,10 +521,23 @@ msgid "How many payments the amount paid is made of."
 msgstr "Nombre de paiements qui composent le montant payé."
 
 #: models.py:455
+msgid "Exact payment"
+msgstr "Paiement exact"
+
+#: models.py:458
+msgid ""
+"Whether one of the payments was exactly the amount owed, whatever the others "
+"add up to. Set by the payment check along with the amount paid."
+msgstr ""
+"Si l'un des paiements était exactement le montant dû, quel que soit le total "
+"des autres. Défini par la vérification des paiements en même temps que le "
+"montant payé."
+
+#: models.py:465
 msgid "Gross PvE income"
 msgstr "Revenu PvE brut"
 
-#: models.py:459
+#: models.py:469
 msgid ""
 "Bounties earned this month before any corp tax, in whole ISK: the "
 "corporation wallet reconciled with the member wallets, so a stretch without "
@@ -536,11 +549,11 @@ msgstr ""
 "sans ingame tax compte aussi. Le montant à payer en est calculé. Vide pour "
 "les lignes écrites avant qu'il soit enregistré."
 
-#: models.py:467 templates/eos_tax/index.html:57
+#: models.py:477 templates/eos_tax/index.html:57
 msgid "Characters without wallet audit"
 msgstr "Characters sans audit du wallet"
 
-#: models.py:471
+#: models.py:481
 msgid ""
 "Characters whose bounties this month showed up in the corporation wallet "
 "only, at or above the configured income, as [{id, name, gross}], highest "
@@ -550,11 +563,11 @@ msgstr ""
 "la corporation, à partir du revenu configuré, sous la forme [{id, name, "
 "gross}], le plus élevé d'abord."
 
-#: models.py:478 templates/eos_tax/index.html:58
+#: models.py:488 templates/eos_tax/index.html:58
 msgid "Calculation time"
 msgstr "Durée du calcul"
 
-#: models.py:482
+#: models.py:492
 msgid ""
 "How long the last calculation of this month took, in seconds - reading both "
 "journals, the reconciliation and the payment check. Empty on rows written "
@@ -564,11 +577,11 @@ msgstr ""
 "rapprochement et vérification des paiements. Vide pour les lignes écrites "
 "avant qu'elle soit enregistrée."
 
-#: models.py:489
+#: models.py:499
 msgid "Payment date"
 msgstr "Date de paiement"
 
-#: models.py:493
+#: models.py:503
 msgid ""
 "Journal date of the transfer that settled this month: the one of exactly the "
 "amount owed, or the one that brought the payments up to it. Empty until a "
@@ -578,11 +591,11 @@ msgstr ""
 "exact dû, ou celui avec lequel les paiements l'ont atteint. Vide tant "
 "qu'aucun paiement n'a réglé la ligne."
 
-#: models.py:500
+#: models.py:510
 msgid "Recorded as paid"
 msgstr "Enregistré comme payé"
 
-#: models.py:504
+#: models.py:514
 msgid ""
 "When the payment check first marked this month as paid. Empty on rows marked "
 "paid before it was stored."
@@ -1065,70 +1078,70 @@ msgstr ""
 "Aucune ingame corp tax, donc rien n'arrive dans le wallet de la corporation "
 "qui puisse être taxé."
 
-#: templates/eos_tax/index.html:93
+#: templates/eos_tax/index.html:94
 #, python-format
 msgid "Earned in total: %(value)s ISK"
 msgstr "Gagné au total : %(value)s ISK"
 
-#: templates/eos_tax/index.html:115
+#: templates/eos_tax/index.html:116
 #: templates/eos_tax/partials/recalculate-result.html:113
 #, python-format
 msgid "Paid %(value)s ISK more than owed."
 msgstr "%(value)s ISK payés en plus du montant dû."
 
-#: templates/eos_tax/index.html:119
+#: templates/eos_tax/index.html:120
 #: templates/eos_tax/partials/recalculate-result.html:118
 #, python-format
 msgid "%(value)s ISK short of the amount owed."
 msgstr "Il manque %(value)s ISK au montant dû."
 
-#: templates/eos_tax/index.html:132
+#: templates/eos_tax/index.html:133
 #, python-format
 msgid "Sum of %(counter)s payment"
 msgid_plural "Sum of %(counter)s payments"
 msgstr[0] "Somme de %(counter)s paiement"
 msgstr[1] "Somme de %(counter)s paiements"
 
-#: templates/eos_tax/index.html:148
+#: templates/eos_tax/index.html:149
 msgid "Not shown while in progress"
 msgstr "Non affiché tant que le mois est en cours"
 
-#: templates/eos_tax/index.html:154 templates/eos_tax/index.html:155
+#: templates/eos_tax/index.html:155 templates/eos_tax/index.html:156
 msgid "Copy reason to clipboard"
 msgstr "Copier le Reason dans le presse-papiers"
 
-#: templates/eos_tax/index.html:171 templates/eos_tax/index.html:172
+#: templates/eos_tax/index.html:172 templates/eos_tax/index.html:173
 #, python-format
 msgid "Transferred %(date)s EVE"
 msgstr "Viré le %(date)s EVE"
 
-#: templates/eos_tax/index.html:171 templates/eos_tax/index.html:172
+#: templates/eos_tax/index.html:172 templates/eos_tax/index.html:173
 #, python-format
 msgid "Recorded as paid %(date)s EVE"
 msgstr "Enregistré comme payé le %(date)s EVE"
 
-#: templates/eos_tax/index.html:175
+#: templates/eos_tax/index.html:176
 msgid "Not paid"
 msgstr "Non payé"
 
-#: templates/eos_tax/index.html:206
+#: templates/eos_tax/index.html:207
 #, python-format
 msgid "%(seconds)s s"
 msgstr "%(seconds)s s"
 
-#: templates/eos_tax/index.html:217
+#: templates/eos_tax/index.html:218
 msgid "No tax data for the selected months."
 msgstr "Aucune donnée de taxe pour les mois sélectionnés."
 
-#: templates/eos_tax/index.html:219
+#: templates/eos_tax/index.html:220
 msgid "Nothing outstanding."
 msgstr "Rien à payer."
 
-#: templates/eos_tax/index.html:221
+#: templates/eos_tax/index.html:222
 msgid "Nothing paid yet."
 msgstr "Rien de payé pour l'instant."
 
-#: templates/eos_tax/index.html:223
+#: templates/eos_tax/index.html:224
 msgid "Nothing in progress."
 msgstr "Rien en cours."
 
@@ -1433,7 +1446,8 @@ msgstr ""
 
 #: templates/eos_tax/partials/bot-gm-detail.html:73
 msgid "No GM transaction and no wallet below zero on this account."
-msgstr "Aucune transaction GM et aucun wallet en dessous de zéro sur ce compte."
+msgstr ""
+"Aucune transaction GM et aucun wallet en dessous de zéro sur ce compte."
 
 #: templates/eos_tax/partials/bot-group-header.html:18
 msgid "no main known"

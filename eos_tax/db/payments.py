@@ -30,7 +30,7 @@ from eos_tax.db.shared import _month_range
 logger = get_extension_logger(__name__)
 
 
-def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False, alliance_tax_rate: float = 0, amount_paid: int = None, payment_count: int = 0, gross_income: int = None, unaudited_characters: list = None, calculation_seconds: float = None, paid_at: datetime = None):
+def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False, alliance_tax_rate: float = 0, amount_paid: int = None, payment_count: int = 0, exact_payment: bool = False, gross_income: int = None, unaudited_characters: list = None, calculation_seconds: float = None, paid_at: datetime = None):
     # a new row starts from the model defaults, which are what the
     # conditional writes below leave alone
     selected_corp = (
@@ -80,6 +80,9 @@ def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_per
     if amount_paid is not None:
         selected_corp.amount_paid=amount_paid
         selected_corp.payment_count=payment_count
+        # with the amount, not on its own: it describes the payments that
+        # amount is made of, and a check that found none keeps both
+        selected_corp.exact_payment=exact_payment
     if paid_at is not None:
         selected_corp.paid_at=paid_at
 
@@ -198,8 +201,13 @@ def get_website_data(dates: list = [], admin: bool = False, corps=[]):
                 # exact payment still is not, the template only badges a sign
                 "flag_paid_difference": abs(paid_difference) >= difference_min,
                 "payment_count": selected_corp.payment_count,
-                # settled to the ISK - neither more nor less than owed
-                "paid_exactly": amount_paid is not None and paid_difference == 0,
+                # settled to the ISK - neither more nor less than owed - or
+                # one transfer of exactly the amount among several: a second
+                # transfer on top, a double payment or another month's code
+                # pasted twice, does not make the right one wrong
+                "paid_exactly": amount_paid is not None and (
+                    paid_difference == 0 or selected_corp.exact_payment
+                ),
                 "unaudited_characters": [
                     {**character, "isk": format_isk(character["gross"])}
                     for character in selected_corp.unaudited_characters or []
@@ -656,6 +664,7 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
         alliance_tax_rate=alliance_tax_rate,
         amount_paid=payment["amount_paid"],
         payment_count=len(payment["payments"]),
+        exact_payment=payment["match"] == "exact",
         paid_at=payment["paid_at"],
         gross_income=gross_income,
         unaudited_characters=unaudited_characters,

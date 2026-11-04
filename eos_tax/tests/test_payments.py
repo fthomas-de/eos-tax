@@ -1316,6 +1316,26 @@ class TestUpdateCorpRecordsThePayment(PaymentsTestCase):
         self.assertEqual(row.amount_paid, self.owed + 3_000)
         self.assertEqual(row.payment_count, 2)
 
+    def test_should_store_an_exact_payment_among_several(self):
+        self.pay(self.owed, day=12)
+        self.pay(2_000, day=13)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        row = self.row()
+        self.assertEqual(row.amount_paid, self.owed + 2_000)
+        self.assertTrue(row.exact_payment)
+
+    def test_should_not_store_an_exact_payment_for_a_sum(self):
+        self.pay(self.owed - 1_000, day=12)
+        self.pay(2_000, day=13)
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        row = self.row()
+        self.assertTrue(row.payed)
+        self.assertFalse(row.exact_payment)
+
     def test_should_tell_the_log_how_much_too_much(self):
         self.pay(self.owed + 1_000, day=12)
 
@@ -1390,6 +1410,19 @@ class TestOverviewPaidAmount(PaymentsTestCase):
                 row.save()
 
                 self.assertFalse(self.overview_row()["paid_exactly"])
+
+    def test_should_mark_a_row_with_one_exact_payment_among_several(self):
+        row = create_tax_row(CORP_ID, "Bravo Corp", alliance_tax_rate=0.15)
+        row.amount_paid = row.amount_to_pay + 5_000_000
+        row.payment_count = 2
+        row.exact_payment = True
+        row.save()
+
+        data = self.overview_row()
+
+        self.assertTrue(data["paid_exactly"])
+        # the surplus is still reported, green or not
+        self.assertEqual(data["paid_difference"], 5_000_000)
 
     def test_should_list_the_characters_without_wallet_audit(self):
         row = create_tax_row(CORP_ID, "Bravo Corp", alliance_tax_rate=0.15)

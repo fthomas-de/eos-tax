@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- The overview shows the amount owed and the amount paid in green also
+  when one of several payments with the row's reason code was exactly
+  the amount owed. Until now only the total counted, so a Corporation
+  that paid the right amount and then sent a second transfer on top - a
+  double payment, or a reason code pasted twice - read as unsettled, as
+  if the right payment had never come in. The surplus badge still shows
+  what came in on top. The payment check now stores whether such a
+  payment was among them (migration 0032); rows checked before keep the
+  old colour until their next recalculation.
+
 ## [0.4.16] - 2026-11-02
 
 ### Added
