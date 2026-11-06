@@ -234,6 +234,9 @@ document.addEventListener("DOMContentLoaded", function () {
             { searchable: true }    // Description
         ],
         search: {
+            // ?search= lets another page link here filtered to one main;
+            // get() gives null without it, which DataTables cannot search
+            search: new URLSearchParams(window.location.search).get("search") || "",
             caseInsensitive: true,
             smart: true
         },

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- GM Transactions takes its starting search from the address:
+  `?search=%22Some%20Main%22` opens the page with `"Some Main"` already in
+  the search box, so another page can link straight to one main's rows.
+  It is the ordinary search, so it can be cleared in the box like any
+  other. A main whose whole account has left still needs the alliance
+  switch turned off, as before.
+
 ## [0.4.19] - 2026-11-06
 
 ### Added

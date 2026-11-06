@@ -725,6 +725,16 @@ class TestGmView(GmTestCase):
             header.count("<th "),
         )
 
+    def test_script_should_start_from_the_search_parameter(self):
+        """A link from another page carries ?search=; without the fallback
+        a page opened without it would hand DataTables null."""
+        script = read_static("gm-transactions.js")
+
+        self.assertIn(
+            'search: new URLSearchParams(window.location.search).get("search") || "",',
+            script,
+        )
+
     def test_should_offer_a_box_per_counterparty(self):
         add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
         add_wallet_entry(self.gm, BANK_TEXT, Decimal("-2"), _at(4))
