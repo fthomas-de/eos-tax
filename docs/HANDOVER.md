@@ -4,11 +4,19 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-06 (0.4.19).
+Last updated 2026-11-06 (0.4.20).
 
 ## Release
 
-- Version **0.4.19** in `eos_tax/__init__.py`, released 2026-11-06
+- Version **0.4.20** in `eos_tax/__init__.py`, released 2026-11-06
+- `[0.4.20]` in `CHANGELOG.md`, one addition on GM Transactions:
+  - **`?search=<text>` as the starting search**: `gm-transactions.js`
+    passes `new URLSearchParams(window.location.search).get("search") ||
+    ""` as `search.search` to the DataTable - the ordinary search box,
+    clearable there. eos-auth-monitor's account page links a main as
+    `?search=%22<main>%22` (quoted = phrase in smart search). No new
+    strings; source test `test_script_should_start_from_the_search_parameter`
+    in `tests/test_gm_transactions.py`. Checked in the browser by the user
 - `[0.4.19]` in `CHANGELOG.md`, one addition on GM Transactions:
   - **"Cleared" column** (third, after Note): a checkbox per row,
     `data-eos-cleared-box`, disabled without a note. Field
@@ -229,7 +237,18 @@ Last updated 2026-11-06 (0.4.19).
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
 
-## Decisions of the 2026-11-06 session
+## Decisions of the 2026-11-06 sessions
+
+`?search=` on GM Transactions (0.4.20), for the link from
+eos-auth-monitor - the user's choices:
+
+- **The main's name only, quoted** - not the corporation too (it would
+  hide alts in other corps), and not a hidden filter on the Main column
+  (invisible, not clearable). The search also hits Character, Note,
+  Description and the corporation columns, which is accepted.
+- **The alliance switch stays on** when the parameter is present: a main
+  whose whole account has left shows an empty table until the switch is
+  turned off.
 
 "Cleared" on GM Transactions (0.4.19) - the user's
 choices unless marked:
