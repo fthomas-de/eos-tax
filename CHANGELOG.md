@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.19] - 2026-11-06
+
 ### Added
 
 - GM Transactions has a "Cleared" column, third after the note, to tick

@@ -4,11 +4,30 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-04 (0.4.18).
+Last updated 2026-11-06 (0.4.19).
 
 ## Release
 
-- Version **0.4.18** in `eos_tax/__init__.py`, released 2026-11-04
+- Version **0.4.19** in `eos_tax/__init__.py`, released 2026-11-06
+- `[0.4.19]` in `CHANGELOG.md`, one addition on GM Transactions:
+  - **"Cleared" column** (third, after Note): a checkbox per row,
+    `data-eos-cleared-box`, disabled without a note. Field
+    `GmNote.cleared` (migration 0034); POST `gm_transactions_cleared`
+    (`BOTS_GM_READ`, 403) -> `save_gm_cleared` in
+    `db/gm_transactions.py`: refuses an unlisted row or one without a
+    note; an emptied note deletes the `GmNote` row and the tick with it.
+    Row key `cleared` from `get_gm_page`
+  - **Alliance mark grey** (`text-body-secondary`) on a cleared row;
+    `showCleared()` in `gm-transactions.js` updates tick, sort value,
+    `data-eos-cleared` and the mark without a redraw
+  - **Switch "Hide cleared rows"** (`data-eos-cleared-filter`), off by
+    default, in the same `DataTable.ext.search` function as the alliance
+    switch
+  - **GM tab** of the character page: column "Cleared", green `fa-check`,
+    read only. Bots lists unchanged (still red)
+  - 4 new strings, in all six catalogues; tests in
+    `tests/test_gm_transactions.py` (`TestGmNotes`) and
+    `tests/test_bots_gm.py` (`TestGmTab`)
 - `[0.4.18]` in `CHANGELOG.md`, one change on the overview:
   - **The sum badge's tooltip names the transfers**: "Sum of 3 payments:
     600.000.000 / 300.000.000 / 100.000.000 ISK", highest first; beyond
@@ -195,10 +214,11 @@ Last updated 2026-11-04 (0.4.18).
   versions: see `CHANGELOG.md`. Still worth knowing from them:
   `manage_settings` (0.4.5, migration 0027) guards every settings write;
   `admin_view` alone sees the settings page read only
-- Migrations **0001-0033** applied to `aa_dev`; 0.4.18 brought 0033
-  (`largest_payments`), 0.4.17 brought 0032 (`exact_payment`), 0.4.15
-  brought 0031 (permission only), 0.4.13 brought 0030 (`GmNote`)
-- 784 tests, all green (769 without the translation tag, 15 with it)
+- Migrations **0001-0034** applied to `aa_dev`; 0.4.19 brought 0034
+  (`GmNote.cleared`), 0.4.18 brought 0033 (`largest_payments`), 0.4.17
+  brought 0032 (`exact_payment`), 0.4.15 brought 0031 (permission only),
+  0.4.13 brought 0030 (`GmNote`)
+- 797 tests, all green (782 without the translation tag, 15 with it)
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the
   page's GM rows can only be seen in tests or on production data. The
   0.4.9 fix, the 0.4.10 "GM X" filter and the whole of 0.4.11 to 0.4.16
@@ -211,7 +231,7 @@ Last updated 2026-11-04 (0.4.18).
 
 ## Decisions of the 2026-11-06 session
 
-"Cleared" on GM Transactions (committed, unreleased) - the user's
+"Cleared" on GM Transactions (0.4.19) - the user's
 choices unless marked:
 
 - **A tick per row needs a note**; **emptying the note takes the tick
@@ -556,9 +576,10 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
-000. **On deploying the "Cleared" column: migration 0034** before GM
-   Transactions loads (it reads `GmNote.cleared`). Already applied to
-   `aa_dev`. Not looked at in a browser (the dev data has no GM row).
+000. **On deploying 0.4.19: migration 0034** before GM Transactions
+   loads (it reads `GmNote.cleared`); no Celery change. Not looked at in
+   a browser (the dev data has no GM row) - in production tick one row,
+   empty its note, and try the switch.
 00. **On deploying 0.4.18: migration 0033** before the overview loads
    (it reads `largest_payments` on every row), then restart the Celery
    workers (`set_corp_tax` takes a new keyword). The amounts appear only
@@ -652,7 +673,7 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## State of the dev instance
 
-- Migrations 0001-0033 applied to `aa_dev`; every `MonthlyTax` row has
+- Migrations 0001-0034 applied to `aa_dev`; every `MonthlyTax` row has
   `exact_payment` False and `largest_payments` `[]` until recalculated. `eos_tax_gmnote` is empty.
   Nobody holds `gm_bots_access` there yet.
 - `eos_tax_botreport` holds 8 rows from a trial run of the job (2026-09
@@ -737,6 +758,15 @@ The browser pane opens a `file://` page only as a static snapshot - no
 script runs there.
 
 ## Traps recent sessions cost time on
+
+- **Script tests find the first match in the whole file.**
+  `test_script_should_start_from_the_ticked_boxes` compared the first
+  `addEventListener("change"` with the first `dataTable.draw();` and broke
+  when `setUpCleared` (above the page start) got a listener - it now
+  searches from `DOMContentLoaded` on. A new helper function above the
+  page start can trip the other string-order tests the same way.
+- **A quoted bash heredoc still broke a patch script** in the Bash tool
+  (2026-11-06) - write patch scripts with the Write tool, always.
 
 - **`payments._corporation_at` bisects with a float sentinel**
   (`(moment, inf)`): its periods must be `(start, corporation_id)` pairs.
