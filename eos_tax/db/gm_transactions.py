@@ -350,6 +350,8 @@ def save_gm_note(character_id, entry_id, text, user):
     text = clean_note(text)
 
     if not text:
+        # the cleared tick goes with the row: without a note nothing says
+        # why the row was cleared, the user's rule
         GmNote.objects.filter(character_id=character_id, entry_id=entry_id).delete()
         return ""
 
@@ -360,6 +362,22 @@ def save_gm_note(character_id, entry_id, text, user):
     )
 
     return text
+
+
+def save_gm_cleared(character_id, entry_id, cleared, user):
+    """Ticks a row off as cleared, or takes the tick back. ValueError for a
+    row the page does not list, or a row without a note - the note is what
+    says why it was cleared."""
+    if not _is_listed(character_id, entry_id):
+        raise ValueError("no such row on the page")
+
+    updated = GmNote.objects.filter(character_id=character_id, entry_id=entry_id).update(
+        cleared=cleared, updated_by=user, updated_at=timezone.now()
+    )
+
+    # taking the tick off a row whose note is gone is already done
+    if cleared and not updated:
+        raise ValueError("a row needs a note before it can be cleared")
 
 
 def _alliance_corporation_ids(config):
@@ -515,10 +533,10 @@ def get_gm_page(stored, character_ids=None):
     periods, corporation_names = _corporation_periods(with_transaction)
     player_names = _player_names(transactions)
     notes = {
-        (character_id, entry_id): text
-        for character_id, entry_id, text in GmNote.objects.filter(
+        (character_id, entry_id): (text, cleared)
+        for character_id, entry_id, text, cleared in GmNote.objects.filter(
             character_id__in=character_ids
-        ).values_list("character_id", "entry_id", "text")
+        ).values_list("character_id", "entry_id", "text", "cleared")
     }
 
     def corporation_then(character_id, transaction):
@@ -535,6 +553,9 @@ def get_gm_page(stored, character_ids=None):
         last_login = logins.get(character_id)
         named, other = (
             sides(transaction["description"], player_names) if transaction else ("", "")
+        )
+        note, cleared = notes.get(
+            (character_id, transaction["entry_id"] if transaction else 0), ("", False)
         )
 
         return {
@@ -566,9 +587,8 @@ def get_gm_page(stored, character_ids=None):
             "named_character": named,
             "counterparty": other,
             "description": transaction["description"] if transaction else "",
-            "note": notes.get(
-                (character_id, transaction["entry_id"] if transaction else 0), ""
-            ),
+            "note": note,
+            "cleared": cleared,
         }
 
     rows = [row_for(row["character_id"], row) for row in transactions]

@@ -20,6 +20,7 @@ from eos_tax.db.gm_transactions import (
     find_in_alliance,
     get_gm_page,
     get_stored_gm_report,
+    gm_listed_character_ids,
     sides,
     store_gm_report,
 )
@@ -627,7 +628,7 @@ class TestGmView(GmTestCase):
         self.assertContains(response, "clipboard.min.js")
         self.assertContains(response, "eos_tax/js/copy-buttons.")
 
-    def test_should_show_the_note_second_and_age_and_main_after_the_character(self):
+    def test_should_show_the_note_and_cleared_and_age_and_main_after_the_character(self):
         """Header and cells move together - one without the other puts every
         value under the wrong title."""
         EveCharacter.objects.filter(character_id=GM_ID).update(
@@ -642,13 +643,14 @@ class TestGmView(GmTestCase):
         cells = after_character.split("</td>")
 
         self.assertEqual(
-            titles[:8],
-            ["In the Alliance", "Note", "Date", "Character", "Age", "Last login", "Main",
-             "Corporation"],
+            titles[:9],
+            ["In the Alliance", "Note", "Cleared", "Date", "Character", "Age", "Last login",
+             "Main", "Corporation"],
         )
         self.assertNotIn("Transaction for", titles)
         self.assertIn("data-eos-note-character", before_character.split("</td>")[1])
-        self.assertIn(_at(3).strftime("%Y-%m-%d %H:%M"), before_character.split("</td>")[2])
+        self.assertIn("data-eos-cleared-box", before_character.split("</td>")[2])
+        self.assertIn(_at(3).strftime("%Y-%m-%d %H:%M"), before_character.split("</td>")[3])
         self.assertIn('data-order="400">1 y', cells[0])
         # no login known: a dash
         self.assertIn('data-order="">&mdash;', cells[1])
@@ -663,7 +665,7 @@ class TestGmView(GmTestCase):
         titles = [cell.split(">", 1)[1].split("<", 1)[0] for cell in header.split("<th ")[1:]]
         cells = table_body(response).split("</th>", 1)[1].split("</td>")
 
-        self.assertEqual(titles[9:11], ["Corporations in the Alliance", "Alliance"])
+        self.assertEqual(titles[10:12], ["Corporations in the Alliance", "Alliance"])
         # after the Character: Age, Last login, Main, Corporation, at the
         # time, then these two
         self.assertIn('class="d-none d-lg-table-cell">', cells[5])
@@ -693,8 +695,7 @@ class TestGmView(GmTestCase):
         # the first cell of each row, the transaction before the wallet
         self.assertIn('data-order="1"', rows[0].split("</td>")[0])
         self.assertIn(
-            '<i class="fa-solid fa-circle-exclamation text-danger" aria-hidden="true"></i>',
-            rows[0].split("</td>")[0],
+            'class="fa-solid fa-circle-exclamation text-danger"', rows[0].split("</td>")[0]
         )
         self.assertIn('<td data-order="0">', rows[1].split("</td>")[0])
         self.assertNotIn("fa-circle-exclamation", rows[1])
@@ -759,8 +760,10 @@ class TestGmView(GmTestCase):
 
         self.assertIn("let shownParties = ticked();", script)
         self.assertIn("return each.checked;", script)
+        # the page's own start, not setUpCleared's listener on the ticks
+        start = script[script.index('document.addEventListener("DOMContentLoaded"'):]
         self.assertLess(
-            script.index("dataTable.draw();"), script.index('addEventListener("change"')
+            start.index("dataTable.draw();"), start.index('addEventListener("change"')
         )
 
     def test_should_show_the_corporation_at_the_time_in_red(self):
@@ -1006,6 +1009,147 @@ class TestGmNotes(GmTestCase):
         self.assertIn("data-eos-note-save", body)
         self.assertIn('data-bs-dismiss="modal">', body)
         self.assertIn(f'data-eos-note-url="{self.note_url}"', body)
+
+    def clear(self, cleared=True, entry_id=None, character_id=GM_ID):
+        return self.client.post(reverse("eos_tax:gm_transactions_cleared"), {
+            "character_id": character_id,
+            "entry_id": self.first.entry_id if entry_id is None else entry_id,
+            "cleared": "1" if cleared else "0",
+        })
+
+    def cleared_cells(self):
+        """The third cell of each row, the newest transaction first."""
+        return [
+            row.split("</td>")[2]
+            for row in table_body(self.client.get(self.url)).split("</tr>")[:-1]
+        ]
+
+    def test_should_offer_the_tick_only_on_a_row_with_a_note(self):
+        self.save("refund asked")
+
+        second, first = self.cleared_cells()
+
+        self.assertIn("data-eos-cleared-box", first)
+        self.assertNotIn("disabled", first)
+        self.assertIn('title="Cleared"', first)
+        self.assertIn("disabled", second)
+        self.assertIn('title="Add a note first"', second)
+
+    def test_should_clear_one_row_and_take_it_back(self):
+        self.save("refund asked")
+        self.save("other", entry_id=self.second.entry_id)
+
+        response = self.clear()
+
+        self.assertEqual(response.json(), {"cleared": True})
+        second, first = self.cleared_cells()
+        self.assertIn('data-order="1"', first)
+        self.assertIn("checked", first)
+        self.assertIn('data-order="0"', second)
+        self.assertNotIn("checked", second)
+        self.assertEqual(GmNote.objects.get(entry_id=self.first.entry_id).updated_by, self.user)
+
+        self.assertEqual(self.clear(False).json(), {"cleared": False})
+        self.assertFalse(GmNote.objects.filter(cleared=True).exists())
+
+    def test_should_refuse_to_clear_without_a_note(self):
+        """The user's rule: the note says why the row was cleared."""
+        response = self.clear()
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(GmNote.objects.exists())
+
+    def test_should_take_the_tick_away_with_the_note(self):
+        self.save("refund asked")
+        self.clear()
+
+        self.save("")
+        self.save("again")
+
+        self.assertFalse(GmNote.objects.get().cleared)
+
+    def test_should_keep_the_tick_when_the_note_changes(self):
+        self.save("refund asked")
+        self.clear()
+
+        self.save("refund paid")
+
+        self.assertTrue(GmNote.objects.get().cleared)
+
+    def test_should_refuse_to_clear_a_row_the_page_does_not_list(self):
+        self.save("refund asked")
+        # a note left behind by a row a later run no longer found
+        GmNote.objects.create(character_id=GM_ID, entry_id=999999, text="gone")
+
+        self.assertEqual(self.clear(entry_id=999999).status_code, 400)
+        self.assertEqual(self.clear(entry_id="abc").status_code, 400)
+        self.assertFalse(GmNote.objects.filter(cleared=True).exists())
+
+    def test_should_refuse_to_clear_without_admin_view(self):
+        self.save("refund asked")
+        user = create_user("basic", 2100000197, BRAVO_CORP_ID, "Bravo Corp", ["basic_access"])
+        self.client.force_login(user)
+
+        self.assertEqual(self.clear().status_code, 403)
+        self.assertFalse(GmNote.objects.get().cleared)
+
+    def test_should_clear_a_wallet_below_zero_without_a_transaction(self):
+        broke = add_character_audit(BROKE_ID, True, name="Broke Pilot")
+        broke.balance = Decimal("-10.00")
+        broke.save()
+        self.save("owes", entry_id=0, character_id=BROKE_ID)
+
+        self.assertEqual(self.clear(entry_id=0, character_id=BROKE_ID).status_code, 200)
+
+        self.assertIn("checked", self.cleared_cells()[2])
+
+    def test_should_grey_the_alliance_mark_of_a_cleared_row(self):
+        EveCharacter.objects.filter(character_id=GM_ID).update(
+            alliance_id=TAXED_ALLIANCE_ID
+        )
+        store_gm_report()
+        self.save("refund asked")
+        self.clear()
+
+        second, first = [
+            row.split("</td>")[0]
+            for row in table_body(self.client.get(self.url)).split("</tr>")[:-1]
+        ]
+
+        self.assertIn('class="fa-solid fa-circle-exclamation text-body-secondary"', first)
+        self.assertNotIn("text-danger", first)
+        self.assertIn('class="fa-solid fa-circle-exclamation text-danger"', second)
+
+    def test_should_offer_the_switch_for_cleared_rows_off(self):
+        """Off by default, the user's choice: every row shows at first."""
+        self.save("refund asked")
+        self.clear()
+
+        body = self.client.get(self.url).content.decode()
+        switch = body.split('id="eos-tax-hide-cleared"')[0].rsplit("<input", 1)[1]
+        rows = table_body(self.client.get(self.url)).split("</tr>")[:-1]
+
+        self.assertIn("data-eos-cleared-filter", body)
+        self.assertNotIn("checked", switch)
+        self.assertIn('data-eos-cleared="0"', rows[0])
+        self.assertIn('data-eos-cleared="1"', rows[1])
+
+    def test_should_keep_a_cleared_character_on_the_bots_lists(self):
+        """The user's choice: the red row on the bots page stays."""
+        self.save("refund asked")
+        self.save("other", entry_id=self.second.entry_id)
+        self.clear()
+        self.clear(entry_id=self.second.entry_id)
+
+        self.assertIn(GM_ID, gm_listed_character_ids())
+
+    def test_script_should_hide_cleared_rows_by_the_switch(self):
+        script = read_static("gm-transactions.js")
+
+        self.assertIn('row.dataset.eosCleared === "1"', script)
+        self.assertIn("[data-eos-cleared-filter]", script)
+        # an emptied note takes the tick away on the page too
+        self.assertIn("showCleared(dataTable, row, false)", script)
 
     def test_script_should_handle_the_note_as_text_only(self):
         script = read_static("gm-transactions.js")

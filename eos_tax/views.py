@@ -36,6 +36,7 @@ from eos_tax.db.gm_transactions import (
     get_gm_page,
     get_stored_gm_report,
     gm_listed_character_ids,
+    save_gm_cleared,
     save_gm_note,
 )
 from eos_tax.db.payments import (
@@ -294,6 +295,29 @@ def gm_transactions_note(request):
         return HttpResponseBadRequest(str(error))
 
     return JsonResponse({"text": text})
+
+
+@login_required
+# the same access as the note it depends on
+@any_permission_required(BOTS_GM_READ, raise_exception=True)
+@require_POST
+def gm_transactions_cleared(request):
+    """Ticks one row off as cleared ("cleared" = "1") or takes the tick
+    back; answers {"cleared": bool}."""
+    try:
+        character_id = int(request.POST.get("character_id", ""))
+        entry_id = int(request.POST.get("entry_id", ""))
+    except ValueError:
+        return HttpResponseBadRequest("character_id and entry_id must be numbers")
+
+    cleared = request.POST.get("cleared") == "1"
+
+    try:
+        save_gm_cleared(character_id, entry_id, cleared, request.user)
+    except ValueError as error:
+        return HttpResponseBadRequest(str(error))
+
+    return JsonResponse({"cleared": cleared})
 
 
 @login_required

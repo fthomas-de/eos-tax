@@ -35,4 +35,9 @@ urlpatterns = [
         name="gm_transactions_recalculate",
     ),
     path("gm-transactions/note/", views.gm_transactions_note, name="gm_transactions_note"),
+    path(
+        "gm-transactions/cleared/",
+        views.gm_transactions_cleared,
+        name="gm_transactions_cleared",
+    ),
 ]

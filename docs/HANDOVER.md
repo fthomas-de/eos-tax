@@ -209,6 +209,31 @@ Last updated 2026-11-04 (0.4.18).
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
 
+## Decisions of the 2026-11-06 session
+
+"Cleared" on GM Transactions (committed, unreleased) - the user's
+choices unless marked:
+
+- **A tick per row needs a note**; **emptying the note takes the tick
+  away** (the note row is deleted, the flag with it).
+- **A cleared row's alliance mark turns grey** (`text-body-secondary`),
+  not empty - empty means "left".
+- **Switch "Hide cleared rows", off by default.**
+- **The bots lists stay red** for a cleared character; **the GM tab of
+  the character page shows the tick** read only (green `fa-check`).
+- Claude's calls: `GmNote.cleared` (migration 0034), not a table of its
+  own; POST `gm_transactions_cleared` (`BOTS_GM_READ`, 403), answers
+  `{"cleared": bool}`, refuses an unlisted row or a row without a note
+  (taking a tick off a row without a note is a quiet no-op); the column
+  third, after Note; changing the note keeps the tick; `updated_by` /
+  `updated_at` move with a tick too; the wallet-below-zero row (entry 0)
+  can be cleared like any other, and its tick stays when the wallet
+  dips below zero again later. New strings "Cleared", "Add a note first",
+  "Hide cleared rows", "Could not save." - in all six catalogues (gettext
+  had guessed the old note strings for two of them). Tests in `test_gm_transactions.py`
+  (`TestGmNotes`) and `test_bots_gm.py` (`TestGmTab`), all seven
+  sabotages caught. Not looked at in a browser.
+
 ## Decisions of the 2026-11-04 sessions
 
 Payment amounts in the sum badge's tooltip (0.4.18) - the user's choices
@@ -531,6 +556,9 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
+000. **On deploying the "Cleared" column: migration 0034** before GM
+   Transactions loads (it reads `GmNote.cleared`). Already applied to
+   `aa_dev`. Not looked at in a browser (the dev data has no GM row).
 00. **On deploying 0.4.18: migration 0033** before the overview loads
    (it reads `largest_payments` on every row), then restart the Celery
    workers (`set_corp_tax` takes a new keyword). The amounts appear only

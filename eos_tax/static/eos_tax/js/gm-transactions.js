@@ -1,9 +1,92 @@
 /* GM Transactions: the sortable table, its counterparty filter, the note
- * popup of each row, and the wait for the job.
+ * popup and the cleared tick of each row, and the wait for the job.
  *
  * Loaded from gm-transactions.html, which hands over the translated strings
  * as json_script "eos-tax-config" - a .js file cannot reach {% translate %}.
  */
+/* Shows a row as cleared or not: the tick, its sort value, the filter's
+ * flag, and the alliance mark grey instead of red. Does not draw - the row
+ * stays where the reader is looking.
+ */
+function showCleared(dataTable, row, cleared) {
+    "use strict";
+
+    const box = row.querySelector("[data-eos-cleared-box]");
+    const mark = row.querySelector("[data-eos-alliance-mark]");
+
+    box.checked = cleared;
+    box.closest("td").dataset.order = cleared ? "1" : "0";
+    row.dataset.eosCleared = cleared ? "1" : "0";
+
+    if (mark) {
+        mark.classList.toggle("text-danger", !cleared);
+        mark.classList.toggle("text-body-secondary", cleared);
+    }
+
+    dataTable.row(row).invalidate("dom");
+}
+
+/* The cleared tick of a row. The page only enables it on a row with a
+ * note, and the server refuses it without one; on a failure the tick goes
+ * back to what is stored.
+ */
+function setUpCleared(dataTable) {
+    "use strict";
+
+    const table = dataTable.table().node();
+    const csrf = document.querySelector("#eos-tax-gm-note [name=csrfmiddlewaretoken]");
+
+    // on the table, not each box: DataTables takes the rows of other pages
+    // out of the document
+    table.addEventListener("change", function (event) {
+        const box = event.target.closest("[data-eos-cleared-box]");
+
+        if (!box) {
+            return;
+        }
+
+        const row = box.closest("tr");
+        const note = row.querySelector("[data-eos-note-character]");
+        const wanted = box.checked;
+        const body = new URLSearchParams();
+        body.set("character_id", note.dataset.eosNoteCharacter);
+        body.set("entry_id", note.dataset.eosNoteEntry);
+        body.set("cleared", wanted ? "1" : "0");
+
+        box.disabled = true;
+
+        fetch(table.dataset.eosClearedUrl, {
+            method: "POST",
+            credentials: "same-origin",
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": csrf.value,
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: body.toString(),
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error(response.status);
+                }
+
+                return response.json();
+            })
+            .then(function (data) {
+                box.title = table.dataset.eosLabelCleared;
+                showCleared(dataTable, row, data.cleared);
+            })
+            .catch(function (failure) {
+                box.checked = !wanted;
+                box.title = table.dataset.eosLabelClearedError;
+                console.error("eos_tax: saving the cleared tick failed", failure);
+            })
+            .finally(function () {
+                box.disabled = !note.dataset.eosNote;
+            });
+    });
+}
+
 /* The note of a row, edited in one popup the buttons share.
  *
  * A note is someone's free text, so it only ever travels as text: read from
@@ -74,6 +157,9 @@ function setUpNotes(dataTable) {
             })
             .then(function (data) {
                 const cell = button.closest("td");
+                const row = cell.closest("tr");
+                const box = row.querySelector("[data-eos-cleared-box]");
+                const table = dataTable.table().node();
 
                 button.dataset.eosNote = data.text;
                 button.title = data.text || modal.dataset.eosLabelEmpty;
@@ -81,9 +167,17 @@ function setUpNotes(dataTable) {
                 button.classList.toggle("btn-outline-secondary", !data.text);
                 cell.dataset.order = data.text;
                 cell.dataset.search = data.text;
+                // no note, no tick: the server dropped it with the note
+                box.disabled = !data.text;
+                box.title = data.text
+                    ? table.dataset.eosLabelCleared
+                    : table.dataset.eosLabelNeedsNote;
+                if (!data.text) {
+                    showCleared(dataTable, row, false);
+                }
                 // DataTables keeps what it read at the start; no draw, so
                 // the row stays where the reader is looking
-                dataTable.row(cell.closest("tr")).invalidate("dom");
+                dataTable.row(row).invalidate("dom");
 
                 bootstrap.Modal.getInstance(modal).hide();
             })
@@ -125,6 +219,7 @@ document.addEventListener("DOMContentLoaded", function () {
         columns: [
             { searchable: false },  // In the Alliance
             { searchable: true },   // Note - its data-search, not the button
+            { searchable: false },  // Cleared
             { searchable: false },  // Date
             { searchable: true },   // Character
             { searchable: false },  // Age
@@ -153,6 +248,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     setUpNotes(dataTable);
+    setUpCleared(dataTable);
 
     // one box per counterparty; the page leaves the boxes out when there
     // is only one to tick
@@ -161,6 +257,8 @@ document.addEventListener("DOMContentLoaded", function () {
     );
     // on as the page sent it: hides the rows whose whole account has left
     const allianceSwitch = document.querySelector("[data-eos-alliance-filter]");
+    // off as the page sent it: hides the rows ticked off as cleared
+    const clearedSwitch = document.querySelector("[data-eos-cleared-filter]");
 
     // the ticked boxes, as the page sent them: GM X alone when it is there;
     // null without boxes - then no counterparty is hidden
@@ -193,6 +291,10 @@ document.addEventListener("DOMContentLoaded", function () {
             return false;
         }
 
+        if (clearedSwitch && clearedSwitch.checked && row.dataset.eosCleared === "1") {
+            return false;
+        }
+
         return shownParties === null || shownParties.has(row.dataset.eosParty);
     });
 
@@ -208,6 +310,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (allianceSwitch) {
         allianceSwitch.addEventListener("change", function () {
+            dataTable.draw();
+        });
+    }
+
+    if (clearedSwitch) {
+        clearedSwitch.addEventListener("change", function () {
             dataTable.draw();
         });
     }

@@ -589,6 +589,9 @@ class GmNote(models.Model):
     # 0, not NULL: MySQL lets any number of NULLs past a unique constraint
     entry_id = models.BigIntegerField(default=0)
     text = models.CharField(max_length=GM_NOTE_LENGTH)
+    # on the note, not a table of its own: clearing a row needs its note,
+    # and deleting the note has to take the tick with it
+    cleared = models.BooleanField(default=False)
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

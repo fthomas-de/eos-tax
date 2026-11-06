@@ -14,7 +14,7 @@ from eos_tax.db.gm_transactions import (
     gm_listed_character_ids,
     store_gm_report,
 )
-from eos_tax.models import TaxConfiguration
+from eos_tax.models import GmNote, TaxConfiguration
 from eos_tax.tests.base import EosTaxTestCase, json_script
 
 from .factories import (
@@ -260,6 +260,15 @@ class TestGmTab(BotsPageTestCase):
 
         self.assertIn(f"bots/{RATTER_ID}/", body)
         self.assertIn("1 wallet below zero", body)
+
+    def test_should_show_a_cleared_row_read_only(self):
+        self.below_zero(RATTER_ID)
+        GmNote.objects.create(character_id=RATTER_ID, entry_id=0, text="owes", cleared=True)
+
+        body = self.gm_tab().content.decode()
+
+        self.assertIn("fa-check text-success", body)
+        self.assertNotIn("data-eos-cleared-box", body)
 
     def test_should_say_so_when_the_account_has_nothing(self):
         self.assertContains(

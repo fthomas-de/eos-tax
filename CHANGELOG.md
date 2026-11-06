@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- GM Transactions has a "Cleared" column, third after the note, to tick
+  a row off once it has been looked into. A cleared row keeps its mark in
+  "In the Alliance", but grey instead of red: the account is still in the
+  alliance, it is just no longer a warning. Every row stayed red until
+  now, so the rows already dealt with could not be told from the new
+  ones. The tick needs a note - the note is what says why the row was
+  cleared - so the box is greyed out without one, the server refuses it
+  too, and emptying the note takes the tick with it (migration 0034, a
+  `cleared` flag on the note). A new switch, "Hide cleared rows", off by
+  default, hides them. The GM tab of the character page shows the tick
+  read only. The red rows on the bots lists stay as they were.
+
 ## [0.4.18] - 2026-11-04
 
 ### Changed
