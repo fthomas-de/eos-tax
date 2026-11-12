@@ -4,8 +4,6 @@ from django.conf import settings
 # the first time migration 0005 runs, so an existing install keeps behaving the
 # way its local.py described. Afterwards the settings page is the single source
 # of truth and changes here have no effect.
-DEFAULT_LAST_MONTH = getattr(settings, "LAST_MONTH", False)
-DEFAULT_CURRENT_MONTH = getattr(settings, "CURRENT_MONTH", False)
 DEFAULT_TAX_ALLIANCES = getattr(settings, "TAX_ALLIANCES", [])
 DEFAULT_TAX_CORPORATIONS = getattr(settings, "TAX_CORPORATIONS", [])
 DEFAULT_CORPORATION_BLACKLIST = getattr(settings, "CORPORATION_BLACKLIST", [])

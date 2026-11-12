@@ -7,6 +7,74 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.21] - 2026-11-12
+
+### Changed
+
+- The two switches "previous month" and "running month" are gone
+  (migration 0035): the task always calculates both, and the overview
+  always shows both. A month that could be switched off only left rows
+  nobody looked at any more. An instance that ran with one of them off
+  gets rows and menu badge counts for the other month from the next run
+  on. `LAST_MONTH` and `CURRENT_MONTH` in `local.py` are no longer read
+  anywhere.
+- The task also recalculates every unpaid row of the three months before
+  the previous one. A row was looked at for the last time by the last run
+  of the month after its own, so a transfer made on that month's last
+  evening - imported after that run - was never found, and the row stayed
+  unpaid although the ISK had arrived. Only a manual recalculation could
+  settle it. Paid rows and excluded Corporations are left alone; the
+  overview still lists the previous and the running month only.
+
+### Fixed
+
+- One transfer whose reason named two codes - two months of a
+  Corporation, or two Corporations - counted in full for both rows: each
+  row only asked whether its own code occurred in the reason. Both were
+  marked paid, in green, for half the ISK. A transfer now counts only
+  when its reason names this row's code and no other; words around the
+  code, and several transfers with the same code, work as before. The
+  same check stops a code from matching as the tail of a longer one
+  (`198000001/9/2026` for `98000001/9/2026`). Rows already settled that
+  way stay paid - paid is never taken back.
+- The first calculation of a month never found its payment: the payment
+  check read the amount owed off the stored row, and without a row it
+  did not look at the journal at all. The task's next run made up for it
+  in the two months it covers; any other month, recalculated once on the
+  settings page, said "no payment found" and stayed unpaid. The first
+  run now checks against the amount it is about to store.
+- Two calculations of the same row at the same moment - the task and the
+  recalculate button - could take "paid" back: both read the row unpaid,
+  one saved the payment it found, the other saved its stale copy over
+  it. The row is now locked from the read to the write.
+- The bots page took any month from year 1 to 9998 from its address, and
+  a month without stored lists queues the job and stores four lists - so
+  every hand written `?month=` cost a job, a run on everybody's progress
+  bar and four empty rows. Months before 2003 and months in the future
+  now fall back to the running month, and the Recalculate button refuses
+  them.
+- Recalculating one Corporation accepted any id Alliance Auth knows, not
+  only the Corporations the selection offers. A hand written id of a
+  Corporation outside the taxed alliances got a row, which the admins'
+  overview listed with a reason code and the menu badge counted as
+  outstanding. Such an id is refused now.
+- Corp Tax Changes kept what the static data export says an NPC pays for
+  as long as the web worker lived - an empty answer included. Opened once
+  before the export was loaded, a worker kept reporting that the page
+  cannot run until it was restarted, while the next worker showed data;
+  a newer export was not picked up either. The table is now kept for an
+  hour, and an empty one not at all.
+- Adding a rate in the Django admin with a day inside a month that
+  already has one ended in a server error: the uniqueness check compared
+  the day as typed, and saving then moved it onto the first of the
+  month, where the database refused it. The day is now normalised before
+  the check, so the form says the month is taken. The settings page was
+  never affected - its month picker has no day.
+- The Age column of the four bots lists was written by the job, so its
+  unit came in the worker's language, not the reader's. It is now
+  written when the page is read, from the days the job stores beside it
+  - as GM Transactions and the audit tab already did.
+
 ## [0.4.20] - 2026-11-06
 
 ### Added

@@ -89,8 +89,6 @@ class TaxConfigurationForm(forms.ModelForm):
             "corporation_blacklist",
             "tax_rate",
             "tax_types",
-            "last_month",
-            "current_month",
             "use_reason",
             "unaudited_min_millions",
             "paid_difference_min_millions",

@@ -6,11 +6,33 @@ introduced them (`test_bot_signals.py`) because nothing else uses them yet.
 call it - so it gets a file of its own instead of attaching to either.
 """
 import datetime
+from unittest import mock
 
 from django.utils import translation
 
 from eos_tax.tests.base import EosTaxTestCase
-from eos_tax.util import format_age
+from eos_tax.util import format_age, get_dates
+
+
+class TestDates(EosTaxTestCase):
+    """The months the task calculates and the overview shows - always the
+    previous and the running one, since the two switches are gone."""
+
+    def dates_on(self, year, month, day):
+        with mock.patch("eos_tax.util.datetime") as clock:
+            clock.now.return_value = datetime.datetime(year, month, day)
+
+            return get_dates()
+
+    def test_should_name_the_previous_and_the_running_month(self):
+        self.assertEqual(self.dates_on(2026, 11, 12), [(10, 2026), (11, 2026)])
+
+    def test_should_reach_back_into_the_year_before(self):
+        self.assertEqual(self.dates_on(2027, 1, 31), [(12, 2026), (1, 2027)])
+
+    def test_should_not_skip_a_short_month(self):
+        """The 31st minus a month is still the month before, not two back."""
+        self.assertEqual(self.dates_on(2026, 3, 31), [(2, 2026), (3, 2026)])
 
 
 class TestFormatAge(EosTaxTestCase):

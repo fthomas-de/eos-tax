@@ -1,8 +1,10 @@
 """The progress bar of the recalculation runs: what the tasks record, what
 the endpoint hands the page, and the page parts that show it."""
 
+from datetime import datetime
 from unittest.mock import patch
 
+from dateutil.relativedelta import relativedelta
 from django.core.cache import cache
 from django.urls import reverse
 
@@ -33,6 +35,7 @@ from .factories import (
     configure,
     create_alliance,
     create_corporation,
+    create_tax_row,
     create_user,
 )
 
@@ -170,6 +173,43 @@ class TestTasks(ProgressTestCase):
         )
         self.assertEqual(delay.call_count, 2)
         delay.assert_any_call(corp_id=BRAVO_CORP_ID, month=8, year=2026, run_id=run["id"])
+
+    def months_queued_with_a_row(self, months_back, payed=False):
+        """A row that many months back, and the months the periodic task
+        then queues when only the running month is its own."""
+        now = datetime.now()
+        old = now - relativedelta(months=months_back)
+        create_tax_row(
+            BRAVO_CORP_ID, "Bravo Corp", payed=payed, month=old.month, year=old.year
+        )
+
+        with patch("eos_tax.tasks.get_dates", return_value=[(now.month, now.year)]), \
+                patch("eos_tax.tasks.run_update_corporation.delay") as delay:
+            run_update_alliance()
+
+        queued = {
+            (call.kwargs["month"], call.kwargs["year"]) for call in delay.call_args_list
+        }
+
+        return (old.month, old.year), queued
+
+    def test_should_recalculate_an_unpaid_row_of_an_earlier_month(self):
+        """A transfer made on the last evening before its month left the
+        task's window reached the journal after the last run that looked
+        at it, and the row stayed unpaid for good."""
+        old, queued = self.months_queued_with_a_row(2)
+
+        self.assertIn(old, queued)
+
+    def test_should_leave_a_paid_row_of_an_earlier_month_alone(self):
+        old, queued = self.months_queued_with_a_row(2, payed=True)
+
+        self.assertNotIn(old, queued)
+
+    def test_should_leave_a_row_beyond_the_window_alone(self):
+        old, queued = self.months_queued_with_a_row(5)
+
+        self.assertNotIn(old, queued)
 
     def test_should_take_the_run_off_when_the_broker_is_down(self):
         with patch("eos_tax.tasks.run_update_corporation.delay", side_effect=OSError("broker")):

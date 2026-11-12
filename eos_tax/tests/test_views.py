@@ -15,7 +15,7 @@ from eos_tax.auth_hooks import EosTaxMenuItem
 from decimal import Decimal
 
 from eos_tax.db.payments import get_tax_corp
-from eos_tax.models import MonthlyTax, TaxConfiguration, TaxRate
+from eos_tax.models import BotReport, MonthlyTax, TaxConfiguration, TaxRate
 from eos_tax.util import format_isk, get_amount_to_pay
 
 from .factories import (
@@ -28,7 +28,6 @@ from .factories import (
     create_corporation,
     create_tax_row,
     create_user,
-    enable_current_month,
     mid_month,
 )
 
@@ -74,7 +73,6 @@ class TestIndexAccess(EosTaxTestCase):
 
 class TestIndexContent(EosTaxTestCase):
     def setUp(self):
-        enable_current_month()
         self.user = create_user(
             "admin",
             91000001,
@@ -132,9 +130,6 @@ class TestOverviewFilter(EosTaxTestCase):
 
     def setUp(self):
         self.enterContext(mid_month())
-        config = enable_current_month()
-        config.last_month = True
-        config.save()
         self.user = create_user(
             "toggle",
             91000006,
@@ -300,7 +295,6 @@ class TestIndexMarkup(EosTaxTestCase):
     BOOTSTRAP3_CLASSES = ["panel panel-primary", "panel-heading", "panel-title", "panel-body"]
 
     def setUp(self):
-        enable_current_month()
         user = create_user(
             "markup",
             91000005,
@@ -344,7 +338,6 @@ class TestOverviewTable(EosTaxTestCase):
     """
 
     def setUp(self):
-        enable_current_month()
         user = create_user(
             "sorter",
             91000010,
@@ -456,9 +449,6 @@ class TestOverviewTable(EosTaxTestCase):
         """The reason has to reach the ingame transfer character for character."""
         self.enterContext(mid_month())
         previous = datetime.datetime.now() - relativedelta(months=1)
-        config = TaxConfiguration.get_solo()
-        config.last_month = True
-        config.save()
         row = create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=False)
         row.month = previous.month
         row.year = previous.year
@@ -797,9 +787,6 @@ class TestMenuBadge(EosTaxTestCase):
     def setUp(self):
         self.enterContext(mid_month())
         previous = datetime.datetime.now() - relativedelta(months=1)
-        config = TaxConfiguration.get_solo()
-        config.last_month = True
-        config.save()
 
         self.row = create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
         self.row.month = previous.month
@@ -967,7 +954,6 @@ class TestScriptConfiguration(EosTaxTestCase):
                 ["basic_access", "admin_view"],
             )
         )
-        enable_current_month()
 
     def config(self, name):
         response = self.client.get(reverse(f"eos_tax:{name}"))
@@ -1029,7 +1015,6 @@ class TestNarrowScreens(EosTaxTestCase):
         self.user = create_user(
             "member", 97000001, BRAVO_CORP_ID, "Bravo Corp", ["basic_access"]
         )
-        enable_current_month()
         self.row = create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
         self.client.force_login(self.user)
 
@@ -1093,11 +1078,6 @@ class TestTitleRate(EosTaxTestCase):
         previous = today - relativedelta(months=1)
         TaxRate.objects.create(valid_from=previous, rate=Decimal("0.075"))
         TaxRate.objects.create(valid_from=today, rate=Decimal("0.10"))
-
-        config = TaxConfiguration.get_solo()
-        config.last_month = True
-        config.current_month = False
-        config.save()
         self.client.force_login(
             create_user("titled", 91000031, BRAVO_CORP_ID, "Bravo Corp", ["basic_access"])
         )
@@ -1140,6 +1120,32 @@ class TestYearsOutOfRange(EosTaxTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, datetime.date.today().strftime("%Y-%m"))
+
+    def test_should_not_compute_a_month_nobody_can_have_earned_in(self):
+        """Every month from year 1 to 9998 queued the bots job and stored
+        four empty lists - one job per hand written url."""
+        future = datetime.date.today().year + 1
+
+        for year in (1999, future):
+            with self.subTest(year=year):
+                response = self.client.get(
+                    reverse("eos_tax:bots"), {"month": f"{year}-01"}
+                )
+
+                self.assertContains(response, datetime.date.today().strftime("%Y-%m"))
+                self.assertFalse(BotReport.objects.filter(year=year).exists())
+
+    def test_should_refuse_to_recalculate_the_bots_lists_of_such_a_month(self):
+        future = datetime.date.today().year + 1
+
+        for year in (1999, future):
+            with self.subTest(year=year):
+                response = self.client.post(
+                    reverse("eos_tax:bots_recalculate"), {"month": f"{year}-01"}
+                )
+
+                self.assertEqual(response.status_code, 400)
+                self.assertFalse(BotReport.objects.filter(year=year).exists())
 
 
 class TestNavigation(EosTaxTestCase):

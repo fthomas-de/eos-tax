@@ -25,7 +25,7 @@ from eos_tax.tests.base import EosTaxTestCase, read_stylesheet
 from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
 
 from eos_tax.db.payments import get_website_data
-from eos_tax.forms import TaxConfigurationForm, journal_type_choices
+from eos_tax.forms import TaxConfigurationForm, TaxRateAdminForm, journal_type_choices
 from eos_tax.models import MonthlyTax, TaxConfiguration, TaxRate
 from eos_tax.util import format_isk
 
@@ -161,8 +161,6 @@ class TestSettingsForm(EosTaxTestCase):
             "corporation_blacklist": [],
             "tax_rate": "10",
             "tax_types": ["bounty_prizes"],
-            "last_month": "on",
-            "current_month": "on",
             "tax_change_min_points": "0.45",
             # the rate schedule rides along in the same POST
             "form-TOTAL_FORMS": "0",
@@ -183,8 +181,6 @@ class TestSettingsForm(EosTaxTestCase):
         self.assertEqual(config.alliance_ids(), [ALLIANCE_ID])
         self.assertEqual(config.holding_corporation_id(), BRAVO_CORP_ID)
         self.assertEqual(config.tax_types, ["bounty_prizes"])
-        self.assertTrue(config.last_month)
-        self.assertTrue(config.current_month)
         self.assertFalse(config.use_reason)
         # the model's own defaults, so changing one does not need this edited
         self.assertEqual(
@@ -533,6 +529,22 @@ class TestSettingsRecalculate(EosTaxTestCase):
 
         self.assertEqual(response.status_code, 405)
 
+    def test_should_refuse_a_corporation_outside_the_taxed_alliances(self):
+        """The selection only offers the taxed alliances' Corporations; a
+        hand written id wrote a row the overview and the badge then
+        counted as owed."""
+        EveCorporationInfo.objects.create(
+            corporation_id=98000777,
+            corporation_name="Outsider Corp",
+            corporation_ticker="OUT",
+            member_count=1,
+            tax_rate=0.1,
+        )
+
+        response = self.post(corp_id="98000777", month="9", year="2026")
+
+        self.assertEqual(response.status_code, 400)
+
     def test_should_reject_basic_access(self):
         self.client.force_login(
             create_user("member", 93000042, BRAVO_CORP_ID, "Bravo Corp", ["basic_access"])
@@ -752,6 +764,17 @@ class TestTaxRateSchedule(EosTaxTestCase):
 
         self.assertEqual(rate.valid_from, date(2026, 9, 1))
 
+    def test_should_refuse_a_second_entry_for_the_month_in_the_admin(self):
+        """The admin takes a full date. The uniqueness check compared the
+        day as typed, and saving then moved it onto the first - a server
+        error from the database instead of an error on the form."""
+        TaxRate.objects.create(valid_from=date(2026, 9, 1), rate=Decimal("0.07"))
+
+        form = TaxRateAdminForm({"valid_from": "2026-09-17", "rate": "9"})
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("valid_from", form.errors)
+
     def test_should_reject_a_second_entry_for_the_same_month(self):
         TaxRate.objects.create(valid_from=date(2026, 9, 1), rate=Decimal("0.07"))
 
@@ -889,7 +912,6 @@ class TestConfigurationTakesEffect(EosTaxTestCase):
             )
         )
         config = TaxConfiguration.get_solo()
-        config.current_month = True
         config.tax_rate = Decimal("0.1")
         config.save()
 
@@ -905,15 +927,6 @@ class TestConfigurationTakesEffect(EosTaxTestCase):
         response = self.client.get(reverse("eos_tax:index"))
 
         self.assertContains(response, "Taxes to pay: 25%")
-
-    def test_should_apply_a_changed_month_switch(self):
-        config = TaxConfiguration.get_solo()
-        config.current_month = False
-        config.save()
-
-        response = self.client.get(reverse("eos_tax:index"))
-
-        self.assertContains(response, "No tax data for the selected months.")
 
     def test_should_not_rewrite_history_when_the_rate_changes(self):
         """Past months keep the rate they were calculated with."""

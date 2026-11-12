@@ -16,6 +16,7 @@ from eos_tax.tasks import (
     run_update_bot_reports,
 )
 from eos_tax.tests.base import EosTaxTestCase
+from eos_tax.util import format_age_days
 from eos_tax.views import _previous_and_running_month
 
 from .factories import (
@@ -62,6 +63,18 @@ class TestStoredReports(EosTaxTestCase):
 
         self.assertIsInstance(row["started_at"], datetime)
         self.assertIsInstance(row["ended_at"], datetime)
+
+    def test_should_write_the_age_from_the_stored_days(self):
+        """The job formats the age in the worker's language; the page has
+        to say it in the reader's, from the days stored beside it."""
+        store_bot_reports(YEAR, MONTH)
+        stored = BotReport.objects.get(year=YEAR, month=MONTH, signal="hours")
+        stored.report["groups"][0]["characters"][0].update(age="stale", age_days=400)
+        stored.save()
+
+        row = get_stored_reports(YEAR, MONTH, ["hours"])["hours"]["groups"][0]["characters"][0]
+
+        self.assertEqual(row["age"], format_age_days(400))
 
     def test_should_keep_only_what_the_tab_shows(self):
         """Every scored row of the month would grow the table with the
@@ -123,11 +136,6 @@ class TestQueueing(EosTaxTestCase):
         delay.assert_called_once()
 
     def test_should_compute_the_tax_months_with_the_tax_job(self):
-        config = TaxConfiguration.get_solo()
-        config.last_month = True
-        config.current_month = True
-        config.save()
-
         with mock.patch("eos_tax.tasks.queue_corporations"), \
                 mock.patch.object(run_update_bot_reports, "delay") as delay:
             run_update_alliance()
@@ -209,8 +217,6 @@ class TestSavingSettings(EosTaxTestCase):
             "corporation_blacklist": [],
             "tax_rate": "10",
             "tax_types": ["bounty_prizes"],
-            "last_month": "on",
-            "current_month": "on",
             "tax_change_min_points": "0.45",
             "form-TOTAL_FORMS": "0",
             "form-INITIAL_FORMS": "0",

@@ -1,3 +1,4 @@
+import re
 from datetime import date, datetime, timezone
 
 from dateutil.relativedelta import relativedelta
@@ -14,22 +15,18 @@ from eos_tax.app_settings import get_config
 from allianceauth.services.hooks import get_extension_logger
 
 DONATION_TYPES = ["player_donation", "corporation_account_withdrawal"]
+# a reason code as the overview hands it out: corporation id/month/year
+REASON_CODE = re.compile(r"\d+/\d+/\d+")
 logger = get_extension_logger(__name__)
 
 def get_dates():
+    """The months the task calculates and the overview shows: the previous
+    one, payable from the 2nd, and the running one. Both always - the two
+    switches that used to choose between them are gone."""
+    now = datetime.now()
+    previous = now - relativedelta(months=1)
 
-    config = get_config()
-    dates = []
-
-    if config.last_month:
-        previous = datetime.now() - relativedelta(months=1)
-        dates.append((previous.month, previous.year))
-
-    if config.current_month:
-        now = datetime.now()
-        dates.append((now.month, now.year))
-
-    return dates
+    return [(previous.month, previous.year), (now.month, now.year)]
 
 def format_isk(isk):
     return str(f'{int(isk):,}').replace(',','.')
@@ -167,7 +164,7 @@ def _one_side(rows: list) -> list:
     )
 
 
-def find_payment(corp_id:int, month:int, year:int, config=None, corp_name:str = None) -> dict:
+def find_payment(corp_id:int, month:int, year:int, config=None, corp_name:str = None, amount_to_pay:int = None) -> dict:
     """What came in for that month, and whether it settles what was owed.
 
     "payed" is the answer the row gets; "match" says how it was reached -
@@ -182,24 +179,31 @@ def find_payment(corp_id:int, month:int, year:int, config=None, corp_name:str = 
 
     Pass config and corp_name when the caller already holds them: both used to
     cost their own query, once per corporation and month.
+
+    amount_to_pay is only used while the month has no row yet: the figure the
+    caller is about to store for it. Without it a first calculation never
+    looked at the journal, and a month only ever calculated once stayed unpaid.
     """
     nothing = {"payed": False, "match": None, "amount_paid": None, "payments": [], "paid_at": None}
 
     tax_data = MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).first()
-    if not tax_data:
+    if not tax_data and amount_to_pay is None:
         return nothing
 
+    already_paid = bool(tax_data and tax_data.payed)
     config = config or get_config()
     holding_corp_id = config.holding_corporation_id()
 
     if not holding_corp_id:
         # nothing configured that a payment could have gone to
-        return {**nothing, "payed": tax_data.payed}
+        return {**nothing, "payed": already_paid}
 
     # the figure the overview shows, read off the same row - worked out here
     # a second time it could disagree with the page by a rounding step, and
-    # a payment of exactly what the page said would then not match
-    amount_to_pay = tax_data.amount_to_pay
+    # a payment of exactly what the page said would then not match. A month
+    # without a row has no figure on the page yet and takes the caller's
+    if tax_data:
+        amount_to_pay = tax_data.amount_to_pay
 
     journal = CorporationWalletJournalEntry.objects.filter(
         second_party_id=holding_corp_id,
@@ -211,10 +215,16 @@ def find_payment(corp_id:int, month:int, year:int, config=None, corp_name:str = 
     )
 
     if config.use_reason:
-        payments = _one_side(list(
-            journal.filter(reason__icontains=f"{corp_id}/{month}/{year}")
-            .values("date", "amount")
-        ))
+        code = f"{corp_id}/{month}/{year}"
+        # the database narrows, this decides: a transfer naming two codes
+        # counted in full for both rows, and a code that is only the tail
+        # of a longer one matched as well. Words around the code are fine,
+        # and so are several transfers with the same code
+        payments = _one_side([
+            row for row in
+            journal.filter(reason__icontains=code).values("date", "amount", "reason")
+            if set(REASON_CODE.findall(row["reason"])) == {code}
+        ])
         # whole ISK like amount_to_pay, cut rather than rounded: a transfer of
         # x.99 short of the amount owed must not round up to settling it
         total = int(sum(payment["amount"] for payment in payments))
@@ -253,7 +263,7 @@ def find_payment(corp_id:int, month:int, year:int, config=None, corp_name:str = 
         amount_paid = amount_to_pay if payment else None
         paid_at = payment["date"] if payment else None
 
-    payed = tax_data.payed or match is not None
+    payed = already_paid or match is not None
     name = corp_name or get_corp_name(corp_id)
     owed = format_isk(amount_to_pay)
     found = f"Payment found ({match})" if match else "No Payment found"

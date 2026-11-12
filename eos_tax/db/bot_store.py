@@ -21,6 +21,7 @@ from eos_tax.db.bot_signals import (
 )
 from eos_tax.db.bots import get_bot_report
 from eos_tax.models import BotReport, TaxConfiguration
+from eos_tax.util import format_age_days
 
 
 # By the name each tab travels under in the url.
@@ -112,6 +113,11 @@ def _restored(report):
             for key in DATETIME_KEYS:
                 if isinstance(row.get(key), str):
                     row[key] = parse_datetime(row[key])
+
+            # the job wrote the age in the worker's language; the days it
+            # stored beside it say it in the reader's
+            if row.get("age_days") is not None:
+                row["age"] = format_age_days(row["age_days"])
 
     return report
 

@@ -13,6 +13,7 @@ from corptools.models import (
     CorporationWalletJournalEntry,
     EveName,
 )
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from allianceauth.services.hooks import get_extension_logger
@@ -30,11 +31,15 @@ from eos_tax.db.shared import _month_range
 logger = get_extension_logger(__name__)
 
 
+@transaction.atomic
 def set_corp_tax(corp_id: int, corp_name: str = '', tax_value: int = -1, tax_percentage: float = -1, month: int = -1, year: int = -1, payed: bool = False, alliance_tax_rate: float = 0, amount_paid: int = None, payment_count: int = 0, exact_payment: bool = False, largest_payments: list = None, gross_income: int = None, unaudited_characters: list = None, calculation_seconds: float = None, paid_at: datetime = None):
     # a new row starts from the model defaults, which are what the
     # conditional writes below leave alone
     selected_corp = (
-        MonthlyTax.objects.filter(corp_id=corp_id, month=month, year=year).first()
+        # locked until the save below: a parallel run that read the row
+        # before this one wrote it saved its stale "unpaid" over the payment
+        MonthlyTax.objects.select_for_update()
+        .filter(corp_id=corp_id, month=month, year=year).first()
         or MonthlyTax(corp_id=corp_id, month=month, year=year)
     )
     # worked out here from the values this function writes anyway,
@@ -660,17 +665,20 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
         }
 
     overall_ratted = int(tax_sum)
+    gross_income = income["gross_income"]
     payment = find_payment(
         corp_id=corp_id,
         month=month,
         year=year,
         config=config,
         corp_name=corp_info.corporation_name,
+        # only for a month without a row yet; the same figure set_corp_tax
+        # stores below - keep the two formulas equal
+        amount_to_pay=round(gross_income * alliance_tax_rate),
     )
     payed = payment["payed"]
     logger.info(f"dbcon update_corp3: {corp_info.corporation_name} ({corp_id}): payed {payed} - {month}/{year}")
 
-    gross_income = income["gross_income"]
     unaudited_characters, unaudited_left = _unaudited_characters(
         income["unaudited"], config.unaudited_min_millions * 1_000_000, corp_id,
     )

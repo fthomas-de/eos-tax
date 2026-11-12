@@ -69,6 +69,9 @@ OVERVIEW_FILTERS = (STATE_OPEN, STATE_PAID, STATE_PROGRESS, "all")
 MIN_YEAR = 1
 MAX_YEAR = 9998
 
+# EVE went live in May 2003 - no wallet journal is older
+FIRST_YEAR = 2003
+
 # gm_bots_access opens the bots lists and GM Transactions alone, so every
 # view of those two pages takes either the old permission or the new one
 BOTS_GM_READ = ("eos_tax.admin_view", "eos_tax.gm_bots_access")
@@ -528,6 +531,17 @@ def settings_recalculate(request):
     except ValueError:
         return HttpResponseBadRequest("corp_id must be an integer or 'all'")
 
+    # only what the selection offers: a hand written id wrote a row for a
+    # Corporation the alliance does not tax, which the overview and the
+    # menu badge then counted as owed
+    if not EveCorporationInfo.objects.filter(
+        corporation_id=corp_id,
+        alliance__alliance_id__in=config.alliance_ids(),
+    ).exists():
+        return HttpResponseBadRequest(
+            "corp_id is not a corporation of the taxed alliances"
+        )
+
     # a run of one, so the bar on another admin's page shows it as well
     corp_name = (
         EveCorporationInfo.objects.filter(corporation_id=corp_id)
@@ -592,15 +606,17 @@ def progress_dismiss(request, run_id):
 def _selected_month(request):
     """Month from the picker, falling back to the running one.
 
-    Range checked for the same reason as _selected_year: strptime accepts
-    9999-12, and the month range built from it would not.
+    Only a month a journal can exist for. A month nobody can have earned
+    in still queued the bots job and stored four empty lists - one job per
+    hand written url, for any of 120,000 months. The same bounds keep
+    strptime's 9999-12 away from the month range built from it.
     """
     try:
         selected = datetime.strptime(request.GET.get("month", ""), "%Y-%m")
     except ValueError:
         return datetime.now()
 
-    if not MIN_YEAR <= selected.year <= MAX_YEAR:
+    if selected.year < FIRST_YEAR or selected > datetime.now():
         return datetime.now()
 
     return selected
@@ -717,10 +733,9 @@ def bots_recalculate(request):
     except ValueError:
         return HttpResponseBadRequest("month must be YYYY-MM")
 
-    # the readings build the range up to the following month, as in
-    # _selected_month
-    if not MIN_YEAR <= selected.year <= MAX_YEAR:
-        return HttpResponseBadRequest(f"year must be between {MIN_YEAR} and {MAX_YEAR}")
+    # only a month a journal can exist for, as in _selected_month
+    if selected.year < FIRST_YEAR or selected > datetime.now():
+        return HttpResponseBadRequest("no journal can exist for that month")
 
     return JsonResponse({
         "queued": bool(queue_bot_reports([(selected.month, selected.year)])),

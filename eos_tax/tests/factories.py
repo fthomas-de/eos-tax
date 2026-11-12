@@ -176,15 +176,6 @@ def create_corporation(corp_id, name, alliance, tax_rate=TAX_RATE, **fields):
     )
 
 
-def enable_current_month():
-    """The overview shows nothing unless at least one month is switched on."""
-    config = TaxConfiguration.get_solo()
-    config.current_month = True
-    config.save()
-
-    return config
-
-
 class _MidMonth(datetime.datetime):
     @classmethod
     def now(cls, tz=None):

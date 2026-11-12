@@ -4,7 +4,51 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-06 (0.4.20).
+Last updated 2026-11-12 (0.4.20 plus uncommitted work).
+
+## Uncommitted: the audit of 2026-11-11
+
+`docs/AUDIT.md` holds the audit, the user's decisions and the plan; all of
+it is implemented in the working tree, **nothing committed** (the user
+commits with `/commit`). `[Unreleased]` in `CHANGELOG.md` describes it.
+
+- **TAX-01** `util.find_payment`: a transfer counts only when its reason
+  names this row's code and no other (`REASON_CODE`); several transfers
+  with one code still add up - the user wants correction payments
+- **TAX-02** `tasks.overdue_jobs`: the periodic task also recalculates
+  unpaid rows `OVERDUE_MONTHS` = 3 months back (`queue_corporations(...,
+  extra=)`). The overview stays at the two months - older debts go
+  through eos-invoices (user)
+- **TAX-03** `set_corp_tax` is `@transaction.atomic` and reads the row
+  with `select_for_update()`
+- **TAX-04** `find_payment(..., amount_to_pay=)`: used only while the month
+  has no row; `update_corp` hands in `round(gross_income *
+  alliance_tax_rate)` - keep it equal to `set_corp_tax`'s formula
+- **TAX-05** `views.FIRST_YEAR` = 2003: `_selected_month` and
+  `bots_recalculate` refuse months before it and months in the future
+- **TAX-06** `settings_recalculate` refuses a Corporation outside the taxed
+  alliances (400)
+- **TAX-07** `_npc_bounties` keeps its table in the Django cache for an
+  hour, an empty one not at all (was `lru_cache`)
+- **TAX-08** `TaxRate.clean()` normalises the day before the uniqueness
+  check
+- **TAX-09** `bot_store._restored` writes `age` from `age_days` at read time
+- **FU-01** the settings `last_month` / `current_month` are gone
+  (**migration 0035**, applied to `aa_dev` on 2026-11-12 with the user's
+  yes; both switches were on there, recorded in
+  `~/aa-dev/eos-tax-month-flags-before-0035.json`);
+  `get_dates()` always returns the previous and the running month;
+  `factories.enable_current_month` is gone with them
+- Left as they are, by the user's decision: the exception text on the
+  progress bar, what `basic_access` sees (holders are CEOs or alliance
+  leadership), `duration` / `apart_for` in the worker's language
+- The suite without the translation tag ran green on the kept test
+  database (800 tests). **Still due at the commit**: `--fresh`, and the
+  catalogues - two help texts and the heading "Months" left the source,
+  no new string
+- On deploying: migrate 0035, restart gunicorn and every Celery worker.
+  An instance that had one month switched off gets rows for it from the
+  next run on
 
 ## Release
 
@@ -692,7 +736,7 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## State of the dev instance
 
-- Migrations 0001-0034 applied to `aa_dev`; every `MonthlyTax` row has
+- Migrations 0001-0035 applied to `aa_dev` (0035 still uncommitted); every `MonthlyTax` row has
   `exact_payment` False and `largest_payments` `[]` until recalculated. `eos_tax_gmnote` is empty.
   Nobody holds `gm_bots_access` there yet.
 - `eos_tax_botreport` holds 8 rows from a trial run of the job (2026-09

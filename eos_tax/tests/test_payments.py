@@ -20,6 +20,8 @@ from corptools.models import (
     EveName,
 )
 from dateutil.relativedelta import relativedelta
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from eos_tax.db.payments import (
@@ -302,6 +304,23 @@ class TestPaidIsNeverTakenBack(PaymentsTestCase):
         )
 
         self.assertTrue(self.row().payed)
+
+    def test_should_lock_the_row_while_it_decides(self):
+        """Two runs of one row at once: the one that read it before the
+        other wrote "paid" saved its stale copy over that."""
+        create_tax_row(
+            CORP_ID, "Bravo Corp", tax_value=1, tax_percentage=10.0,
+            month=MONTH, year=YEAR, alliance_tax_rate=0.15,
+        )
+
+        with CaptureQueriesContext(connection) as queries:
+            set_corp_tax(
+                corp_id=CORP_ID, corp_name="Bravo Corp", tax_value=5_000_000,
+                tax_percentage=10.0, month=MONTH, year=YEAR,
+                alliance_tax_rate=0.2,
+            )
+
+        self.assertTrue(any("FOR UPDATE" in query["sql"] for query in queries))
 
     def test_should_keep_the_amount_paid_when_a_later_check_finds_nothing(self):
         """The same for the amount: the reason setting switched off, or the
@@ -1058,6 +1077,24 @@ class TestCorpHasPayedReasonMatching(CorpHasPayedTestCase):
 
         self.assertFalse(self.has_payed())
 
+    def test_should_not_count_a_transfer_naming_two_codes(self):
+        """One transfer with two codes in its reason settled both rows in
+        full - half the ISK for twice the tax."""
+        self.pay(OWED, reason=f"{CORP_ID}/{MONTH}/{YEAR} {OTHER_CORP_ID}/{MONTH}/{YEAR}")
+
+        self.assertFalse(self.has_payed())
+
+    def test_should_not_take_the_tail_of_a_longer_code(self):
+        """The code of a Corporation whose id only ends in this one's."""
+        self.pay(OWED, reason=f"1{CORP_ID}/{MONTH}/{YEAR}")
+
+        self.assertFalse(self.has_payed())
+
+    def test_should_accept_words_around_the_code(self):
+        self.pay(OWED, reason=f"tax {CORP_ID}/{MONTH}/{YEAR} thanks")
+
+        self.assertTrue(self.has_payed())
+
 
 class TestCorpHasPayedRefType(CorpHasPayedTestCase):
     def test_should_ignore_a_payment_of_the_wrong_ref_type(self):
@@ -1365,6 +1402,36 @@ class TestUpdateCorpRecordsThePayment(PaymentsTestCase):
         self.assertEqual(breakdown["paid_difference"], 0)
 
 
+class TestUpdateCorpFindsThePaymentOnTheFirstRun(PaymentsTestCase):
+    """A month without a row yet has no stored amount to check against."""
+
+    def test_should_mark_a_month_paid_on_its_first_calculation(self):
+        """Only the previous and the running month get a second run by
+        themselves - any other month stayed unpaid until somebody pressed
+        Recalculate twice."""
+        self.config.tax_rate = Decimal("0.15")
+        self.config.use_reason = True
+        self.config.tax_corporation = create_corporation(HOLDING_CORP_ID, "Holding Corp", None)
+        self.config.save()
+        self.bounty(500_000_000, day=10)
+        CorporationWalletJournalEntry.objects.create(
+            division=self.division,
+            date=datetime.datetime(YEAR, MONTH, 12, tzinfo=datetime.timezone.utc),
+            description="tax payment",
+            entry_id=999,
+            ref_type="player_donation",
+            first_party_id=RATTER_ID,
+            second_party_id=HOLDING_CORP_ID,
+            reason=REASON,
+            amount=-10**12,
+        )
+
+        update_corp(CORP_ID, MONTH, YEAR)
+
+        self.assertTrue(self.row().payed)
+        self.assertEqual(self.row().amount_paid, 10**12)
+
+
 class TestOverviewPaidAmount(PaymentsTestCase):
     """get_website_data: what the new column of the overview reads."""
 
@@ -1499,11 +1566,6 @@ class TestOpenPaymentCount(EosTaxTestCase):
         self.enterContext(mid_month())
         previous = datetime.datetime.now() - relativedelta(months=1)
         self.period = (previous.month, previous.year)
-
-        config = TaxConfiguration.get_solo()
-        config.last_month = True
-        config.current_month = True
-        config.save()
 
     def row(self, corp_id, name, payed=False, period=None):
         month, year = period or self.period

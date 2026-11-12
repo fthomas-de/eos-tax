@@ -3,11 +3,11 @@
 import time
 import re
 from collections import defaultdict
-from functools import lru_cache
 from statistics import median
 from datetime import datetime, timezone
 
 from corptools.models import CorporationWalletJournalEntry
+from django.core.cache import cache
 from allianceauth.services.hooks import get_extension_logger
 
 from eos_tax.app_settings import get_config
@@ -83,24 +83,39 @@ def _configured_tolerance():
     return float(points) / 100 if points else RATE_STEP_TOLERANCE
 
 
-@lru_cache(maxsize=1)
+NPC_BOUNTIES_KEY = "eos_tax:npc_bounties"
+# an hour: spares the page the table, and an export loaded since shows up
+# without restarting anything
+NPC_BOUNTIES_SECONDS = 60 * 60
+
+
 def _npc_bounties():
     """What each NPC pays, from the static data export.
 
     eve_sde is not a hard dependency of this app - without it the whole feature
     reports that it cannot run rather than breaking the page.
     """
+    bounties = cache.get(NPC_BOUNTIES_KEY)
+    if bounties:
+        return bounties
+
     try:
         from eve_sde.models import TypeDogma
     except ImportError:
         logger.warning("eos_tax: eve_sde is not installed, no corp tax changes")
         return {}
 
-    return dict(
+    bounties = dict(
         TypeDogma.objects.filter(dogma_attribute_id=BOUNTY_ATTRIBUTE_ID)
         .exclude(value=None)
         .values_list("item_type_id", "value")
     )
+    # an empty answer is not kept: the process-wide cache that stood here
+    # held on to "no export" until the web worker was restarted
+    if bounties:
+        cache.set(NPC_BOUNTIES_KEY, bounties, NPC_BOUNTIES_SECONDS)
+
+    return bounties
 
 
 def _full_bounty(reason, bounties):

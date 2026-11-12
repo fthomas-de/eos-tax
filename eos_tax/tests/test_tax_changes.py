@@ -10,7 +10,9 @@ together, smoothing a day of noise away, and deciding what counts as a step.
 """
 
 import datetime
+import sys
 from decimal import Decimal
+from types import SimpleNamespace
 from unittest import mock
 
 from allianceauth.eveonline.models import EveCorporationInfo
@@ -19,9 +21,14 @@ from corptools.models import (
     CorporationWalletDivision,
     CorporationWalletJournalEntry,
 )
+from django.core.cache import cache
 from django.urls import reverse
 
-from eos_tax.db.tax_changes import get_corp_tax_changes, get_corp_tax_detail
+from eos_tax.db.tax_changes import (
+    _npc_bounties,
+    get_corp_tax_changes,
+    get_corp_tax_detail,
+)
 from eos_tax.models import TaxConfiguration
 from eos_tax.tests.base import EosTaxTestCase, read_static
 
@@ -729,3 +736,41 @@ class TestQuickFilterButtons(TaxChangeTestCase):
 
         self.assertIn('other.setAttribute("aria-pressed", "false");', script)
         self.assertIn('button.setAttribute("aria-pressed", "true");', script)
+
+
+class TestBountyCache(EosTaxTestCase):
+    """What an NPC pays is read from the static data export and kept for a
+    while - every other test here hands the table in instead."""
+
+    def setUp(self):
+        # the cache of the version before, should it come back
+        getattr(_npc_bounties, "cache_clear", lambda: None)()
+        cache.clear()
+        self.addCleanup(cache.clear)
+
+    def export(self, rows):
+        """Stands in for eve_sde, which the test instance need not have."""
+        model = mock.MagicMock()
+        model.objects.filter.return_value.exclude.return_value \
+            .values_list.return_value = rows
+
+        return mock.patch.dict(sys.modules, {
+            "eve_sde": mock.MagicMock(),
+            "eve_sde.models": SimpleNamespace(TypeDogma=model),
+        })
+
+    def test_should_ask_again_after_an_empty_answer(self):
+        """Opened before the export was loaded, the page kept saying it
+        could not run until the web worker was restarted."""
+        with self.export([]):
+            self.assertEqual(_npc_bounties(), {})
+
+        with self.export([(NPC_TYPE_ID, NPC_BOUNTY)]):
+            self.assertEqual(_npc_bounties(), BOUNTIES)
+
+    def test_should_keep_a_filled_table(self):
+        with self.export([(NPC_TYPE_ID, NPC_BOUNTY)]):
+            _npc_bounties()
+
+        with self.export([]):
+            self.assertEqual(_npc_bounties(), BOUNTIES)

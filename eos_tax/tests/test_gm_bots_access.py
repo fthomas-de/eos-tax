@@ -120,9 +120,6 @@ class TestNavigation(GmBotsTestCase):
     def test_should_show_the_menu_entry_without_a_badge(self):
         """Not even with a row of their Corporation due - as in TestMenuBadge."""
         self.enterContext(mid_month())
-        config = TaxConfiguration.get_solo()
-        config.last_month = True
-        config.save()
         previous = datetime.datetime.now() - relativedelta(months=1)
         create_tax_row(BRAVO_CORP_ID, "Bravo Corp", month=previous.month, year=previous.year)
         request = RequestFactory().get(reverse("eos_tax:bots"))

@@ -57,8 +57,10 @@ CELERYBEAT_SCHEDULE["eos_tax: update taxes"] = {
 or as a periodic task in the Django admin under **Periodic Tasks**.
 
 **Pick the interval deliberately.** The task fans out one subtask per
-Corporation and per configured month. With a large Alliance and both months
-switched on that is hundreds of subtasks per run - every few hours is plenty.
+Corporation for the previous and for the running month - always both - plus
+one for every row of the three months before that is still unpaid, so a
+transfer that arrives late is still found. With a large Alliance that is
+hundreds of subtasks per run - every few hours is plenty.
 
 ## Configuration
 
@@ -74,7 +76,6 @@ removed.
 | Excluded corporations | never taxed, never listed |
 | Base tax rate | share of the gross PvE income, in percent |
 | Taxed journal types | wallet journal `ref_type`s counted as PvE income |
-| Previous / running month | which months the task calculates |
 | Match by Reason | match payments by their Reason code, not by amount alone |
 | Bot detection thresholds | one set per reading of the Bots page - hours and days, unbroken runs, the two Corporation comparisons - each with its own chapter on the settings page |
 
@@ -91,6 +92,11 @@ up, so a Corporation can pay in parts. What came in is shown in the
 Overview's "Amount paid in ISK" column, with a badge when it is more or less
 than was owed. Without Match by Reason only a transfer of exactly the amount
 owed is recognised - a larger one could belong to anybody.
+
+**One code per transfer.** A transfer whose Reason names two codes - two
+months, or two Corporations - counts for neither: it is one sum of ISK, and
+it used to settle both rows in full. Words around the code are fine, and so
+is a second transfer with the same code to make up a difference.
 
 The Holding Corporation has to be known to Alliance Auth. A holding without
 members never shows up on its own - import it once:
@@ -119,7 +125,7 @@ rate is stored per row, so a new entry never rewrites the past.
 
 ## Pages
 
-**Overview** - what each Corporation owes for the configured months and whether
+**Overview** - what each Corporation owes for the previous and the running month and whether
 it has paid. Sortable columns, the Corporation column is searchable. Members see
 their own Corporations, `admin_view` sees all.
 

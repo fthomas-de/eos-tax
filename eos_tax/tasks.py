@@ -1,6 +1,10 @@
+from datetime import datetime
+
 from celery import shared_task
+from dateutil.relativedelta import relativedelta
 
 from django.core.cache import cache
+from django.db.models import Q
 
 from allianceauth.services.hooks import get_extension_logger
 from allianceauth.eveonline.models import EveCorporationInfo
@@ -9,6 +13,7 @@ from eos_tax import progress
 from eos_tax.db.bot_store import READINGS, store_bot_reports
 from eos_tax.db.gm_transactions import GM_STEPS, store_gm_report
 from eos_tax.db.payments import update_corp
+from eos_tax.models import MonthlyTax
 from eos_tax.app_settings import get_config
 from eos_tax.util import get_dates
 
@@ -78,9 +83,32 @@ def queue_gm_report():
     return queued
 
 
-def queue_corporations(corporations, dates, kind):
+# How many months back an unpaid row is still recalculated. A transfer made
+# on the last evening before its month drops out of get_dates() reaches the
+# journal after the last run that looked at that month.
+OVERDUE_MONTHS = 3
+
+
+def overdue_jobs(dates):
+    """Unpaid rows of the months before the calculated ones, as
+    (corp_id, corp_name, month, year)."""
+    earliest = datetime.now() - relativedelta(months=OVERDUE_MONTHS)
+    rows = MonthlyTax.objects.filter(payed=False).filter(
+        Q(year__gt=earliest.year)
+        | Q(year=earliest.year, month__gte=earliest.month)
+    ).exclude(corp_id__in=get_config().blacklisted_corporation_ids())
+
+    return [
+        (row.corp_id, row.corp_name, row.month, row.year)
+        for row in rows
+        if (row.month, row.year) not in dates
+    ]
+
+
+def queue_corporations(corporations, dates, kind, extra=()):
     """Queues one subtask per Corporation and month, as one run of the
-    progress bar. corporations: (corp_id, corp_name) pairs.
+    progress bar. corporations: (corp_id, corp_name) pairs. extra:
+    (corp_id, corp_name, month, year) jobs beyond that grid.
 
     The run is registered before the first subtask is queued: a worker that
     picks one up at once must find its run already there.
@@ -89,6 +117,11 @@ def queue_corporations(corporations, dates, kind):
         {"corp_id": corp_id, "corp_name": corp_name, "month": month, "year": year}
         for corp_id, corp_name in corporations
         for month, year in dates
+    ]
+    # single rows beyond that grid - see overdue_jobs
+    jobs += [
+        {"corp_id": corp_id, "corp_name": corp_name, "month": month, "year": year}
+        for corp_id, corp_name, month, year in extra
     ]
     if not jobs:
         return None
@@ -121,9 +154,12 @@ def run_update_alliance():
         alliance__alliance_id__in=get_config().alliance_ids()
     ).values_list("corporation_id", "corporation_name")
 
-    queue_corporations(corporations, get_dates(), progress.AUTOMATIC)
+    dates = get_dates()
+    queue_corporations(
+        corporations, dates, progress.AUTOMATIC, overdue_jobs(dates)
+    )
     # the same months, so the bots page keeps pace with the tax rows
-    queue_bot_reports(get_dates())
+    queue_bot_reports(dates)
     queue_gm_report()
 
 # helper task

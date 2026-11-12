@@ -13,7 +13,6 @@ from .factories import (
     BRAVO_CORP_ID,
     create_tax_row,
     create_user,
-    enable_current_month,
 )
 
 GERMAN = {"accept-language": "de"}
@@ -220,7 +219,6 @@ class TestGermanCatalogue(EosTaxTestCase):
 
     def test_should_translate_the_overview_table(self):
         # the headers only exist once there is a row to show
-        enable_current_month()
         create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
 
         response = self.client.get(reverse("eos_tax:index"), headers=GERMAN)

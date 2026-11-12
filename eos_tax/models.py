@@ -79,14 +79,6 @@ class TaxConfiguration(SingletonModel):
         blank=True,
         help_text=_("Wallet journal ref_types counted as PvE income, for example bounty_prizes."),
     )
-    last_month = models.BooleanField(
-        default=False,
-        help_text=_("Include the previous month in calculations and on the overview."),
-    )
-    current_month = models.BooleanField(
-        default=False,
-        help_text=_("Include the running month in calculations and on the overview."),
-    )
     use_reason = models.BooleanField(
         default=False,
         help_text=_(
@@ -382,6 +374,13 @@ class TaxRate(models.Model):
 
     def __str__(self):
         return f"{self.valid_from:%Y-%m}: {self.rate}"
+
+    def clean(self):
+        # before the uniqueness check, which otherwise compares the day as
+        # typed and lets a second entry for the month through to the
+        # database's own constraint - a server error in the admin
+        if self.valid_from:
+            self.valid_from = self.valid_from.replace(day=1)
 
     def save(self, *args, **kwargs):
         # the tax is calculated per month, so a mid month start would be
