@@ -4,282 +4,84 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-12 (0.4.20 plus uncommitted work).
-
-## Uncommitted: the audit of 2026-11-11
-
-`docs/AUDIT.md` holds the audit, the user's decisions and the plan; all of
-it is implemented in the working tree, **nothing committed** (the user
-commits with `/commit`). `[Unreleased]` in `CHANGELOG.md` describes it.
-
-- **TAX-01** `util.find_payment`: a transfer counts only when its reason
-  names this row's code and no other (`REASON_CODE`); several transfers
-  with one code still add up - the user wants correction payments
-- **TAX-02** `tasks.overdue_jobs`: the periodic task also recalculates
-  unpaid rows `OVERDUE_MONTHS` = 3 months back (`queue_corporations(...,
-  extra=)`). The overview stays at the two months - older debts go
-  through eos-invoices (user)
-- **TAX-03** `set_corp_tax` is `@transaction.atomic` and reads the row
-  with `select_for_update()`
-- **TAX-04** `find_payment(..., amount_to_pay=)`: used only while the month
-  has no row; `update_corp` hands in `round(gross_income *
-  alliance_tax_rate)` - keep it equal to `set_corp_tax`'s formula
-- **TAX-05** `views.FIRST_YEAR` = 2003: `_selected_month` and
-  `bots_recalculate` refuse months before it and months in the future
-- **TAX-06** `settings_recalculate` refuses a Corporation outside the taxed
-  alliances (400)
-- **TAX-07** `_npc_bounties` keeps its table in the Django cache for an
-  hour, an empty one not at all (was `lru_cache`)
-- **TAX-08** `TaxRate.clean()` normalises the day before the uniqueness
-  check
-- **TAX-09** `bot_store._restored` writes `age` from `age_days` at read time
-- **FU-01** the settings `last_month` / `current_month` are gone
-  (**migration 0035**, applied to `aa_dev` on 2026-11-12 with the user's
-  yes; both switches were on there, recorded in
-  `~/aa-dev/eos-tax-month-flags-before-0035.json`);
-  `get_dates()` always returns the previous and the running month;
-  `factories.enable_current_month` is gone with them
-- Left as they are, by the user's decision: the exception text on the
-  progress bar, what `basic_access` sees (holders are CEOs or alliance
-  leadership), `duration` / `apart_for` in the worker's language
-- The suite without the translation tag ran green on the kept test
-  database (800 tests). **Still due at the commit**: `--fresh`, and the
-  catalogues - two help texts and the heading "Months" left the source,
-  no new string
-- On deploying: migrate 0035, restart gunicorn and every Celery worker.
-  An instance that had one month switched off gets rows for it from the
-  next run on
+Last updated 2026-11-12 (0.4.21).
 
 ## Release
 
-- Version **0.4.20** in `eos_tax/__init__.py`, released 2026-11-06
-- `[0.4.20]` in `CHANGELOG.md`, one addition on GM Transactions:
-  - **`?search=<text>` as the starting search**: `gm-transactions.js`
-    passes `new URLSearchParams(window.location.search).get("search") ||
-    ""` as `search.search` to the DataTable - the ordinary search box,
-    clearable there. eos-auth-monitor's account page links a main as
-    `?search=%22<main>%22` (quoted = phrase in smart search). No new
-    strings; source test `test_script_should_start_from_the_search_parameter`
-    in `tests/test_gm_transactions.py`. Checked in the browser by the user
-- `[0.4.19]` in `CHANGELOG.md`, one addition on GM Transactions:
-  - **"Cleared" column** (third, after Note): a checkbox per row,
-    `data-eos-cleared-box`, disabled without a note. Field
-    `GmNote.cleared` (migration 0034); POST `gm_transactions_cleared`
-    (`BOTS_GM_READ`, 403) -> `save_gm_cleared` in
-    `db/gm_transactions.py`: refuses an unlisted row or one without a
-    note; an emptied note deletes the `GmNote` row and the tick with it.
-    Row key `cleared` from `get_gm_page`
-  - **Alliance mark grey** (`text-body-secondary`) on a cleared row;
-    `showCleared()` in `gm-transactions.js` updates tick, sort value,
-    `data-eos-cleared` and the mark without a redraw
-  - **Switch "Hide cleared rows"** (`data-eos-cleared-filter`), off by
-    default, in the same `DataTable.ext.search` function as the alliance
-    switch
-  - **GM tab** of the character page: column "Cleared", green `fa-check`,
-    read only. Bots lists unchanged (still red)
-  - 4 new strings, in all six catalogues; tests in
-    `tests/test_gm_transactions.py` (`TestGmNotes`) and
-    `tests/test_bots_gm.py` (`TestGmTab`)
-- `[0.4.18]` in `CHANGELOG.md`, one change on the overview:
-  - **The sum badge's tooltip names the transfers**: "Sum of 3 payments:
-    600.000.000 / 300.000.000 / 100.000.000 ISK", highest first; beyond
-    five "Sum of 7 payments, the 5 largest: ... ISK". New field
-    `MonthlyTax.largest_payments` (JSONField, migration 0033, default
-    `[]`), written by `update_corp` via `_largest_payments` in
-    `db/payments.py` (`LARGEST_PAYMENTS_SHOWN` = 5, each cut to whole ISK
-    like `amount_paid`) through `set_corp_tax(largest_payments=...)`,
-    **together with `amount_paid`** (a check that finds nothing keeps
-    it). `get_website_data` keys `isk_largest_payments` (formatted,
-    joined " / ") and `payments_shown`; empty = the old count-only text
-  - 4 new strings (field name, help text, two plural tooltips), in all
-    six catalogues; 5 tests in `tests/test_payments.py`
-    (`TestUpdateCorpRecordsThePayment`, `TestOverviewPaidAmount`) and
-    `tests/test_views.py`
-- `[0.4.17]` in `CHANGELOG.md`, one change on the overview:
-  - **Green also for one exact payment among several**: the amount owed
-    and the amount paid turn `text-success` when the total equals the
-    amount owed (as before) **or** one payment with the row's reason code
-    was exactly that amount, whatever the rest adds up to. New field
-    `MonthlyTax.exact_payment` (migration 0032, default False), set by
-    `update_corp` from `find_payment`'s `match == "exact"` via
-    `set_corp_tax(exact_payment=...)`, written **together with
-    `amount_paid`** (a check that finds nothing keeps both).
-    `get_website_data` key `paid_exactly` = `amount_paid is not None and
-    (paid_difference == 0 or exact_payment)`; the template is unchanged
-    apart from its comment. The surplus badge (+) and the payment count
-    badge still show
-  - 2 new strings (field name and help text), in all six catalogues;
-    3 tests in `tests/test_payments.py` (`TestOverviewPaidAmount`,
-    `TestUpdateCorpRecordsThePayment`)
-- `[0.4.16]` in `CHANGELOG.md`, GM Transactions reaches the bots pages:
-  - **Copy buttons** beside character names (GM Transactions, every bots
-    list, group headings, character page title) and main names (bots).
-    One template `partials/copy-button.html` (`text`, `main=True` for
-    the main's label); the ClipboardJS code moved from `overview.js` to
-    `static/eos_tax/js/copy-buttons.js`, which every page with a button
-    loads after `bundles/clipboard-js.html`. Character cells got
-    `text-nowrap` (`ps-4 text-nowrap` in `bot-character-cells.html`)
-  - **"Last login" column** on GM Transactions after Age: corptools
-    `CharacterAudit.last_known_login`, read in `get_gm_page` at render
-    (not by the job), shown as `Y-m-d (n days)`, `data-order` ISO, dash
-    when unknown; entry in `gm-transactions.js` `columns`
-  - **Red rows** (`table-danger`, title "Listed on GM Transactions") on
-    all five bots lists: `gm_listed_character_ids()` in
-    `db/gm_transactions.py` = character ids of the stored report's
-    transactions plus `_negative_balances()` now; passed as `gm_listed`
-    by `bots` and `bot_signal`
-  - **Tab "GM Transactions" on the character page**: `bot-tabs.html`
-    with `gm_tab=True`, pane `#eos-tax-tab-gm`, signal `gm` in
-    `BOT_SIGNAL_DETAILS` -> `_account_gm` in `views.py`:
-    `get_gm_page(stored, account_character_ids(id))` (every character
-    of the same `CharacterOwnership.user`, plus the character itself);
-    no stored report queues the job and shows the pending note
-    (`data-eos-pending`, `bots.js` retries). Fragment
-    `partials/bot-gm-detail.html`, notes read only, whole journal (not
-    the month)
-  - 8 new strings, in all six catalogues; tests in `tests/test_bots_gm.py`
-    and `tests/test_gm_transactions.py`
-- `[0.4.15]` in `CHANGELOG.md`, one new permission:
-  - **`gm_bots_access`** ("Can use the bots and GM Transactions pages",
-    migration 0031) opens the bots pages (list, signal tabs, character
-    page and its detail tabs) and GM Transactions with notes, both
-    Recalculate buttons and the progress bar - nothing else
-  - `views.py`: `any_permission_required(perms, raise_exception=False)`
-    (Django's `user_passes_test`, one of perms instead of all);
-    `BOTS_GM_READ` = admin_view or gm_bots_access, `BOTS_GM_WRITE` =
-    manage_settings or gm_bots_access. `index` lets basic_access or
-    gm_bots_access in and redirects the latter to `eos_tax:bots`
-    (the menu entry points at the overview)
-  - `progress_state` hands a user without `admin_view` only runs of kind
-    `bots` / `gm`; `progress_dismiss` answers 403 when a user without
-    `manage_settings` tries a tax run
-  - Menu entry (`auth_hooks.py`) shows for basic_access or gm_bots_access;
-    the badge only with basic_access
-  - `base.html`: Overview link only with `basic_access` (also hides it
-    from an `admin_view`-only user, whose click only redirected);
-    Bots / GM Transactions with admin_view or gm_bots_access; the rest
-    admin_view as before
-  - No new strings; tests in `tests/test_gm_bots_access.py`
-- `[0.4.14]` in `CHANGELOG.md`, one addition on GM Transactions:
-  - **Alliance switch** above the table (`form-switch`,
-    `#eos-tax-in-alliance`, `data-eos-alliance-filter`), **on by
-    default**: hides rows whose `<tr data-eos-left="1">`, i.e.
-    `row.in_alliance is False` (the whole account out as of the GM job's
-    run). None (dash) is `0` and stays shown. In `gm-transactions.js` one
-    `DataTable.ext.search` function now checks the switch and the
-    counterparty boxes (`shownParties` is null without boxes, so the
-    switch also works on a page with a single counterparty). Not
-    remembered across page loads
-  - 1 new string ("Only characters still in the Alliance with a Main or
-    alt"), in all six catalogues
-- `[0.4.13]` in `CHANGELOG.md`, all on GM Transactions:
-  - **Note per row**, second column: a `fa-note-sticky` button opens one
-    shared Bootstrap modal (`#eos-tax-gm-note`, textarea `maxlength` 160,
-    counter, Save / Cancel); the saved note is the button's `title` and
-    its cell's `data-search` / `data-order`. Model `GmNote` (migration
-    0030): `character_id`, `entry_id` (0 = the wallet-below-zero row -
-    MySQL lets NULLs past a unique constraint), `text`
-    (`GM_NOTE_LENGTH` = 160), `updated_at`, `updated_by`. Not in
-    `GmReport`, which the job replaces. POST `gm_transactions_note`
-    (`admin_view`, 403 not redirect) -> `save_gm_note` in
-    `db/gm_transactions.py`: `_is_listed` (entry in the stored report,
-    or the wallet below zero now), `clean_note` (trim, keep `\n`, drop
-    Unicode `Cc`/`Cf`, ValueError over 160), empty = delete; answers
-    `{"text": <as stored>}`. JS `setUpNotes(dataTable)` in
-    `gm-transactions.js` handles it as text only (no `innerHTML`, a test
-    checks) and `invalidate("dom")`s the row without a redraw
-  - **Column order** now: In the Alliance, Note, Date, Character, Age,
-    Main, Corporation, Corporation at the time, Corporations in the
-    Alliance, Alliance, Amount, Wallet balance, Description
-  - **Amount and Wallet balance as whole ISK** (`floatformat:"0g"`,
-    rounded, not truncated); `data-order` keeps the cents
-  - 5 new strings ("Note", "Add a note", "Could not save the note.",
-    "Cancel", "Save"), in all six catalogues
-- `[0.4.12]` in `CHANGELOG.md`, one change on GM Transactions:
-  - **"In the Alliance" covers the whole account**: a red
-    `fa-circle-exclamation text-danger` (no more green tick) when the
-    character or any other character of the same Alliance Auth account
-    (`CharacterOwnership.user`) was in a taxed alliance at the GM job's run.
-    `find_account_in_alliance(character_ids, config)` in
-    `db/gm_transactions.py` groups by owner and asks `find_in_alliance`
-    for every character of those accounts; `store_gm_report` stores its
-    answer under the same `report["in_alliance"]` key. Unregistered
-    character = an account of its own; no character of the account known
-    = absent (dash). Header tooltip "This character or another character
-    of the same Main is in the Alliance", in all six catalogues
-- `[0.4.11]` in `CHANGELOG.md`, all on GM Transactions:
-  - **First column "In the Alliance"** as of the GM job's run,
-    `find_in_alliance` (per character, two sources, the newer wins),
-    stored as `report["in_alliance"]` (`{str(id): bool}`), row key
-    `in_alliance` (True / False / None). Cell: mark (`data-order="1"`),
-    empty (`0`), dash for None (`""`)
-  - **Column order** (since changed in 0.4.13): In the Alliance first;
-    the **"Transaction for" column is gone** (`sides()`
-    still reads the character to tell it from the counterparty)
-  - 1 new string ("In the Alliance"), in all six catalogues; "Transaction
-    for" is obsolete (`#~`) there
-- `[0.4.10]` in `CHANGELOG.md`:
-  - **Recalculate buttons** on the bots page (the month on screen) and on
-    GM Transactions, `manage_settings` only: `bots_recalculate` /
-    `gm_transactions_recalculate` (POST, answer `{"queued": bool}`),
-    `partials/recalculate-button.html` in the card header,
-    `static/eos_tax/js/recalculate.js`. They queue only the page's job,
-    not the tax run
-  - **Step runs on the progress bar**: `queue_bot_reports` /
-    `queue_gm_report` go through `tasks._queue_steps`, which registers a
-    run of kind `bots` (period `YYYY-MM`, steps = `READINGS` keys) or `gm`
-    (steps = `GM_STEPS`: `transactions`, `characters`) and passes
-    `run_id` to the task. The store functions wrap each step in
-    `progress.tracked_job`; on failure `progress.skip_unstarted` marks the
-    rest skipped (reason `step_failed`). Broker down: run withdrawn, lock
-    freed. `progress.js` shows `job.step` via `data-eos-tax-step-*`
-    labels and `run.period` beside the name
-  - **"GM X"** red in the GM counterparty filter and, when present, the
-    only ticked box (`FLAGGED_PARTY`, `_parties_of` gives `flagged` /
-    `checked`); `gm-transactions.js` starts from the ticked boxes and
-    draws once on load
-  - 8 new strings, in all six catalogues
-- `[0.4.9]` in `CHANGELOG.md`, one fix on GM Transactions: the
-  counterparty filter offered the characters themselves, because a GM
-  taking ISK back books "between GM X and <character>". `sides()` (replaces
-  `named_character()`/`counterparty()`) now takes the party that is a
-  character Alliance Auth knows (`_player_names`, casefolded; every wallet
-  owner is one) as the character, the other as the counterparty; both
-  players = "No counterparty"
-- `[0.4.8]` in `CHANGELOG.md`, all on GM Transactions
-  (`db/gm_transactions.py`, `gm-transactions.html`/`.js`):
-  - **Age column**: the GM job stores each listed character's age in days
-    (`report["age_days"]`, characters with a transaction and wallets below
-    zero at the job's run); the page formats it with `format_age_days`
-    (new in `util.py`, `format_age` uses it)
-  - **Character name links to the corptools Character Audit**
-    (`corptools:reactmain`)
-  - **Counterparty filter**: a checkbox per counterparty of the
-    descriptions (`_parties_of()`), filtered in the browser via
-    `DataTable.ext.search`
-  - **Column "Corporation at the time"**, red: the character's Corporation
-    at the transaction, via `payments._corporation_at`
-  - 3 new strings, in all six catalogues
-- `[0.4.7]` and `[0.4.6]`, the same day: the GM Transactions page itself
-  (`GmReport`, migration 0029); the bots lists computed by a job
-  (`BotReport`, migration 0028), the audit tab and its sorting. Earlier
-  versions: see `CHANGELOG.md`. Still worth knowing from them:
-  `manage_settings` (0.4.5, migration 0027) guards every settings write;
-  `admin_view` alone sees the settings page read only
-- Migrations **0001-0034** applied to `aa_dev`; 0.4.19 brought 0034
-  (`GmNote.cleared`), 0.4.18 brought 0033 (`largest_payments`), 0.4.17
-  brought 0032 (`exact_payment`), 0.4.15 brought 0031 (permission only),
-  0.4.13 brought 0030 (`GmNote`)
-- 797 tests, all green (782 without the translation tag, 15 with it)
-- `aa_dev` has **no GM transactions** and no stored `GmReport`: the
-  page's GM rows can only be seen in tests or on production data. The
-  0.4.9 fix, the 0.4.10 "GM X" filter and the whole of 0.4.11 to 0.4.16
-  (the note popup, the alliance switch, the red bots rows and the GM tab
-  included) are verified by tests only, not in the browser
+- Version **0.4.21** in `eos_tax/__init__.py`, released 2026-11-12, tag
+  `v0.4.21`
+- `[0.4.21]` in `CHANGELOG.md`: the fixes of the audit of 2026-11-11 and
+  the end of the month switches. `docs/AUDIT.md` holds the findings
+  (TAX-01 to TAX-09), the user's decisions and the plan they were built
+  from; everything in it is implemented. Where each fix lives:
+  - **TAX-01** `util.find_payment`: a transfer counts only when its reason
+    names this row's code and no other (`REASON_CODE`). Several transfers
+    with one code still add up - the user wants correction payments
+  - **TAX-02** `tasks.overdue_jobs`: the periodic task also recalculates
+    unpaid rows `OVERDUE_MONTHS` = 3 months back, passed to
+    `queue_corporations(..., extra=)`
+  - **TAX-03** `set_corp_tax` is `@transaction.atomic` and reads the row
+    with `select_for_update()`
+  - **TAX-04** `find_payment(..., amount_to_pay=)`, used only while the
+    month has no row; `update_corp` hands in `round(gross_income *
+    alliance_tax_rate)` - keep it equal to `set_corp_tax`'s formula
+  - **TAX-05** `views.FIRST_YEAR` = 2003: `_selected_month` falls back to
+    the running month for a month before it or in the future,
+    `bots_recalculate` answers 400
+  - **TAX-06** `settings_recalculate` answers 400 for a Corporation outside
+    the taxed alliances
+  - **TAX-07** `tax_changes._npc_bounties` keeps the table in the Django
+    cache for an hour (`NPC_BOUNTIES_KEY`), an empty one not at all
+  - **TAX-08** `TaxRate.clean()` puts the day on the first before the
+    uniqueness check
+  - **TAX-09** `bot_store._restored` writes `age` from `age_days` when the
+    lists are read
+  - **Month switches gone** (migration 0035): `TaxConfiguration.last_month`
+    and `current_month`, their form fields and the settings heading
+    "Months"; `get_dates()` always returns the previous and the running
+    month. The three strings are obsolete (`#~`) in all six catalogues
+- Earlier versions, in short (details in `CHANGELOG.md`): 0.4.20 `?search=`
+  on GM Transactions; 0.4.19 the "Cleared" tick (`GmNote.cleared`, 0034);
+  0.4.18 the five largest payments in the sum badge (0033); 0.4.17 green
+  for one exact payment among several (0032); 0.4.16 copy buttons, red rows
+  and the GM tab on the bots pages; 0.4.15 `gm_bots_access` (0031); 0.4.13
+  notes on GM Transactions (`GmNote`, 0030); 0.4.10 Recalculate buttons
+  and step runs on the bar; 0.4.6/0.4.7 the bots and GM jobs (`BotReport`
+  0028, `GmReport` 0029). `manage_settings` (0.4.5, 0027) guards every
+  settings write; `admin_view` alone sees the settings page read only
+- Migrations **0001-0035** applied to `aa_dev`
+- 815 tests, all green (800 without the translation tag, 15 with it); the
+  suite ran `--fresh` at the commit
+- `aa_dev` has **no GM transactions** and no stored `GmReport`: the page's
+  GM rows can only be seen in tests or on production data. 0.4.9 to 0.4.16
+  on GM Transactions are verified by tests only, not in the browser
 - All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
   complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
+
+## Decisions of the 2026-11-12 session
+
+The audit (`docs/AUDIT.md`, "Decisions") - the user's choices:
+
+- **Unpaid rows are followed up three months back** by the task. The
+  overview and the menu badge **stay at the previous and the running
+  month**; an older debt is followed up through eos-invoices.
+- **The two month switches go**, the app always works with the previous
+  and the running month (`LAST_MONTH` / `CURRENT_MONTH` in `local.py` are
+  no longer read).
+- **Correction payments stay allowed**: several transfers with the same
+  code add up. Only one transfer naming two codes is refused. No hint on
+  the page, the README says it.
+- **Left as they are**: the exception text on the progress bar (it is what
+  makes a failure easy to find); what `basic_access` sees, the characters
+  without wallet audit included (holders are CEOs or alliance leadership);
+  `duration` / `apart_for` on the runs and clock tabs written in the
+  worker's language.
+- Claude's calls: a reason that names another `n/n/n` beside the code (a
+  date written that way) is refused too; rows settled earlier by a
+  two-code transfer stay paid - paid is never taken back; 2003 as the
+  first month a journal can exist for.
 
 ## Decisions of the 2026-11-06 sessions
 
@@ -639,6 +441,15 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
+0000. **On deploying 0.4.21: migration 0035**, then restart gunicorn and
+   every Celery worker (the model lost two columns, the task queues more).
+   An instance that ran with one month switch off gets rows and badge
+   counts for that month from the next run on. Watch the first runs: the
+   task now also queues every unpaid row of three earlier months, and a
+   row settled by a late payment should turn paid. A reason with two codes
+   no longer counts - if a Corporation paid that way, it has to pay per
+   code. Not looked at in a browser: the settings page without the
+   "Months" heading.
 000. **On deploying 0.4.19: migration 0034** before GM Transactions
    loads (it reads `GmNote.cleared`); no Celery change. Not looked at in
    a browser (the dev data has no GM row) - in production tick one row,
@@ -736,7 +547,9 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## State of the dev instance
 
-- Migrations 0001-0035 applied to `aa_dev` (0035 still uncommitted); every `MonthlyTax` row has
+- Migrations 0001-0035 applied to `aa_dev`; both month switches were on
+  before 0035 dropped them (`~/aa-dev/eos-tax-month-flags-before-0035.json`),
+  so the dev instance behaves as before. Every `MonthlyTax` row has
   `exact_payment` False and `largest_payments` `[]` until recalculated. `eos_tax_gmnote` is empty.
   Nobody holds `gm_bots_access` there yet.
 - `eos_tax_botreport` holds 8 rows from a trial run of the job (2026-09
@@ -822,6 +635,15 @@ script runs there.
 
 ## Traps recent sessions cost time on
 
+- **`makemessages` from `eos_tax/` goes through the instance's
+  `manage.py` by path**: `cd eos_tax && ~/aa-dev/venv/bin/python
+  ~/aa-dev/working/myauth/manage.py makemessages -l de -l es -l fr_FR
+  -l it_IT -l ko_KR -l ru`, the same for `compilemessages`. A removed
+  string turns into `#~` in all six; the `#:` line shifts make the diff
+  look large.
+- **`overdue_jobs` reads `MonthlyTax` with `payed=False`**: a test that
+  counts what `run_update_alliance` queues must not leave an unpaid row of
+  an earlier month lying around, or it finds an extra job.
 - **Script tests find the first match in the whole file.**
   `test_script_should_start_from_the_ticked_boxes` compared the first
   `addEventListener("change"` with the first `dataTable.draw();` and broke
