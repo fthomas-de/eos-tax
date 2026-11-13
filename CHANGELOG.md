@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.23] - 2026-11-13
+
+### Added
+
+- A sixth bots tab, "Possibly banned", lists every character one of the
+  four readings has shown in any stored month - the fallback list of a
+  month nobody crossed a threshold included - whose last corptools login
+  is at least 30 days ago, grouped by main. A bot that disappears after a
+  month on the lists was probably banned, and nothing told a hunter so
+  before. Each row names the months it was listed in, newest first, as
+  links to that month's bots page, beside the Corporation of today, the
+  age and the last login. A character without a known login is left out:
+  that is the audit tab's finding. The days are a setting of their own
+  (`possibly_banned_min_days`, migration 0037), deliberately without the
+  `bot_` prefix - every `bot_` field is in the lists' fingerprint, and
+  changing a filter applied at render would have recomputed every stored
+  month.
+
 ## [0.4.22] - 2026-11-13
 
 ### Added

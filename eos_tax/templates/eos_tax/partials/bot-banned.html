@@ -1,0 +1,60 @@
+{% load i18n %}
+
+{# here and not in bots.html: bots.js replaces the whole pane with this #}
+<p class="text-body-secondary small">
+    {% blocktranslate %}Characters shown on one of the four lists in any stored month whose last login is at least {{ min_days }} days ago. Not limited to the selected month; the number of days lives on the settings page.{% endblocktranslate %}
+</p>
+
+{% if groups %}
+    <div class="table-responsive">
+        {# bots.js sorts it: the mains by name, the characters inside each main by any column #}
+        <table class="table table-striped table-hover align-middle w-100" data-eos-sortable-groups>
+            <thead>
+                <tr>
+                    {% translate "Character" as heading %}
+                    {% include "eos_tax/partials/sort-header.html" with title=heading css="" %}
+                    {% translate "Corporation" as heading %}
+                    {% include "eos_tax/partials/sort-header.html" with title=heading css="d-none d-md-table-cell" %}
+                    {% translate "Main" as heading %}
+                    {% include "eos_tax/partials/sort-header.html" with title=heading css="d-none d-lg-table-cell" sort_groups=True %}
+                    {% translate "Age" as heading %}
+                    {% include "eos_tax/partials/sort-header.html" with title=heading css="d-none d-lg-table-cell" %}
+                    {% translate "Last login" as heading %}
+                    {% include "eos_tax/partials/sort-header.html" with title=heading css="" %}
+                    {% translate "Listed in" as heading %}
+                    {% include "eos_tax/partials/sort-header.html" with title=heading css="" %}
+                </tr>
+            </thead>
+
+            {% for group in groups %}
+                <tbody data-eos-group="{{ group.main_name }}">
+                    {% include "eos_tax/partials/bot-group-header.html" with group=group columns=6 %}
+
+                    {% for row in group.characters %}
+                    <tr{% if row.character_id in gm_listed %} class="table-danger" title="{% translate 'Listed on GM Transactions' %}"{% endif %}>
+                        {% include "eos_tax/partials/bot-character-cells.html" %}
+                        <td class="text-nowrap" data-order="{{ row.last_login|date:'c' }}">{{ row.last_login|date:"Y-m-d" }}</td>
+                        {# the newest month sorts; each opens the bots page of its month #}
+                        <td data-order="{{ row.months.0 }}">
+                            {% for month in row.months %}
+                                <a class="badge text-bg-secondary text-decoration-none"
+                                   href="{% url 'eos_tax:bots' %}?month={{ month }}">{{ month }}</a>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            {% endfor %}
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-success text-center">
+        {% translate "Every character the lists have shown has logged in since." %}
+    </div>
+{% endif %}
+
+<div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
+    <span>{% blocktranslate count counter=stats.flagged_characters %}{{ counter }} character on the four lists{% plural %}{{ counter }} characters on the four lists{% endblocktranslate %}</span>
+    <span>{% blocktranslate count counter=stats.quiet_characters %}{{ counter }} without a login since{% plural %}{{ counter }} without a login since{% endblocktranslate %}</span>
+    <span class="ms-auto">{% include "eos_tax/partials/bot-computed-at.html" %}</span>
+</div>

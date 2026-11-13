@@ -68,6 +68,33 @@ Last updated 2026-11-13 (0.4.22).
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
 
+## Decisions of the 2026-11-13 session (unreleased: "Possibly banned")
+
+Sixth bots tab, uncommitted, in `[Unreleased]` - the user's choices unless
+marked:
+
+- **Tab name "Possibly banned"**; characters **grouped by main**.
+- **Everything a tab showed counts**, the fallback list included (chosen
+  over "crossed a threshold only" and "high/medium only").
+- **All months a character was listed in, newest first**, as badges
+  linking to that month's bots page.
+- **No known login (no audit, or `last_known_login` empty) = left out.**
+- **Days in the settings, default 30** (`possibly_banned_min_days`,
+  migration 0037, applied to `aa_dev`), card "Possibly banned" at the end
+  of the bots chapter.
+- Claude's calls: `db/bot_ban.py`, read live at every fetch, no job; only
+  the four readings' `BotReport` rows, **every stored month whatever its
+  fingerprint**; the tab ignores the month selector; the field name has no
+  `bot_` prefix so it stays out of the fingerprint (tested); Corporation
+  of today from `EveCharacter`, falling back to the stored name; age live
+  via `grouped()`; login compared with `<=` now minus the days; red rows
+  for GM-listed characters like the other tabs; no level column. A month
+  recomputed after a settings change replaces its list, so a character
+  can drop out of the history. 16 tests in `test_bot_ban.py`, seven
+  sabotages caught. Not looked at in a browser; empty on `aa_dev` (nobody
+  there has a login). The new strings are not yet in the catalogues -
+  that happens at `/commit`.
+
 ## Decisions of the 2026-11-13 session (0.4.22)
 
 In-game window button on the bots tabs, modelled on aa-srp - the user's

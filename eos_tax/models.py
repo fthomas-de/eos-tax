@@ -125,6 +125,18 @@ class TaxConfiguration(SingletonModel):
             "within it count as one level. Nine percent to ten is one point."
         ),
     )
+    # not "bot_": every bot_ field is in the lists' fingerprint, and changing
+    # this one would recompute every stored month for a filter applied at render
+    possibly_banned_min_days = models.PositiveSmallIntegerField(
+        verbose_name=_("Days without a login"),
+        default=30,
+        validators=[MinValueValidator(1), MaxValueValidator(3650)],
+        help_text=_(
+            "A character once shown on one of the four bots lists is listed "
+            "under Possibly banned when its last login is at least this many "
+            "days ago."
+        ),
+    )
     bot_run_min_ticks = models.PositiveSmallIntegerField(
         verbose_name=_("Shortest run listed"),
         default=18,

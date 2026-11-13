@@ -25,6 +25,7 @@ from eos_tax.forms import TaxConfigurationForm, TaxRateFormSet, TaxRateReadOnlyF
 from eos_tax.models import TaxRate, UiCharacter
 from eos_tax.providers import ESI_SCOPE_UI_OPEN_WINDOW, esi
 from eos_tax.db.bot_audit import get_unaudited_mains
+from eos_tax.db.bot_ban import get_possibly_banned
 from eos_tax.db.bot_store import READINGS, get_stored_reports, settings_fingerprint
 from eos_tax.db.bots import (
     find_characters,
@@ -875,6 +876,7 @@ BOT_SIGNAL_LABELS = {
     "rhythm": _("Against the Corporation"),
     "clock": _("Off the Corporation clock"),
     "audit": _("Without current audit"),
+    "banned": _("Possibly banned"),
 }
 
 
@@ -990,6 +992,8 @@ BOT_SIGNALS = {
     # not a reading of its own: the characters of the four above whom
     # corptools no longer watches, picked out of their stored lists
     "audit": "eos_tax/partials/bot-audit.html",
+    # every stored month of the four, for whoever has not logged in since
+    "banned": "eos_tax/partials/bot-banned.html",
 }
 
 
@@ -1035,6 +1039,9 @@ def bot_signal(request, signal):
     if signal == "audit":
         reports = _stored_reports(selected, list(READINGS))
         report = get_unaudited_mains(reports) if reports else None
+    elif signal == "banned":
+        # every stored month, not the one on screen - nothing to queue
+        report = get_possibly_banned(get_config().possibly_banned_min_days)
     else:
         reports = _stored_reports(selected, [signal])
         report = reports[signal] if reports else None
@@ -1049,6 +1056,7 @@ def bot_signal(request, signal):
         "groups": report["groups"],
         "stats": report["stats"],
         "computed_at": report["computed_at"],
+        "min_days": report.get("min_days"),
         "selected_month": month,
         "gm_listed": gm_listed_character_ids(),
     })
