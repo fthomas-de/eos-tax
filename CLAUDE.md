@@ -151,7 +151,7 @@ keep it that way, `TestPaidIsNeverTakenBack` guards it.
 
 ## Translations
 
-Six catalogues: `de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`. They are only
+Seven catalogues: `de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`, `zh_Hans`. They are only
 touched **at a commit** - see below. Everything else stays English.
 
 - EVE jargon stays English in every language: Corporation, Alliance, Character,
@@ -172,15 +172,20 @@ touched **at a commit** - see below. Everything else stays English.
   corrupted a `.po` file before - the `msgid` line vanished, leaving a bare
   quoted string that `msgfmt` refuses to compile. `msgfmt --check -o /dev/null
   <file>` right after any bulk edit catches it while it is still one file to
-  revert instead of six; the Edit tool alone has not needed it yet.
-- Plural forms: de/es/fr/it 2, ko 1, ru 3.
+  revert instead of seven; the Edit tool alone has not needed it yet.
+- Plural forms: de/es/fr/it 2, ko/zh 1, ru 3.
+- Chinese: Alliance Auth translates the bare column titles "Alliance",
+  "Character" and "Corporation" itself and comes first in `INSTALLED_APPS`,
+  so on a zh-hans page they read 所在联盟, 角色, 公司 whatever our catalogue
+  says - as German shows "Allianz". A distinctive word for a test has to be
+  one no other installed app translates: eos-invoices also has 概览.
 - Korean: never write a bare `%` that the msgid does not have - msgfmt rejects
   it as a broken format string.
 - xgettext reads the source, it does not run it, and it does not descend into
   an f-string interpolation. Bind a translated unit to a local before building
   the string, or it never reaches a catalogue.
 - `makemessages` without extra flags. `--no-location` strips every `#:`
-  line-number comment from all six catalogues at once - a diff of ~2000 lines
+  line-number comment from all seven catalogues at once - a diff of ~2000 lines
   for a one-string change, and it did not shrink again on the next plain run
   because the flag is not sticky. If that happens, `git checkout` the `.po`
   files and rerun without it.

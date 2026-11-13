@@ -1,0 +1,2352 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: eos_tax\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-13 14:32+0000\n"
+"Language: zh-Hans\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: auth_hooks.py:19 templates/eos_tax/base.html:5
+#: templates/eos_tax/base.html:60
+msgid "Alliance PvE Tax"
+msgstr "Alliance PvE Tax"
+
+#: forms.py:76 forms.py:256
+msgid "Base tax rate (%)"
+msgstr "基础税率 (%)"
+
+#: forms.py:130
+msgid ""
+"Corporations of the taxed alliances. Excluding any other corporation would "
+"change nothing."
+msgstr "被征税 Alliance 的 Corporation。排除任何其他 Corporation 都不会有任何变化。"
+
+#: forms.py:137
+msgid "Base rate, used for months before the first scheduled change below."
+msgstr "基础税率，用于下方第一次计划变更之前的月份。"
+
+#: forms.py:158
+msgid ""
+"Has to stay at or below the longest break a run can survive, otherwise that "
+"ceiling never applies."
+msgstr "必须不超过连续段能容忍的最长中断，否则该上限永远不会生效。"
+
+#: forms.py:229 forms.py:264
+msgid "Rate (%)"
+msgstr "税率 (%)"
+
+#: models.py:49
+msgid "Taxed alliances"
+msgstr "被征税的 Alliance"
+
+#: models.py:50
+msgid "Corporations of these alliances are taxed."
+msgstr "这些 Alliance 的 Corporation 需要缴税。"
+
+#: models.py:58
+msgid "Holding corporation"
+msgstr "Holding Corporation"
+
+#: models.py:59
+msgid "The single corporation that receives the tax payments."
+msgstr "接收税款的唯一 Corporation。"
+
+#: models.py:65
+msgid "Excluded corporations"
+msgstr "排除的 Corporation"
+
+#: models.py:66
+msgid "Never taxed and never listed, even inside a taxed alliance."
+msgstr "永不征税、永不列出，即使位于被征税的 Alliance 中。"
+
+#: models.py:69 models.py:375
+msgid "Alliance tax rate"
+msgstr "Alliance 税率"
+
+#: models.py:74
+msgid "Share of the gross PvE income a corporation owes. 0.1 means 10 percent."
+msgstr "Corporation 应缴纳的 PvE 总收入份额。0.1 表示百分之十。"
+
+#: models.py:77
+msgid "Taxed journal types"
+msgstr "征税的流水类型"
+
+#: models.py:80
+msgid ""
+"Wallet journal ref_types counted as PvE income, for example bounty_prizes."
+msgstr "计为 PvE 收入的 wallet 流水 ref_type，例如 bounty_prizes。"
+
+#: models.py:85
+msgid ""
+"Match payments by their reason code instead of by amount alone. With it every"
+" payment carrying the code counts, so a corporation can pay in parts, and "
+"paying more than it owes is recorded. Without it a payment is recognised by "
+"its exact amount only, so two corporations owing the same sum, or one "
+"corporation owing the same sum twice, cannot be told apart."
+msgstr ""
+"按 Reason 代码而不仅按金额匹配付款。启用后，每笔带有该代码的付款都会计入，因此 Corporation "
+"可以分批付款，多付的金额也会被记录。未启用时，只能按精确金额识别付款，因此两个应付相同金额的 Corporation，或一个 Corporation "
+"两次应付相同金额，将无法区分。"
+
+#: models.py:94
+msgid "Income that needs a wallet audit (million ISK)"
+msgstr "需要 wallet 审计的收入（百万 ISK）"
+
+#: models.py:98
+msgid ""
+"A character whose bounties reach the corporation wallet but not through a "
+"member wallet is listed on the overview once this much gross income a month "
+"is backed out of the corporation's slice. Without the member wallet a stretch"
+" without ingame tax cannot be seen for that character."
+msgstr ""
+"如果某个 Character 的 bounty 进入了 Corporation wallet，但没有经过成员 wallet，那么一旦从 "
+"Corporation 的份额反推出的月度总收入达到此数值，就会在概览中列出该 Character。没有成员 wallet，就无法看出该 "
+"Character 在某段时间内是否没有游戏内税。"
+
+#: models.py:106
+msgid "Smallest payment difference worth flagging (million ISK)"
+msgstr "值得标记的最小付款差额（百万 ISK）"
+
+#: models.py:110
+msgid ""
+"A payment at least this much above or below the amount owed gets a badge next"
+" to the amount paid on the overview; a smaller difference is shown without "
+"one. 0 flags every difference."
+msgstr "付款比应付金额多或少至少此数值时，概览中实付金额旁会显示标记；较小的差额不显示标记。0 表示标记所有差额。"
+
+#: models.py:116
+msgid "Smallest move worth listing"
+msgstr "值得列出的最小变动"
+
+#: models.py:123
+msgid ""
+"In percentage points of the share of the bounty that reaches the corporation."
+" A move smaller than this is not listed, and days within it count as one "
+"level. Nine percent to ten is one point."
+msgstr ""
+"以进入 Corporation 的 bounty "
+"份额的百分点计。小于此值的变动不会列出，处于此范围内的天数视为同一水平。从百分之九到百分之十为一个百分点。"
+
+#: models.py:131
+msgid "Days without a login"
+msgstr "未登录天数"
+
+#: models.py:135
+msgid ""
+"A character once shown on one of the four bots lists is listed under Possibly"
+" banned when its last login is at least this many days ago."
+msgstr "曾出现在四个机器人列表之一中的 Character，若最后一次登录距今至少这么多天，就会列在“可能已被封禁”下。"
+
+#: models.py:141
+msgid "Shortest run listed"
+msgstr "列出的最短连续段"
+
+#: models.py:145
+msgid ""
+"How many payouts in a row a character has to collect without a break before "
+"the run is listed. The game pays a ratter about every twenty minutes, so "
+"eighteen is roughly six hours."
+msgstr "Character 必须不间断地连续领取多少次发放，该连续段才会被列出。游戏大约每二十分钟向刷怪玩家发放一次，因此十八次约为六小时。"
+
+#: models.py:151
+msgid "Interruptions allowed"
+msgstr "允许的中断次数"
+
+#: models.py:155
+msgid ""
+"How many breaks a run may contain and still count as one. A daily downtime "
+"would otherwise cut every long night in two. Only a break under an hour can "
+"be forgiven; a longer one always ends the run."
+msgstr ""
+"一个连续段最多可包含多少次中断仍算作一个。否则每日停机维护会把每个漫长的夜晚切成两段。只有不到一小时的中断可以被容忍；更长的中断总会结束连续段。"
+
+#: models.py:162
+msgid "Longest gap that still counts as the same tick"
+msgstr "仍算作同一发放周期的最长间隔"
+
+#: models.py:166
+msgid ""
+"In minutes. The game pays about every twenty minutes and the tick slips, so a"
+" little more than twenty leaves room for that without calling an unbroken "
+"stretch broken."
+msgstr "以分钟计。游戏大约每二十分钟发放一次，且周期会有偏移，因此略多于二十分钟可以留出余量，不会把不间断的时段误判为中断。"
+
+#: models.py:172
+msgid "Longest break a run can survive"
+msgstr "连续段能容忍的最长中断"
+
+#: models.py:176
+msgid ""
+"In minutes. A break longer than this ends the run whatever the allowance "
+"above says. Without a ceiling one allowance would weld a morning and an "
+"evening into a single twelve hour run."
+msgstr "以分钟计。超过此长度的中断会结束连续段，无论上方允许次数如何。如果没有上限，一次允许就可能把上午和晚上拼成一个十二小时的连续段。"
+
+#: models.py:182
+msgid "Length of the busy window"
+msgstr "繁忙时段的长度"
+
+#: models.py:186
+msgid ""
+"How many hours of the day count as the corporation's busy window. A character"
+" spread evenly over the clock lands on this share of any window, which is the"
+" floor the score measures down to."
+msgstr ""
+"一天中有多少小时算作 Corporation 的繁忙时段。一个在全天均匀分布的 Character 在任何时段中都会占到这一份额，这就是评分所衡量的下限。"
+
+#: models.py:192 models.py:266
+msgid "Smallest character worth reading"
+msgstr "值得判读的最小 Character"
+
+#: models.py:196
+msgid ""
+"Below this many payouts in the month a character has too little of a day to "
+"describe, and is left out of this reading."
+msgstr "当月发放次数低于此值的 Character，其一天的数据太少，无法描述，不参与此项判读。"
+
+#: models.py:201 models.py:275
+msgid "Smallest usable yardstick"
+msgstr "最小可用参照基准"
+
+#: models.py:205
+msgid ""
+"How many payouts have to be left in the corporation once the character's own "
+"are taken out. Below this there is no rhythm to compare against, only noise, "
+"and the character is not scored."
+msgstr ""
+"去掉该 Character 自己的发放后，Corporation 中至少还要剩下多少次发放。低于此值就没有可比较的节奏，只有噪声，该 Character "
+"不会被评分。"
+
+#: models.py:211 models.py:245
+msgid "Leave flagged characters out of the yardstick"
+msgstr "将已标记的 Character 排除在参照基准之外"
+
+#: models.py:214
+msgid ""
+"A character flat enough to be listed is also part of their corporation's day,"
+" and drags it flat with them - which makes everybody else look ordinary. With"
+" this on the reading runs twice: once to find them, once with them taken out."
+" A corporation that would fall below the floor above keeps the plain figure."
+msgstr ""
+"分布平坦到足以被列出的 Character 也是其 Corporation "
+"一天的一部分，会把整体一起拉平——这会让其他人看起来都很普通。启用后，判读会运行两次：一次找出他们，一次把他们排除在外。会因此低于上方下限的 "
+"Corporation 保留原始数值。"
+
+#: models.py:223
+msgid "Smallest difference listed"
+msgstr "列出的最小差异"
+
+#: models.py:227
+msgid ""
+"In percentage points. How much flatter than the rest of their corporation a "
+"character has to be before the list mentions them. A negative difference "
+"means more concentrated than the corporation, which is the opposite of what "
+"this looks for, so those are never listed whatever this says."
+msgstr ""
+"以百分点计。Character 必须比其 Corporation 的其他成员平坦多少，列表才会提到他们。负差异表示比 Corporation "
+"更集中，这与所要寻找的相反，因此无论此处如何设置都不会列出。"
+
+#: models.py:235
+msgid "Distance counted as a full deviation"
+msgstr "视为完全偏离的距离"
+
+#: models.py:239
+msgid ""
+"In hours. Twelve is as far apart as two times of day can be, so the default "
+"treats the whole clock as the scale. A smaller value makes the colouring "
+"reach red sooner."
+msgstr "以小时计。十二小时是一天中两个时刻能相隔的最远距离，因此默认值把整个时钟作为刻度。较小的值会让颜色更早变红。"
+
+#: models.py:248
+msgid ""
+"The same for this reading: a character far enough from their corporation to "
+"be listed also pulls the corporation's own middle of the day towards "
+"themselves, which shortens everybody else's distance."
+msgstr ""
+"此项判读同理：离其 Corporation 足够远而被列出的 Character，也会把 Corporation "
+"自身一天的中心拉向自己，从而缩短其他所有人的距离。"
+
+#: models.py:255
+msgid "Smallest distance listed"
+msgstr "列出的最小距离"
+
+#: models.py:259
+msgid ""
+"In hours. How far from their corporation a character's day has to sit before "
+"the list mentions them. A third of the scale above is where the colouring "
+"stops calling a distance unremarkable, so a threshold under that lets green "
+"rows into the list."
+msgstr ""
+"以小时计。Character 的一天与其 Corporation "
+"相距多远，列表才会提到他们。上方刻度的三分之一是颜色不再把距离视为普通的位置，因此低于该值的阈值会让绿色行进入列表。"
+
+#: models.py:270
+msgid ""
+"Below this many payouts in the month the middle of a character's day is "
+"wherever the noise landed, so they are left out."
+msgstr "当月发放次数低于此值时，Character 一天的中心只取决于噪声落在哪里，因此不参与判读。"
+
+#: models.py:279
+msgid ""
+"How many payouts have to be left in the corporation once the character's own "
+"are taken out, before its middle of the day is worth comparing against."
+msgstr "去掉该 Character 自己的发放后，Corporation 中至少还要剩下多少次发放，其一天的中心才值得比较。"
+
+#: models.py:285
+msgid "Least concentrated day with a middle"
+msgstr "有中心的一天的最低集中度"
+
+#: models.py:289
+msgid ""
+"In percent. How closely the payouts have to gather around one time of day "
+"before that day has a middle: 100 when all of them fall into one hour, 0 for "
+"a day spread perfectly evenly. A day spread evenly over twelve hours comes "
+"out at 64, over sixteen at 42, over twenty at 19. Below this - for the "
+"character or the rest of their corporation - the middle would be wherever the"
+" rounding put it, so the character is left out of this reading."
+msgstr ""
+"以百分比计。发放需要多紧密地聚集在一天中的某个时刻，这一天才有中心：全部落在同一小时内为 100，完全均匀分布为 0。均匀分布在十二小时内的一天为 "
+"64，十六小时为 42，二十小时为 19。低于此值时——无论是 Character 还是其 Corporation "
+"的其他成员——中心只取决于取整落在哪里，因此该 Character 不参与此项判读。"
+
+#: models.py:299
+msgid "Entries before an hour counts as active"
+msgstr "一小时算作活跃所需的记录数"
+
+#: models.py:303
+msgid ""
+"A single entry is noise - a stray bounty tick, one ESS payout. The game pays "
+"about every twenty minutes, so an hour of uninterrupted play holds three; two"
+" is deliberately tolerant, because play gets interrupted and a false negative"
+" costs less than accusing a player."
+msgstr ""
+"单条记录只是噪声——一次零星的 bounty 发放，一次 ESS "
+"发放。游戏大约每二十分钟发放一次，因此一小时不间断的游戏会有三条；设为二是有意放宽，因为游戏会被打断，而漏判的代价低于冤枉一名玩家。"
+
+#: models.py:311
+msgid "Hours in a day before it counts"
+msgstr "一天算数所需的小时数"
+
+#: models.py:315
+msgid ""
+"A day counts as suspicious when a character earned taxed income in more than "
+"this many different hours of that day."
+msgstr "如果 Character 在某一天中超过此数量的不同小时内获得了应税收入，这一天就算作可疑。"
+
+#: models.py:320
+msgid "Days in a month before a character is listed"
+msgstr "Character 被列出前一个月内所需的天数"
+
+#: models.py:324
+msgid ""
+"A character is listed once it reaches this many suspicious days within the "
+"selected month."
+msgstr "Character 在所选月份内达到此数量的可疑天数后即被列出。"
+
+#: models.py:330
+msgid "Tax configuration"
+msgstr "税务配置"
+
+#: models.py:370 templates/eos_tax/settings.html:111
+msgid "Valid from"
+msgstr "生效起始"
+
+#: models.py:372
+msgid "First month this rate applies to. Stored as the first of that month."
+msgstr "此税率适用的第一个月。存储为该月的第一天。"
+
+#: models.py:379
+msgid "Share of the gross PvE income. 0.1 means 10 percent."
+msgstr "PvE 总收入的份额。0.1 表示百分之十。"
+
+#: models.py:384
+msgid "Tax rate"
+msgstr "税率"
+
+#: models.py:385 templates/eos_tax/settings.html:88
+msgid "Tax rate schedule"
+msgstr "税率计划"
+
+#: models.py:405
+msgid "Corporation ID"
+msgstr "Corporation ID"
+
+#: models.py:406
+msgid "Taxed month"
+msgstr "征税月份"
+
+#: models.py:407
+msgid "Taxed year"
+msgstr "征税年份"
+
+#: models.py:408
+msgid "Corporation name"
+msgstr "Corporation 名称"
+
+#: models.py:409
+msgid "Tax value"
+msgstr "税值"
+
+#: models.py:410
+msgid "Tax percentage"
+msgstr "税率百分比"
+
+#: models.py:411 templates/eos_tax/index.html:33
+#: templates/eos_tax/index.html:56 templates/eos_tax/index.html:183
+msgid "Paid"
+msgstr "已付"
+
+#: models.py:428
+msgid "Applied alliance tax rate"
+msgstr "适用的 Alliance 税率"
+
+#: models.py:431
+msgid ""
+"Alliance rate in effect when this row was calculated. Stored per row so "
+"changing the rate does not rewrite what past months were owed."
+msgstr "计算此行时生效的 Alliance 税率。按行存储，因此更改税率不会改写过去月份的应付金额。"
+
+#: models.py:437
+msgid "Amount to pay"
+msgstr "应付金额"
+
+#: models.py:440
+msgid ""
+"ISK owed to the alliance for this month, in whole ISK. Worked out from "
+"tax_value, tax_percentage and alliance_tax_rate whenever the row is written, "
+"and kept with them from then on - the page, the chart and the payment check "
+"read it rather than redoing the arithmetic."
+msgstr ""
+"本月应付给 Alliance 的 ISK，以整 ISK 计。每次写入该行时根据 tax_value、tax_percentage 和 "
+"alliance_tax_rate 计算得出，此后与它们一起保存——页面、图表和付款检查都读取此值，而不是重新计算。"
+
+#: models.py:448
+msgid "Amount paid"
+msgstr "实付金额"
+
+#: models.py:452
+msgid ""
+"ISK the payment check found for this month, in whole ISK: with reason codes "
+"every payment carrying this row's code added up, without them the amount owed"
+" once a payment of exactly that turned up. Empty until a payment was seen."
+msgstr ""
+"付款检查为本月找到的 ISK，以整 ISK 计：使用 Reason "
+"代码时，为所有带有本行代码的付款之和；不使用时，一旦出现恰好等于应付金额的付款，即为应付金额。在发现付款之前为空。"
+
+#: models.py:460 templates/eos_tax/settings.html:82
+msgid "Payments"
+msgstr "付款"
+
+#: models.py:462
+msgid "How many payments the amount paid is made of."
+msgstr "实付金额由多少笔付款组成。"
+
+#: models.py:466
+msgid "Exact payment"
+msgstr "精确付款"
+
+#: models.py:469
+msgid ""
+"Whether one of the payments was exactly the amount owed, whatever the others "
+"add up to. Set by the payment check along with the amount paid."
+msgstr "是否有一笔付款恰好等于应付金额，无论其他付款加起来是多少。由付款检查与实付金额一起设置。"
+
+#: models.py:476
+msgid "Largest payments"
+msgstr "最大的几笔付款"
+
+#: models.py:480
+msgid ""
+"The largest of the payments the amount paid is made of, in whole ISK, highest"
+" first - at most five. Set by the payment check along with the amount paid."
+msgstr "构成实付金额的付款中最大的几笔，以整 ISK 计，从高到低——最多五笔。由付款检查与实付金额一起设置。"
+
+#: models.py:487
+msgid "Gross PvE income"
+msgstr "PvE 总收入"
+
+#: models.py:491
+msgid ""
+"Bounties earned this month before any corp tax, in whole ISK: the corporation"
+" wallet reconciled with the member wallets, so a stretch without ingame tax "
+"is counted as well. The amount to pay is worked out from it. Empty on rows "
+"written before it was stored."
+msgstr ""
+"本月在扣除任何 Corporation 税之前获得的 bounty，以整 ISK 计：Corporation wallet 与成员 wallet "
+"核对后的结果，因此没有游戏内税的时段也会被计入。应付金额据此计算。在开始存储之前写入的行中为空。"
+
+#: models.py:499 templates/eos_tax/index.html:57
+msgid "Characters without wallet audit"
+msgstr "没有 wallet 审计的 Character"
+
+#: models.py:503
+msgid ""
+"Characters whose bounties this month showed up in the corporation wallet "
+"only, at or above the configured income, as [{id, name, gross}], highest "
+"first."
+msgstr ""
+"本月 bounty 只出现在 Corporation wallet 中、且达到或超过配置收入的 Character，格式为 [{id, name, "
+"gross}]，从高到低。"
+
+#: models.py:510 templates/eos_tax/index.html:58
+msgid "Calculation time"
+msgstr "计算耗时"
+
+#: models.py:514
+msgid ""
+"How long the last calculation of this month took, in seconds - reading both "
+"journals, the reconciliation and the payment check. Empty on rows written "
+"before it was stored."
+msgstr "本月上次计算所花的时间，以秒计——读取两份流水、核对以及付款检查。在开始存储之前写入的行中为空。"
+
+#: models.py:521
+msgid "Payment date"
+msgstr "付款日期"
+
+#: models.py:525
+msgid ""
+"Journal date of the transfer that settled this month: the one of exactly the "
+"amount owed, or the one that brought the payments up to it. Empty until a "
+"payment settled the row."
+msgstr "结清本月的那笔转账的流水日期：恰好等于应付金额的那笔，或使付款总额达到应付金额的那笔。在付款结清该行之前为空。"
+
+#: models.py:532
+msgid "Recorded as paid"
+msgstr "记录为已付"
+
+#: models.py:536
+msgid ""
+"When the payment check first marked this month as paid. Empty on rows marked "
+"paid before it was stored."
+msgstr "付款检查首次将本月标记为已付的时间。在开始存储之前就已标记为已付的行中为空。"
+
+#: templates/eos_tax/base.html:11
+msgid "Overview"
+msgstr "概览"
+
+#: templates/eos_tax/base.html:17 views.py:159
+msgid "Statistics"
+msgstr "统计"
+
+#: templates/eos_tax/base.html:24 views.py:696
+msgid "Bots"
+msgstr "机器人"
+
+#: templates/eos_tax/base.html:30 views.py:233
+msgid "Corp Tax Changes"
+msgstr "Corporation 税率变动"
+
+#: templates/eos_tax/base.html:36
+#: templates/eos_tax/partials/bot-gm-detail.html:6
+#: templates/eos_tax/partials/bot-tabs.html:38
+#: templates/eos_tax/partials/progress.html:16 views.py:259
+msgid "GM Transactions"
+msgstr "GM 交易"
+
+#: templates/eos_tax/base.html:42 views.py:431
+msgid "Settings"
+msgstr "设置"
+
+#: templates/eos_tax/bot-detail.html:45
+msgid "Character Audit"
+msgstr "Character 审计"
+
+#: templates/eos_tax/bot-detail.html:70
+#, python-format
+msgid "%(main)s - %(counter)s more character"
+msgid_plural "%(main)s - %(counter)s more characters"
+msgstr[0] "%(main)s - 另外 %(counter)s 个 Character"
+
+#: templates/eos_tax/bot-detail.html:87
+msgid "Every character of this main"
+msgstr "此 Main 的所有 Character"
+
+#: templates/eos_tax/bot-detail.html:118
+msgid "Open one of the bot lists to see how each of them was assessed."
+msgstr "打开其中一个机器人列表，查看每个 Character 的评估结果。"
+
+#: templates/eos_tax/bot-detail.html:129
+#: templates/eos_tax/tax-change-detail.html:12
+msgid "Back to the list"
+msgstr "返回列表"
+
+#: templates/eos_tax/bot-detail.html:137 templates/eos_tax/bots.html:22
+#: templates/eos_tax/index.html:54 templates/eos_tax/settings.html:195
+#: templates/eos_tax/statistics.html:49
+msgid "Month"
+msgstr "月份"
+
+#: templates/eos_tax/bot-detail.html:143 templates/eos_tax/bots.html:35
+#: templates/eos_tax/index.html:28 templates/eos_tax/tax-changes.html:35
+msgid "Show"
+msgstr "显示"
+
+#: templates/eos_tax/bot-detail.html:166
+#, python-format
+msgid ""
+"Active hours per day. An hour counts as active once the same taxed\n"
+"                journal type appears in it at least %(min_entries)s times, which is the same rule the\n"
+"                list uses. Times are EVE time."
+msgstr ""
+"每天的活跃小时数。当同一种应税流水类型在一小时内出现至少 %(min_entries)s 次时，该小时算作活跃，这与列表使用的规则相同。时间为 EVE "
+"时间。"
+
+#: templates/eos_tax/bot-detail.html:175
+msgid "Active hours per day, calendar weeks as rows and weekdays as columns"
+msgstr "每天的活跃小时数，以日历周为行、星期为列"
+
+#: templates/eos_tax/bot-detail.html:180
+msgid "Week"
+msgstr "周"
+
+#: templates/eos_tax/bot-detail.html:204
+#, python-format
+msgid "Active hours: %(hours)s"
+msgstr "活跃小时数：%(hours)s"
+
+#: templates/eos_tax/bot-detail.html:225
+msgid "quiet"
+msgstr "安静"
+
+#: templates/eos_tax/bot-detail.html:230
+#, python-format
+msgid "%(counter)s hour"
+msgid_plural "%(counter)s hours"
+msgstr[0] "%(counter)s 小时"
+
+#: templates/eos_tax/bot-detail.html:234
+#, python-format
+msgid "%(counter)s active day"
+msgid_plural "%(counter)s active days"
+msgstr[0] "%(counter)s 个活跃日"
+
+#: templates/eos_tax/bot-detail.html:235
+#, python-format
+msgid "%(counter)s active hour"
+msgid_plural "%(counter)s active hours"
+msgstr[0] "%(counter)s 个活跃小时"
+
+#: templates/eos_tax/bot-detail.html:236
+#, python-format
+msgid "busiest day %(counter)s hour"
+msgid_plural "busiest day %(counter)s hours"
+msgstr[0] "最忙的一天 %(counter)s 小时"
+
+#: templates/eos_tax/bot-detail.html:237
+#, python-format
+msgid "%(value)s journal entry"
+msgid_plural "%(value)s journal entries"
+msgstr[0] "%(value)s 条流水记录"
+
+#: templates/eos_tax/bot-detail.html:240 templates/eos_tax/bots.html:134
+#: templates/eos_tax/tax-change-detail.html:73
+#: templates/eos_tax/tax-changes.html:135
+msgid "total"
+msgstr "合计"
+
+#: templates/eos_tax/bot-detail.html:245
+msgid "This character had no active hour in the selected month."
+msgstr "该 Character 在所选月份没有活跃小时。"
+
+#: templates/eos_tax/bots.html:28 templates/eos_tax/gm-transactions.html:82
+#: templates/eos_tax/partials/bot-audit.html:14
+#: templates/eos_tax/partials/bot-banned.html:14
+#: templates/eos_tax/partials/bot-clock-detail.html:32
+#: templates/eos_tax/partials/bot-clock.html:26
+#: templates/eos_tax/partials/bot-gm-detail.html:20
+#: templates/eos_tax/partials/bot-rhythm-detail.html:27
+#: templates/eos_tax/partials/bot-rhythm.html:26
+#: templates/eos_tax/partials/bot-runs.html:26
+#: templates/eos_tax/partials/bot-table.html:7
+msgid "Character"
+msgstr "Character"
+
+#: templates/eos_tax/bots.html:31
+msgid "Open a character directly"
+msgstr "直接打开某个 Character"
+
+#: templates/eos_tax/bots.html:61
+#, python-format
+msgid ""
+"Characters that earned taxed income in more than %(min_hours)s different\n"
+"                hours of a day, on at least %(min_days)s days of the selected month. Both thresholds\n"
+"                live on the settings page."
+msgstr ""
+"在所选月份中至少 %(min_days)s 天里，在一天内超过 %(min_hours)s 个不同小时获得应税收入的 "
+"Character。两个阈值都在设置页面中。"
+
+#: templates/eos_tax/bots.html:69
+msgid "Several characters match:"
+msgstr "有多个 Character 匹配："
+
+#: templates/eos_tax/bots.html:82
+#, python-format
+msgid "No character found for \"%(wanted)s\"."
+msgstr "未找到“%(wanted)s”对应的 Character。"
+
+#: templates/eos_tax/bots.html:93
+msgid ""
+"No character crossed both thresholds. The ten mains with the longest days of "
+"the month are shown instead, so the thresholds can be judged against real "
+"numbers."
+msgstr "没有 Character 同时超过两个阈值。改为显示本月一天最长的十个 Main，以便用真实数字评估阈值。"
+
+#: templates/eos_tax/bots.html:99
+msgid "No character crossed both thresholds in this month."
+msgstr "本月没有 Character 同时超过两个阈值。"
+
+#: templates/eos_tax/bots.html:123
+msgid "slower than usual"
+msgstr "比平时慢"
+
+#: templates/eos_tax/bots.html:126
+#, python-format
+msgid "%(value)s hour blocks"
+msgstr "%(value)s 个小时段"
+
+#: templates/eos_tax/bots.html:127
+#, python-format
+msgid "%(value)s characters"
+msgstr "%(value)s 个 Character"
+
+#: templates/eos_tax/bots.html:128
+#, python-format
+msgid "%(value)s hit"
+msgid_plural "%(value)s hits"
+msgstr[0] "%(value)s 次命中"
+
+#: templates/eos_tax/bots.html:132
+msgid "database"
+msgstr "数据库"
+
+#: templates/eos_tax/bots.html:133
+msgid "aggregation"
+msgstr "汇总"
+
+#: templates/eos_tax/gm-transactions.html:7
+msgid "Add a note"
+msgstr "添加备注"
+
+#: templates/eos_tax/gm-transactions.html:8
+#: templates/eos_tax/partials/bot-gm-detail.html:26
+#: templates/eos_tax/partials/bot-gm-detail.html:65
+msgid "Cleared"
+msgstr "已处理"
+
+#: templates/eos_tax/gm-transactions.html:9
+msgid "Add a note first"
+msgstr "请先添加备注"
+
+#: templates/eos_tax/gm-transactions.html:20
+msgid ""
+"Characters with a GM transaction in their own wallet journal, and characters "
+"whose wallet is below zero right now. The transactions are looked up by a "
+"background job over the whole journal; wallet balances, mains and "
+"Corporations are read when the page loads."
+msgstr ""
+"在自己的 wallet 流水中有 GM 交易的 Character，以及当前 wallet 余额低于零的 "
+"Character。交易由后台任务在整个流水中查找；wallet 余额、Main 和 Corporation 在页面加载时读取。"
+
+#: templates/eos_tax/gm-transactions.html:26
+msgid ""
+"The GM transactions are being looked up in the background. This page reloads "
+"by itself once they are ready."
+msgstr "正在后台查找 GM 交易。准备好后此页面会自动重新加载。"
+
+#: templates/eos_tax/gm-transactions.html:34
+msgid "Only characters still in the Alliance with a Main or alt"
+msgstr "仅显示仍有 Main 或小号在 Alliance 中的 Character"
+
+#: templates/eos_tax/gm-transactions.html:43
+msgid "Hide cleared rows"
+msgstr "隐藏已处理的行"
+
+#: templates/eos_tax/gm-transactions.html:50
+msgid "Counterparty"
+msgstr "交易对方"
+
+#: templates/eos_tax/gm-transactions.html:60
+msgid "No counterparty"
+msgstr "无交易对方"
+
+#: templates/eos_tax/gm-transactions.html:75
+msgid "Could not save."
+msgstr "无法保存。"
+
+#: templates/eos_tax/gm-transactions.html:78
+msgid "This character or another character of the same Main is in the Alliance"
+msgstr "此 Character 或同一 Main 的其他 Character 在 Alliance 中"
+
+#: templates/eos_tax/gm-transactions.html:78
+#: templates/eos_tax/gm-transactions.html:114
+msgid "In the Alliance"
+msgstr "在 Alliance 中"
+
+#: templates/eos_tax/gm-transactions.html:79
+#: templates/eos_tax/gm-transactions.html:137
+#: templates/eos_tax/gm-transactions.html:220
+#: templates/eos_tax/gm-transactions.html:226
+#: templates/eos_tax/partials/bot-gm-detail.html:25
+msgid "Note"
+msgstr "备注"
+
+#: templates/eos_tax/gm-transactions.html:81
+#: templates/eos_tax/partials/bot-gm-detail.html:19
+msgid "Date"
+msgstr "日期"
+
+#: templates/eos_tax/gm-transactions.html:83
+#: templates/eos_tax/partials/bot-audit.html:20
+#: templates/eos_tax/partials/bot-banned.html:20
+#: templates/eos_tax/partials/bot-clock.html:29
+#: templates/eos_tax/partials/bot-rhythm.html:29
+#: templates/eos_tax/partials/bot-runs.html:29
+#: templates/eos_tax/partials/bot-table.html:10
+msgid "Age"
+msgstr "年龄"
+
+#: templates/eos_tax/gm-transactions.html:84
+#: templates/eos_tax/partials/bot-banned.html:22
+msgid "Last login"
+msgstr "最后登录"
+
+#: templates/eos_tax/gm-transactions.html:85
+#: templates/eos_tax/partials/bot-audit.html:18
+#: templates/eos_tax/partials/bot-banned.html:18
+#: templates/eos_tax/partials/bot-clock.html:28
+#: templates/eos_tax/partials/bot-rhythm.html:28
+#: templates/eos_tax/partials/bot-runs.html:28
+#: templates/eos_tax/partials/bot-table.html:9
+msgid "Main"
+msgstr "Main"
+
+#: templates/eos_tax/gm-transactions.html:86 templates/eos_tax/index.html:49
+#: templates/eos_tax/partials/bot-audit.html:16
+#: templates/eos_tax/partials/bot-banned.html:16
+#: templates/eos_tax/partials/bot-clock-detail.html:33
+#: templates/eos_tax/partials/bot-clock.html:27
+#: templates/eos_tax/partials/bot-rhythm-detail.html:28
+#: templates/eos_tax/partials/bot-rhythm.html:27
+#: templates/eos_tax/partials/bot-runs.html:27
+#: templates/eos_tax/partials/bot-table.html:8
+#: templates/eos_tax/settings.html:182 templates/eos_tax/statistics.html:85
+#: templates/eos_tax/tax-changes.html:69
+msgid "Corporation"
+msgstr "Corporation"
+
+#: templates/eos_tax/gm-transactions.html:87
+#: templates/eos_tax/partials/bot-gm-detail.html:21
+msgid "Corporation at the time"
+msgstr "当时的 Corporation"
+
+#: templates/eos_tax/gm-transactions.html:88
+msgid "Corporations in the Alliance"
+msgstr "Alliance 中的 Corporation"
+
+#: templates/eos_tax/gm-transactions.html:89
+#: templates/eos_tax/statistics.html:26
+msgid "Alliance"
+msgstr "Alliance"
+
+#: templates/eos_tax/gm-transactions.html:90
+#: templates/eos_tax/partials/bot-gm-detail.html:22
+msgid "Amount"
+msgstr "金额"
+
+#: templates/eos_tax/gm-transactions.html:91
+#: templates/eos_tax/partials/bot-gm-detail.html:23
+msgid "Wallet balance"
+msgstr "wallet 余额"
+
+#: templates/eos_tax/gm-transactions.html:92
+#: templates/eos_tax/partials/bot-gm-detail.html:24
+msgid "Description"
+msgstr "描述"
+
+#: templates/eos_tax/gm-transactions.html:162
+#, python-format
+msgid "%(days)s day"
+msgid_plural "%(days)s days"
+msgstr[0] "%(days)s 天"
+
+#: templates/eos_tax/gm-transactions.html:177
+#: templates/eos_tax/partials/bot-character-cells.html:23
+msgid "not registered"
+msgstr "未注册"
+
+#: templates/eos_tax/gm-transactions.html:214
+msgid "Could not save the note."
+msgstr "无法保存备注。"
+
+#: templates/eos_tax/gm-transactions.html:223
+#: templates/eos_tax/gm-transactions.html:236
+msgid "Cancel"
+msgstr "取消"
+
+#: templates/eos_tax/gm-transactions.html:239
+msgid "Save"
+msgstr "保存"
+
+#: templates/eos_tax/gm-transactions.html:247
+msgid "No GM transaction in any character journal, and no wallet below zero."
+msgstr "所有 Character 流水中都没有 GM 交易，也没有余额低于零的 wallet。"
+
+#: templates/eos_tax/gm-transactions.html:253
+#: templates/eos_tax/partials/bot-gm-detail.html:75
+#, python-format
+msgid "%(counter)s GM transaction"
+msgid_plural "%(counter)s GM transactions"
+msgstr[0] "%(counter)s 笔 GM 交易"
+
+#: templates/eos_tax/gm-transactions.html:254
+#: templates/eos_tax/partials/bot-gm-detail.html:76
+#, python-format
+msgid "%(counter)s wallet below zero"
+msgid_plural "%(counter)s wallets below zero"
+msgstr[0] "%(counter)s 个余额低于零的 wallet"
+
+#: templates/eos_tax/gm-transactions.html:255
+#: templates/eos_tax/partials/bot-clock.html:72
+#: templates/eos_tax/partials/bot-group-header.html:15
+#: templates/eos_tax/partials/bot-rhythm.html:72
+#: templates/eos_tax/partials/bot-runs.html:86
+#, python-format
+msgid "%(counter)s character"
+msgid_plural "%(counter)s characters"
+msgstr[0] "%(counter)s 个 Character"
+
+#: templates/eos_tax/help.html:4
+msgid "How to pay taxes?"
+msgstr "如何缴税？"
+
+#: templates/eos_tax/help.html:6
+#, python-format
+msgid "1. Search for: <u>%(tax_corp)s</u>"
+msgstr "1. 搜索：<u>%(tax_corp)s</u>"
+
+#: templates/eos_tax/help.html:11 templates/eos_tax/help.html:12
+msgid "Copy corporation name to clipboard"
+msgstr "将 Corporation 名称复制到剪贴板"
+
+#: templates/eos_tax/help.html:16
+msgid "2. Right click and select <u>\"Give Money\"</u>"
+msgstr "2. 右键点击并选择 <u>“Give Money”</u>"
+
+#: templates/eos_tax/help.html:17
+msgid ""
+"3. Copy the \"Amount to pay in ISK\" for the last month and paste it into "
+"amount"
+msgstr "3. 复制上个月的“应付 ISK 金额”，粘贴到金额栏中"
+
+#: templates/eos_tax/help.html:18
+msgid "4. Copy the \"Reason\" into the corresponding field"
+msgstr "4. 将“Reason”复制到相应的字段中"
+
+#: templates/eos_tax/help.html:19
+msgid ""
+"4a. A reason is only shown for the last month, starting on the 2nd of the "
+"current month, to avoid outdated payments."
+msgstr "4a. 为避免过期的付款，Reason 只针对上个月显示，并从本月 2 日开始显示。"
+
+#: templates/eos_tax/index.html:30
+msgid "Outstanding"
+msgstr "未付"
+
+#: templates/eos_tax/index.html:36
+msgid "In progress"
+msgstr "进行中"
+
+#: templates/eos_tax/index.html:39 templates/eos_tax/tax-changes.html:44
+msgid "All"
+msgstr "全部"
+
+#: templates/eos_tax/index.html:50
+msgid "Ingame Corp Tax"
+msgstr "Ingame Corp Tax"
+
+#: templates/eos_tax/index.html:51
+msgid "Alliance Tax"
+msgstr "Alliance 税"
+
+#: templates/eos_tax/index.html:52
+msgid "Amount to pay in ISK"
+msgstr "应付 ISK 金额"
+
+#: templates/eos_tax/index.html:53
+msgid "Amount paid in ISK"
+msgstr "实付 ISK 金额"
+
+#: templates/eos_tax/index.html:55
+msgid "Reason"
+msgstr "Reason"
+
+#: templates/eos_tax/index.html:75 templates/eos_tax/index.html:77
+msgid "No ingame corp tax, so nothing reaches the corporation wallet to tax."
+msgstr "没有游戏内 Corporation 税，因此没有可征税的收入进入 Corporation wallet。"
+
+#: templates/eos_tax/index.html:94
+#, python-format
+msgid "Earned in total: %(value)s ISK"
+msgstr "总收入：%(value)s ISK"
+
+#: templates/eos_tax/index.html:116
+#: templates/eos_tax/partials/recalculate-result.html:113
+#, python-format
+msgid "Paid %(value)s ISK more than owed."
+msgstr "比应付金额多付了 %(value)s ISK。"
+
+#: templates/eos_tax/index.html:120
+#: templates/eos_tax/partials/recalculate-result.html:118
+#, python-format
+msgid "%(value)s ISK short of the amount owed."
+msgstr "比应付金额少 %(value)s ISK。"
+
+#: templates/eos_tax/index.html:138
+#, python-format
+msgid "Sum of %(counter)s payment"
+msgid_plural "Sum of %(counter)s payments"
+msgstr[0] "%(counter)s 笔付款之和"
+
+#: templates/eos_tax/index.html:140
+#, python-format
+msgid "Sum of %(counter)s payment, the %(shown)s largest: %(amounts)s ISK"
+msgid_plural ""
+"Sum of %(counter)s payments, the %(shown)s largest: %(amounts)s ISK"
+msgstr[0] "%(counter)s 笔付款之和，最大的 %(shown)s 笔：%(amounts)s ISK"
+
+#: templates/eos_tax/index.html:142
+#, python-format
+msgid "Sum of %(counter)s payment: %(amounts)s ISK"
+msgid_plural "Sum of %(counter)s payments: %(amounts)s ISK"
+msgstr[0] "%(counter)s 笔付款之和：%(amounts)s ISK"
+
+#: templates/eos_tax/index.html:159
+msgid "Not shown while in progress"
+msgstr "进行中，暂不显示"
+
+#: templates/eos_tax/index.html:165 templates/eos_tax/index.html:166
+msgid "Copy reason to clipboard"
+msgstr "将 Reason 复制到剪贴板"
+
+#: templates/eos_tax/index.html:182 templates/eos_tax/index.html:183
+#, python-format
+msgid "Transferred %(date)s EVE"
+msgstr "转账于 %(date)s EVE"
+
+#: templates/eos_tax/index.html:182 templates/eos_tax/index.html:183
+#, python-format
+msgid "Recorded as paid %(date)s EVE"
+msgstr "记录为已付于 %(date)s EVE"
+
+#: templates/eos_tax/index.html:186
+msgid "Not paid"
+msgstr "未付"
+
+#: templates/eos_tax/index.html:217
+#, python-format
+msgid "%(seconds)s s"
+msgstr "%(seconds)s 秒"
+
+#: templates/eos_tax/index.html:228
+msgid "No tax data for the selected months."
+msgstr "所选月份没有税务数据。"
+
+#: templates/eos_tax/index.html:230
+msgid "Nothing outstanding."
+msgstr "没有未付款项。"
+
+#: templates/eos_tax/index.html:232
+msgid "Nothing paid yet."
+msgstr "尚无已付款项。"
+
+#: templates/eos_tax/index.html:234
+msgid "Nothing in progress."
+msgstr "没有进行中的款项。"
+
+#: templates/eos_tax/partials/bot-audit.html:5
+msgid ""
+"Mains with at least one character on the other four tabs whose corptools "
+"audit is missing or no longer current. Only the characters those tabs show "
+"are checked, not the rest of the account."
+msgstr ""
+"至少有一个 Character 出现在其他四个标签页中、且其 corptools 审计缺失或已过期的 Main。只检查这些标签页显示的 "
+"Character，而不检查账号中的其他 Character。"
+
+#: templates/eos_tax/partials/bot-audit.html:22
+msgid "Listed on"
+msgstr "列于"
+
+#: templates/eos_tax/partials/bot-audit.html:24
+msgid "Audit"
+msgstr "审计"
+
+#: templates/eos_tax/partials/bot-audit.html:26
+#: templates/eos_tax/partials/bot-clock.html:34
+#: templates/eos_tax/partials/bot-rhythm.html:34
+#: templates/eos_tax/partials/bot-runs.html:34
+#: templates/eos_tax/partials/bot-table.html:16
+msgid "Assessment"
+msgstr "评估"
+
+#: templates/eos_tax/partials/bot-audit.html:36
+#: templates/eos_tax/partials/bot-banned.html:34
+#: templates/eos_tax/partials/bot-clock.html:43
+#: templates/eos_tax/partials/bot-rhythm.html:43
+#: templates/eos_tax/partials/bot-runs.html:43
+#: templates/eos_tax/partials/bot-table.html:25
+msgid "Listed on GM Transactions"
+msgstr "列于 GM 交易"
+
+#: templates/eos_tax/partials/bot-audit.html:49
+#: templates/eos_tax/partials/bot-tabs.html:8
+#: templates/eos_tax/partials/progress.html:23
+#: templates/eos_tax/settings.html:239 views.py:874
+msgid "Hours per day"
+msgstr "每天小时数"
+
+#: templates/eos_tax/partials/bot-audit.html:49
+#: templates/eos_tax/partials/bot-tabs.html:15
+#: templates/eos_tax/partials/progress.html:24
+#: templates/eos_tax/settings.html:254 views.py:875
+msgid "Unbroken runs"
+msgstr "不间断连续段"
+
+#: templates/eos_tax/partials/bot-audit.html:49
+#: templates/eos_tax/partials/bot-tabs.html:22
+#: templates/eos_tax/partials/progress.html:25
+#: templates/eos_tax/settings.html:271 views.py:876
+msgid "Against the Corporation"
+msgstr "与 Corporation 对比"
+
+#: templates/eos_tax/partials/bot-audit.html:49
+#: templates/eos_tax/partials/bot-tabs.html:29
+#: templates/eos_tax/partials/progress.html:26
+#: templates/eos_tax/settings.html:289 views.py:877
+msgid "Off the Corporation clock"
+msgstr "偏离 Corporation 作息"
+
+#: templates/eos_tax/partials/bot-audit.html:56
+msgid "not current"
+msgstr "已过期"
+
+#: templates/eos_tax/partials/bot-audit.html:58
+msgid "no audit"
+msgstr "无审计"
+
+#: templates/eos_tax/partials/bot-audit.html:73
+msgid "Every character on the other four tabs has a current audit."
+msgstr "其他四个标签页上的每个 Character 都有当前有效的审计。"
+
+#: templates/eos_tax/partials/bot-audit.html:78
+#, python-format
+msgid "%(counter)s character on the other tabs"
+msgid_plural "%(counter)s characters on the other tabs"
+msgstr[0] "其他标签页上的 %(counter)s 个 Character"
+
+#: templates/eos_tax/partials/bot-audit.html:79
+#, python-format
+msgid "%(counter)s without current audit"
+msgid_plural "%(counter)s without current audit"
+msgstr[0] "%(counter)s 个没有当前有效审计"
+
+#: templates/eos_tax/partials/bot-banned.html:5
+#, python-format
+msgid ""
+"Characters shown on one of the four lists in any stored month whose last "
+"login is at least %(min_days)s days ago. Not limited to the selected month; "
+"the number of days lives on the settings page."
+msgstr ""
+"在任一已存储月份中出现在四个列表之一、且最后一次登录距今至少 %(min_days)s 天的 Character。不限于所选月份；天数在设置页面中设置。"
+
+#: templates/eos_tax/partials/bot-banned.html:24
+msgid "Listed in"
+msgstr "列出月份"
+
+#: templates/eos_tax/partials/bot-banned.html:52
+msgid "Every character the lists have shown has logged in since."
+msgstr "列表中出现过的每个 Character 此后都登录过。"
+
+#: templates/eos_tax/partials/bot-banned.html:57
+#, python-format
+msgid "%(counter)s character on the four lists"
+msgid_plural "%(counter)s characters on the four lists"
+msgstr[0] "四个列表上的 %(counter)s 个 Character"
+
+#: templates/eos_tax/partials/bot-banned.html:58
+#, python-format
+msgid "%(counter)s without a login since"
+msgid_plural "%(counter)s without a login since"
+msgstr[0] "%(counter)s 个此后未登录"
+
+#: templates/eos_tax/partials/bot-clock-detail.html:12
+msgid ""
+"This character's payouts are spread so evenly over the day that it has no "
+"middle to place, so there is no distance to measure. The threshold is on the "
+"settings page."
+msgstr "该 Character 的发放在一天中分布得太均匀，没有可确定的中心，因此无法测量距离。阈值在设置页面中。"
+
+#: templates/eos_tax/partials/bot-clock-detail.html:16
+msgid ""
+"The rest of this corporation is spread so evenly over the day that it has no "
+"middle to place, so there is no distance to measure. The threshold is on the "
+"settings page."
+msgstr "该 Corporation 的其他成员在一天中分布得太均匀，没有可确定的中心，因此无法测量距离。阈值在设置页面中。"
+
+#: templates/eos_tax/partials/bot-clock-detail.html:20
+msgid ""
+"Nothing is left of this corporation once the character's own payouts are "
+"taken out, so there is no clock to compare against and none is drawn. Only "
+"the character's own day is shown. The threshold is on the settings page."
+msgstr ""
+"去掉该 Character 自己的发放后，该 Corporation 已没有剩余数据，因此没有可比较的时钟，也不会绘制。只显示该 Character "
+"自己的一天。阈值在设置页面中。"
+
+#: templates/eos_tax/partials/bot-clock-detail.html:24
+msgid ""
+"The same two days drawn round a clock face, because the hours either side of "
+"midnight are neighbours and a straight axis puts them at opposite ends. The "
+"markers are the middle of each day, averaged the way a clock wraps."
+msgstr "同样的两天绘制在钟面上，因为午夜前后的小时是相邻的，而直线坐标轴会把它们放在两端。标记是每一天的中心，按时钟循环的方式取平均。"
+
+#: templates/eos_tax/partials/bot-clock-detail.html:38
+#, python-format
+msgid "Character %(value)s"
+msgstr "Character %(value)s"
+
+#: templates/eos_tax/partials/bot-clock-detail.html:39
+#, python-format
+msgid "Corporation %(value)s"
+msgstr "Corporation %(value)s"
+
+#: templates/eos_tax/partials/bot-clock-detail.html:40
+#, python-format
+msgid "%(value)s apart"
+msgstr "相差 %(value)s"
+
+#: templates/eos_tax/partials/bot-clock-detail.html:41
+#: templates/eos_tax/partials/bot-clock.html:90
+msgid "all times EVE time"
+msgstr "所有时间均为 EVE 时间"
+
+#: templates/eos_tax/partials/bot-clock-detail.html:44
+#: templates/eos_tax/partials/bot-rhythm-detail.html:39
+#, python-format
+msgid "%(value)s payouts, no yardstick"
+msgstr "%(value)s 次发放，无参照基准"
+
+#: templates/eos_tax/partials/bot-clock-detail.html:49
+#: templates/eos_tax/partials/bot-rhythm-detail.html:44
+#: templates/eos_tax/partials/bot-run-detail.html:37
+#: templates/eos_tax/partials/bot-runs.html:81
+msgid "No taxed income in this month."
+msgstr "本月没有应税收入。"
+
+#: templates/eos_tax/partials/bot-clock.html:6
+msgid ""
+"How far a character's day sits from their corporation's, averaged the way a "
+"clock wraps rather than read off the busiest hour, which out of a handful of "
+"payouts is wherever the noise landed. Somebody genuinely living elsewhere "
+"looks the same as an account played by somebody else - a hint, never an "
+"accusation."
+msgstr ""
+"Character 的一天与其 Corporation "
+"的一天相距多远，按时钟循环的方式取平均，而不是读取最忙的小时——在少量发放中，最忙的小时只取决于噪声落在哪里。真正住在别处的人与由他人操作的账号看起来一样——这是提示，绝非指控。"
+
+#: templates/eos_tax/partials/bot-clock.html:18
+#, python-format
+msgid ""
+"No character sat %(counter)s hour or more from their corporation. The largest"
+" distances of the month are shown instead, so the threshold can be judged "
+"against real numbers."
+msgid_plural ""
+"No character sat %(counter)s hours or more from their corporation. The "
+"largest distances of the month are shown instead, so the threshold can be "
+"judged against real numbers."
+msgstr[0] ""
+"没有 Character 与其 Corporation 相距 %(counter)s 小时或以上。改为显示本月最大的距离，以便用真实数字评估阈值。"
+
+#: templates/eos_tax/partials/bot-clock.html:30
+msgid "Character's middle of the day"
+msgstr "Character 一天的中心"
+
+#: templates/eos_tax/partials/bot-clock.html:31
+msgid "Corporation's middle of the day"
+msgstr "Corporation 一天的中心"
+
+#: templates/eos_tax/partials/bot-clock.html:32
+msgid "Apart"
+msgstr "相差"
+
+#: templates/eos_tax/partials/bot-clock.html:33
+#: templates/eos_tax/partials/bot-rhythm.html:33
+#: templates/eos_tax/tax-changes.html:73 views.py:354
+msgid "Payouts"
+msgstr "发放次数"
+
+#: templates/eos_tax/partials/bot-clock.html:67
+#, python-format
+msgid ""
+"Nobody could be measured this month. A character needs %(own)s payouts of "
+"their own, the rest of their corporation %(rest)s, and both days a middle to "
+"place."
+msgstr ""
+"本月无法测量任何人。Character 自己需要 %(own)s 次发放，其 Corporation 的其他成员需要 %(rest)s "
+"次，并且两者的一天都要有可确定的中心。"
+
+#: templates/eos_tax/partials/bot-clock.html:74
+#: templates/eos_tax/partials/bot-rhythm.html:74
+#: templates/eos_tax/partials/bot-runs.html:88
+#: templates/eos_tax/partials/bot-table.html:68
+#, python-format
+msgid "%(shown)s of %(total)s groups shown"
+msgstr "显示 %(total)s 组中的 %(shown)s 组"
+
+#: templates/eos_tax/partials/bot-clock.html:76
+#: templates/eos_tax/partials/bot-rhythm.html:76
+#, python-format
+msgid "%(counter)s corporation with a rhythm"
+msgid_plural "%(counter)s corporations with a rhythm"
+msgstr[0] "%(counter)s 个有节奏的 Corporation"
+
+#: templates/eos_tax/partials/bot-clock.html:77
+#: templates/eos_tax/partials/bot-rhythm.html:78
+#, python-format
+msgid "measured from %(value)s payouts"
+msgstr "基于 %(value)s 次发放测量"
+
+#: templates/eos_tax/partials/bot-clock.html:78
+#, python-format
+msgid "listed from %(counter)s hour apart"
+msgid_plural "listed from %(counter)s hours apart"
+msgstr[0] "相差 %(counter)s 小时起列出"
+
+#: templates/eos_tax/partials/bot-clock.html:79
+#, python-format
+msgid "full deviation at %(counter)s hour"
+msgid_plural "full deviation at %(counter)s hours"
+msgstr[0] "%(counter)s 小时为完全偏离"
+
+#: templates/eos_tax/partials/bot-clock.html:80
+#: templates/eos_tax/partials/bot-rhythm.html:80
+#, python-format
+msgid "%(shown)s of %(total)s measured"
+msgstr "显示已测量的 %(total)s 个中的 %(shown)s 个"
+
+#: templates/eos_tax/partials/bot-clock.html:88
+#: templates/eos_tax/partials/bot-rhythm.html:88
+#, python-format
+msgid "%(counter)s flagged character left out of the yardstick"
+msgid_plural "%(counter)s flagged characters left out of the yardstick"
+msgstr[0] "%(counter)s 个已标记的 Character 被排除在参照基准之外"
+
+#: templates/eos_tax/partials/bot-computed-at.html:6
+#, python-format
+msgid "computed %(value)s EVE"
+msgstr "计算于 %(value)s EVE"
+
+#: templates/eos_tax/partials/bot-gm-detail.html:5
+msgid ""
+"What GM Transactions lists for every character of this account: GM "
+"transactions in their wallet journals, and wallets below zero right now. Not "
+"limited to the selected month."
+msgstr ""
+"GM 交易页面为此账号的每个 Character 列出的内容：其 wallet 流水中的 GM 交易，以及当前余额低于零的 wallet。不限于所选月份。"
+
+#: templates/eos_tax/partials/bot-gm-detail.html:12
+msgid ""
+"The GM transactions are being looked up in the background. This tab loads "
+"them by itself once they are ready."
+msgstr "正在后台查找 GM 交易。准备好后此标签页会自动加载。"
+
+#: templates/eos_tax/partials/bot-gm-detail.html:81
+msgid "No GM transaction and no wallet below zero on this account."
+msgstr "此账号没有 GM 交易，也没有余额低于零的 wallet。"
+
+#: templates/eos_tax/partials/bot-group-header.html:18
+msgid "no main known"
+msgstr "未知 Main"
+
+#: templates/eos_tax/partials/bot-level-badge.html:4
+msgid "strong"
+msgstr "强"
+
+#: templates/eos_tax/partials/bot-level-badge.html:6
+msgid "worth a look"
+msgstr "值得一看"
+
+#: templates/eos_tax/partials/bot-level-badge.html:8
+msgid "unremarkable"
+msgstr "无异常"
+
+#: templates/eos_tax/partials/bot-pending.html:5
+msgid ""
+"The lists of this month are being calculated in the background. This tab "
+"loads them by itself once they are ready."
+msgstr "本月的列表正在后台计算。准备好后此标签页会自动加载。"
+
+#: templates/eos_tax/partials/bot-rhythm-detail.html:14
+msgid ""
+"Nothing is left of this corporation once the character's own payouts are "
+"taken out, so there is no rhythm to compare against and none is drawn. Only "
+"the character's own day is shown. The threshold is on the settings page."
+msgstr ""
+"去掉该 Character 自己的发放后，该 Corporation 已没有剩余数据，因此没有可比较的节奏，也不会绘制。只显示该 Character "
+"自己的一天。阈值在设置页面中。"
+
+#: templates/eos_tax/partials/bot-rhythm-detail.html:18
+#, python-format
+msgid ""
+"The character's day against the rest of their corporation's, hour by hour. "
+"Shares rather than counts, because one character never has the volume of a "
+"corporation. The shaded hours are the corporation's busiest %(hours)s."
+msgstr ""
+"Character 的一天与其 Corporation 其他成员的一天逐小时对比。使用份额而非次数，因为单个 Character 永远不会有一个 "
+"Corporation 的数量。阴影部分是该 Corporation 最忙的 %(hours)s 小时。"
+
+#: templates/eos_tax/partials/bot-rhythm-detail.html:29
+msgid "Hour of the day (EVE time)"
+msgstr "一天中的小时（EVE 时间）"
+
+#: templates/eos_tax/partials/bot-rhythm-detail.html:34
+#, python-format
+msgid "%(value)s %% inside the busy hours"
+msgstr "%(value)s %% 在繁忙时段内"
+
+#: templates/eos_tax/partials/bot-rhythm-detail.html:35
+#, python-format
+msgid "Corporation %(value)s %%"
+msgstr "Corporation %(value)s %%"
+
+#: templates/eos_tax/partials/bot-rhythm-detail.html:36
+#, python-format
+msgid "%(value)s pp apart"
+msgstr "相差 %(value)s 个百分点"
+
+#: templates/eos_tax/partials/bot-rhythm.html:6
+msgid ""
+"How much of a character's income falls inside the hours their own corporation"
+" is busy. The corporation is the yardstick and not the alliance: the alliance"
+" spans several timezones at once, so its day is flat and a script would look "
+"ordinary against it. A ranking, not a verdict."
+msgstr ""
+"Character 的收入中有多少落在其所属 Corporation 的繁忙时段内。参照基准是 Corporation 而不是 "
+"Alliance：Alliance 同时跨越多个时区，所以它的一天是平坦的，脚本在它面前会显得很普通。这是排名，不是裁决。"
+
+#: templates/eos_tax/partials/bot-rhythm.html:18
+#, python-format
+msgid ""
+"No character was %(value)s pp flatter than the rest of their corporation. The"
+" largest differences of the month are shown instead, so the threshold can be "
+"judged against real numbers."
+msgstr ""
+"没有 Character 比其 Corporation 的其他成员平坦 %(value)s 个百分点。改为显示本月最大的差异，以便用真实数字评估阈值。"
+
+#: templates/eos_tax/partials/bot-rhythm.html:30
+msgid "Character in the busy hours"
+msgstr "Character 在繁忙时段内"
+
+#: templates/eos_tax/partials/bot-rhythm.html:31
+msgid "Corporation in the busy hours"
+msgstr "Corporation 在繁忙时段内"
+
+#: templates/eos_tax/partials/bot-rhythm.html:32
+msgid "Difference"
+msgstr "差异"
+
+#: templates/eos_tax/partials/bot-rhythm.html:47
+#: templates/eos_tax/tax-changes.html:105
+msgid "pp"
+msgstr "百分点"
+
+#: templates/eos_tax/partials/bot-rhythm.html:67
+#, python-format
+msgid ""
+"Nobody could be measured this month. A character needs %(own)s payouts of "
+"their own, and the rest of their corporation %(rest)s."
+msgstr "本月无法测量任何人。Character 自己需要 %(own)s 次发放，其 Corporation 的其他成员需要 %(rest)s 次。"
+
+#: templates/eos_tax/partials/bot-rhythm.html:77
+#, python-format
+msgid "busy window %(counter)s hour"
+msgid_plural "busy window %(counter)s hours"
+msgstr[0] "繁忙时段 %(counter)s 小时"
+
+#: templates/eos_tax/partials/bot-rhythm.html:79
+#, python-format
+msgid "listed from %(value)s pp"
+msgstr "%(value)s 个百分点起列出"
+
+#: templates/eos_tax/partials/bot-run-detail.html:12
+#, python-format
+msgid ""
+"Every payout of the month, by day and time of day. The longest unbroken run "
+"is picked out; a run counts once it reaches %(value)s payouts without a "
+"break."
+msgstr "本月的每次发放，按日期和一天中的时间排列。突出显示最长的不间断连续段；连续段在不间断地达到 %(value)s 次发放后计入。"
+
+#: templates/eos_tax/partials/bot-run-detail.html:19
+msgid "Longest run"
+msgstr "最长连续段"
+
+#: templates/eos_tax/partials/bot-run-detail.html:20
+msgid "Other payouts"
+msgstr "其他发放"
+
+#: templates/eos_tax/partials/bot-run-detail.html:21
+msgid "Day of the month"
+msgstr "当月日期"
+
+#: templates/eos_tax/partials/bot-run-detail.html:25
+#, python-format
+msgid "longest run %(counter)s payout"
+msgid_plural "longest run %(counter)s payouts"
+msgstr[0] "最长连续段 %(counter)s 次发放"
+
+#: templates/eos_tax/partials/bot-run-detail.html:32
+#, python-format
+msgid "%(counter)s interruption"
+msgid_plural "%(counter)s interruptions"
+msgstr[0] "%(counter)s 次中断"
+
+#: templates/eos_tax/partials/bot-runs.html:6
+msgid ""
+"The game pays a ratter about every twenty minutes, so an uninterrupted "
+"stretch shows up as a chain of payouts and nothing else does. This says "
+"nothing about when somebody plays, which makes it the one reading that treats"
+" every timezone of the alliance alike."
+msgstr ""
+"游戏大约每二十分钟向刷怪玩家发放一次，因此不间断的时段会表现为一串发放，其他情况则不会。这与某人何时游戏无关，因此这是唯一一种平等对待 Alliance "
+"所有时区的判读。"
+
+#: templates/eos_tax/partials/bot-runs.html:18
+#, python-format
+msgid ""
+"No character collected %(value)s payouts in a row. The longest runs of the "
+"month are shown instead, so the threshold can be judged against real numbers."
+msgstr "没有 Character 连续领取 %(value)s 次发放。改为显示本月最长的连续段，以便用真实数字评估阈值。"
+
+#: templates/eos_tax/partials/bot-runs.html:30
+msgid "Payouts in a row"
+msgstr "连续发放次数"
+
+#: templates/eos_tax/partials/bot-runs.html:31
+msgid "From - to (EVE time)"
+msgstr "从 - 到（EVE 时间）"
+
+#: templates/eos_tax/partials/bot-runs.html:32
+msgid "Duration"
+msgstr "持续时间"
+
+#: templates/eos_tax/partials/bot-runs.html:33
+msgid "Interruptions"
+msgstr "中断次数"
+
+#: templates/eos_tax/partials/bot-runs.html:90
+#, python-format
+msgid "listed from %(value)s payouts in a row"
+msgstr "连续 %(value)s 次发放起列出"
+
+#: templates/eos_tax/partials/bot-runs.html:91
+#, python-format
+msgid "%(counter)s interruption allowed"
+msgid_plural "%(counter)s interruptions allowed"
+msgstr[0] "允许 %(counter)s 次中断"
+
+#: templates/eos_tax/partials/bot-runs.html:92
+#, python-format
+msgid "same tick up to %(value)s min"
+msgstr "%(value)s 分钟内为同一发放周期"
+
+#: templates/eos_tax/partials/bot-runs.html:93
+#, python-format
+msgid "run ends past %(value)s min"
+msgstr "超过 %(value)s 分钟则连续段结束"
+
+#: templates/eos_tax/partials/bot-table.html:11
+msgid "Suspicious days"
+msgstr "可疑天数"
+
+#: templates/eos_tax/partials/bot-table.html:12
+msgid "Active days"
+msgstr "活跃天数"
+
+#: templates/eos_tax/partials/bot-table.html:13
+msgid "Busiest day (hours)"
+msgstr "最忙的一天（小时）"
+
+#: templates/eos_tax/partials/bot-table.html:14
+msgid "Average day (hours)"
+msgstr "平均每天（小时）"
+
+#: templates/eos_tax/partials/bot-table.html:15
+msgid "Contributed tax"
+msgstr "贡献的税款"
+
+#: templates/eos_tax/partials/bot-tabs.html:48 views.py:878
+msgid "Without current audit"
+msgstr "无当前有效审计"
+
+#: templates/eos_tax/partials/bot-tabs.html:55
+#: templates/eos_tax/settings.html:307 views.py:879
+msgid "Possibly banned"
+msgstr "可能已被封禁"
+
+#: templates/eos_tax/partials/copy-button.html:9
+msgid "Copy main name to clipboard"
+msgstr "将 Main 名称复制到剪贴板"
+
+#: templates/eos_tax/partials/copy-button.html:11
+msgid "Copy character name to clipboard"
+msgstr "将 Character 名称复制到剪贴板"
+
+#: templates/eos_tax/partials/open-window-button.html:3
+msgid "Open in the EVE client"
+msgstr "在 EVE 客户端中打开"
+
+#: templates/eos_tax/partials/progress.html:13
+msgid "Automatic recalculation"
+msgstr "自动重新计算"
+
+#: templates/eos_tax/partials/progress.html:14
+msgid "Manual recalculation"
+msgstr "手动重新计算"
+
+#: templates/eos_tax/partials/progress.html:15
+msgid "Bots lists"
+msgstr "机器人列表"
+
+#: templates/eos_tax/partials/progress.html:17
+#, python-brace-format
+msgid "{finished} of {total} done"
+msgstr "已完成 {finished}/{total}"
+
+#: templates/eos_tax/partials/progress.html:18
+msgid "Finished. Reload the page to see the new figures."
+msgstr "已完成。重新加载页面以查看新数据。"
+
+#: templates/eos_tax/partials/progress.html:19
+msgid "Reload"
+msgstr "重新加载"
+
+#: templates/eos_tax/partials/progress.html:20
+msgid "Dismiss"
+msgstr "关闭"
+
+#: templates/eos_tax/partials/progress.html:21
+msgctxt "progress bar details"
+msgid "Corporations"
+msgstr "Corporation"
+
+#: templates/eos_tax/partials/progress.html:22
+msgctxt "progress bar details"
+msgid "Steps"
+msgstr "步骤"
+
+#: templates/eos_tax/partials/progress.html:27
+msgid "Search the wallet journals"
+msgstr "搜索 wallet 流水"
+
+#: templates/eos_tax/partials/progress.html:28
+msgid "Wallet balances and ages"
+msgstr "wallet 余额与年龄"
+
+#: templates/eos_tax/partials/progress.html:29
+#, python-brace-format
+msgid "{count} failed"
+msgstr "{count} 个失败"
+
+#: templates/eos_tax/partials/progress.html:30
+msgctxt "progress bar job state"
+msgid "Waiting"
+msgstr "等待中"
+
+#: templates/eos_tax/partials/progress.html:31
+msgctxt "progress bar job state"
+msgid "Running"
+msgstr "运行中"
+
+#: templates/eos_tax/partials/progress.html:32
+msgctxt "progress bar job state"
+msgid "Done"
+msgstr "完成"
+
+#: templates/eos_tax/partials/progress.html:33
+msgctxt "progress bar job state"
+msgid "Skipped"
+msgstr "已跳过"
+
+#: templates/eos_tax/partials/progress.html:34
+msgctxt "progress bar job state"
+msgid "Failed"
+msgstr "失败"
+
+#: templates/eos_tax/partials/progress.html:35
+msgid "Corporation not known to Alliance Auth"
+msgstr "Alliance Auth 不认识的 Corporation"
+
+#: templates/eos_tax/partials/progress.html:36
+msgid "No ingame tax rate"
+msgstr "没有游戏内税率"
+
+#: templates/eos_tax/partials/progress.html:37
+msgid "Alliance tax rate is 0"
+msgstr "Alliance 税率为 0"
+
+#: templates/eos_tax/partials/progress.html:38
+msgid "No journal entries"
+msgstr "没有流水记录"
+
+#: templates/eos_tax/partials/progress.html:39
+msgid "An earlier step failed"
+msgstr "之前的步骤失败"
+
+#: templates/eos_tax/partials/recalculate-button.html:13
+msgid "Queued - the bar above shows how far it has got."
+msgstr "已加入队列——上方进度条显示进展。"
+
+#: templates/eos_tax/partials/recalculate-button.html:14
+msgid "Already being calculated."
+msgstr "已在计算中。"
+
+#: templates/eos_tax/partials/recalculate-button.html:15
+msgid "Could not queue the calculation."
+msgstr "无法将计算加入队列。"
+
+#: templates/eos_tax/partials/recalculate-button.html:21
+#: templates/eos_tax/settings.html:170 templates/eos_tax/settings.html:209
+msgid "Recalculate"
+msgstr "重新计算"
+
+#: templates/eos_tax/partials/recalculate-queued.html:4
+#, python-format
+msgid "Recalculation queued for %(counter)s corporation."
+msgid_plural "Recalculation queued for %(counter)s corporations."
+msgstr[0] "已为 %(counter)s 个 Corporation 加入重新计算队列。"
+
+#: templates/eos_tax/partials/recalculate-result.html:6
+#, python-format
+msgid "%(corp)s — %(month)s/%(year)s"
+msgstr "%(corp)s — %(month)s/%(year)s"
+
+#: templates/eos_tax/partials/recalculate-result.html:11
+#, python-format
+msgid "Tax types considered: %(types)s"
+msgstr "考虑的税务类型：%(types)s"
+
+#: templates/eos_tax/partials/recalculate-result.html:15
+#, python-format
+msgid "%(type)s: %(counter)s entry, %(sum)s ISK"
+msgid_plural "%(type)s: %(counter)s entries, %(sum)s ISK"
+msgstr[0] "%(type)s：%(counter)s 条记录，%(sum)s ISK"
+
+#: templates/eos_tax/partials/recalculate-result.html:19
+#, python-format
+msgid "Sum of all tax types, %(counter)s entry: %(value)s ISK"
+msgid_plural "Sum of all tax types, %(counter)s entries: %(value)s ISK"
+msgstr[0] "所有税务类型之和，%(counter)s 条记录：%(value)s ISK"
+
+#: templates/eos_tax/partials/recalculate-result.html:22
+#, python-format
+msgid "Corporation's ingame tax rate: %(rate)s%%"
+msgstr "Corporation 的游戏内税率：%(rate)s%%"
+
+#: templates/eos_tax/partials/recalculate-result.html:24
+msgid "(read from ESI - Alliance Auth has no rate on file)"
+msgstr "（从 ESI 读取——Alliance Auth 中没有记录税率）"
+
+#: templates/eos_tax/partials/recalculate-result.html:28
+#, python-format
+msgid "Member wallets: %(counter)s entry"
+msgid_plural "Member wallets: %(counter)s entries"
+msgstr[0] "成员 wallet：%(counter)s 条记录"
+
+#: templates/eos_tax/partials/recalculate-result.html:32
+#, python-format
+msgid ""
+"%(counter)s untaxed entry from outside the character's time in this "
+"corporation (or without a corporation history), not counted"
+msgid_plural ""
+"%(counter)s untaxed entries from outside the character's time in this "
+"corporation (or without a corporation history), not counted"
+msgstr[0] ""
+"%(counter)s 条未征税的记录不在该 Character 属于此 Corporation 的期间内（或没有 Corporation 历史），未计入"
+
+#: templates/eos_tax/partials/recalculate-result.html:36
+#, python-format
+msgid "%(counter)s found in the corporation wallet as well, counted once"
+msgid_plural ""
+"%(counter)s found in the corporation wallet as well, counted once"
+msgstr[0] "%(counter)s 条同样出现在 Corporation wallet 中，只计一次"
+
+#: templates/eos_tax/partials/recalculate-result.html:41
+#, python-format
+msgid "%(counter)s without a corp tax slice, added: %(value)s ISK"
+msgid_plural "%(counter)s without a corp tax slice, added: %(value)s ISK"
+msgstr[0] "%(counter)s 条没有 Corporation 税份额，已加入：%(value)s ISK"
+
+#: templates/eos_tax/partials/recalculate-result.html:47
+#, python-format
+msgid ""
+"%(counter)s corporation wallet entry without a member wallet, backed out with"
+" the rate measured nearest in time"
+msgid_plural ""
+"%(counter)s corporation wallet entries without a member wallet, backed out "
+"with the rate measured nearest in time"
+msgstr[0] "%(counter)s 条 Corporation wallet 记录没有对应的成员 wallet，按时间上最接近的测得税率反推"
+
+#: templates/eos_tax/partials/recalculate-result.html:52
+#, python-format
+msgid ""
+"%(counter)s corporation wallet entry with no rate known, counted at its slice"
+" only - the income is understated"
+msgid_plural ""
+"%(counter)s corporation wallet entries with no rate known, counted at their "
+"slice only - the income is understated"
+msgstr[0] "%(counter)s 条 Corporation wallet 记录没有已知税率，只按其份额计入——收入被低估"
+
+#: templates/eos_tax/partials/recalculate-result.html:57
+#, python-format
+msgid ""
+"Without wallet audit, %(minimum)s million ISK or more - add their wallet:"
+msgstr "没有 wallet 审计、收入达到 %(minimum)s 百万 ISK 或以上——请添加其 wallet："
+
+#: templates/eos_tax/partials/recalculate-result.html:67
+#, python-format
+msgid ""
+"%(counter)s character without wallet audit has left this corporation since, "
+"not listed"
+msgid_plural ""
+"%(counter)s characters without wallet audit have left this corporation since,"
+" not listed"
+msgstr[0] "%(counter)s 个没有 wallet 审计的 Character 此后已离开此 Corporation，未列出"
+
+#: templates/eos_tax/partials/recalculate-result.html:73
+#, python-format
+msgid "Gross PvE income, the corp tax backed out: %(value)s ISK"
+msgstr "PvE 总收入（已反推出 Corporation 税）：%(value)s ISK"
+
+#: templates/eos_tax/partials/recalculate-result.html:76
+#, python-format
+msgid "Alliance tax rate applied: %(rate)s%%"
+msgstr "适用的 Alliance 税率：%(rate)s%%"
+
+#: templates/eos_tax/partials/recalculate-result.html:80
+#, python-format
+msgid "Amount owed to the alliance: %(value)s ISK"
+msgstr "应付给 Alliance 的金额：%(value)s ISK"
+
+#: templates/eos_tax/partials/recalculate-result.html:91
+msgid "A payment of exactly the amount owed was found."
+msgstr "找到一笔恰好等于应付金额的付款。"
+
+#: templates/eos_tax/partials/recalculate-result.html:93
+#, python-format
+msgid ""
+"No payment of exactly the amount owed. %(counter)s payment with this reason "
+"comes to %(total)s ISK."
+msgid_plural ""
+"No payment of exactly the amount owed. The %(counter)s payments with this "
+"reason add up to %(total)s ISK."
+msgstr[0] "没有恰好等于应付金额的付款。带有此 Reason 的 %(counter)s 笔付款合计 %(total)s ISK。"
+
+#: templates/eos_tax/partials/recalculate-result.html:95
+msgid "No payment with this reason found."
+msgstr "未找到带有此 Reason 的付款。"
+
+#: templates/eos_tax/partials/recalculate-result.html:97
+msgid ""
+"No payment of exactly the amount owed found. Without matching by reason only "
+"that amount can be told to belong to this corporation."
+msgstr "未找到恰好等于应付金额的付款。不按 Reason 匹配时，只有该金额能确定属于此 Corporation。"
+
+#: templates/eos_tax/partials/recalculate-result.html:102
+msgid "Payments:"
+msgstr "付款："
+
+#: templates/eos_tax/partials/recalculate-result.html:123
+msgid "Already marked as paid."
+msgstr "已标记为已付。"
+
+#: templates/eos_tax/partials/recalculate-result.html:125
+msgid "Not marked as paid yet."
+msgstr "尚未标记为已付。"
+
+#: templates/eos_tax/partials/recalculate-result.html:133
+#, python-format
+msgid "Corporation %(corp_id)s is not known to Alliance Auth."
+msgstr "Alliance Auth 不认识 Corporation %(corp_id)s。"
+
+#: templates/eos_tax/partials/recalculate-result.html:135
+#, python-format
+msgid ""
+"%(corp)s has no ingame tax rate in Alliance Auth, and ESI could not be "
+"reached to ask for it. Try again later."
+msgstr "%(corp)s 在 Alliance Auth 中没有游戏内税率，且无法连接 ESI 查询。请稍后再试。"
+
+#: templates/eos_tax/partials/recalculate-result.html:137
+#, python-format
+msgid ""
+"%(corp)s has no journal entries of the configured tax types for "
+"%(month)s/%(year)s."
+msgstr "%(corp)s 在 %(month)s/%(year)s 没有配置税务类型的流水记录。"
+
+#: templates/eos_tax/partials/recalculate-result.html:139
+#, python-format
+msgid ""
+"The alliance tax rate for %(month)s/%(year)s is 0, so nothing is owed and no "
+"row is written."
+msgstr "%(month)s/%(year)s 的 Alliance 税率为 0，因此无需缴纳，也不会写入任何行。"
+
+#: templates/eos_tax/partials/recalculate-result.html:141
+msgid "Nothing could be calculated for this selection."
+msgstr "无法为此选择计算任何内容。"
+
+#: templates/eos_tax/partials/ui-character.html:8
+msgid "Add a character for in-game windows"
+msgstr "添加用于游戏内窗口的 Character"
+
+#: templates/eos_tax/partials/ui-character.html:11
+msgid "Could not reach the server."
+msgstr "无法连接服务器。"
+
+#: templates/eos_tax/partials/ui-character.html:14
+#: templates/eos_tax/partials/ui-character.html:16
+msgid "In-game character"
+msgstr "游戏内 Character"
+
+#: templates/eos_tax/settings.html:16
+msgid ""
+"These values were taken over from local.py once. They are read from\n"
+"                here now, so editing local.py has no further effect."
+msgstr "这些值曾从 local.py 导入一次。现在从这里读取，因此编辑 local.py 不再有任何效果。"
+
+#: templates/eos_tax/settings.html:22
+msgid ""
+"You can view these settings, but not change them or recalculate a month."
+msgstr "你可以查看这些设置，但不能更改它们或重新计算某个月份。"
+
+#: templates/eos_tax/settings.html:52 templates/eos_tax/statistics.html:93
+msgid "Tax"
+msgstr "税务"
+
+#: templates/eos_tax/settings.html:61
+msgid "Bot"
+msgstr "机器人"
+
+#: templates/eos_tax/settings.html:70
+msgid "Taxation"
+msgstr "征税"
+
+#: templates/eos_tax/settings.html:72
+msgid ""
+"What is taxed, and what it costs. Everything the overview\n"
+"                                    and the statistics are built from."
+msgstr "征收什么，以及税率多少。概览和统计都基于这些数据。"
+
+#: templates/eos_tax/settings.html:76
+msgid "Scope"
+msgstr "范围"
+
+#: templates/eos_tax/settings.html:85 templates/eos_tax/settings.html:112
+msgid "Rate"
+msgstr "税率"
+
+#: templates/eos_tax/settings.html:90
+msgid ""
+"The newest entry that is not in the future applies, so a\n"
+"                                    change can be entered months ahead. Months before the first entry use the base\n"
+"                                    rate above. Already calculated months keep the rate they were charged with."
+msgstr "生效的是不在未来的最新条目，因此可以提前几个月输入变更。第一个条目之前的月份使用上方的基础税率。已计算的月份保留当时收取的税率。"
+
+#: templates/eos_tax/settings.html:114
+msgid "Remove"
+msgstr "移除"
+
+#: templates/eos_tax/settings.html:140
+msgid "Wallet audit"
+msgstr "wallet 审计"
+
+#: templates/eos_tax/settings.html:142
+msgid ""
+"From what income a character without a member wallet is\n"
+"                                    listed on the overview."
+msgstr "没有成员 wallet 的 Character 从多少收入起会在概览中列出。"
+
+#: templates/eos_tax/settings.html:147
+msgid "Payment differences"
+msgstr "付款差额"
+
+#: templates/eos_tax/settings.html:149
+msgid ""
+"How far a payment has to be off the amount owed\n"
+"                                    before the overview flags it."
+msgstr "付款与应付金额相差多少时，概览会标记它。"
+
+#: templates/eos_tax/settings.html:154
+msgid "Corp tax changes"
+msgstr "Corporation 税率变动"
+
+#: templates/eos_tax/settings.html:156
+msgid ""
+"How large a move of a corporation's own tax rate has to be\n"
+"                                    before that page reports it."
+msgstr "Corporation 自身税率的变动需要多大，该页面才会报告。"
+
+#: templates/eos_tax/settings.html:172
+msgid ""
+"Runs the calculation again for one month, outside the\n"
+"                                    periodic task - useful right after a journal import finished or a rate was\n"
+"                                    corrected. One corporation runs immediately and shows the arithmetic behind its\n"
+"                                    figure; every corporation is queued the way the periodic task queues them,\n"
+"                                    without waiting for the result here."
+msgstr ""
+"在周期任务之外，为某个月份重新运行计算——在流水导入完成或税率更正后立即使用很有用。单个 Corporation "
+"会立即运行，并显示其数值背后的计算过程；所有 Corporation 会像周期任务那样加入队列，而不在此处等待结果。"
+
+#: templates/eos_tax/settings.html:185
+msgid "All configured corporations"
+msgstr "所有已配置的 Corporation"
+
+#: templates/eos_tax/settings.html:202 templates/eos_tax/statistics.html:17
+#: templates/eos_tax/tax-changes.html:26
+msgid "Year"
+msgstr "年份"
+
+#: templates/eos_tax/settings.html:222
+msgid ""
+"Four readings of the same month, each with its own\n"
+"                                    thresholds. A character at the top of one can be absent from the next, and\n"
+"                                    that disagreement is the point."
+msgstr "同一个月的四种判读，各有各的阈值。在一种判读中排名靠前的 Character 可能在下一种中不出现，而这种分歧正是关键所在。"
+
+#: templates/eos_tax/settings.html:243
+msgid ""
+"Counts how many different hours of a day a character\n"
+"                                            earned in, and on how many days."
+msgstr "统计 Character 在一天中多少个不同小时内有收入，以及有多少天如此。"
+
+#: templates/eos_tax/settings.html:258
+msgid ""
+"Looks at the minute rather than the hour: the game pays a\n"
+"                                            ratter about every twenty minutes, so an uninterrupted stretch shows up as a\n"
+"                                            chain of payouts and nothing else does."
+msgstr "看的是分钟而不是小时：游戏大约每二十分钟向刷怪玩家发放一次，因此不间断的时段会表现为一串发放，其他情况则不会。"
+
+#: templates/eos_tax/settings.html:275
+msgid ""
+"How much of a character's income falls inside the hours\n"
+"                                            their own corporation is busy. The corporation is the yardstick and not the\n"
+"                                            alliance, which spans several timezones at once."
+msgstr ""
+"Character 的收入中有多少落在其所属 Corporation 的繁忙时段内。参照基准是 Corporation 而不是 Alliance，因为 "
+"Alliance 同时跨越多个时区。"
+
+#: templates/eos_tax/settings.html:293
+msgid ""
+"How far a character's day sits from their corporation's,\n"
+"                                            averaged the way a clock wraps."
+msgstr "Character 的一天与其 Corporation 的一天相距多远，按时钟循环的方式取平均。"
+
+#: templates/eos_tax/settings.html:318
+msgid "Save settings"
+msgstr "保存设置"
+
+#: templates/eos_tax/statistics.html:28
+msgid "All alliances"
+msgstr "所有 Alliance"
+
+#: templates/eos_tax/statistics.html:36
+msgid "Display"
+msgstr "显示方式"
+
+#: templates/eos_tax/statistics.html:38
+msgid "Trend over the year"
+msgstr "全年趋势"
+
+#: templates/eos_tax/statistics.html:39
+msgid "Share of one month"
+msgstr "单月占比"
+
+#: templates/eos_tax/statistics.html:54
+msgid "Min. share"
+msgstr "最小占比"
+
+#: templates/eos_tax/statistics.html:92
+msgid "PvE income"
+msgstr "PvE 收入"
+
+#: templates/eos_tax/statistics.html:117
+msgid "No tax data recorded yet."
+msgstr "尚无税务数据记录。"
+
+#: templates/eos_tax/tax-change-detail.html:17
+msgid ""
+"The share of the full bounty that reached the corporation, per day.\n"
+"                The value carries the system's bounty modifier as well as the rate, so the level itself\n"
+"                means little - a step in it does not."
+msgstr ""
+"每天进入 Corporation 的完整 bounty 份额。该数值除了税率还包含星系的 bounty 修正，因此水平本身意义不大——但其中的跳变则不然。"
+
+#: templates/eos_tax/tax-change-detail.html:20
+#, python-format
+msgid ""
+"A level counts once it held for at least two days, and a move of at least "
+"%(minimum)s percentage points separates one level from the next."
+msgstr "一个水平至少保持两天才算数，至少 %(minimum)s 个百分点的变动才会把一个水平与下一个分开。"
+
+#: templates/eos_tax/tax-change-detail.html:33
+msgid "The stretches of days the rate held, and the steps between them"
+msgstr "税率保持不变的连续天数，以及它们之间的跳变"
+
+#: templates/eos_tax/tax-change-detail.html:37
+msgid "From"
+msgstr "从"
+
+#: templates/eos_tax/tax-change-detail.html:38
+msgid "To"
+msgstr "到"
+
+#: templates/eos_tax/tax-change-detail.html:39
+msgid "Share of the bounty"
+msgstr "bounty 份额"
+
+#: templates/eos_tax/tax-change-detail.html:40
+msgid "Days"
+msgstr "天数"
+
+#: templates/eos_tax/tax-change-detail.html:61
+#, python-format
+msgid ""
+"On %(on)s the share moved from %(before)s percent to %(after)s percent, in "
+"%(counter)s system."
+msgid_plural ""
+"On %(on)s the share moved from %(before)s percent to %(after)s percent, "
+"across %(counter)s systems."
+msgstr[0] "%(on)s，份额从百分之 %(before)s 变为百分之 %(after)s，涉及 %(counter)s 个星系。"
+
+#: templates/eos_tax/tax-change-detail.html:69
+#, python-format
+msgid "%(value)s payouts"
+msgstr "%(value)s 次发放"
+
+#: templates/eos_tax/tax-change-detail.html:70
+#, python-format
+msgid "%(value)s days measured"
+msgstr "已测量 %(value)s 天"
+
+#: templates/eos_tax/tax-change-detail.html:78
+msgid "Not enough payouts in this year to measure a rate."
+msgstr "本年发放次数不足，无法测量税率。"
+
+#: templates/eos_tax/tax-changes.html:16
+#, python-format
+msgid ""
+"The corporation wallet only shows the corporation's own cut, so the ingame\n"
+"                rate is not in it directly. It is recovered from the kills behind each bounty: what the\n"
+"                NPCs were worth against what arrived. Every move of that share by at least\n"
+"                %(minimum)s percentage points is listed, as long as the new level held for two\n"
+"                days - a corporation that switched three times appears three times. The minimum\n"
+"                is set on the settings page."
+msgstr ""
+"Corporation wallet 只显示 Corporation 自己的抽成，因此游戏内税率不会直接出现在其中。它是从每笔 bounty "
+"背后的击杀中还原出来的：NPC 的价值与实际到账金额之比。该份额每次至少 %(minimum)s "
+"个百分点的变动都会被列出，只要新水平保持了两天——切换了三次的 Corporation 会出现三次。最小值在设置页面中设置。"
+
+#: templates/eos_tax/tax-changes.html:41
+msgid "Quick filters"
+msgstr "快速筛选"
+
+#: templates/eos_tax/tax-changes.html:52 templates/eos_tax/tax-changes.html:55
+msgid "Only"
+msgstr "仅"
+
+#: templates/eos_tax/tax-changes.html:61
+msgid ""
+"The static data export is not available, so bounty values cannot be resolved."
+msgstr "静态数据导出不可用，因此无法解析 bounty 价值。"
+
+#: templates/eos_tax/tax-changes.html:70
+msgid "Change in the share"
+msgstr "份额变动"
+
+#: templates/eos_tax/tax-changes.html:71
+msgid "On"
+msgstr "日期"
+
+#: templates/eos_tax/tax-changes.html:72 views.py:355
+msgid "Systems"
+msgstr "星系"
+
+#: templates/eos_tax/tax-changes.html:124
+msgid "No corporation changed its ingame tax rate in this year."
+msgstr "本年没有 Corporation 更改其游戏内税率。"
+
+#: templates/eos_tax/tax-changes.html:129
+#, python-format
+msgid "%(counter)s corporation examined"
+msgid_plural "%(counter)s corporations examined"
+msgstr[0] "已检查 %(counter)s 个 Corporation"
+
+#: templates/eos_tax/tax-changes.html:130
+#, python-format
+msgid "%(counter)s change"
+msgid_plural "%(counter)s changes"
+msgstr[0] "%(counter)s 次变动"
+
+#: templates/eos_tax/tax-changes.html:131
+#, python-format
+msgid "%(counter)s corporation that changed"
+msgid_plural "%(counter)s corporations that changed"
+msgstr[0] "%(counter)s 个有变动的 Corporation"
+
+#: templates/eos_tax/tax-changes.html:132
+#, python-format
+msgid "%(value)s payout"
+msgid_plural "%(value)s payouts"
+msgstr[0] "%(value)s 次发放"
+
+#: util.py:76
+msgid "h"
+msgstr "小时"
+
+#: util.py:77
+msgid "min"
+msgstr "分钟"
+
+#: util.py:118
+msgid "d"
+msgstr "天"
+
+#: util.py:119
+msgid "mo"
+msgstr "个月"
+
+#: util.py:120
+msgid "y"
+msgstr "年"
+
+#: views.py:138
+#, python-format
+msgid "Taxes to pay: %(rate)s%%"
+msgstr "应缴税款：%(rate)s%%"
+
+#: views.py:147
+msgid "Corporation:"
+msgstr "Corporation："
+
+#: views.py:148
+msgid "Filter by corporation name"
+msgstr "按 Corporation 名称筛选"
+
+#: views.py:167 views.py:663 views.py:722
+msgid "Loading…"
+msgstr "加载中…"
+
+#: views.py:168
+msgid "No data for this selection."
+msgstr "此选择没有数据。"
+
+#: views.py:169
+msgid "Could not load the statistics."
+msgstr "无法加载统计数据。"
+
+#: views.py:170
+msgid "corporations"
+msgstr "Corporation"
+
+#: views.py:171
+msgid "Other"
+msgstr "其他"
+
+#: views.py:172
+#, python-brace-format
+msgid "{shown} of {total} corporations drawn"
+msgstr "已绘制 {total} 个 Corporation 中的 {shown} 个"
+
+#: views.py:173
+#, python-brace-format
+msgid "{value} of the tax covered"
+msgstr "占税款的 {value}"
+
+#: views.py:174
+#, python-brace-format
+msgid "{value} ISK income"
+msgstr "{value} ISK 收入"
+
+#: views.py:175
+#, python-brace-format
+msgid "{value} ISK tax"
+msgstr "{value} ISK 税款"
+
+#: views.py:240 views.py:263
+msgid "Search:"
+msgstr "搜索："
+
+#: views.py:241
+msgid "Corporation name, or a rate such as 0 or 100"
+msgstr "Corporation 名称，或税率，如 0 或 100"
+
+#: views.py:264
+msgid "Character, Corporation or Main"
+msgstr "Character、Corporation 或 Main"
+
+#: views.py:353
+msgid "Share of the bounty in percent"
+msgstr "bounty 份额百分比"
+
+#: views.py:396
+msgid "Settings saved."
+msgstr "设置已保存。"
+
+#: views.py:444
+msgid "Calculating…"
+msgstr "计算中…"
+
+#: views.py:445
+msgid "Could not recalculate this month."
+msgstr "无法重新计算此月份。"
+
+#: views.py:664 views.py:723
+msgid "Could not load this view."
+msgstr "无法加载此视图。"
+
+#: views.py:778
+#, python-format
+msgid "%(name)s is not one of your characters."
+msgstr "%(name)s 不是你的 Character。"
+
+#: views.py:786 views.py:817
+#, python-format
+msgid "Windows now open in the EVE client of %(name)s."
+msgstr "现在会在 %(name)s 的 EVE 客户端中打开窗口。"
+
+#: views.py:801
+msgid "No in-game character chosen."
+msgstr "未选择游戏内 Character。"
+
+#: views.py:830
+msgid "Choose your in-game character above first."
+msgstr "请先在上方选择你的游戏内 Character。"
+
+#: views.py:838
+#, python-format
+msgid "%(name)s has no token for in-game windows any more - add it again."
+msgstr "%(name)s 已没有用于游戏内窗口的 token——请重新添加。"
+
+#: views.py:852
+#, python-format
+msgid "The window could not be opened. Is %(name)s logged in to EVE?"
+msgstr "无法打开窗口。%(name)s 是否已登录 EVE？"
+
+#: views.py:857
+#, python-format
+msgid "Opened in the EVE client of %(name)s."
+msgstr "已在 %(name)s 的 EVE 客户端中打开。"

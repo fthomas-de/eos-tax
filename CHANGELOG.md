@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.24] - 2026-11-13
+
+### Added
+
+- Simplified Chinese (`zh_Hans`), so eos-tax and eos-invoices ship the same
+  languages. Every message is translated; EVE terms stay English as in the
+  other six catalogues, and `ratter` is paraphrased as there. The jargon test
+  now also rejects 赏金, 公司, 军团, 联盟, 原因, 钱包 and 角色. On a Chinese
+  page the bare column titles Alliance, Character and Corporation still come
+  out of Alliance Auth's own catalogue (所在联盟, 角色, 公司), exactly as
+  German shows "Allianz": AA is first in `INSTALLED_APPS`. The language
+  test checks "如何缴税？" rather than the translated "Overview", because
+  eos-invoices translates that word the same way and the test passed without
+  our catalogue. Machine-translated, not yet read by a native speaker.
+
 ## [0.4.23] - 2026-11-13
 
 ### Added

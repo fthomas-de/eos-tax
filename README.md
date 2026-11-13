@@ -213,7 +213,8 @@ nobody but a superuser can.
 
 ## Translations
 
-Shipped in German, English, Spanish, French, Italian, Korean and Russian. EVE
+Shipped in German, English, Spanish, French, Italian, Korean, Russian and
+Simplified Chinese. EVE
 terms stay in English throughout - Corporation, Alliance, wallet, bounty, ISK,
 PvE, Reason, Character, and the ingame names of the journal types - lower
 case in running text, capitalised in headings and column titles.

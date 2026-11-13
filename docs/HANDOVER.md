@@ -72,9 +72,12 @@ Last updated 2026-11-13 (0.4.23).
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the page's
   GM rows can only be seen in tests or on production data. 0.4.9 to 0.4.16
   on GM Transactions are verified by tests only, not in the browser
-- All six catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`) are
-  complete: `msgfmt --check` clean, nothing fuzzy or empty, `.mo` newer than
-  `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
+- All seven catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`,
+  `zh_Hans`) are complete: `msgfmt --check` clean, nothing fuzzy or empty,
+  `.mo` newer than `.po`. `ratter` is paraphrased in es/fr/it/ko/ru/zh and
+  kept literal in de. `zh_Hans` is new and unreleased (`[Unreleased]`),
+  machine-translated, not read by a native speaker, not looked at in a
+  browser
 - `CHANGELOG.md` is newest first
 
 ## Decisions of the 2026-11-13 session (0.4.23)
@@ -735,8 +738,8 @@ script runs there.
 - **`makemessages` from `eos_tax/` goes through the instance's
   `manage.py` by path**: `cd eos_tax && ~/aa-dev/venv/bin/python
   ~/aa-dev/working/myauth/manage.py makemessages -l de -l es -l fr_FR
-  -l it_IT -l ko_KR -l ru`, the same for `compilemessages`. A removed
-  string turns into `#~` in all six; the `#:` line shifts make the diff
+  -l it_IT -l ko_KR -l ru -l zh_Hans`, the same for `compilemessages`. A
+  removed string turns into `#~` in all seven; the `#:` line shifts make the diff
   look large.
 - **`overdue_jobs` reads `MonthlyTax` with `payed=False`**: a test that
   counts what `run_update_alliance` queues must not leave an unpaid row of
@@ -839,7 +842,8 @@ script runs there.
   terminal alone.
 - **`compilemessages` and `makemessages` run from `eos_tax/`**, not from
   `myauth/`, and `makemessages` with the locales named
-  (`-l de -l es -l fr_FR -l it_IT -l ko_KR -l ru`); `-a` did nothing.
+  (`-l de -l es -l fr_FR -l it_IT -l ko_KR -l ru -l zh_Hans`); `-a` did
+  nothing.
   Check `.mo` newer than `.po` afterwards.
 - **Two sessions share `test_aa_dev`** - a second session runs with
   `EOS_TEST_DB=<own name>`.

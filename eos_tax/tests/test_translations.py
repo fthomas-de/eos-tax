@@ -90,7 +90,9 @@ class TestCatalogueIntegrity(EosTaxTestCase):
     def test_should_ship_a_catalogue_per_language(self):
         found = {path.parents[1].name for path in self.catalogues()}
 
-        self.assertEqual(found, {"de", "es", "fr_FR", "it_IT", "ko_KR", "ru"})
+        self.assertEqual(
+            found, {"de", "es", "fr_FR", "it_IT", "ko_KR", "ru", "zh_Hans"}
+        )
 
     def test_should_have_a_compiled_file_next_to_every_source(self):
         for po_path in self.catalogues():
@@ -168,6 +170,9 @@ class TestEveJargon(EosTaxTestCase):
         "ru": {"bounty": r"наград\w*", "Corporation": r"корпораци\w*",
                "Reason": r"назначение платежа", "wallet": r"кошел\w*",
                "Character": r"[Пп]ерсонаж\w*"},
+        "zh_Hans": {"bounty": r"赏金", "Corporation": r"公司|军团",
+                    "Alliance": r"联盟", "Reason": r"原因", "wallet": r"钱包",
+                    "Character": r"角色"},
     }
 
     def test_should_never_translate_eve_jargon(self):
@@ -263,6 +268,8 @@ class TestGermanCatalogue(EosTaxTestCase):
             "it-it": "Panoramica",
             "ko-kr": "개요",
             "ru": "Обзор",
+            # not 概览: eos-invoices translates Overview the same way
+            "zh-hans": "如何缴税？",
         }
 
         for code, word in expected.items():
@@ -287,6 +294,7 @@ class TestGermanCatalogue(EosTaxTestCase):
             "it-it": "Alliance tassate",
             "ko-kr": "과세 대상 Alliance",
             "ru": "Облагаемые Alliances",
+            "zh-hans": "被征税的 Alliance",
         }
 
         for code, label in expected.items():
