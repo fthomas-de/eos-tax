@@ -11,6 +11,7 @@
             {# the four lists of the month on screen, the audit tab with them #}
             {% url "eos_tax:bots_recalculate" as recalculate_url %}
             {% include "eos_tax/partials/recalculate-button.html" with recalculate_month=selected_month %}
+            {% include "eos_tax/partials/ui-character.html" %}
         </div>
 
         <div class="card-body">
@@ -158,4 +159,5 @@
     {% sri_static "eos_tax/js/copy-buttons.js" %}
     {% sri_static "eos_tax/js/bots.js" %}
     {% sri_static "eos_tax/js/recalculate.js" %}
+    {% sri_static "eos_tax/js/open-window.js" %}
 {% endblock %}

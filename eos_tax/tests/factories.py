@@ -32,6 +32,7 @@ from corptools.models import (
 from django.contrib.auth.models import Permission, User
 
 from django.db import models as django_models
+from esi.models import Scope, Token
 
 from eos_tax.app_settings import get_config
 from eos_tax.forms import TaxConfigurationForm
@@ -155,6 +156,21 @@ def create_alt(owner, character_id, name,
     )
 
     return alt
+
+
+def add_window_token(user, character, scope="esi-ui.open_window.v1"):
+    """An SSO token of user's for character, as EVE SSO would leave it."""
+    token = Token.objects.create(
+        user=user,
+        character_id=character.character_id,
+        character_name=character.character_name,
+        character_owner_hash=f"token-hash-{character.character_id}",
+        access_token="access",
+        refresh_token="refresh",
+    )
+    token.scopes.add(Scope.objects.get_or_create(name=scope)[0])
+
+    return token
 
 
 def create_alliance(alliance_id, name):

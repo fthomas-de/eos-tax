@@ -12,14 +12,18 @@ from django.utils.dates import MONTHS_3, WEEKDAYS_ABBR
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.http import require_POST
 
-from allianceauth.eveonline.models import EveCorporationInfo
+from esi.decorators import token_required
+from esi.models import Token
+
+from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.services.hooks import get_extension_logger
 from allianceauth.framework.api.user import get_all_characters_from_user
 
 from eos_tax import VERSION
 from eos_tax.app_settings import get_config
 from eos_tax.forms import TaxConfigurationForm, TaxRateFormSet, TaxRateReadOnlyFormSet
-from eos_tax.models import TaxRate
+from eos_tax.models import TaxRate, UiCharacter
+from eos_tax.providers import ESI_SCOPE_UI_OPEN_WINDOW, esi
 from eos_tax.db.bot_audit import get_unaudited_mains
 from eos_tax.db.bot_store import READINGS, get_stored_reports, settings_fingerprint
 from eos_tax.db.bots import (
@@ -704,6 +708,9 @@ def bots(request):
         "gm_listed": gm_listed_character_ids(),
         "wanted": wanted,
         "matches": matches,
+        "ui_characters": _ui_characters(request.user),
+        "ui_character_id": UiCharacter.objects.filter(user=request.user)
+        .values_list("character__character_id", flat=True).first(),
         # the month travels in the url, so a tab opened after the form was
         # submitted fetches the month on screen rather than the running one
         "js_config": {
@@ -739,6 +746,114 @@ def bots_recalculate(request):
 
     return JsonResponse({
         "queued": bool(queue_bot_reports([(selected.month, selected.year)])),
+    })
+
+
+def _ui_characters(user):
+    """The reader's own characters with a token that may open windows."""
+    with_token = Token.objects.filter(user=user).require_scopes(
+        [ESI_SCOPE_UI_OPEN_WINDOW]
+    ).values("character_id")
+
+    return EveCharacter.objects.filter(
+        character_ownership__user=user, character_id__in=with_token
+    ).order_by("character_name")
+
+
+@login_required
+@any_permission_required(BOTS_GM_READ)
+@token_required(scopes=[ESI_SCOPE_UI_OPEN_WINDOW])
+def ui_character_add(request, token):
+    """Takes the character just picked on EVE SSO as the in-game one."""
+    # SSO hands out a token for any character the reader can log in with;
+    # only their own may open windows on their behalf
+    character = EveCharacter.objects.filter(
+        character_id=token.character_id, character_ownership__user=request.user
+    ).first()
+
+    if character is None:
+        messages.error(
+            request,
+            _("%(name)s is not one of your characters.") % {"name": token.character_name},
+        )
+    else:
+        UiCharacter.objects.update_or_create(
+            user=request.user, defaults={"character": character}
+        )
+        messages.success(
+            request,
+            _("Windows now open in the EVE client of %(name)s.")
+            % {"name": character.character_name},
+        )
+
+    return redirect("eos_tax:bots")
+
+
+@login_required
+@any_permission_required(BOTS_GM_READ, raise_exception=True)
+@require_POST
+def ui_character_select(request):
+    """The dropdown of the bots page; empty clears the choice."""
+    if not request.POST.get("character_id"):
+        UiCharacter.objects.filter(user=request.user).delete()
+
+        return JsonResponse({"message": _("No in-game character chosen.")})
+
+    try:
+        character_id = int(request.POST["character_id"])
+    except ValueError:
+        return HttpResponseBadRequest("character_id must be a number")
+
+    character = _ui_characters(request.user).filter(character_id=character_id).first()
+    if character is None:
+        return HttpResponseBadRequest("not one of your characters with a window token")
+
+    UiCharacter.objects.update_or_create(
+        user=request.user, defaults={"character": character}
+    )
+
+    return JsonResponse({
+        "message": _("Windows now open in the EVE client of %(name)s.")
+        % {"name": character.character_name},
+    })
+
+
+@login_required
+@any_permission_required(BOTS_GM_READ, raise_exception=True)
+@require_POST
+def open_window(request, character_id):
+    """Opens the information window of character_id in the reader's EVE
+    client; every outcome is a 200 with a message for the page."""
+    chosen = UiCharacter.objects.filter(user=request.user).select_related("character").first()
+    if chosen is None:
+        return JsonResponse({"message": _("Choose your in-game character above first.")})
+
+    name = chosen.character.character_name
+    token = Token.objects.filter(
+        user=request.user, character_id=chosen.character.character_id
+    ).require_scopes([ESI_SCOPE_UI_OPEN_WINDOW]).first()
+    if token is None:
+        return JsonResponse({
+            "message": _("%(name)s has no token for in-game windows any more - add it again.")
+            % {"name": name},
+        })
+
+    try:
+        esi.client.User_Interface.PostUiOpenwindowInformation(
+            target_id=character_id, token=token
+        ).result(use_etag=False, use_cache=False, store_cache=False)
+    except Exception as exc:
+        # ESI answers an offline client and an expired token alike; the
+        # reader can fix the first, the log keeps the second
+        logger.warning(f"open_window: {character_id} in the client of {name} failed: {exc}")
+
+        return JsonResponse({
+            "message": _("The window could not be opened. Is %(name)s logged in to EVE?")
+            % {"name": name},
+        })
+
+    return JsonResponse({
+        "message": _("Opened in the EVE client of %(name)s.") % {"name": name},
     })
 
 

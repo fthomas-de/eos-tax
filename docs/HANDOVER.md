@@ -60,6 +60,31 @@ Last updated 2026-11-12 (0.4.21).
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
 
+## Decisions of the 2026-11-13 session (0.4.22)
+
+In-game window button on the bots tabs, modelled on aa-srp - the user's
+choices unless marked:
+
+- **The chosen character is stored per user in the DB** (`UiCharacter`,
+  migration 0036, applied to `aa_dev`), not in the browser or session.
+- **On all five bots tabs**, not on GM Transactions or the character page.
+- **The listed character only**, no button beside the main.
+- **Feedback as a status line in the card header**, like Recalculate.
+- Claude's calls: own `ESIClientProvider` in `providers.py` (AA's
+  `open_api_provider` is limited to its own operations), compatibility
+  date taken from Alliance Auth; the dropdown offers own characters with
+  an `esi-ui.open_window.v1` token, saved on change by fetch; `+` goes
+  through `token_required`; the button is always clickable - without a
+  choice the server answers "Choose your in-game character above first."
+  (the fetched tabs would otherwise need the choice in their context);
+  any target id is accepted (an info window is public); icon
+  `fa-display`. Saving a token makes Alliance Auth move the character's
+  ownership to the token's user, so the "not one of your characters"
+  branch of `ui_character_add` is tested with an unsaved token.
+- 16 tests in `test_open_window.py`, six sabotages caught. Not looked at
+  in a browser, never talked to the real ESI. The ten new strings are in
+  all six catalogues ("Character" kept English, no "персонаж" in ru).
+
 ## Decisions of the 2026-11-12 session
 
 The audit (`docs/AUDIT.md`, "Decisions") - the user's choices:
@@ -441,6 +466,11 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
+00000. **On deploying the in-game window button: migration 0036**, and
+   check that the EVE developer application of the instance has
+   `esi-ui.open_window.v1` (corptools asks for it too, so it probably
+   has) - otherwise the `+` SSO round trip fails. Then pick a character,
+   log it in to EVE and press one button: never tried against real ESI.
 0000. **On deploying 0.4.21: migration 0035**, then restart gunicorn and
    every Celery worker (the model lost two columns, the task queues more).
    An instance that ran with one month switch off gets rows and badge

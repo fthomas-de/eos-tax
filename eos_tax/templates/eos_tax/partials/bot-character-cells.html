@@ -7,6 +7,7 @@
         {{ row.character_name }}
     </a>
     {% include "eos_tax/partials/copy-button.html" with text=row.character_name %}
+    {% include "eos_tax/partials/open-window-button.html" with character_id=row.character_id %}
 </th>
 <td class="d-none d-md-table-cell">{{ row.corporation_name }}</td>
 {% comment %}

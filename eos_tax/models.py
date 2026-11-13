@@ -8,7 +8,7 @@ from django.db import models
 
 from django.utils.translation import gettext_lazy as _
 
-from allianceauth.eveonline.models import EveAllianceInfo, EveCorporationInfo
+from allianceauth.eveonline.models import EveAllianceInfo, EveCharacter, EveCorporationInfo
 from allianceauth.services.hooks import get_extension_logger
 
 from solo.models import SingletonModel
@@ -607,3 +607,21 @@ class GmNote(models.Model):
                 name="eos_tax_one_gm_note_per_row",
             ),
         ]
+
+
+class UiCharacter(models.Model):
+    """The reader's own character whose EVE client the bots page opens
+    information windows in. No row: none chosen yet."""
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        primary_key=True,
+        on_delete=models.CASCADE,
+        related_name="+",
+    )
+    character = models.ForeignKey(
+        EveCharacter, on_delete=models.CASCADE, related_name="+"
+    )
+
+    class Meta:
+        default_permissions = ()

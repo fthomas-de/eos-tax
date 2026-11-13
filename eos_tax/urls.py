@@ -17,6 +17,10 @@ urlpatterns = [
     # the buttons that queue the bots or the GM job alone
     path("bots/recalculate/", views.bots_recalculate, name="bots_recalculate"),
     path("bots/<int:character_id>/", views.bot_detail, name="bot_detail"),
+    # information windows in the reader's own EVE client
+    path("bots/<int:character_id>/open-window/", views.open_window, name="open_window"),
+    path("bots/ui-character/", views.ui_character_select, name="ui_character_select"),
+    path("bots/ui-character/add/", views.ui_character_add, name="ui_character_add"),
     # the sub tabs of the bots page, fetched one at a time when opened
     path("bots/signal/<slug:signal>/", views.bot_signal, name="bot_signal"),
     # the same three readings for one character, behind the tabs of its

@@ -1,0 +1,27 @@
+{% load i18n %}
+{% comment %}
+    The reader's own character whose EVE client the window buttons beside
+    the names open in. open-window.js saves a change at once and writes every
+    answer, the buttons' too, into the status line. Only characters with a
+    window token are offered; + fetches one through EVE SSO.
+{% endcomment %}
+{% translate "Add a character for in-game windows" as add_label %}
+<div class="d-flex align-items-center gap-2" data-eos-ui-character
+     data-eos-select-url="{% url 'eos_tax:ui_character_select' %}"
+     data-eos-label-error="{% translate 'Could not reach the server.' %}">
+    {% csrf_token %}
+    <span class="small text-body-secondary" role="status" data-eos-ui-result></span>
+    <label for="eos-tax-ui-character" class="visually-hidden">{% translate "In-game character" %}</label>
+    <select id="eos-tax-ui-character" class="form-select form-select-sm w-auto">
+        <option value="">{% translate "In-game character" %}</option>
+        {% for character in ui_characters %}
+            <option value="{{ character.character_id }}"{% if character.character_id == ui_character_id %} selected{% endif %}>
+                {{ character.character_name }}
+            </option>
+        {% endfor %}
+    </select>
+    <a class="btn btn-sm btn-outline-primary" href="{% url 'eos_tax:ui_character_add' %}"
+       title="{{ add_label }}" aria-label="{{ add_label }}">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+    </a>
+</div>

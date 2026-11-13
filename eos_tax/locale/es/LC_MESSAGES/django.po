@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-12 19:39+0000\n"
+"POT-Creation-Date: 2026-11-13 12:29+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -608,26 +608,26 @@ msgstr ""
 msgid "Overview"
 msgstr "Resumen"
 
-#: templates/eos_tax/base.html:17 views.py:154
+#: templates/eos_tax/base.html:17 views.py:158
 msgid "Statistics"
 msgstr "Estadísticas"
 
-#: templates/eos_tax/base.html:24 views.py:691
+#: templates/eos_tax/base.html:24 views.py:695
 msgid "Bots"
 msgstr "Bots"
 
-#: templates/eos_tax/base.html:30 views.py:228
+#: templates/eos_tax/base.html:30 views.py:232
 msgid "Corp Tax Changes"
 msgstr "Corp Tax Changes"
 
 #: templates/eos_tax/base.html:36
 #: templates/eos_tax/partials/bot-gm-detail.html:6
 #: templates/eos_tax/partials/bot-tabs.html:38
-#: templates/eos_tax/partials/progress.html:16 views.py:254
+#: templates/eos_tax/partials/progress.html:16 views.py:258
 msgid "GM Transactions"
 msgstr "Transacciones de GM"
 
-#: templates/eos_tax/base.html:42 views.py:426
+#: templates/eos_tax/base.html:42 views.py:430
 msgid "Settings"
 msgstr "Ajustes"
 
@@ -655,13 +655,13 @@ msgstr "Abre una de las listas de bots para ver cómo se valoró a cada uno."
 msgid "Back to the list"
 msgstr "Volver a la lista"
 
-#: templates/eos_tax/bot-detail.html:137 templates/eos_tax/bots.html:21
+#: templates/eos_tax/bot-detail.html:137 templates/eos_tax/bots.html:22
 #: templates/eos_tax/index.html:54 templates/eos_tax/settings.html:195
 #: templates/eos_tax/statistics.html:49
 msgid "Month"
 msgstr "Mes"
 
-#: templates/eos_tax/bot-detail.html:143 templates/eos_tax/bots.html:34
+#: templates/eos_tax/bot-detail.html:143 templates/eos_tax/bots.html:35
 #: templates/eos_tax/index.html:28 templates/eos_tax/tax-changes.html:35
 msgid "Show"
 msgstr "Mostrar"
@@ -731,7 +731,7 @@ msgid_plural "%(value)s journal entries"
 msgstr[0] "%(value)s entrada de journal"
 msgstr[1] "%(value)s entradas de journal"
 
-#: templates/eos_tax/bot-detail.html:240 templates/eos_tax/bots.html:133
+#: templates/eos_tax/bot-detail.html:240 templates/eos_tax/bots.html:134
 #: templates/eos_tax/tax-change-detail.html:73
 #: templates/eos_tax/tax-changes.html:135
 msgid "total"
@@ -741,7 +741,7 @@ msgstr "total"
 msgid "This character had no active hour in the selected month."
 msgstr "Este character no tuvo ninguna hora activa en el mes seleccionado."
 
-#: templates/eos_tax/bots.html:27 templates/eos_tax/gm-transactions.html:82
+#: templates/eos_tax/bots.html:28 templates/eos_tax/gm-transactions.html:82
 #: templates/eos_tax/partials/bot-audit.html:14
 #: templates/eos_tax/partials/bot-clock-detail.html:32
 #: templates/eos_tax/partials/bot-clock.html:26
@@ -753,11 +753,11 @@ msgstr "Este character no tuvo ninguna hora activa en el mes seleccionado."
 msgid "Character"
 msgstr "Character"
 
-#: templates/eos_tax/bots.html:30
+#: templates/eos_tax/bots.html:31
 msgid "Open a character directly"
 msgstr "Abrir un character directamente"
 
-#: templates/eos_tax/bots.html:60
+#: templates/eos_tax/bots.html:61
 #, python-format
 msgid ""
 "Characters that earned taxed income in more than %(min_hours)s different\n"
@@ -769,16 +769,16 @@ msgstr ""
 "distintas de un día, en al menos %(min_days)s días del mes seleccionado. "
 "Ambos umbrales están en la página de ajustes."
 
-#: templates/eos_tax/bots.html:68
+#: templates/eos_tax/bots.html:69
 msgid "Several characters match:"
 msgstr "Varios characters coinciden:"
 
-#: templates/eos_tax/bots.html:81
+#: templates/eos_tax/bots.html:82
 #, python-format
 msgid "No character found for \"%(wanted)s\"."
 msgstr "No se encontró ningún character para \"%(wanted)s\"."
 
-#: templates/eos_tax/bots.html:92
+#: templates/eos_tax/bots.html:93
 msgid ""
 "No character crossed both thresholds. The ten mains with the longest days of "
 "the month are shown instead, so the thresholds can be judged against real "
@@ -788,36 +788,36 @@ msgstr ""
 "Mains con los días más largos del mes, para poder juzgar los umbrales con "
 "cifras reales."
 
-#: templates/eos_tax/bots.html:98
+#: templates/eos_tax/bots.html:99
 msgid "No character crossed both thresholds in this month."
 msgstr "Ningún Character superó ambos umbrales en este mes."
 
-#: templates/eos_tax/bots.html:122
+#: templates/eos_tax/bots.html:123
 msgid "slower than usual"
 msgstr "más lento de lo normal"
 
-#: templates/eos_tax/bots.html:125
+#: templates/eos_tax/bots.html:126
 #, python-format
 msgid "%(value)s hour blocks"
 msgstr "%(value)s bloques de hora"
 
-#: templates/eos_tax/bots.html:126
+#: templates/eos_tax/bots.html:127
 #, python-format
 msgid "%(value)s characters"
 msgstr "%(value)s Characters"
 
-#: templates/eos_tax/bots.html:127
+#: templates/eos_tax/bots.html:128
 #, python-format
 msgid "%(value)s hit"
 msgid_plural "%(value)s hits"
 msgstr[0] "%(value)s acierto"
 msgstr[1] "%(value)s aciertos"
 
-#: templates/eos_tax/bots.html:131
+#: templates/eos_tax/bots.html:132
 msgid "database"
 msgstr "base de datos"
 
-#: templates/eos_tax/bots.html:132
+#: templates/eos_tax/bots.html:133
 msgid "aggregation"
 msgstr "agregación"
 
@@ -969,7 +969,7 @@ msgstr[0] "%(days)s día"
 msgstr[1] "%(days)s días"
 
 #: templates/eos_tax/gm-transactions.html:177
-#: templates/eos_tax/partials/bot-character-cells.html:22
+#: templates/eos_tax/partials/bot-character-cells.html:23
 msgid "not registered"
 msgstr "sin registrar"
 
@@ -1211,28 +1211,28 @@ msgstr "Aparece en Transacciones de GM"
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:8
 #: templates/eos_tax/partials/progress.html:23
-#: templates/eos_tax/settings.html:239 views.py:758
+#: templates/eos_tax/settings.html:239 views.py:873
 msgid "Hours per day"
 msgstr "Horas por día"
 
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:15
 #: templates/eos_tax/partials/progress.html:24
-#: templates/eos_tax/settings.html:254 views.py:759
+#: templates/eos_tax/settings.html:254 views.py:874
 msgid "Unbroken runs"
 msgstr "Rachas ininterrumpidas"
 
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:22
 #: templates/eos_tax/partials/progress.html:25
-#: templates/eos_tax/settings.html:271 views.py:760
+#: templates/eos_tax/settings.html:271 views.py:875
 msgid "Against the Corporation"
 msgstr "Al ritmo de la Corporation"
 
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:29
 #: templates/eos_tax/partials/progress.html:26
-#: templates/eos_tax/settings.html:289 views.py:761
+#: templates/eos_tax/settings.html:289 views.py:876
 msgid "Off the Corporation clock"
 msgstr "Fuera del horario de la Corporation"
 
@@ -1386,7 +1386,7 @@ msgstr "Diferencia"
 
 #: templates/eos_tax/partials/bot-clock.html:33
 #: templates/eos_tax/partials/bot-rhythm.html:33
-#: templates/eos_tax/tax-changes.html:73 views.py:349
+#: templates/eos_tax/tax-changes.html:73 views.py:353
 msgid "Payouts"
 msgstr "Pagos"
 
@@ -1404,7 +1404,7 @@ msgstr ""
 #: templates/eos_tax/partials/bot-clock.html:74
 #: templates/eos_tax/partials/bot-rhythm.html:74
 #: templates/eos_tax/partials/bot-runs.html:88
-#: templates/eos_tax/partials/bot-table.html:67
+#: templates/eos_tax/partials/bot-table.html:68
 #, python-format
 msgid "%(shown)s of %(total)s groups shown"
 msgstr "%(shown)s de %(total)s grupos mostrados"
@@ -1722,7 +1722,7 @@ msgstr "Día promedio (horas)"
 msgid "Contributed tax"
 msgstr "Impuesto aportado"
 
-#: templates/eos_tax/partials/bot-tabs.html:48 views.py:762
+#: templates/eos_tax/partials/bot-tabs.html:48 views.py:877
 msgid "Without current audit"
 msgstr "Sin auditoría al día"
 
@@ -1733,6 +1733,10 @@ msgstr "Copiar el nombre del main al portapapeles"
 #: templates/eos_tax/partials/copy-button.html:11
 msgid "Copy character name to clipboard"
 msgstr "Copiar el nombre del character al portapapeles"
+
+#: templates/eos_tax/partials/open-window-button.html:3
+msgid "Open in the EVE client"
+msgstr "Abrir en el cliente de EVE"
 
 #: templates/eos_tax/partials/progress.html:13
 msgid "Automatic recalculation"
@@ -2078,6 +2082,19 @@ msgstr ""
 msgid "Nothing could be calculated for this selection."
 msgstr "No se pudo calcular nada para esta selección."
 
+#: templates/eos_tax/partials/ui-character.html:8
+msgid "Add a character for in-game windows"
+msgstr "Añadir un character para ventanas en el juego"
+
+#: templates/eos_tax/partials/ui-character.html:11
+msgid "Could not reach the server."
+msgstr "No se pudo contactar con el servidor."
+
+#: templates/eos_tax/partials/ui-character.html:14
+#: templates/eos_tax/partials/ui-character.html:16
+msgid "In-game character"
+msgstr "Character en el juego"
+
 #: templates/eos_tax/settings.html:16
 msgid ""
 "These values were taken over from local.py once. They are read from\n"
@@ -2394,7 +2411,7 @@ msgstr "Cambio en la parte"
 msgid "On"
 msgstr "El"
 
-#: templates/eos_tax/tax-changes.html:72 views.py:350
+#: templates/eos_tax/tax-changes.html:72 views.py:354
 msgid "Systems"
 msgstr "Sistemas"
 
@@ -2450,90 +2467,123 @@ msgstr "m"
 msgid "y"
 msgstr "a"
 
-#: views.py:133
+#: views.py:137
 #, python-format
 msgid "Taxes to pay: %(rate)s%%"
 msgstr "Impuesto a pagar: %(rate)s%%"
 
-#: views.py:142
+#: views.py:146
 msgid "Corporation:"
 msgstr "Corporation:"
 
-#: views.py:143
+#: views.py:147
 msgid "Filter by corporation name"
 msgstr "Filtrar por nombre de Corporation"
 
-#: views.py:162 views.py:658 views.py:714
+#: views.py:166 views.py:662 views.py:721
 msgid "Loading…"
 msgstr "Cargando…"
 
-#: views.py:163
+#: views.py:167
 msgid "No data for this selection."
 msgstr "No hay datos para esta selección."
 
-#: views.py:164
+#: views.py:168
 msgid "Could not load the statistics."
 msgstr "No se pudieron cargar las estadísticas."
 
-#: views.py:165
+#: views.py:169
 msgid "corporations"
 msgstr "Corporations"
 
-#: views.py:166
+#: views.py:170
 msgid "Other"
 msgstr "Otras"
 
-#: views.py:167
+#: views.py:171
 #, python-brace-format
 msgid "{shown} of {total} corporations drawn"
 msgstr "{shown} de {total} corporations dibujadas"
 
-#: views.py:168
+#: views.py:172
 #, python-brace-format
 msgid "{value} of the tax covered"
 msgstr "{value} del impuesto cubierto"
 
-#: views.py:169
+#: views.py:173
 #, python-brace-format
 msgid "{value} ISK income"
 msgstr "{value} ISK de ingreso"
 
-#: views.py:170
+#: views.py:174
 #, python-brace-format
 msgid "{value} ISK tax"
 msgstr "{value} ISK de impuesto"
 
-#: views.py:235 views.py:258
+#: views.py:239 views.py:262
 msgid "Search:"
 msgstr "Buscar:"
 
-#: views.py:236
+#: views.py:240
 msgid "Corporation name, or a rate such as 0 or 100"
 msgstr "Nombre de la corporation o un tipo como 0 o 100"
 
-#: views.py:259
+#: views.py:263
 msgid "Character, Corporation or Main"
 msgstr "Character, Corporation o Main"
 
-#: views.py:348
+#: views.py:352
 msgid "Share of the bounty in percent"
 msgstr "Parte de la bounty en por ciento"
 
-#: views.py:391
+#: views.py:395
 msgid "Settings saved."
 msgstr "Ajustes guardados."
 
-#: views.py:439
+#: views.py:443
 msgid "Calculating…"
 msgstr "Calculando…"
 
-#: views.py:440
+#: views.py:444
 msgid "Could not recalculate this month."
 msgstr "No se pudo recalcular este mes."
 
-#: views.py:659 views.py:715
+#: views.py:663 views.py:722
 msgid "Could not load this view."
 msgstr "No se pudo cargar esta vista."
+
+#: views.py:777
+#, python-format
+msgid "%(name)s is not one of your characters."
+msgstr "%(name)s no es uno de tus characters."
+
+#: views.py:785 views.py:816
+#, python-format
+msgid "Windows now open in the EVE client of %(name)s."
+msgstr "Las ventanas se abren ahora en el cliente de EVE de %(name)s."
+
+#: views.py:800
+msgid "No in-game character chosen."
+msgstr "Ningún character en el juego elegido."
+
+#: views.py:829
+msgid "Choose your in-game character above first."
+msgstr "Elige primero arriba tu character en el juego."
+
+#: views.py:837
+#, python-format
+msgid "%(name)s has no token for in-game windows any more - add it again."
+msgstr "%(name)s ya no tiene token para ventanas en el juego; vuelve a añadirlo."
+
+#: views.py:851
+#, python-format
+msgid "The window could not be opened. Is %(name)s logged in to EVE?"
+msgstr "No se pudo abrir la ventana. ¿Está %(name)s conectado a EVE?"
+
+#: views.py:856
+#, python-format
+msgid "Opened in the EVE client of %(name)s."
+msgstr "Abierto en el cliente de EVE de %(name)s."
 
 #~ msgid "Include the previous month in calculations and on the overview."
 #~ msgstr "Incluir el mes anterior en los cálculos y en el resumen."

@@ -1,0 +1,10 @@
+{% load i18n %}
+{# the information window of character_id in the reader's EVE client - open-window.js #}
+{% translate "Open in the EVE client" as open_label %}
+<button type="button"
+        class="btn btn-link btn-sm p-0 ms-1 align-baseline"
+        data-eos-open-window="{% url 'eos_tax:open_window' character_id %}"
+        title="{{ open_label }}"
+        aria-label="{{ open_label }}">
+    <i class="fa-solid fa-display" aria-hidden="true"></i>
+</button>

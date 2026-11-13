@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.22] - 2026-11-13
+
+### Added
+
+- A button beside every character name on the five bots tabs opens that
+  character's information window in the reader's own EVE client, through
+  ESI's `esi-ui.open_window.v1`, the way aa-srp does it. Before, a hunter
+  had to copy the name and search for it in game. The client is chosen in
+  a dropdown in the card header, beside Recalculate: it offers the
+  reader's own characters that hold a token with that scope, and `+` adds
+  one through EVE SSO. The choice is kept per user (`UiCharacter`,
+  migration 0036), so it survives a new login and another browser. Every
+  answer - opened, nothing chosen, token gone, client offline - is a line
+  of text beside the dropdown; ESI answers an offline client and a dead
+  token alike, so the text asks whether the character is logged in and
+  the log keeps ESI's reason. Alliance Auth's own ESI client knows no UI
+  operations, so the app has a small one of its own (`providers.py`).
+
 ## [0.4.21] - 2026-11-12
 
 ### Changed
