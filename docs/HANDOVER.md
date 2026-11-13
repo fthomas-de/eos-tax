@@ -4,13 +4,22 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-13 (0.4.22).
+Last updated 2026-11-13 (0.4.23).
 
 ## Release
 
-- Version **0.4.22** in `eos_tax/__init__.py`, released 2026-11-13, tag
-  `v0.4.22`
-- `[0.4.22]` in `CHANGELOG.md`: a button beside every name on the five
+- Version **0.4.23** in `eos_tax/__init__.py`, released 2026-11-13, tag
+  `v0.4.23`
+- `[0.4.23]` in `CHANGELOG.md`: a sixth bots tab "Possibly banned" -
+  characters any of the four readings showed in a stored month whose last
+  corptools login is at least `possibly_banned_min_days` (default 30,
+  migration 0037) ago, grouped by main, with the months listed. Where it
+  lives: `db/bot_ban.py` (`get_possibly_banned`), the `banned` branch of
+  `views.bot_signal`, `partials/bot-banned.html`, the card at the end of
+  the bots chapter of `settings.html`, tests in `test_bot_ban.py`.
+  `bots.js` needed no change - it fetches and sorts any `data-eos-signal`
+  pane. Decisions below
+- `[0.4.22]`: a button beside every name on the five
   bots tabs opens the character's information window in the reader's EVE
   client (ESI `esi-ui.open_window.v1`, modelled on aa-srp). Where it
   lives: `providers.py` (own ESI client), `UiCharacter` (migration 0036),
@@ -57,8 +66,8 @@ Last updated 2026-11-13 (0.4.22).
   and step runs on the bar; 0.4.6/0.4.7 the bots and GM jobs (`BotReport`
   0028, `GmReport` 0029). `manage_settings` (0.4.5, 0027) guards every
   settings write; `admin_view` alone sees the settings page read only
-- Migrations **0001-0036** applied to `aa_dev`
-- 831 tests, all green (816 without the translation tag, 15 with it); the
+- Migrations **0001-0037** applied to `aa_dev`
+- 847 tests, all green (832 without the translation tag, 15 with it); the
   suite ran `--fresh` at the commit
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the page's
   GM rows can only be seen in tests or on production data. 0.4.9 to 0.4.16
@@ -68,10 +77,9 @@ Last updated 2026-11-13 (0.4.22).
   `.po`. `ratter` is paraphrased in es/fr/it/ko/ru and kept literal in de
 - `CHANGELOG.md` is newest first
 
-## Decisions of the 2026-11-13 session (unreleased: "Possibly banned")
+## Decisions of the 2026-11-13 session (0.4.23)
 
-Sixth bots tab, uncommitted, in `[Unreleased]` - the user's choices unless
-marked:
+Sixth bots tab "Possibly banned" - the user's choices unless marked:
 
 - **Tab name "Possibly banned"**; characters **grouped by main**.
 - **Everything a tab showed counts**, the fallback list included (chosen
@@ -92,8 +100,9 @@ marked:
   recomputed after a settings change replaces its list, so a character
   can drop out of the history. 16 tests in `test_bot_ban.py`, seven
   sabotages caught. Not looked at in a browser; empty on `aa_dev` (nobody
-  there has a login). The new strings are not yet in the catalogues -
-  that happens at `/commit`.
+  there has a login). The eight new strings are in all six catalogues
+  (tab: "Möglicherweise gebannt", "Posiblemente baneado", "Peut-être
+  banni", "Forse bannato", "밴 가능성", "Возможно, забанен").
 
 ## Decisions of the 2026-11-13 session (0.4.22)
 
@@ -501,6 +510,13 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
+000000. **On deploying 0.4.23: migration 0037** before the settings page
+   or the bots page loads (both read `possibly_banned_min_days`); no
+   Celery change. Then open "Possibly banned" once on production data:
+   does it list the expected quiet characters, and how long does the
+   fetch take (it reads every stored `BotReport` row of the four
+   readings on each visit - fine for a few years of months; if it grows
+   slow, that is the place to cache). Not looked at in a browser yet.
 00000. **On deploying the in-game window button: migration 0036**, and
    check that the EVE developer application of the instance has
    `esi-ui.open_window.v1` (corptools asks for it too, so it probably
@@ -615,7 +631,9 @@ plain list of alts from Alliance Auth, without assessments.
 - `eos_tax_uicharacter` (0036) is empty: nobody has picked an in-game
   character on the dev instance, and no `esi-ui.open_window.v1` token
   exists there that was taken for it.
-- Migrations 0001-0036 applied to `aa_dev`; both month switches were on
+- `possibly_banned_min_days` (0037) is at its default 30. "Possibly
+  banned" is empty there: no listed character has a corptools login.
+- Migrations 0001-0037 applied to `aa_dev`; both month switches were on
   before 0035 dropped them (`~/aa-dev/eos-tax-month-flags-before-0035.json`),
   so the dev instance behaves as before. Every `MonthlyTax` row has
   `exact_payment` False and `largest_payments` `[]` until recalculated. `eos_tax_gmnote` is empty.
