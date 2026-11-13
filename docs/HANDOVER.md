@@ -4,13 +4,21 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-12 (0.4.21).
+Last updated 2026-11-13 (0.4.22).
 
 ## Release
 
-- Version **0.4.21** in `eos_tax/__init__.py`, released 2026-11-12, tag
-  `v0.4.21`
-- `[0.4.21]` in `CHANGELOG.md`: the fixes of the audit of 2026-11-11 and
+- Version **0.4.22** in `eos_tax/__init__.py`, released 2026-11-13, tag
+  `v0.4.22`
+- `[0.4.22]` in `CHANGELOG.md`: a button beside every name on the five
+  bots tabs opens the character's information window in the reader's EVE
+  client (ESI `esi-ui.open_window.v1`, modelled on aa-srp). Where it
+  lives: `providers.py` (own ESI client), `UiCharacter` (migration 0036),
+  views `ui_character_add` / `ui_character_select` / `open_window`,
+  `partials/ui-character.html` (header dropdown),
+  `partials/open-window-button.html`, `js/open-window.js`, tests in
+  `test_open_window.py`. Decisions below
+- `[0.4.21]`: the fixes of the audit of 2026-11-11 and
   the end of the month switches. `docs/AUDIT.md` holds the findings
   (TAX-01 to TAX-09), the user's decisions and the plan they were built
   from; everything in it is implemented. Where each fix lives:
@@ -49,8 +57,8 @@ Last updated 2026-11-12 (0.4.21).
   and step runs on the bar; 0.4.6/0.4.7 the bots and GM jobs (`BotReport`
   0028, `GmReport` 0029). `manage_settings` (0.4.5, 0027) guards every
   settings write; `admin_view` alone sees the settings page read only
-- Migrations **0001-0035** applied to `aa_dev`
-- 815 tests, all green (800 without the translation tag, 15 with it); the
+- Migrations **0001-0036** applied to `aa_dev`
+- 831 tests, all green (816 without the translation tag, 15 with it); the
   suite ran `--fresh` at the commit
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the page's
   GM rows can only be seen in tests or on production data. 0.4.9 to 0.4.16
@@ -577,7 +585,10 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## State of the dev instance
 
-- Migrations 0001-0035 applied to `aa_dev`; both month switches were on
+- `eos_tax_uicharacter` (0036) is empty: nobody has picked an in-game
+  character on the dev instance, and no `esi-ui.open_window.v1` token
+  exists there that was taken for it.
+- Migrations 0001-0036 applied to `aa_dev`; both month switches were on
   before 0035 dropped them (`~/aa-dev/eos-tax-month-flags-before-0035.json`),
   so the dev instance behaves as before. Every `MonthlyTax` row has
   `exact_payment` False and `largest_payments` `[]` until recalculated. `eos_tax_gmnote` is empty.
@@ -664,6 +675,17 @@ The browser pane opens a `file://` page only as a static snapshot - no
 script runs there.
 
 ## Traps recent sessions cost time on
+
+- **Saving an esi `Token` moves the character's ownership** to the token's
+  user (Alliance Auth's signal). A test token for another user's character
+  silently makes it yours - use an unsaved stand-in where ownership is
+  what the test is about.
+- **`UiCharacter.character_id` is the `EveCharacter` pk**, not the EVE id.
+  Compare with `character__character_id`; the dropdown's "selected" was
+  lost that way once.
+- **AA's `open_api_provider` only knows its own operation list** - any
+  other ESI call needs `eos_tax.providers.esi` with the operation added to
+  its `operations`.
 
 - **`makemessages` from `eos_tax/` goes through the instance's
   `manage.py` by path**: `cd eos_tax && ~/aa-dev/venv/bin/python
