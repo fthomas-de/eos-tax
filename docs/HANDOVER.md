@@ -4,13 +4,17 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-13 (0.4.23).
+Last updated 2026-11-13 (0.4.24).
 
 ## Release
 
-- Version **0.4.23** in `eos_tax/__init__.py`, released 2026-11-13, tag
-  `v0.4.23`
-- `[0.4.23]` in `CHANGELOG.md`: a sixth bots tab "Possibly banned" -
+- Version **0.4.24** in `eos_tax/__init__.py`, released 2026-11-13, tag
+  `v0.4.24`
+- `[0.4.24]` in `CHANGELOG.md`: Simplified Chinese (`zh_Hans`), the
+  seventh catalogue, so eos-tax and eos-invoices ship the same languages.
+  No code change; `test_translations.py` knows the new locale. Decisions
+  below
+- `[0.4.23]`: a sixth bots tab "Possibly banned" -
   characters any of the four readings showed in a stored month whose last
   corptools login is at least `possibly_banned_min_days` (default 30,
   migration 0037) ago, grouped by main, with the months listed. Where it
@@ -75,10 +79,29 @@ Last updated 2026-11-13 (0.4.23).
 - All seven catalogues (`de`, `es`, `fr_FR`, `it_IT`, `ko_KR`, `ru`,
   `zh_Hans`) are complete: `msgfmt --check` clean, nothing fuzzy or empty,
   `.mo` newer than `.po`. `ratter` is paraphrased in es/fr/it/ko/ru/zh and
-  kept literal in de. `zh_Hans` is new and unreleased (`[Unreleased]`),
-  machine-translated, not read by a native speaker, not looked at in a
-  browser
+  kept literal in de. `zh_Hans` (0.4.24) is machine-translated, not read by
+  a native speaker, not looked at in a browser
 - `CHANGELOG.md` is newest first
+
+## Decisions of the 2026-11-13 session (0.4.24)
+
+Simplified Chinese - the user's choices unless marked:
+
+- **eos-tax and eos-invoices ship the same languages**: eos-tax got
+  `zh_Hans`, eos-invoices gets es, fr_FR, it_IT, ko_KR in a session of its
+  own (that repo, not this one).
+- **Translated the way the other six are**: by hand in the `.po` (no
+  glossary tool here), EVE jargon English, `ratter` paraphrased (刷怪玩家).
+- **Alliance Auth's clashes accepted**: the bare column titles Alliance,
+  Character and Corporation show AA's 所在联盟 / 角色 / 公司 on a Chinese page,
+  as German shows "Allianz". A `msgctxt` would fix it in all seven
+  catalogues - offered, not chosen.
+- Claude's calls: terms taken from eos-invoices' `tools/glossary.py`
+  (概览, 已付, 设置 ...); payout = 发放, run = 连续段, yardstick = 参照基准,
+  reading = 判读, journal = 流水, Bots = 机器人, audit = 审计; the jargon test
+  rejects 赏金, 公司, 军团, 联盟, 原因, 钱包, 角色; the language test uses
+  如何缴税？ because 概览 also comes from eos-invoices (caught by removing the
+  `.mo`, both new checks failed once the word was changed).
 
 ## Decisions of the 2026-11-13 session (0.4.23)
 
@@ -513,6 +536,11 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
+0000000. **On deploying 0.4.24**: nothing to migrate or restart - only the
+   catalogues changed. Open one page with the browser set to Simplified
+   Chinese (overview, bots, settings): the Chinese has never been rendered
+   or read by a native speaker. A Chinese-speaking member's corrections go
+   straight into `locale/zh_Hans/LC_MESSAGES/django.po`.
 000000. **On deploying 0.4.23: migration 0037** before the settings page
    or the bots page loads (both read `possibly_banned_min_days`); no
    Celery change. Then open "Possibly banned" once on production data:
