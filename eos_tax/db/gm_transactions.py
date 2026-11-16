@@ -473,6 +473,19 @@ def gm_listed_character_ids():
     return {row["character_id"] for row in transactions} | set(_negative_balances())
 
 
+def gm_x_character_ids(stored):
+    """The characters with a GM X booking in a stored report (a GmReport or
+    None). Either side counts: a GM taking ISK back books "between GM X and
+    <character>"."""
+    transactions = stored.report["transactions"] if stored else []
+
+    return {
+        row["character_id"]
+        for row in transactions
+        if FLAGGED_PARTY in _parties(row["description"])
+    }
+
+
 def account_character_ids(character_id):
     """Every character on the same Alliance Auth account; a character nobody
     registered is an account of its own, as in find_account_in_alliance."""

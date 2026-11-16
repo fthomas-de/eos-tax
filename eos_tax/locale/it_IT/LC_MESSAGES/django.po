@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 14:17+0000\n"
+"POT-Creation-Date: 2026-11-16 09:25+0000\n"
 "Language: it-IT\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1297,30 +1297,41 @@ msgstr[1] "%(counter)s senza audit aggiornato"
 #: templates/eos_tax/partials/bot-banned.html:5
 #, python-format
 msgid ""
-"Characters shown on one of the four lists in any stored month whose last "
-"login is at least %(min_days)s days ago. Not limited to the selected month; "
-"the number of days lives on the settings page."
+"Characters shown on one of the four lists in any stored month, or with a GM "
+"X booking on GM Transactions, whose last login is at least %(min_days)s days "
+"ago. Not limited to the selected month; the number of days lives on the "
+"settings page."
 msgstr ""
 "Character comparsi in una delle quattro liste in un qualsiasi mese salvato "
-"il cui ultimo accesso risale ad almeno %(min_days)s giorni fa. Non limitato "
+"o con una transazione con GM X su GM Transactions, il cui ultimo accesso risale ad almeno %(min_days)s giorni fa. Non limitato "
 "al mese selezionato; il numero di giorni è nella pagina delle impostazioni."
 
 #: templates/eos_tax/partials/bot-banned.html:24
 msgid "Listed in"
 msgstr "Elencato in"
 
-#: templates/eos_tax/partials/bot-banned.html:52
-msgid "Every character the lists have shown has logged in since."
-msgstr "Ogni character mostrato dalle liste ha effettuato l'accesso da allora."
-
 #: templates/eos_tax/partials/bot-banned.html:57
+msgid ""
+"Every character the lists or a GM X booking have shown has logged in since."
+msgstr ""
+"Ogni character mostrato dalle liste o da una transazione con GM X ha "
+"effettuato l'accesso da allora."
+
+#: templates/eos_tax/partials/bot-banned.html:62
 #, python-format
 msgid "%(counter)s character on the four lists"
 msgid_plural "%(counter)s characters on the four lists"
 msgstr[0] "%(counter)s character nelle quattro liste"
 msgstr[1] "%(counter)s character nelle quattro liste"
 
-#: templates/eos_tax/partials/bot-banned.html:58
+#: templates/eos_tax/partials/bot-banned.html:63
+#, python-format
+msgid "%(counter)s character with a GM X booking"
+msgid_plural "%(counter)s characters with a GM X booking"
+msgstr[0] "%(counter)s character con una transazione con GM X"
+msgstr[1] "%(counter)s character con una transazione con GM X"
+
+#: templates/eos_tax/partials/bot-banned.html:64
 #, python-format
 msgid "%(counter)s without a login since"
 msgid_plural "%(counter)s without a login since"

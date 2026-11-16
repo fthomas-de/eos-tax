@@ -7,7 +7,7 @@ from django.utils import timezone as django_timezone
 
 from eos_tax.db.bot_ban import get_possibly_banned
 from eos_tax.db.bot_store import settings_fingerprint
-from eos_tax.models import BotReport, TaxConfiguration
+from eos_tax.models import BotReport, GmReport, TaxConfiguration
 from eos_tax.tests.base import EosTaxTestCase
 
 from .factories import (
@@ -48,6 +48,24 @@ def _store(year, month, signal, *rows, listed=True, fingerprint="any"):
         fingerprint=fingerprint,
         computed_at=COMPUTED_AT,
     )
+
+
+def _gm(*bookings):
+    """The stored GM report, reduced to what this tab reads: (character_id,
+    description) per booking."""
+    GmReport.objects.create(
+        pk=1,
+        report={"transactions": [
+            {"character_id": character_id, "description": description}
+            for character_id, description in bookings
+        ]},
+        computed_at=COMPUTED_AT,
+    )
+
+
+GM_X = "GM [16519715] issued transaction between Pilot and GM X"
+GM_X_FIRST = "GM [16519715] issued transaction between GM X and Pilot"
+BANK = "GM [31365906] issued transaction between Pilot and EVE Central Bank"
 
 
 def _logged_in(character_id, days_ago, name=None):
@@ -149,6 +167,67 @@ class TestPossiblyBanned(EosTaxTestCase):
         )
 
 
+class TestGmX(EosTaxTestCase):
+    """A GM X booking puts a quiet character on the tab without any list -
+    the user's choice."""
+
+    def rows(self):
+        return {
+            row["character_id"]: row
+            for group in get_possibly_banned(30)["groups"]
+            for row in group["characters"]
+        }
+
+    def test_should_list_a_quiet_character_with_a_gm_x_booking(self):
+        _gm((RATTER_ID, GM_X))
+        _logged_in(RATTER_ID, 45, name="Busy Ratter")
+
+        row = self.rows()[RATTER_ID]
+
+        self.assertTrue(row["gm"])
+        self.assertEqual(row["months"], [])
+        # the GM report stores no name
+        self.assertEqual(row["character_name"], "Busy Ratter")
+        self.assertEqual(row["corporation_name"], "Bravo Corp")
+
+    def test_should_count_gm_x_on_either_side(self):
+        _gm((RATTER_ID, GM_X_FIRST))
+        _logged_in(RATTER_ID, 45)
+
+        self.assertIn(RATTER_ID, self.rows())
+
+    def test_should_ignore_another_counterparty(self):
+        _gm((RATTER_ID, BANK))
+        _logged_in(RATTER_ID, 45)
+
+        self.assertEqual(self.rows(), {})
+
+    def test_should_leave_out_a_gm_x_character_who_logged_in_since(self):
+        _gm((RATTER_ID, GM_X))
+        _logged_in(RATTER_ID, 29)
+
+        self.assertEqual(self.rows(), {})
+
+    def test_should_keep_the_months_of_a_listed_character(self):
+        _store(YEAR, MONTH, "hours", _row(RATTER_ID))
+        _gm((RATTER_ID, GM_X))
+        _logged_in(RATTER_ID, 45)
+
+        row = self.rows()[RATTER_ID]
+
+        self.assertEqual(row["months"], [f"{YEAR}-{MONTH:02d}"])
+        self.assertTrue(row["gm"])
+        self.assertEqual(row["character_name"], f"Pilot {RATTER_ID}")
+
+    def test_should_count_lists_and_gm_x_apart(self):
+        _store(YEAR, MONTH, "hours", _row(RATTER_ID))
+        _gm((RATTER_ID, GM_X), (CASUAL_ID, GM_X), (CASUAL_ID, BANK))
+
+        stats = get_possibly_banned(30)["stats"]
+
+        self.assertEqual((stats["flagged_characters"], stats["gm_characters"]), (1, 2))
+
+
 class TestTheSetting(EosTaxTestCase):
     def test_should_default_to_thirty_days(self):
         self.assertEqual(
@@ -203,6 +282,17 @@ class TestBannedTab(EosTaxTestCase):
 
         self.assertContains(response, f"Pilot {RATTER_ID}")
         self.assertContains(response, "at least 10 days ago")
+
+    def test_should_link_a_gm_x_character_to_gm_transactions(self):
+        _gm((RATTER_ID, GM_X))
+        _logged_in(RATTER_ID, 45, name="Busy Ratter")
+
+        response = self.fetch()
+
+        self.assertContains(
+            response,
+            f'{reverse("eos_tax:gm_transactions")}?search=%22Busy%20Ratter%22">GM</a>',
+        )
 
     def test_should_say_so_when_nobody_has_gone_quiet(self):
         self.assertContains(self.fetch(), "has logged in since")

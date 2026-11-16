@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.25] - 2026-11-16
+
+### Changed
+
+- "Possibly banned" also lists a character with a booking with GM X in the
+  stored GM report, whether or not one of the four lists ever showed it,
+  once its last login is past the same number of days. A GM taking ISK off
+  a character is a ban's usual trace, and a banned character that never
+  ratted enough to be listed stayed invisible. GM X only, on either side
+  of the description - a GM taking ISK back books "between GM X and
+  <character>" - not EVE Central Bank and not a wallet below zero; a row
+  ticked as cleared still counts. Such a character gets a red "GM" badge
+  in "Listed in", linking to GM Transactions searched for its main, and
+  the footer counts the GM X characters apart from the listed ones. The
+  GM report stores no names, so these take theirs from Alliance Auth.
+
 ## [0.4.24] - 2026-11-13
 
 ### Added

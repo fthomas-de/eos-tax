@@ -8,13 +8,18 @@ from django.utils import timezone
 from allianceauth.eveonline.models import EveCharacter
 
 from eos_tax.db.bot_store import READINGS
+from eos_tax.db.gm_transactions import gm_x_character_ids
 from eos_tax.db.shared import grouped
-from eos_tax.models import BotReport
+from eos_tax.models import BotReport, GmReport
 
 
 def get_possibly_banned(min_days: int):
-    """Characters on any stored month of the four lists whose last login is
-    at least `min_days` ago, grouped by main.
+    """Characters on any stored month of the four lists, or with a GM X
+    booking in the stored GM report, whose last login is at least `min_days`
+    ago, grouped by main.
+
+    GM X only, not every GM counterparty and not a wallet below zero - the
+    user's choice; a cleared GM row still counts.
 
     "On a list" is whatever a tab showed, the fallback list of a month where
     nobody crossed a threshold included - the user's choice. Every stored
@@ -46,6 +51,21 @@ def get_possibly_banned(min_days: int):
                 # newest first by the query's order; four tabs of one month once
                 if label not in entry["months"]:
                     entry["months"].append(label)
+    on_lists = len(flagged)
+
+    stored_gm = GmReport.objects.filter(pk=1).first()
+    gm_ids = gm_x_character_ids(stored_gm)
+    if gm_ids:
+        computed_at = max(computed_at or stored_gm.computed_at, stored_gm.computed_at)
+    for character_id in gm_ids:
+        flagged.setdefault(character_id, {
+            "character_id": character_id,
+            # the GM report stores no names; filled in from EveCharacter below
+            "character_name": "",
+            "corporation_name": "",
+            "level": None,
+            "months": [],
+        })["gm"] = True
 
     cutoff = timezone.now() - timedelta(days=min_days)
     logins = dict(
@@ -55,19 +75,23 @@ def get_possibly_banned(min_days: int):
     )
     # the Corporation now, not when the list was stored: a banned character's
     # affiliation is still updated
-    corporations = dict(
-        EveCharacter.objects.filter(character_id__in=logins)
-        .values_list("character_id", "corporation_name")
-    )
+    characters = {
+        character_id: (name, corporation)
+        for character_id, name, corporation in EveCharacter.objects.filter(
+            character_id__in=logins
+        ).values_list("character_id", "character_name", "corporation_name")
+    }
 
     rows = sorted(
         (
             {
                 **flagged[character_id],
                 "last_login": login,
-                "corporation_name": corporations.get(
-                    character_id, flagged[character_id]["corporation_name"]
-                ),
+                "character_name": flagged[character_id]["character_name"]
+                or characters.get(character_id, ("",))[0],
+                "corporation_name": characters.get(
+                    character_id, (None, flagged[character_id]["corporation_name"])
+                )[1],
             }
             for character_id, login in logins.items()
         ),
@@ -82,7 +106,8 @@ def get_possibly_banned(min_days: int):
         "listed": bool(rows),
         "groups": groups,
         "stats": {
-            "flagged_characters": len(flagged),
+            "flagged_characters": on_lists,
+            "gm_characters": len(gm_ids),
             "quiet_characters": len(rows),
             "groups_total": total,
         },

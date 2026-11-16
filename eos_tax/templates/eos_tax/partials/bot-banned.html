@@ -2,7 +2,7 @@
 
 {# here and not in bots.html: bots.js replaces the whole pane with this #}
 <p class="text-body-secondary small">
-    {% blocktranslate %}Characters shown on one of the four lists in any stored month whose last login is at least {{ min_days }} days ago. Not limited to the selected month; the number of days lives on the settings page.{% endblocktranslate %}
+    {% blocktranslate %}Characters shown on one of the four lists in any stored month, or with a GM X booking on GM Transactions, whose last login is at least {{ min_days }} days ago. Not limited to the selected month; the number of days lives on the settings page.{% endblocktranslate %}
 </p>
 
 {% if groups %}
@@ -40,6 +40,11 @@
                                 <a class="badge text-bg-secondary text-decoration-none"
                                    href="{% url 'eos_tax:bots' %}?month={{ month }}">{{ month }}</a>
                             {% endfor %}
+                            {% if row.gm %}
+                                {# quoted like eos-auth-monitor's link: the main, and its alts with it #}
+                                <a class="badge text-bg-danger text-decoration-none"
+                                   href="{% url 'eos_tax:gm_transactions' %}?search=%22{{ group.main_name|urlencode:'' }}%22">GM</a>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -49,12 +54,13 @@
     </div>
 {% else %}
     <div class="alert alert-success text-center">
-        {% translate "Every character the lists have shown has logged in since." %}
+        {% translate "Every character the lists or a GM X booking have shown has logged in since." %}
     </div>
 {% endif %}
 
 <div class="d-flex flex-wrap gap-3 small mt-4 pt-3 border-top text-body-secondary">
     <span>{% blocktranslate count counter=stats.flagged_characters %}{{ counter }} character on the four lists{% plural %}{{ counter }} characters on the four lists{% endblocktranslate %}</span>
+    <span>{% blocktranslate count counter=stats.gm_characters %}{{ counter }} character with a GM X booking{% plural %}{{ counter }} characters with a GM X booking{% endblocktranslate %}</span>
     <span>{% blocktranslate count counter=stats.quiet_characters %}{{ counter }} without a login since{% plural %}{{ counter }} without a login since{% endblocktranslate %}</span>
     <span class="ms-auto">{% include "eos_tax/partials/bot-computed-at.html" %}</span>
 </div>

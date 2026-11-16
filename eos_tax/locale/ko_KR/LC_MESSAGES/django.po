@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 14:17+0000\n"
+"POT-Creation-Date: 2026-11-16 09:25+0000\n"
 "Language: ko-KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -158,8 +158,8 @@ msgid ""
 "A character once shown on one of the four bots lists is listed under "
 "Possibly banned when its last login is at least this many days ago."
 msgstr ""
-"네 개의 봇 목록 중 하나에 한 번이라도 표시된 character는 마지막 로그인이 "
-"최소 이 일수 이전이면 밴 가능성 아래에 표시됩니다."
+"네 개의 봇 목록 중 하나에 한 번이라도 표시된 character는 마지막 로그인이 최"
+"소 이 일수 이전이면 밴 가능성 아래에 표시됩니다."
 
 #: models.py:141
 msgid "Shortest run listed"
@@ -1241,29 +1241,38 @@ msgstr[0] "최신 감사 없음 %(counter)s명"
 #: templates/eos_tax/partials/bot-banned.html:5
 #, python-format
 msgid ""
-"Characters shown on one of the four lists in any stored month whose last "
-"login is at least %(min_days)s days ago. Not limited to the selected month; "
-"the number of days lives on the settings page."
+"Characters shown on one of the four lists in any stored month, or with a GM "
+"X booking on GM Transactions, whose last login is at least %(min_days)s days "
+"ago. Not limited to the selected month; the number of days lives on the "
+"settings page."
 msgstr ""
-"저장된 어느 달이든 네 개의 목록 중 하나에 표시되었고 마지막 로그인이 최소 "
-"%(min_days)s일 전인 character입니다. 선택한 달에 한정되지 않으며, 일수는 "
-"설정 페이지에 있습니다."
+"저장된 어느 달이든 네 개의 목록 중 하나에 표시되었거나 GM Transactions에 "
+"GM X와의 거래가 있고, 마지막 로그인이 최소 "
+"%(min_days)s일 전인 character입니다. 선택한 달에 한정되지 않으며, 일수는 설"
+"정 페이지에 있습니다."
 
 #: templates/eos_tax/partials/bot-banned.html:24
 msgid "Listed in"
 msgstr "표시된 달"
 
-#: templates/eos_tax/partials/bot-banned.html:52
-msgid "Every character the lists have shown has logged in since."
-msgstr "목록에 표시된 모든 character가 그 이후 로그인했습니다."
-
 #: templates/eos_tax/partials/bot-banned.html:57
+msgid ""
+"Every character the lists or a GM X booking have shown has logged in since."
+msgstr "목록 또는 GM X와의 거래로 표시된 모든 character가 그 이후 로그인했습니다."
+
+#: templates/eos_tax/partials/bot-banned.html:62
 #, python-format
 msgid "%(counter)s character on the four lists"
 msgid_plural "%(counter)s characters on the four lists"
 msgstr[0] "네 목록의 character %(counter)s명"
 
-#: templates/eos_tax/partials/bot-banned.html:58
+#: templates/eos_tax/partials/bot-banned.html:63
+#, python-format
+msgid "%(counter)s character with a GM X booking"
+msgid_plural "%(counter)s characters with a GM X booking"
+msgstr[0] "GM X와의 거래가 있는 character %(counter)s명"
+
+#: templates/eos_tax/partials/bot-banned.html:64
 #, python-format
 msgid "%(counter)s without a login since"
 msgid_plural "%(counter)s without a login since"

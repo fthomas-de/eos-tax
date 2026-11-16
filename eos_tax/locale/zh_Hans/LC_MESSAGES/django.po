@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-13 14:32+0000\n"
+"POT-Creation-Date: 2026-11-16 09:25+0000\n"
 "Language: zh-Hans\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -27,7 +27,8 @@ msgstr "基础税率 (%)"
 msgid ""
 "Corporations of the taxed alliances. Excluding any other corporation would "
 "change nothing."
-msgstr "被征税 Alliance 的 Corporation。排除任何其他 Corporation 都不会有任何变化。"
+msgstr ""
+"被征税 Alliance 的 Corporation。排除任何其他 Corporation 都不会有任何变化。"
 
 #: forms.py:137
 msgid "Base rate, used for months before the first scheduled change below."
@@ -86,15 +87,16 @@ msgstr "计为 PvE 收入的 wallet 流水 ref_type，例如 bounty_prizes。"
 
 #: models.py:85
 msgid ""
-"Match payments by their reason code instead of by amount alone. With it every"
-" payment carrying the code counts, so a corporation can pay in parts, and "
-"paying more than it owes is recorded. Without it a payment is recognised by "
-"its exact amount only, so two corporations owing the same sum, or one "
+"Match payments by their reason code instead of by amount alone. With it "
+"every payment carrying the code counts, so a corporation can pay in parts, "
+"and paying more than it owes is recorded. Without it a payment is recognised "
+"by its exact amount only, so two corporations owing the same sum, or one "
 "corporation owing the same sum twice, cannot be told apart."
 msgstr ""
-"按 Reason 代码而不仅按金额匹配付款。启用后，每笔带有该代码的付款都会计入，因此 Corporation "
-"可以分批付款，多付的金额也会被记录。未启用时，只能按精确金额识别付款，因此两个应付相同金额的 Corporation，或一个 Corporation "
-"两次应付相同金额，将无法区分。"
+"按 Reason 代码而不仅按金额匹配付款。启用后，每笔带有该代码的付款都会计入，因"
+"此 Corporation 可以分批付款，多付的金额也会被记录。未启用时，只能按精确金额识"
+"别付款，因此两个应付相同金额的 Corporation，或一个 Corporation 两次应付相同金"
+"额，将无法区分。"
 
 #: models.py:94
 msgid "Income that needs a wallet audit (million ISK)"
@@ -104,12 +106,13 @@ msgstr "需要 wallet 审计的收入（百万 ISK）"
 msgid ""
 "A character whose bounties reach the corporation wallet but not through a "
 "member wallet is listed on the overview once this much gross income a month "
-"is backed out of the corporation's slice. Without the member wallet a stretch"
-" without ingame tax cannot be seen for that character."
+"is backed out of the corporation's slice. Without the member wallet a "
+"stretch without ingame tax cannot be seen for that character."
 msgstr ""
-"如果某个 Character 的 bounty 进入了 Corporation wallet，但没有经过成员 wallet，那么一旦从 "
-"Corporation 的份额反推出的月度总收入达到此数值，就会在概览中列出该 Character。没有成员 wallet，就无法看出该 "
-"Character 在某段时间内是否没有游戏内税。"
+"如果某个 Character 的 bounty 进入了 Corporation wallet，但没有经过成员 "
+"wallet，那么一旦从 Corporation 的份额反推出的月度总收入达到此数值，就会在概览"
+"中列出该 Character。没有成员 wallet，就无法看出该 Character 在某段时间内是否"
+"没有游戏内税。"
 
 #: models.py:106
 msgid "Smallest payment difference worth flagging (million ISK)"
@@ -117,10 +120,12 @@ msgstr "值得标记的最小付款差额（百万 ISK）"
 
 #: models.py:110
 msgid ""
-"A payment at least this much above or below the amount owed gets a badge next"
-" to the amount paid on the overview; a smaller difference is shown without "
-"one. 0 flags every difference."
-msgstr "付款比应付金额多或少至少此数值时，概览中实付金额旁会显示标记；较小的差额不显示标记。0 表示标记所有差额。"
+"A payment at least this much above or below the amount owed gets a badge "
+"next to the amount paid on the overview; a smaller difference is shown "
+"without one. 0 flags every difference."
+msgstr ""
+"付款比应付金额多或少至少此数值时，概览中实付金额旁会显示标记；较小的差额不显"
+"示标记。0 表示标记所有差额。"
 
 #: models.py:116
 msgid "Smallest move worth listing"
@@ -128,12 +133,12 @@ msgstr "值得列出的最小变动"
 
 #: models.py:123
 msgid ""
-"In percentage points of the share of the bounty that reaches the corporation."
-" A move smaller than this is not listed, and days within it count as one "
-"level. Nine percent to ten is one point."
+"In percentage points of the share of the bounty that reaches the "
+"corporation. A move smaller than this is not listed, and days within it "
+"count as one level. Nine percent to ten is one point."
 msgstr ""
-"以进入 Corporation 的 bounty "
-"份额的百分点计。小于此值的变动不会列出，处于此范围内的天数视为同一水平。从百分之九到百分之十为一个百分点。"
+"以进入 Corporation 的 bounty 份额的百分点计。小于此值的变动不会列出，处于此范"
+"围内的天数视为同一水平。从百分之九到百分之十为一个百分点。"
 
 #: models.py:131
 msgid "Days without a login"
@@ -141,9 +146,11 @@ msgstr "未登录天数"
 
 #: models.py:135
 msgid ""
-"A character once shown on one of the four bots lists is listed under Possibly"
-" banned when its last login is at least this many days ago."
-msgstr "曾出现在四个机器人列表之一中的 Character，若最后一次登录距今至少这么多天，就会列在“可能已被封禁”下。"
+"A character once shown on one of the four bots lists is listed under "
+"Possibly banned when its last login is at least this many days ago."
+msgstr ""
+"曾出现在四个机器人列表之一中的 Character，若最后一次登录距今至少这么多天，就"
+"会列在“可能已被封禁”下。"
 
 #: models.py:141
 msgid "Shortest run listed"
@@ -154,7 +161,9 @@ msgid ""
 "How many payouts in a row a character has to collect without a break before "
 "the run is listed. The game pays a ratter about every twenty minutes, so "
 "eighteen is roughly six hours."
-msgstr "Character 必须不间断地连续领取多少次发放，该连续段才会被列出。游戏大约每二十分钟向刷怪玩家发放一次，因此十八次约为六小时。"
+msgstr ""
+"Character 必须不间断地连续领取多少次发放，该连续段才会被列出。游戏大约每二十"
+"分钟向刷怪玩家发放一次，因此十八次约为六小时。"
 
 #: models.py:151
 msgid "Interruptions allowed"
@@ -166,7 +175,8 @@ msgid ""
 "would otherwise cut every long night in two. Only a break under an hour can "
 "be forgiven; a longer one always ends the run."
 msgstr ""
-"一个连续段最多可包含多少次中断仍算作一个。否则每日停机维护会把每个漫长的夜晚切成两段。只有不到一小时的中断可以被容忍；更长的中断总会结束连续段。"
+"一个连续段最多可包含多少次中断仍算作一个。否则每日停机维护会把每个漫长的夜晚"
+"切成两段。只有不到一小时的中断可以被容忍；更长的中断总会结束连续段。"
 
 #: models.py:162
 msgid "Longest gap that still counts as the same tick"
@@ -174,10 +184,12 @@ msgstr "仍算作同一发放周期的最长间隔"
 
 #: models.py:166
 msgid ""
-"In minutes. The game pays about every twenty minutes and the tick slips, so a"
-" little more than twenty leaves room for that without calling an unbroken "
+"In minutes. The game pays about every twenty minutes and the tick slips, so "
+"a little more than twenty leaves room for that without calling an unbroken "
 "stretch broken."
-msgstr "以分钟计。游戏大约每二十分钟发放一次，且周期会有偏移，因此略多于二十分钟可以留出余量，不会把不间断的时段误判为中断。"
+msgstr ""
+"以分钟计。游戏大约每二十分钟发放一次，且周期会有偏移，因此略多于二十分钟可以"
+"留出余量，不会把不间断的时段误判为中断。"
 
 #: models.py:172
 msgid "Longest break a run can survive"
@@ -188,7 +200,9 @@ msgid ""
 "In minutes. A break longer than this ends the run whatever the allowance "
 "above says. Without a ceiling one allowance would weld a morning and an "
 "evening into a single twelve hour run."
-msgstr "以分钟计。超过此长度的中断会结束连续段，无论上方允许次数如何。如果没有上限，一次允许就可能把上午和晚上拼成一个十二小时的连续段。"
+msgstr ""
+"以分钟计。超过此长度的中断会结束连续段，无论上方允许次数如何。如果没有上限，"
+"一次允许就可能把上午和晚上拼成一个十二小时的连续段。"
 
 #: models.py:182
 msgid "Length of the busy window"
@@ -196,11 +210,12 @@ msgstr "繁忙时段的长度"
 
 #: models.py:186
 msgid ""
-"How many hours of the day count as the corporation's busy window. A character"
-" spread evenly over the clock lands on this share of any window, which is the"
-" floor the score measures down to."
+"How many hours of the day count as the corporation's busy window. A "
+"character spread evenly over the clock lands on this share of any window, "
+"which is the floor the score measures down to."
 msgstr ""
-"一天中有多少小时算作 Corporation 的繁忙时段。一个在全天均匀分布的 Character 在任何时段中都会占到这一份额，这就是评分所衡量的下限。"
+"一天中有多少小时算作 Corporation 的繁忙时段。一个在全天均匀分布的 Character "
+"在任何时段中都会占到这一份额，这就是评分所衡量的下限。"
 
 #: models.py:192 models.py:266
 msgid "Smallest character worth reading"
@@ -210,7 +225,9 @@ msgstr "值得判读的最小 Character"
 msgid ""
 "Below this many payouts in the month a character has too little of a day to "
 "describe, and is left out of this reading."
-msgstr "当月发放次数低于此值的 Character，其一天的数据太少，无法描述，不参与此项判读。"
+msgstr ""
+"当月发放次数低于此值的 Character，其一天的数据太少，无法描述，不参与此项判"
+"读。"
 
 #: models.py:201 models.py:275
 msgid "Smallest usable yardstick"
@@ -222,8 +239,8 @@ msgid ""
 "are taken out. Below this there is no rhythm to compare against, only noise, "
 "and the character is not scored."
 msgstr ""
-"去掉该 Character 自己的发放后，Corporation 中至少还要剩下多少次发放。低于此值就没有可比较的节奏，只有噪声，该 Character "
-"不会被评分。"
+"去掉该 Character 自己的发放后，Corporation 中至少还要剩下多少次发放。低于此值"
+"就没有可比较的节奏，只有噪声，该 Character 不会被评分。"
 
 #: models.py:211 models.py:245
 msgid "Leave flagged characters out of the yardstick"
@@ -231,14 +248,15 @@ msgstr "将已标记的 Character 排除在参照基准之外"
 
 #: models.py:214
 msgid ""
-"A character flat enough to be listed is also part of their corporation's day,"
-" and drags it flat with them - which makes everybody else look ordinary. With"
-" this on the reading runs twice: once to find them, once with them taken out."
-" A corporation that would fall below the floor above keeps the plain figure."
+"A character flat enough to be listed is also part of their corporation's "
+"day, and drags it flat with them - which makes everybody else look ordinary. "
+"With this on the reading runs twice: once to find them, once with them taken "
+"out. A corporation that would fall below the floor above keeps the plain "
+"figure."
 msgstr ""
-"分布平坦到足以被列出的 Character 也是其 Corporation "
-"一天的一部分，会把整体一起拉平——这会让其他人看起来都很普通。启用后，判读会运行两次：一次找出他们，一次把他们排除在外。会因此低于上方下限的 "
-"Corporation 保留原始数值。"
+"分布平坦到足以被列出的 Character 也是其 Corporation 一天的一部分，会把整体一"
+"起拉平——这会让其他人看起来都很普通。启用后，判读会运行两次：一次找出他们，一"
+"次把他们排除在外。会因此低于上方下限的 Corporation 保留原始数值。"
 
 #: models.py:223
 msgid "Smallest difference listed"
@@ -251,8 +269,9 @@ msgid ""
 "means more concentrated than the corporation, which is the opposite of what "
 "this looks for, so those are never listed whatever this says."
 msgstr ""
-"以百分点计。Character 必须比其 Corporation 的其他成员平坦多少，列表才会提到他们。负差异表示比 Corporation "
-"更集中，这与所要寻找的相反，因此无论此处如何设置都不会列出。"
+"以百分点计。Character 必须比其 Corporation 的其他成员平坦多少，列表才会提到他"
+"们。负差异表示比 Corporation 更集中，这与所要寻找的相反，因此无论此处如何设置"
+"都不会列出。"
 
 #: models.py:235
 msgid "Distance counted as a full deviation"
@@ -263,7 +282,9 @@ msgid ""
 "In hours. Twelve is as far apart as two times of day can be, so the default "
 "treats the whole clock as the scale. A smaller value makes the colouring "
 "reach red sooner."
-msgstr "以小时计。十二小时是一天中两个时刻能相隔的最远距离，因此默认值把整个时钟作为刻度。较小的值会让颜色更早变红。"
+msgstr ""
+"以小时计。十二小时是一天中两个时刻能相隔的最远距离，因此默认值把整个时钟作为"
+"刻度。较小的值会让颜色更早变红。"
 
 #: models.py:248
 msgid ""
@@ -271,8 +292,8 @@ msgid ""
 "be listed also pulls the corporation's own middle of the day towards "
 "themselves, which shortens everybody else's distance."
 msgstr ""
-"此项判读同理：离其 Corporation 足够远而被列出的 Character，也会把 Corporation "
-"自身一天的中心拉向自己，从而缩短其他所有人的距离。"
+"此项判读同理：离其 Corporation 足够远而被列出的 Character，也会把 "
+"Corporation 自身一天的中心拉向自己，从而缩短其他所有人的距离。"
 
 #: models.py:255
 msgid "Smallest distance listed"
@@ -285,20 +306,25 @@ msgid ""
 "stops calling a distance unremarkable, so a threshold under that lets green "
 "rows into the list."
 msgstr ""
-"以小时计。Character 的一天与其 Corporation "
-"相距多远，列表才会提到他们。上方刻度的三分之一是颜色不再把距离视为普通的位置，因此低于该值的阈值会让绿色行进入列表。"
+"以小时计。Character 的一天与其 Corporation 相距多远，列表才会提到他们。上方刻"
+"度的三分之一是颜色不再把距离视为普通的位置，因此低于该值的阈值会让绿色行进入"
+"列表。"
 
 #: models.py:270
 msgid ""
 "Below this many payouts in the month the middle of a character's day is "
 "wherever the noise landed, so they are left out."
-msgstr "当月发放次数低于此值时，Character 一天的中心只取决于噪声落在哪里，因此不参与判读。"
+msgstr ""
+"当月发放次数低于此值时，Character 一天的中心只取决于噪声落在哪里，因此不参与"
+"判读。"
 
 #: models.py:279
 msgid ""
 "How many payouts have to be left in the corporation once the character's own "
 "are taken out, before its middle of the day is worth comparing against."
-msgstr "去掉该 Character 自己的发放后，Corporation 中至少还要剩下多少次发放，其一天的中心才值得比较。"
+msgstr ""
+"去掉该 Character 自己的发放后，Corporation 中至少还要剩下多少次发放，其一天的"
+"中心才值得比较。"
 
 #: models.py:285
 msgid "Least concentrated day with a middle"
@@ -310,12 +336,13 @@ msgid ""
 "before that day has a middle: 100 when all of them fall into one hour, 0 for "
 "a day spread perfectly evenly. A day spread evenly over twelve hours comes "
 "out at 64, over sixteen at 42, over twenty at 19. Below this - for the "
-"character or the rest of their corporation - the middle would be wherever the"
-" rounding put it, so the character is left out of this reading."
+"character or the rest of their corporation - the middle would be wherever "
+"the rounding put it, so the character is left out of this reading."
 msgstr ""
-"以百分比计。发放需要多紧密地聚集在一天中的某个时刻，这一天才有中心：全部落在同一小时内为 100，完全均匀分布为 0。均匀分布在十二小时内的一天为 "
-"64，十六小时为 42，二十小时为 19。低于此值时——无论是 Character 还是其 Corporation "
-"的其他成员——中心只取决于取整落在哪里，因此该 Character 不参与此项判读。"
+"以百分比计。发放需要多紧密地聚集在一天中的某个时刻，这一天才有中心：全部落在"
+"同一小时内为 100，完全均匀分布为 0。均匀分布在十二小时内的一天为 64，十六小时"
+"为 42，二十小时为 19。低于此值时——无论是 Character 还是其 Corporation 的其他"
+"成员——中心只取决于取整落在哪里，因此该 Character 不参与此项判读。"
 
 #: models.py:299
 msgid "Entries before an hour counts as active"
@@ -324,12 +351,13 @@ msgstr "一小时算作活跃所需的记录数"
 #: models.py:303
 msgid ""
 "A single entry is noise - a stray bounty tick, one ESS payout. The game pays "
-"about every twenty minutes, so an hour of uninterrupted play holds three; two"
-" is deliberately tolerant, because play gets interrupted and a false negative"
-" costs less than accusing a player."
+"about every twenty minutes, so an hour of uninterrupted play holds three; "
+"two is deliberately tolerant, because play gets interrupted and a false "
+"negative costs less than accusing a player."
 msgstr ""
-"单条记录只是噪声——一次零星的 bounty 发放，一次 ESS "
-"发放。游戏大约每二十分钟发放一次，因此一小时不间断的游戏会有三条；设为二是有意放宽，因为游戏会被打断，而漏判的代价低于冤枉一名玩家。"
+"单条记录只是噪声——一次零星的 bounty 发放，一次 ESS 发放。游戏大约每二十分钟发"
+"放一次，因此一小时不间断的游戏会有三条；设为二是有意放宽，因为游戏会被打断，"
+"而漏判的代价低于冤枉一名玩家。"
 
 #: models.py:311
 msgid "Hours in a day before it counts"
@@ -339,7 +367,9 @@ msgstr "一天算数所需的小时数"
 msgid ""
 "A day counts as suspicious when a character earned taxed income in more than "
 "this many different hours of that day."
-msgstr "如果 Character 在某一天中超过此数量的不同小时内获得了应税收入，这一天就算作可疑。"
+msgstr ""
+"如果 Character 在某一天中超过此数量的不同小时内获得了应税收入，这一天就算作可"
+"疑。"
 
 #: models.py:320
 msgid "Days in a month before a character is listed"
@@ -412,7 +442,9 @@ msgstr "适用的 Alliance 税率"
 msgid ""
 "Alliance rate in effect when this row was calculated. Stored per row so "
 "changing the rate does not rewrite what past months were owed."
-msgstr "计算此行时生效的 Alliance 税率。按行存储，因此更改税率不会改写过去月份的应付金额。"
+msgstr ""
+"计算此行时生效的 Alliance 税率。按行存储，因此更改税率不会改写过去月份的应付"
+"金额。"
 
 #: models.py:437
 msgid "Amount to pay"
@@ -425,8 +457,9 @@ msgid ""
 "and kept with them from then on - the page, the chart and the payment check "
 "read it rather than redoing the arithmetic."
 msgstr ""
-"本月应付给 Alliance 的 ISK，以整 ISK 计。每次写入该行时根据 tax_value、tax_percentage 和 "
-"alliance_tax_rate 计算得出，此后与它们一起保存——页面、图表和付款检查都读取此值，而不是重新计算。"
+"本月应付给 Alliance 的 ISK，以整 ISK 计。每次写入该行时根据 tax_value、"
+"tax_percentage 和 alliance_tax_rate 计算得出，此后与它们一起保存——页面、图表"
+"和付款检查都读取此值，而不是重新计算。"
 
 #: models.py:448
 msgid "Amount paid"
@@ -435,11 +468,13 @@ msgstr "实付金额"
 #: models.py:452
 msgid ""
 "ISK the payment check found for this month, in whole ISK: with reason codes "
-"every payment carrying this row's code added up, without them the amount owed"
-" once a payment of exactly that turned up. Empty until a payment was seen."
+"every payment carrying this row's code added up, without them the amount "
+"owed once a payment of exactly that turned up. Empty until a payment was "
+"seen."
 msgstr ""
-"付款检查为本月找到的 ISK，以整 ISK 计：使用 Reason "
-"代码时，为所有带有本行代码的付款之和；不使用时，一旦出现恰好等于应付金额的付款，即为应付金额。在发现付款之前为空。"
+"付款检查为本月找到的 ISK，以整 ISK 计：使用 Reason 代码时，为所有带有本行代码"
+"的付款之和；不使用时，一旦出现恰好等于应付金额的付款，即为应付金额。在发现付"
+"款之前为空。"
 
 #: models.py:460 templates/eos_tax/settings.html:82
 msgid "Payments"
@@ -457,7 +492,9 @@ msgstr "精确付款"
 msgid ""
 "Whether one of the payments was exactly the amount owed, whatever the others "
 "add up to. Set by the payment check along with the amount paid."
-msgstr "是否有一笔付款恰好等于应付金额，无论其他付款加起来是多少。由付款检查与实付金额一起设置。"
+msgstr ""
+"是否有一笔付款恰好等于应付金额，无论其他付款加起来是多少。由付款检查与实付金"
+"额一起设置。"
 
 #: models.py:476
 msgid "Largest payments"
@@ -465,9 +502,12 @@ msgstr "最大的几笔付款"
 
 #: models.py:480
 msgid ""
-"The largest of the payments the amount paid is made of, in whole ISK, highest"
-" first - at most five. Set by the payment check along with the amount paid."
-msgstr "构成实付金额的付款中最大的几笔，以整 ISK 计，从高到低——最多五笔。由付款检查与实付金额一起设置。"
+"The largest of the payments the amount paid is made of, in whole ISK, "
+"highest first - at most five. Set by the payment check along with the amount "
+"paid."
+msgstr ""
+"构成实付金额的付款中最大的几笔，以整 ISK 计，从高到低——最多五笔。由付款检查与"
+"实付金额一起设置。"
 
 #: models.py:487
 msgid "Gross PvE income"
@@ -475,13 +515,14 @@ msgstr "PvE 总收入"
 
 #: models.py:491
 msgid ""
-"Bounties earned this month before any corp tax, in whole ISK: the corporation"
-" wallet reconciled with the member wallets, so a stretch without ingame tax "
-"is counted as well. The amount to pay is worked out from it. Empty on rows "
-"written before it was stored."
+"Bounties earned this month before any corp tax, in whole ISK: the "
+"corporation wallet reconciled with the member wallets, so a stretch without "
+"ingame tax is counted as well. The amount to pay is worked out from it. "
+"Empty on rows written before it was stored."
 msgstr ""
-"本月在扣除任何 Corporation 税之前获得的 bounty，以整 ISK 计：Corporation wallet 与成员 wallet "
-"核对后的结果，因此没有游戏内税的时段也会被计入。应付金额据此计算。在开始存储之前写入的行中为空。"
+"本月在扣除任何 Corporation 税之前获得的 bounty，以整 ISK 计：Corporation "
+"wallet 与成员 wallet 核对后的结果，因此没有游戏内税的时段也会被计入。应付金额"
+"据此计算。在开始存储之前写入的行中为空。"
 
 #: models.py:499 templates/eos_tax/index.html:57
 msgid "Characters without wallet audit"
@@ -493,8 +534,8 @@ msgid ""
 "only, at or above the configured income, as [{id, name, gross}], highest "
 "first."
 msgstr ""
-"本月 bounty 只出现在 Corporation wallet 中、且达到或超过配置收入的 Character，格式为 [{id, name, "
-"gross}]，从高到低。"
+"本月 bounty 只出现在 Corporation wallet 中、且达到或超过配置收入的 "
+"Character，格式为 [{id, name, gross}]，从高到低。"
 
 #: models.py:510 templates/eos_tax/index.html:58
 msgid "Calculation time"
@@ -505,7 +546,9 @@ msgid ""
 "How long the last calculation of this month took, in seconds - reading both "
 "journals, the reconciliation and the payment check. Empty on rows written "
 "before it was stored."
-msgstr "本月上次计算所花的时间，以秒计——读取两份流水、核对以及付款检查。在开始存储之前写入的行中为空。"
+msgstr ""
+"本月上次计算所花的时间，以秒计——读取两份流水、核对以及付款检查。在开始存储之"
+"前写入的行中为空。"
 
 #: models.py:521
 msgid "Payment date"
@@ -516,7 +559,9 @@ msgid ""
 "Journal date of the transfer that settled this month: the one of exactly the "
 "amount owed, or the one that brought the payments up to it. Empty until a "
 "payment settled the row."
-msgstr "结清本月的那笔转账的流水日期：恰好等于应付金额的那笔，或使付款总额达到应付金额的那笔。在付款结清该行之前为空。"
+msgstr ""
+"结清本月的那笔转账的流水日期：恰好等于应付金额的那笔，或使付款总额达到应付金"
+"额的那笔。在付款结清该行之前为空。"
 
 #: models.py:532
 msgid "Recorded as paid"
@@ -526,7 +571,8 @@ msgstr "记录为已付"
 msgid ""
 "When the payment check first marked this month as paid. Empty on rows marked "
 "paid before it was stored."
-msgstr "付款检查首次将本月标记为已付的时间。在开始存储之前就已标记为已付的行中为空。"
+msgstr ""
+"付款检查首次将本月标记为已付的时间。在开始存储之前就已标记为已付的行中为空。"
 
 #: templates/eos_tax/base.html:11
 msgid "Overview"
@@ -593,11 +639,12 @@ msgstr "显示"
 #, python-format
 msgid ""
 "Active hours per day. An hour counts as active once the same taxed\n"
-"                journal type appears in it at least %(min_entries)s times, which is the same rule the\n"
+"                journal type appears in it at least %(min_entries)s times, "
+"which is the same rule the\n"
 "                list uses. Times are EVE time."
 msgstr ""
-"每天的活跃小时数。当同一种应税流水类型在一小时内出现至少 %(min_entries)s 次时，该小时算作活跃，这与列表使用的规则相同。时间为 EVE "
-"时间。"
+"每天的活跃小时数。当同一种应税流水类型在一小时内出现至少 %(min_entries)s 次"
+"时，该小时算作活跃，这与列表使用的规则相同。时间为 EVE 时间。"
 
 #: templates/eos_tax/bot-detail.html:175
 msgid "Active hours per day, calendar weeks as rows and weekdays as columns"
@@ -677,11 +724,12 @@ msgstr "直接打开某个 Character"
 #, python-format
 msgid ""
 "Characters that earned taxed income in more than %(min_hours)s different\n"
-"                hours of a day, on at least %(min_days)s days of the selected month. Both thresholds\n"
+"                hours of a day, on at least %(min_days)s days of the "
+"selected month. Both thresholds\n"
 "                live on the settings page."
 msgstr ""
-"在所选月份中至少 %(min_days)s 天里，在一天内超过 %(min_hours)s 个不同小时获得应税收入的 "
-"Character。两个阈值都在设置页面中。"
+"在所选月份中至少 %(min_days)s 天里，在一天内超过 %(min_hours)s 个不同小时获得"
+"应税收入的 Character。两个阈值都在设置页面中。"
 
 #: templates/eos_tax/bots.html:69
 msgid "Several characters match:"
@@ -697,7 +745,9 @@ msgid ""
 "No character crossed both thresholds. The ten mains with the longest days of "
 "the month are shown instead, so the thresholds can be judged against real "
 "numbers."
-msgstr "没有 Character 同时超过两个阈值。改为显示本月一天最长的十个 Main，以便用真实数字评估阈值。"
+msgstr ""
+"没有 Character 同时超过两个阈值。改为显示本月一天最长的十个 Main，以便用真实"
+"数字评估阈值。"
 
 #: templates/eos_tax/bots.html:99
 msgid "No character crossed both thresholds in this month."
@@ -753,7 +803,8 @@ msgid ""
 "Corporations are read when the page loads."
 msgstr ""
 "在自己的 wallet 流水中有 GM 交易的 Character，以及当前 wallet 余额低于零的 "
-"Character。交易由后台任务在整个流水中查找；wallet 余额、Main 和 Corporation 在页面加载时读取。"
+"Character。交易由后台任务在整个流水中查找；wallet 余额、Main 和 Corporation "
+"在页面加载时读取。"
 
 #: templates/eos_tax/gm-transactions.html:26
 msgid ""
@@ -990,7 +1041,8 @@ msgstr "Reason"
 
 #: templates/eos_tax/index.html:75 templates/eos_tax/index.html:77
 msgid "No ingame corp tax, so nothing reaches the corporation wallet to tax."
-msgstr "没有游戏内 Corporation 税，因此没有可征税的收入进入 Corporation wallet。"
+msgstr ""
+"没有游戏内 Corporation 税，因此没有可征税的收入进入 Corporation wallet。"
 
 #: templates/eos_tax/index.html:94
 #, python-format
@@ -1077,8 +1129,8 @@ msgid ""
 "audit is missing or no longer current. Only the characters those tabs show "
 "are checked, not the rest of the account."
 msgstr ""
-"至少有一个 Character 出现在其他四个标签页中、且其 corptools 审计缺失或已过期的 Main。只检查这些标签页显示的 "
-"Character，而不检查账号中的其他 Character。"
+"至少有一个 Character 出现在其他四个标签页中、且其 corptools 审计缺失或已过期"
+"的 Main。只检查这些标签页显示的 Character，而不检查账号中的其他 Character。"
 
 #: templates/eos_tax/partials/bot-audit.html:22
 msgid "Listed on"
@@ -1160,27 +1212,37 @@ msgstr[0] "%(counter)s 个没有当前有效审计"
 #: templates/eos_tax/partials/bot-banned.html:5
 #, python-format
 msgid ""
-"Characters shown on one of the four lists in any stored month whose last "
-"login is at least %(min_days)s days ago. Not limited to the selected month; "
-"the number of days lives on the settings page."
+"Characters shown on one of the four lists in any stored month, or with a GM "
+"X booking on GM Transactions, whose last login is at least %(min_days)s days "
+"ago. Not limited to the selected month; the number of days lives on the "
+"settings page."
 msgstr ""
-"在任一已存储月份中出现在四个列表之一、且最后一次登录距今至少 %(min_days)s 天的 Character。不限于所选月份；天数在设置页面中设置。"
+"在任一已存储月份中出现在四个列表之一、或在 GM Transactions 中有与 GM X 的交易，"
+"且最后一次登录距今至少 %(min_days)s 天"
+"的 Character。不限于所选月份；天数在设置页面中设置。"
 
 #: templates/eos_tax/partials/bot-banned.html:24
 msgid "Listed in"
 msgstr "列出月份"
 
-#: templates/eos_tax/partials/bot-banned.html:52
-msgid "Every character the lists have shown has logged in since."
-msgstr "列表中出现过的每个 Character 此后都登录过。"
-
 #: templates/eos_tax/partials/bot-banned.html:57
+msgid ""
+"Every character the lists or a GM X booking have shown has logged in since."
+msgstr "列表中出现过或有与 GM X 交易的每个 Character 此后都登录过。"
+
+#: templates/eos_tax/partials/bot-banned.html:62
 #, python-format
 msgid "%(counter)s character on the four lists"
 msgid_plural "%(counter)s characters on the four lists"
 msgstr[0] "四个列表上的 %(counter)s 个 Character"
 
-#: templates/eos_tax/partials/bot-banned.html:58
+#: templates/eos_tax/partials/bot-banned.html:63
+#, python-format
+msgid "%(counter)s character with a GM X booking"
+msgid_plural "%(counter)s characters with a GM X booking"
+msgstr[0] "%(counter)s 个有与 GM X 交易的 Character"
+
+#: templates/eos_tax/partials/bot-banned.html:64
 #, python-format
 msgid "%(counter)s without a login since"
 msgid_plural "%(counter)s without a login since"
@@ -1191,14 +1253,18 @@ msgid ""
 "This character's payouts are spread so evenly over the day that it has no "
 "middle to place, so there is no distance to measure. The threshold is on the "
 "settings page."
-msgstr "该 Character 的发放在一天中分布得太均匀，没有可确定的中心，因此无法测量距离。阈值在设置页面中。"
+msgstr ""
+"该 Character 的发放在一天中分布得太均匀，没有可确定的中心，因此无法测量距离。"
+"阈值在设置页面中。"
 
 #: templates/eos_tax/partials/bot-clock-detail.html:16
 msgid ""
 "The rest of this corporation is spread so evenly over the day that it has no "
 "middle to place, so there is no distance to measure. The threshold is on the "
 "settings page."
-msgstr "该 Corporation 的其他成员在一天中分布得太均匀，没有可确定的中心，因此无法测量距离。阈值在设置页面中。"
+msgstr ""
+"该 Corporation 的其他成员在一天中分布得太均匀，没有可确定的中心，因此无法测量"
+"距离。阈值在设置页面中。"
 
 #: templates/eos_tax/partials/bot-clock-detail.html:20
 msgid ""
@@ -1206,15 +1272,17 @@ msgid ""
 "taken out, so there is no clock to compare against and none is drawn. Only "
 "the character's own day is shown. The threshold is on the settings page."
 msgstr ""
-"去掉该 Character 自己的发放后，该 Corporation 已没有剩余数据，因此没有可比较的时钟，也不会绘制。只显示该 Character "
-"自己的一天。阈值在设置页面中。"
+"去掉该 Character 自己的发放后，该 Corporation 已没有剩余数据，因此没有可比较"
+"的时钟，也不会绘制。只显示该 Character 自己的一天。阈值在设置页面中。"
 
 #: templates/eos_tax/partials/bot-clock-detail.html:24
 msgid ""
 "The same two days drawn round a clock face, because the hours either side of "
 "midnight are neighbours and a straight axis puts them at opposite ends. The "
 "markers are the middle of each day, averaged the way a clock wraps."
-msgstr "同样的两天绘制在钟面上，因为午夜前后的小时是相邻的，而直线坐标轴会把它们放在两端。标记是每一天的中心，按时钟循环的方式取平均。"
+msgstr ""
+"同样的两天绘制在钟面上，因为午夜前后的小时是相邻的，而直线坐标轴会把它们放在"
+"两端。标记是每一天的中心，按时钟循环的方式取平均。"
 
 #: templates/eos_tax/partials/bot-clock-detail.html:38
 #, python-format
@@ -1257,21 +1325,23 @@ msgid ""
 "looks the same as an account played by somebody else - a hint, never an "
 "accusation."
 msgstr ""
-"Character 的一天与其 Corporation "
-"的一天相距多远，按时钟循环的方式取平均，而不是读取最忙的小时——在少量发放中，最忙的小时只取决于噪声落在哪里。真正住在别处的人与由他人操作的账号看起来一样——这是提示，绝非指控。"
+"Character 的一天与其 Corporation 的一天相距多远，按时钟循环的方式取平均，而不"
+"是读取最忙的小时——在少量发放中，最忙的小时只取决于噪声落在哪里。真正住在别处"
+"的人与由他人操作的账号看起来一样——这是提示，绝非指控。"
 
 #: templates/eos_tax/partials/bot-clock.html:18
 #, python-format
 msgid ""
-"No character sat %(counter)s hour or more from their corporation. The largest"
-" distances of the month are shown instead, so the threshold can be judged "
-"against real numbers."
+"No character sat %(counter)s hour or more from their corporation. The "
+"largest distances of the month are shown instead, so the threshold can be "
+"judged against real numbers."
 msgid_plural ""
 "No character sat %(counter)s hours or more from their corporation. The "
 "largest distances of the month are shown instead, so the threshold can be "
 "judged against real numbers."
 msgstr[0] ""
-"没有 Character 与其 Corporation 相距 %(counter)s 小时或以上。改为显示本月最大的距离，以便用真实数字评估阈值。"
+"没有 Character 与其 Corporation 相距 %(counter)s 小时或以上。改为显示本月最大"
+"的距离，以便用真实数字评估阈值。"
 
 #: templates/eos_tax/partials/bot-clock.html:30
 msgid "Character's middle of the day"
@@ -1298,8 +1368,8 @@ msgid ""
 "their own, the rest of their corporation %(rest)s, and both days a middle to "
 "place."
 msgstr ""
-"本月无法测量任何人。Character 自己需要 %(own)s 次发放，其 Corporation 的其他成员需要 %(rest)s "
-"次，并且两者的一天都要有可确定的中心。"
+"本月无法测量任何人。Character 自己需要 %(own)s 次发放，其 Corporation 的其他"
+"成员需要 %(rest)s 次，并且两者的一天都要有可确定的中心。"
 
 #: templates/eos_tax/partials/bot-clock.html:74
 #: templates/eos_tax/partials/bot-rhythm.html:74
@@ -1358,7 +1428,8 @@ msgid ""
 "transactions in their wallet journals, and wallets below zero right now. Not "
 "limited to the selected month."
 msgstr ""
-"GM 交易页面为此账号的每个 Character 列出的内容：其 wallet 流水中的 GM 交易，以及当前余额低于零的 wallet。不限于所选月份。"
+"GM 交易页面为此账号的每个 Character 列出的内容：其 wallet 流水中的 GM 交易，"
+"以及当前余额低于零的 wallet。不限于所选月份。"
 
 #: templates/eos_tax/partials/bot-gm-detail.html:12
 msgid ""
@@ -1398,8 +1469,8 @@ msgid ""
 "taken out, so there is no rhythm to compare against and none is drawn. Only "
 "the character's own day is shown. The threshold is on the settings page."
 msgstr ""
-"去掉该 Character 自己的发放后，该 Corporation 已没有剩余数据，因此没有可比较的节奏，也不会绘制。只显示该 Character "
-"自己的一天。阈值在设置页面中。"
+"去掉该 Character 自己的发放后，该 Corporation 已没有剩余数据，因此没有可比较"
+"的节奏，也不会绘制。只显示该 Character 自己的一天。阈值在设置页面中。"
 
 #: templates/eos_tax/partials/bot-rhythm-detail.html:18
 #, python-format
@@ -1408,8 +1479,9 @@ msgid ""
 "Shares rather than counts, because one character never has the volume of a "
 "corporation. The shaded hours are the corporation's busiest %(hours)s."
 msgstr ""
-"Character 的一天与其 Corporation 其他成员的一天逐小时对比。使用份额而非次数，因为单个 Character 永远不会有一个 "
-"Corporation 的数量。阴影部分是该 Corporation 最忙的 %(hours)s 小时。"
+"Character 的一天与其 Corporation 其他成员的一天逐小时对比。使用份额而非次数，"
+"因为单个 Character 永远不会有一个 Corporation 的数量。阴影部分是该 "
+"Corporation 最忙的 %(hours)s 小时。"
 
 #: templates/eos_tax/partials/bot-rhythm-detail.html:29
 msgid "Hour of the day (EVE time)"
@@ -1432,22 +1504,24 @@ msgstr "相差 %(value)s 个百分点"
 
 #: templates/eos_tax/partials/bot-rhythm.html:6
 msgid ""
-"How much of a character's income falls inside the hours their own corporation"
-" is busy. The corporation is the yardstick and not the alliance: the alliance"
-" spans several timezones at once, so its day is flat and a script would look "
-"ordinary against it. A ranking, not a verdict."
+"How much of a character's income falls inside the hours their own "
+"corporation is busy. The corporation is the yardstick and not the alliance: "
+"the alliance spans several timezones at once, so its day is flat and a "
+"script would look ordinary against it. A ranking, not a verdict."
 msgstr ""
-"Character 的收入中有多少落在其所属 Corporation 的繁忙时段内。参照基准是 Corporation 而不是 "
-"Alliance：Alliance 同时跨越多个时区，所以它的一天是平坦的，脚本在它面前会显得很普通。这是排名，不是裁决。"
+"Character 的收入中有多少落在其所属 Corporation 的繁忙时段内。参照基准是 "
+"Corporation 而不是 Alliance：Alliance 同时跨越多个时区，所以它的一天是平坦"
+"的，脚本在它面前会显得很普通。这是排名，不是裁决。"
 
 #: templates/eos_tax/partials/bot-rhythm.html:18
 #, python-format
 msgid ""
-"No character was %(value)s pp flatter than the rest of their corporation. The"
-" largest differences of the month are shown instead, so the threshold can be "
-"judged against real numbers."
+"No character was %(value)s pp flatter than the rest of their corporation. "
+"The largest differences of the month are shown instead, so the threshold can "
+"be judged against real numbers."
 msgstr ""
-"没有 Character 比其 Corporation 的其他成员平坦 %(value)s 个百分点。改为显示本月最大的差异，以便用真实数字评估阈值。"
+"没有 Character 比其 Corporation 的其他成员平坦 %(value)s 个百分点。改为显示本"
+"月最大的差异，以便用真实数字评估阈值。"
 
 #: templates/eos_tax/partials/bot-rhythm.html:30
 msgid "Character in the busy hours"
@@ -1471,7 +1545,9 @@ msgstr "百分点"
 msgid ""
 "Nobody could be measured this month. A character needs %(own)s payouts of "
 "their own, and the rest of their corporation %(rest)s."
-msgstr "本月无法测量任何人。Character 自己需要 %(own)s 次发放，其 Corporation 的其他成员需要 %(rest)s 次。"
+msgstr ""
+"本月无法测量任何人。Character 自己需要 %(own)s 次发放，其 Corporation 的其他"
+"成员需要 %(rest)s 次。"
 
 #: templates/eos_tax/partials/bot-rhythm.html:77
 #, python-format
@@ -1490,7 +1566,9 @@ msgid ""
 "Every payout of the month, by day and time of day. The longest unbroken run "
 "is picked out; a run counts once it reaches %(value)s payouts without a "
 "break."
-msgstr "本月的每次发放，按日期和一天中的时间排列。突出显示最长的不间断连续段；连续段在不间断地达到 %(value)s 次发放后计入。"
+msgstr ""
+"本月的每次发放，按日期和一天中的时间排列。突出显示最长的不间断连续段；连续段"
+"在不间断地达到 %(value)s 次发放后计入。"
 
 #: templates/eos_tax/partials/bot-run-detail.html:19
 msgid "Longest run"
@@ -1520,18 +1598,21 @@ msgstr[0] "%(counter)s 次中断"
 msgid ""
 "The game pays a ratter about every twenty minutes, so an uninterrupted "
 "stretch shows up as a chain of payouts and nothing else does. This says "
-"nothing about when somebody plays, which makes it the one reading that treats"
-" every timezone of the alliance alike."
+"nothing about when somebody plays, which makes it the one reading that "
+"treats every timezone of the alliance alike."
 msgstr ""
-"游戏大约每二十分钟向刷怪玩家发放一次，因此不间断的时段会表现为一串发放，其他情况则不会。这与某人何时游戏无关，因此这是唯一一种平等对待 Alliance "
-"所有时区的判读。"
+"游戏大约每二十分钟向刷怪玩家发放一次，因此不间断的时段会表现为一串发放，其他"
+"情况则不会。这与某人何时游戏无关，因此这是唯一一种平等对待 Alliance 所有时区"
+"的判读。"
 
 #: templates/eos_tax/partials/bot-runs.html:18
 #, python-format
 msgid ""
 "No character collected %(value)s payouts in a row. The longest runs of the "
 "month are shown instead, so the threshold can be judged against real numbers."
-msgstr "没有 Character 连续领取 %(value)s 次发放。改为显示本月最长的连续段，以便用真实数字评估阈值。"
+msgstr ""
+"没有 Character 连续领取 %(value)s 次发放。改为显示本月最长的连续段，以便用真"
+"实数字评估阈值。"
 
 #: templates/eos_tax/partials/bot-runs.html:30
 msgid "Payouts in a row"
@@ -1777,7 +1858,8 @@ msgid_plural ""
 "%(counter)s untaxed entries from outside the character's time in this "
 "corporation (or without a corporation history), not counted"
 msgstr[0] ""
-"%(counter)s 条未征税的记录不在该 Character 属于此 Corporation 的期间内（或没有 Corporation 历史），未计入"
+"%(counter)s 条未征税的记录不在该 Character 属于此 Corporation 的期间内（或没"
+"有 Corporation 历史），未计入"
 
 #: templates/eos_tax/partials/recalculate-result.html:36
 #, python-format
@@ -1795,28 +1877,33 @@ msgstr[0] "%(counter)s 条没有 Corporation 税份额，已加入：%(value)s I
 #: templates/eos_tax/partials/recalculate-result.html:47
 #, python-format
 msgid ""
-"%(counter)s corporation wallet entry without a member wallet, backed out with"
-" the rate measured nearest in time"
+"%(counter)s corporation wallet entry without a member wallet, backed out "
+"with the rate measured nearest in time"
 msgid_plural ""
 "%(counter)s corporation wallet entries without a member wallet, backed out "
 "with the rate measured nearest in time"
-msgstr[0] "%(counter)s 条 Corporation wallet 记录没有对应的成员 wallet，按时间上最接近的测得税率反推"
+msgstr[0] ""
+"%(counter)s 条 Corporation wallet 记录没有对应的成员 wallet，按时间上最接近的"
+"测得税率反推"
 
 #: templates/eos_tax/partials/recalculate-result.html:52
 #, python-format
 msgid ""
-"%(counter)s corporation wallet entry with no rate known, counted at its slice"
-" only - the income is understated"
+"%(counter)s corporation wallet entry with no rate known, counted at its "
+"slice only - the income is understated"
 msgid_plural ""
 "%(counter)s corporation wallet entries with no rate known, counted at their "
 "slice only - the income is understated"
-msgstr[0] "%(counter)s 条 Corporation wallet 记录没有已知税率，只按其份额计入——收入被低估"
+msgstr[0] ""
+"%(counter)s 条 Corporation wallet 记录没有已知税率，只按其份额计入——收入被低"
+"估"
 
 #: templates/eos_tax/partials/recalculate-result.html:57
 #, python-format
 msgid ""
 "Without wallet audit, %(minimum)s million ISK or more - add their wallet:"
-msgstr "没有 wallet 审计、收入达到 %(minimum)s 百万 ISK 或以上——请添加其 wallet："
+msgstr ""
+"没有 wallet 审计、收入达到 %(minimum)s 百万 ISK 或以上——请添加其 wallet："
 
 #: templates/eos_tax/partials/recalculate-result.html:67
 #, python-format
@@ -1824,9 +1911,10 @@ msgid ""
 "%(counter)s character without wallet audit has left this corporation since, "
 "not listed"
 msgid_plural ""
-"%(counter)s characters without wallet audit have left this corporation since,"
-" not listed"
-msgstr[0] "%(counter)s 个没有 wallet 审计的 Character 此后已离开此 Corporation，未列出"
+"%(counter)s characters without wallet audit have left this corporation "
+"since, not listed"
+msgstr[0] ""
+"%(counter)s 个没有 wallet 审计的 Character 此后已离开此 Corporation，未列出"
 
 #: templates/eos_tax/partials/recalculate-result.html:73
 #, python-format
@@ -1855,7 +1943,9 @@ msgid ""
 msgid_plural ""
 "No payment of exactly the amount owed. The %(counter)s payments with this "
 "reason add up to %(total)s ISK."
-msgstr[0] "没有恰好等于应付金额的付款。带有此 Reason 的 %(counter)s 笔付款合计 %(total)s ISK。"
+msgstr[0] ""
+"没有恰好等于应付金额的付款。带有此 Reason 的 %(counter)s 笔付款合计 "
+"%(total)s ISK。"
 
 #: templates/eos_tax/partials/recalculate-result.html:95
 msgid "No payment with this reason found."
@@ -1865,7 +1955,9 @@ msgstr "未找到带有此 Reason 的付款。"
 msgid ""
 "No payment of exactly the amount owed found. Without matching by reason only "
 "that amount can be told to belong to this corporation."
-msgstr "未找到恰好等于应付金额的付款。不按 Reason 匹配时，只有该金额能确定属于此 Corporation。"
+msgstr ""
+"未找到恰好等于应付金额的付款。不按 Reason 匹配时，只有该金额能确定属于此 "
+"Corporation。"
 
 #: templates/eos_tax/partials/recalculate-result.html:102
 msgid "Payments:"
@@ -1889,13 +1981,14 @@ msgstr "Alliance Auth 不认识 Corporation %(corp_id)s。"
 msgid ""
 "%(corp)s has no ingame tax rate in Alliance Auth, and ESI could not be "
 "reached to ask for it. Try again later."
-msgstr "%(corp)s 在 Alliance Auth 中没有游戏内税率，且无法连接 ESI 查询。请稍后再试。"
+msgstr ""
+"%(corp)s 在 Alliance Auth 中没有游戏内税率，且无法连接 ESI 查询。请稍后再试。"
 
 #: templates/eos_tax/partials/recalculate-result.html:137
 #, python-format
 msgid ""
-"%(corp)s has no journal entries of the configured tax types for "
-"%(month)s/%(year)s."
+"%(corp)s has no journal entries of the configured tax types for %(month)s/"
+"%(year)s."
 msgstr "%(corp)s 在 %(month)s/%(year)s 没有配置税务类型的流水记录。"
 
 #: templates/eos_tax/partials/recalculate-result.html:139
@@ -1903,7 +1996,8 @@ msgstr "%(corp)s 在 %(month)s/%(year)s 没有配置税务类型的流水记录�
 msgid ""
 "The alliance tax rate for %(month)s/%(year)s is 0, so nothing is owed and no "
 "row is written."
-msgstr "%(month)s/%(year)s 的 Alliance 税率为 0，因此无需缴纳，也不会写入任何行。"
+msgstr ""
+"%(month)s/%(year)s 的 Alliance 税率为 0，因此无需缴纳，也不会写入任何行。"
 
 #: templates/eos_tax/partials/recalculate-result.html:141
 msgid "Nothing could be calculated for this selection."
@@ -1926,7 +2020,9 @@ msgstr "游戏内 Character"
 msgid ""
 "These values were taken over from local.py once. They are read from\n"
 "                here now, so editing local.py has no further effect."
-msgstr "这些值曾从 local.py 导入一次。现在从这里读取，因此编辑 local.py 不再有任何效果。"
+msgstr ""
+"这些值曾从 local.py 导入一次。现在从这里读取，因此编辑 local.py 不再有任何效"
+"果。"
 
 #: templates/eos_tax/settings.html:22
 msgid ""
@@ -1962,9 +2058,13 @@ msgstr "税率"
 #: templates/eos_tax/settings.html:90
 msgid ""
 "The newest entry that is not in the future applies, so a\n"
-"                                    change can be entered months ahead. Months before the first entry use the base\n"
-"                                    rate above. Already calculated months keep the rate they were charged with."
-msgstr "生效的是不在未来的最新条目，因此可以提前几个月输入变更。第一个条目之前的月份使用上方的基础税率。已计算的月份保留当时收取的税率。"
+"                                    change can be entered months ahead. "
+"Months before the first entry use the base\n"
+"                                    rate above. Already calculated months "
+"keep the rate they were charged with."
+msgstr ""
+"生效的是不在未来的最新条目，因此可以提前几个月输入变更。第一个条目之前的月份"
+"使用上方的基础税率。已计算的月份保留当时收取的税率。"
 
 #: templates/eos_tax/settings.html:114
 msgid "Remove"
@@ -2003,13 +2103,17 @@ msgstr "Corporation 自身税率的变动需要多大，该页面才会报告。
 #: templates/eos_tax/settings.html:172
 msgid ""
 "Runs the calculation again for one month, outside the\n"
-"                                    periodic task - useful right after a journal import finished or a rate was\n"
-"                                    corrected. One corporation runs immediately and shows the arithmetic behind its\n"
-"                                    figure; every corporation is queued the way the periodic task queues them,\n"
+"                                    periodic task - useful right after a "
+"journal import finished or a rate was\n"
+"                                    corrected. One corporation runs "
+"immediately and shows the arithmetic behind its\n"
+"                                    figure; every corporation is queued the "
+"way the periodic task queues them,\n"
 "                                    without waiting for the result here."
 msgstr ""
-"在周期任务之外，为某个月份重新运行计算——在流水导入完成或税率更正后立即使用很有用。单个 Corporation "
-"会立即运行，并显示其数值背后的计算过程；所有 Corporation 会像周期任务那样加入队列，而不在此处等待结果。"
+"在周期任务之外，为某个月份重新运行计算——在流水导入完成或税率更正后立即使用很"
+"有用。单个 Corporation 会立即运行，并显示其数值背后的计算过程；所有 "
+"Corporation 会像周期任务那样加入队列，而不在此处等待结果。"
 
 #: templates/eos_tax/settings.html:185
 msgid "All configured corporations"
@@ -2023,9 +2127,12 @@ msgstr "年份"
 #: templates/eos_tax/settings.html:222
 msgid ""
 "Four readings of the same month, each with its own\n"
-"                                    thresholds. A character at the top of one can be absent from the next, and\n"
+"                                    thresholds. A character at the top of "
+"one can be absent from the next, and\n"
 "                                    that disagreement is the point."
-msgstr "同一个月的四种判读，各有各的阈值。在一种判读中排名靠前的 Character 可能在下一种中不出现，而这种分歧正是关键所在。"
+msgstr ""
+"同一个月的四种判读，各有各的阈值。在一种判读中排名靠前的 Character 可能在下一"
+"种中不出现，而这种分歧正是关键所在。"
 
 #: templates/eos_tax/settings.html:243
 msgid ""
@@ -2036,24 +2143,31 @@ msgstr "统计 Character 在一天中多少个不同小时内有收入，以及�
 #: templates/eos_tax/settings.html:258
 msgid ""
 "Looks at the minute rather than the hour: the game pays a\n"
-"                                            ratter about every twenty minutes, so an uninterrupted stretch shows up as a\n"
-"                                            chain of payouts and nothing else does."
-msgstr "看的是分钟而不是小时：游戏大约每二十分钟向刷怪玩家发放一次，因此不间断的时段会表现为一串发放，其他情况则不会。"
+"                                            ratter about every twenty "
+"minutes, so an uninterrupted stretch shows up as a\n"
+"                                            chain of payouts and nothing "
+"else does."
+msgstr ""
+"看的是分钟而不是小时：游戏大约每二十分钟向刷怪玩家发放一次，因此不间断的时段"
+"会表现为一串发放，其他情况则不会。"
 
 #: templates/eos_tax/settings.html:275
 msgid ""
 "How much of a character's income falls inside the hours\n"
-"                                            their own corporation is busy. The corporation is the yardstick and not the\n"
-"                                            alliance, which spans several timezones at once."
+"                                            their own corporation is busy. "
+"The corporation is the yardstick and not the\n"
+"                                            alliance, which spans several "
+"timezones at once."
 msgstr ""
-"Character 的收入中有多少落在其所属 Corporation 的繁忙时段内。参照基准是 Corporation 而不是 Alliance，因为 "
-"Alliance 同时跨越多个时区。"
+"Character 的收入中有多少落在其所属 Corporation 的繁忙时段内。参照基准是 "
+"Corporation 而不是 Alliance，因为 Alliance 同时跨越多个时区。"
 
 #: templates/eos_tax/settings.html:293
 msgid ""
 "How far a character's day sits from their corporation's,\n"
 "                                            averaged the way a clock wraps."
-msgstr "Character 的一天与其 Corporation 的一天相距多远，按时钟循环的方式取平均。"
+msgstr ""
+"Character 的一天与其 Corporation 的一天相距多远，按时钟循环的方式取平均。"
 
 #: templates/eos_tax/settings.html:318
 msgid "Save settings"
@@ -2090,17 +2204,21 @@ msgstr "尚无税务数据记录。"
 #: templates/eos_tax/tax-change-detail.html:17
 msgid ""
 "The share of the full bounty that reached the corporation, per day.\n"
-"                The value carries the system's bounty modifier as well as the rate, so the level itself\n"
+"                The value carries the system's bounty modifier as well as "
+"the rate, so the level itself\n"
 "                means little - a step in it does not."
 msgstr ""
-"每天进入 Corporation 的完整 bounty 份额。该数值除了税率还包含星系的 bounty 修正，因此水平本身意义不大——但其中的跳变则不然。"
+"每天进入 Corporation 的完整 bounty 份额。该数值除了税率还包含星系的 bounty 修"
+"正，因此水平本身意义不大——但其中的跳变则不然。"
 
 #: templates/eos_tax/tax-change-detail.html:20
 #, python-format
 msgid ""
 "A level counts once it held for at least two days, and a move of at least "
 "%(minimum)s percentage points separates one level from the next."
-msgstr "一个水平至少保持两天才算数，至少 %(minimum)s 个百分点的变动才会把一个水平与下一个分开。"
+msgstr ""
+"一个水平至少保持两天才算数，至少 %(minimum)s 个百分点的变动才会把一个水平与下"
+"一个分开。"
 
 #: templates/eos_tax/tax-change-detail.html:33
 msgid "The stretches of days the rate held, and the steps between them"
@@ -2130,7 +2248,9 @@ msgid ""
 msgid_plural ""
 "On %(on)s the share moved from %(before)s percent to %(after)s percent, "
 "across %(counter)s systems."
-msgstr[0] "%(on)s，份额从百分之 %(before)s 变为百分之 %(after)s，涉及 %(counter)s 个星系。"
+msgstr[0] ""
+"%(on)s，份额从百分之 %(before)s 变为百分之 %(after)s，涉及 %(counter)s 个星"
+"系。"
 
 #: templates/eos_tax/tax-change-detail.html:69
 #, python-format
@@ -2150,15 +2270,20 @@ msgstr "本年发放次数不足，无法测量税率。"
 #, python-format
 msgid ""
 "The corporation wallet only shows the corporation's own cut, so the ingame\n"
-"                rate is not in it directly. It is recovered from the kills behind each bounty: what the\n"
-"                NPCs were worth against what arrived. Every move of that share by at least\n"
-"                %(minimum)s percentage points is listed, as long as the new level held for two\n"
-"                days - a corporation that switched three times appears three times. The minimum\n"
+"                rate is not in it directly. It is recovered from the kills "
+"behind each bounty: what the\n"
+"                NPCs were worth against what arrived. Every move of that "
+"share by at least\n"
+"                %(minimum)s percentage points is listed, as long as the new "
+"level held for two\n"
+"                days - a corporation that switched three times appears three "
+"times. The minimum\n"
 "                is set on the settings page."
 msgstr ""
-"Corporation wallet 只显示 Corporation 自己的抽成，因此游戏内税率不会直接出现在其中。它是从每笔 bounty "
-"背后的击杀中还原出来的：NPC 的价值与实际到账金额之比。该份额每次至少 %(minimum)s "
-"个百分点的变动都会被列出，只要新水平保持了两天——切换了三次的 Corporation 会出现三次。最小值在设置页面中设置。"
+"Corporation wallet 只显示 Corporation 自己的抽成，因此游戏内税率不会直接出现"
+"在其中。它是从每笔 bounty 背后的击杀中还原出来的：NPC 的价值与实际到账金额之"
+"比。该份额每次至少 %(minimum)s 个百分点的变动都会被列出，只要新水平保持了两天"
+"——切换了三次的 Corporation 会出现三次。最小值在设置页面中设置。"
 
 #: templates/eos_tax/tax-changes.html:41
 msgid "Quick filters"
