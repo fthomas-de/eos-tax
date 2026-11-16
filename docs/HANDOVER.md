@@ -4,13 +4,21 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-13 (0.4.24).
+Last updated 2026-11-16 (0.4.25).
 
 ## Release
 
-- Version **0.4.24** in `eos_tax/__init__.py`, released 2026-11-13, tag
-  `v0.4.24`
-- `[0.4.24]` in `CHANGELOG.md`: Simplified Chinese (`zh_Hans`), the
+- Version **0.4.25** in `eos_tax/__init__.py`, released 2026-11-16, tag
+  `v0.4.25`
+- `[0.4.25]` in `CHANGELOG.md`: "Possibly banned" also lists characters
+  with a GM X booking in the stored GM report, past the same login
+  threshold, whether or not a list showed them. Where it lives:
+  `gm_transactions.gm_x_character_ids(stored)` (beside
+  `gm_listed_character_ids`), `bot_ban.get_possibly_banned` (adds them
+  with `months: []` and `gm: True`, names from `EveCharacter`, stat
+  `gm_characters`), the red "GM" badge in `partials/bot-banned.html`, tests
+  `TestGmX` and the badge test in `test_bot_ban.py`. Decisions below
+- `[0.4.24]`: Simplified Chinese (`zh_Hans`), the
   seventh catalogue, so eos-tax and eos-invoices ship the same languages.
   No code change; `test_translations.py` knows the new locale. Decisions
   below
@@ -71,7 +79,7 @@ Last updated 2026-11-13 (0.4.24).
   0028, `GmReport` 0029). `manage_settings` (0.4.5, 0027) guards every
   settings write; `admin_view` alone sees the settings page read only
 - Migrations **0001-0037** applied to `aa_dev`
-- 847 tests, all green (832 without the translation tag, 15 with it); the
+- 854 tests, all green (839 without the translation tag, 15 with it); the
   suite ran `--fresh` at the commit
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the page's
   GM rows can only be seen in tests or on production data. 0.4.9 to 0.4.16
@@ -82,6 +90,27 @@ Last updated 2026-11-13 (0.4.24).
   kept literal in de. `zh_Hans` (0.4.24) is machine-translated, not read by
   a native speaker, not looked at in a browser
 - `CHANGELOG.md` is newest first
+
+## Decisions of the 2026-11-16 session (0.4.25)
+
+GM X on "Possibly banned" - the user's choices unless marked:
+
+- **Only bookings with the counterparty GM X** (the filter's flagged
+  party), not every GM counterparty and not a wallet below zero.
+- **A row ticked "Cleared" still counts.**
+- **The character itself**, not every character of its account.
+- **A "GM" badge in "Listed in"**, linking to GM Transactions with
+  `?search="<main>"`, beside any month badges.
+- Claude's calls: GM X on either side of the description (`_parties`), as
+  a GM taking ISK back books "between GM X and <character>"; the date of
+  the booking against the login does not matter; the badge is red
+  (`text-bg-danger`), "GM" untranslated; the list's computed time takes
+  the GM report's too; the footer counts the GM X characters apart; the
+  empty-list text names GM X. Seven tests, five sabotages caught. Not
+  looked at in a browser (`aa_dev` has no GM booking). "Listed in" stays
+  "months listed in" in ko/ru/zh although the GM badge now sits there too
+  - the English text did not change. The zh_Hans `.po` was rewrapped by
+  `makemessages` (about 500 lines of diff, content unchanged).
 
 ## Decisions of the 2026-11-13 session (0.4.24)
 
@@ -536,6 +565,11 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
+00000000. **On deploying 0.4.25**: nothing to migrate or restart - the tab
+   reads live. Open "Possibly banned" after the GM job has run: do the
+   characters with a GM X booking show with the red "GM" badge, and does
+   the badge open GM Transactions filtered to the right main? Never seen
+   with real GM data.
 0000000. **On deploying 0.4.24**: nothing to migrate or restart - only the
    catalogues changed. Open one page with the browser set to Simplified
    Chinese (overview, bots, settings): the Chinese has never been rendered
@@ -663,7 +697,8 @@ plain list of alts from Alliance Auth, without assessments.
   character on the dev instance, and no `esi-ui.open_window.v1` token
   exists there that was taken for it.
 - `possibly_banned_min_days` (0037) is at its default 30. "Possibly
-  banned" is empty there: no listed character has a corptools login.
+  banned" is empty there: no listed character has a corptools login, and
+  there is no GM report for the GM X path to read.
 - Migrations 0001-0037 applied to `aa_dev`; both month switches were on
   before 0035 dropped them (`~/aa-dev/eos-tax-month-flags-before-0035.json`),
   so the dev instance behaves as before. Every `MonthlyTax` row has
