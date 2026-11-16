@@ -4,20 +4,29 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-16 (0.4.25).
+Last updated 2026-11-16 (0.4.26).
 
 ## Release
 
-- Version **0.4.25** in `eos_tax/__init__.py`, released 2026-11-16, tag
-  `v0.4.25`
-- `[0.4.25]` in `CHANGELOG.md`: "Possibly banned" also lists characters
-  with a GM X booking in the stored GM report, past the same login
-  threshold, whether or not a list showed them. Where it lives:
-  `gm_transactions.gm_x_character_ids(stored)` (beside
-  `gm_listed_character_ids`), `bot_ban.get_possibly_banned` (adds them
-  with `months: []` and `gm: True`, names from `EveCharacter`, stat
-  `gm_characters`), the red "GM" badge in `partials/bot-banned.html`, tests
-  `TestGmX` and the badge test in `test_bot_ban.py`. Decisions below
+- Version **0.4.26** in `eos_tax/__init__.py`, released 2026-11-16, tag
+  `v0.4.26`
+- `[0.4.26]` in `CHANGELOG.md`: "Possibly banned" has a "Found" column
+  (month of the finding) and arrives sorted by it, newest first, each main
+  by its newest character. Where it lives: `gm_transactions.gm_x_months`
+  (was `gm_x_character_ids`, now `{character_id: "YYYY-MM"}` of the
+  newest GM X booking), `bot_ban.get_possibly_banned` (`found` on every
+  row and group, the sorting), `partials/sort-header.html` (new
+  `group_key` and `sorted` parameters; `sort_groups` no longer implies
+  "ascending" - the audit tab passes `sorted="ascending"` itself),
+  `eosTaxSortGroups` in `bots.js` (a row column with
+  `data-eos-group-key` also orders the tbodies by that dataset key).
+  Tests in `test_bot_ban.py`, one JS assertion in `test_bot_audit.py`.
+  Decisions below
+- `[0.4.25]`: "Possibly banned" also lists characters with a GM X booking
+  in the stored GM report, past the same login threshold, whether or not
+  a list showed them (`gm: True`, `months: []`, names from `EveCharacter`,
+  the red "GM" badge, stat `gm_characters`, tests `TestGmX`). Decisions
+  below
 - `[0.4.24]`: Simplified Chinese (`zh_Hans`), the
   seventh catalogue, so eos-tax and eos-invoices ship the same languages.
   No code change; `test_translations.py` knows the new locale. Decisions
@@ -79,7 +88,7 @@ Last updated 2026-11-16 (0.4.25).
   0028, `GmReport` 0029). `manage_settings` (0.4.5, 0027) guards every
   settings write; `admin_view` alone sees the settings page read only
 - Migrations **0001-0037** applied to `aa_dev`
-- 854 tests, all green (839 without the translation tag, 15 with it); the
+- 857 tests, all green (842 without the translation tag, 15 with it); the
   suite ran `--fresh` at the commit
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the page's
   GM rows can only be seen in tests or on production data. 0.4.9 to 0.4.16
@@ -90,6 +99,27 @@ Last updated 2026-11-16 (0.4.25).
   kept literal in de. `zh_Hans` (0.4.24) is machine-translated, not read by
   a native speaker, not looked at in a browser
 - `CHANGELOG.md` is newest first
+
+## Decisions of the 2026-11-16 session (0.4.26)
+
+Sorting "Possibly banned" by the date of the finding - the user's choices
+unless marked:
+
+- **Months only, GM before bot**: the month of the newest GM X booking
+  where there is one, even when a list showed the character later; else
+  the newest list month.
+- **The mains sort too**, each by its newest character; the characters
+  inside a main by their own month.
+- **A new column "Found"**, and the table **arrives newest first**.
+- Claude's calls: a tie keeps the name order (stable sorts); "Found" sits
+  between "Last login" and "Listed in"; "Found" and "Main" each order the
+  groups and reset the other's icon; a plain row column (Age, ...) resets
+  "Found"'s icon although the groups stay in date order - accepted, not
+  fixed. Translations: Gefunden, Detectado, Détecté, Rilevato, 발견,
+  Обнаружен, 发现于. Three new tests plus assertions, six sabotages caught.
+  Not looked at in a browser (the dev server was not running; `aa_dev`
+  has no GM booking and nobody listed with a login, so the tab is empty
+  there anyway).
 
 ## Decisions of the 2026-11-16 session (0.4.25)
 
@@ -565,11 +595,13 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
-00000000. **On deploying 0.4.25**: nothing to migrate or restart - the tab
-   reads live. Open "Possibly banned" after the GM job has run: do the
-   characters with a GM X booking show with the red "GM" badge, and does
-   the badge open GM Transactions filtered to the right main? Never seen
-   with real GM data.
+00000000. **On deploying 0.4.25 / 0.4.26**: nothing to migrate or restart
+   - the tab reads live; `collectstatic` for `bots.js`. Open "Possibly
+   banned" after the GM job has run: do the characters with a GM X
+   booking show with the red "GM" badge, does the badge open GM
+   Transactions filtered to the right main, does "Found" show the GM
+   month, and do the "Found" and "Main" headings re-sort the mains? Never
+   seen with real GM data, never clicked in a browser.
 0000000. **On deploying 0.4.24**: nothing to migrate or restart - only the
    catalogues changed. Open one page with the browser set to Simplified
    Chinese (overview, bots, settings): the Chinese has never been rendered
@@ -786,6 +818,12 @@ The browser pane opens a `file://` page only as a static snapshot - no
 script runs there.
 
 ## Traps recent sessions cost time on
+
+- **Through PowerShell, `wsl.exe ... bash -lc '...'` loses `"$(...)"`
+  and inner double quotes** - a `grep -c` inside `$(...)` and a
+  `--format="%h %s"` came out mangled (2026-11-16). Anything beyond a
+  plain command goes into a script file written with the Write tool and
+  run as `bash -l <path>`.
 
 - **Saving an esi `Token` moves the character's ownership** to the token's
   user (Alliance Auth's signal). A test token for another user's character
