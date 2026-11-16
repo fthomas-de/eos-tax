@@ -8,7 +8,7 @@ from django.utils import timezone
 from allianceauth.eveonline.models import EveCharacter
 
 from eos_tax.db.bot_store import READINGS
-from eos_tax.db.gm_transactions import gm_x_character_ids
+from eos_tax.db.gm_transactions import gm_x_months
 from eos_tax.db.shared import grouped
 from eos_tax.models import BotReport, GmReport
 
@@ -28,6 +28,10 @@ def get_possibly_banned(min_days: int):
 
     The login is corptools' `last_known_login`, read now. A character without
     one is left out - a missing audit is the audit tab's finding, not this one.
+
+    "found" is the month of the finding: the newest GM X booking where there
+    is one, else the newest month a list showed the character - GM before
+    bot, months only, the user's choice. Newest first, a main by its newest.
     """
     flagged = {}
     computed_at = None
@@ -54,10 +58,10 @@ def get_possibly_banned(min_days: int):
     on_lists = len(flagged)
 
     stored_gm = GmReport.objects.filter(pk=1).first()
-    gm_ids = gm_x_character_ids(stored_gm)
-    if gm_ids:
+    gm_months = gm_x_months(stored_gm)
+    if gm_months:
         computed_at = max(computed_at or stored_gm.computed_at, stored_gm.computed_at)
-    for character_id in gm_ids:
+    for character_id, gm_month in gm_months.items():
         flagged.setdefault(character_id, {
             "character_id": character_id,
             # the GM report stores no names; filled in from EveCharacter below
@@ -65,7 +69,7 @@ def get_possibly_banned(min_days: int):
             "corporation_name": "",
             "level": None,
             "months": [],
-        })["gm"] = True
+        }).update(gm=True, gm_month=gm_month)
 
     cutoff = timezone.now() - timedelta(days=min_days)
     logins = dict(
@@ -92,22 +96,28 @@ def get_possibly_banned(min_days: int):
                 "corporation_name": characters.get(
                     character_id, (None, flagged[character_id]["corporation_name"])
                 )[1],
+                "found": flagged[character_id].get("gm_month")
+                or flagged[character_id]["months"][0],
             }
             for character_id, login in logins.items()
         ),
         key=lambda row: row["character_name"].casefold(),
     )
+    # sort() is stable: a tie keeps the name order, here and for the groups
+    rows.sort(key=lambda row: row["found"], reverse=True)
 
     groups, total = grouped(rows, limit=None)
-    # by name like the audit tab: worked through main by main
     groups.sort(key=lambda group: group["main_name"].casefold())
+    for group in groups:
+        group["found"] = group["characters"][0]["found"]
+    groups.sort(key=lambda group: group["found"], reverse=True)
 
     return {
         "listed": bool(rows),
         "groups": groups,
         "stats": {
             "flagged_characters": on_lists,
-            "gm_characters": len(gm_ids),
+            "gm_characters": len(gm_months),
             "quiet_characters": len(rows),
             "groups_total": total,
         },

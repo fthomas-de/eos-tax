@@ -7,7 +7,7 @@
 
 {% if groups %}
     <div class="table-responsive">
-        {# bots.js sorts it: the mains by name, the characters inside each main by any column #}
+        {# bots.js sorts it: the mains by name or newest finding, the characters inside each main by any column #}
         <table class="table table-striped table-hover align-middle w-100" data-eos-sortable-groups>
             <thead>
                 <tr>
@@ -21,19 +21,23 @@
                     {% include "eos_tax/partials/sort-header.html" with title=heading css="d-none d-lg-table-cell" %}
                     {% translate "Last login" as heading %}
                     {% include "eos_tax/partials/sort-header.html" with title=heading css="" %}
+                    {# the server sends it newest first, the mains by their newest finding #}
+                    {% translate "Found" as heading %}
+                    {% include "eos_tax/partials/sort-header.html" with title=heading css="" group_key="eosFound" sorted="descending" %}
                     {% translate "Listed in" as heading %}
                     {% include "eos_tax/partials/sort-header.html" with title=heading css="" %}
                 </tr>
             </thead>
 
             {% for group in groups %}
-                <tbody data-eos-group="{{ group.main_name }}">
-                    {% include "eos_tax/partials/bot-group-header.html" with group=group columns=6 %}
+                <tbody data-eos-group="{{ group.main_name }}" data-eos-found="{{ group.found }}">
+                    {% include "eos_tax/partials/bot-group-header.html" with group=group columns=7 %}
 
                     {% for row in group.characters %}
                     <tr{% if row.character_id in gm_listed %} class="table-danger" title="{% translate 'Listed on GM Transactions' %}"{% endif %}>
                         {% include "eos_tax/partials/bot-character-cells.html" %}
                         <td class="text-nowrap" data-order="{{ row.last_login|date:'c' }}">{{ row.last_login|date:"Y-m-d" }}</td>
+                        <td class="text-nowrap" data-order="{{ row.found }}">{{ row.found }}</td>
                         {# the newest month sorts; each opens the bots page of its month #}
                         <td data-order="{{ row.months.0 }}">
                             {% for month in row.months %}

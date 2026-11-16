@@ -23,6 +23,7 @@ from .factories import (
 )
 
 COMPUTED_AT = datetime(YEAR, MONTH, 20, tzinfo=timezone.utc)
+THIRD_ID = 2100000003
 
 
 def _row(character_id, corporation_name="Bravo Corp"):
@@ -52,12 +53,16 @@ def _store(year, month, signal, *rows, listed=True, fingerprint="any"):
 
 def _gm(*bookings):
     """The stored GM report, reduced to what this tab reads: (character_id,
-    description) per booking."""
+    description[, date]) per booking, the date ISO text as the report keeps it."""
     GmReport.objects.create(
         pk=1,
         report={"transactions": [
-            {"character_id": character_id, "description": description}
-            for character_id, description in bookings
+            {
+                "character_id": booking[0],
+                "description": booking[1],
+                "date": booking[2] if len(booking) > 2 else COMPUTED_AT.isoformat(),
+            }
+            for booking in bookings
         ]},
         computed_at=COMPUTED_AT,
     )
@@ -166,6 +171,38 @@ class TestPossiblyBanned(EosTaxTestCase):
             [f"Pilot {CASUAL_ID}", "zulu character"],
         )
 
+    def test_should_date_the_finding_by_the_newest_list_month(self):
+        _store(YEAR, MONTH - 2, "hours", _row(RATTER_ID))
+        _store(YEAR, MONTH, "runs", _row(RATTER_ID))
+        _logged_in(RATTER_ID, 45)
+
+        self.assertEqual(self.rows()[RATTER_ID]["found"], f"{YEAR}-{MONTH:02d}")
+
+    def test_should_put_the_newest_finding_first_a_main_by_its_newest(self):
+        """The user's choice; a tie keeps the name order (the test above)."""
+        owner = create_user("zulu", 94500001, BRAVO_CORP_ID, "Bravo Corp")
+        create_alt(owner, RATTER_ID, "Busy Ratter")
+        create_alt(owner, THIRD_ID, "Zulu Alt")
+        _store(YEAR, MONTH - 2, "hours", _row(RATTER_ID))
+        _store(YEAR, MONTH - 1, "hours", _row(CASUAL_ID))
+        _store(YEAR, MONTH, "hours", _row(THIRD_ID))
+        for character_id in (RATTER_ID, CASUAL_ID, THIRD_ID):
+            _logged_in(character_id, 45)
+
+        groups = get_possibly_banned(30)["groups"]
+
+        self.assertEqual(
+            [(group["main_name"], group["found"]) for group in groups],
+            [
+                ("zulu character", f"{YEAR}-{MONTH:02d}"),
+                (f"Pilot {CASUAL_ID}", f"{YEAR}-{MONTH - 1:02d}"),
+            ],
+        )
+        self.assertEqual(
+            [row["character_id"] for row in groups[0]["characters"]],
+            [THIRD_ID, RATTER_ID],
+        )
+
 
 class TestGmX(EosTaxTestCase):
     """A GM X booking puts a quiet character on the tab without any list -
@@ -219,6 +256,19 @@ class TestGmX(EosTaxTestCase):
         self.assertTrue(row["gm"])
         self.assertEqual(row["character_name"], f"Pilot {RATTER_ID}")
 
+    def test_should_date_the_finding_by_gm_x_before_a_list(self):
+        """GM before bot even where the list is newer, the newest GM X booking,
+        months only - the user's choice."""
+        _store(YEAR, MONTH, "hours", _row(RATTER_ID))
+        _gm(
+            (RATTER_ID, GM_X, f"{YEAR}-{MONTH - 3:02d}-10T12:00:00+00:00"),
+            (RATTER_ID, GM_X_FIRST, f"{YEAR}-{MONTH - 2:02d}-03T08:00:00+00:00"),
+            (RATTER_ID, BANK, f"{YEAR}-{MONTH - 1:02d}-01T08:00:00+00:00"),
+        )
+        _logged_in(RATTER_ID, 45)
+
+        self.assertEqual(self.rows()[RATTER_ID]["found"], f"{YEAR}-{MONTH - 2:02d}")
+
     def test_should_count_lists_and_gm_x_apart(self):
         _store(YEAR, MONTH, "hours", _row(RATTER_ID))
         _gm((RATTER_ID, GM_X), (CASUAL_ID, GM_X), (CASUAL_ID, BANK))
@@ -268,6 +318,12 @@ class TestBannedTab(EosTaxTestCase):
         self.assertContains(response, f"Pilot {RATTER_ID}")
         self.assertContains(response, f"{reverse('eos_tax:bots')}?month={self.month}")
         self.assertContains(response, "data-eos-sortable-groups")
+        # "Found" sorts the mains too, and arrives sorted newest first
+        self.assertContains(response, 'data-eos-group-key="eosFound"')
+        self.assertContains(response, 'aria-sort="descending"', count=1)
+        self.assertContains(response, 'aria-sort="ascending"', count=0)
+        self.assertContains(response, f'data-eos-found="{self.month}"')
+        self.assertContains(response, f'<td class="text-nowrap" data-order="{self.month}">')
         last_login = (django_timezone.now() - timedelta(days=45)).date()
         self.assertContains(response, last_login.isoformat())
 

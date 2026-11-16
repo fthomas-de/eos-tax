@@ -473,17 +473,20 @@ def gm_listed_character_ids():
     return {row["character_id"] for row in transactions} | set(_negative_balances())
 
 
-def gm_x_character_ids(stored):
-    """The characters with a GM X booking in a stored report (a GmReport or
-    None). Either side counts: a GM taking ISK back books "between GM X and
-    <character>"."""
+def gm_x_months(stored):
+    """{character_id: "YYYY-MM" of its newest GM X booking} in a stored report
+    (a GmReport or None). Either side counts: a GM taking ISK back books
+    "between GM X and <character>"."""
     transactions = stored.report["transactions"] if stored else []
+    months = {}
 
-    return {
-        row["character_id"]
-        for row in transactions
-        if FLAGGED_PARTY in _parties(row["description"])
-    }
+    for row in transactions:
+        if FLAGGED_PARTY in _parties(row["description"]):
+            # the stored date is ISO text, so its first seven characters are the month
+            month = row["date"][:7]
+            months[row["character_id"]] = max(months.get(row["character_id"], month), month)
+
+    return months
 
 
 def account_character_ids(character_id):

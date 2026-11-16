@@ -131,15 +131,33 @@ function eosTaxSortGroups(root) {
                     ? "descending" : "ascending";
                 const sign = direction === "ascending" ? 1 : -1;
 
-                if (button.dataset.eosSort === "groups") {
+                // the main's name, or a row column's value for the whole
+                // group - the newest finding of a main on "Possibly banned"
+                const groupKey = button.dataset.eosSort === "groups"
+                    ? "eosGroup" : button.dataset.eosGroupKey;
+
+                if (groupKey) {
                     Array.from(table.tBodies)
                         .sort(function (a, b) {
-                            return compare(a.dataset.eosGroup, b.dataset.eosGroup, sign);
+                            return compare(a.dataset[groupKey], b.dataset[groupKey], sign);
                         })
                         .forEach(function (body) {
                             table.appendChild(body);
                         });
-                } else {
+
+                    // the groups follow one column at a time
+                    headings.forEach(function (other) {
+                        const sorter = other.querySelector("[data-eos-sort]");
+
+                        if (sorter && other !== heading && (
+                            sorter.dataset.eosSort === "groups" || sorter.dataset.eosGroupKey
+                        )) {
+                            show(other, "none");
+                        }
+                    });
+                }
+
+                if (button.dataset.eosSort === "rows") {
                     Array.from(table.tBodies).forEach(function (body) {
                         Array.from(body.rows)
                             .filter(function (row) {

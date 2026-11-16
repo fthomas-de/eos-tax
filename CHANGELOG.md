@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.26] - 2026-11-16
+
+### Changed
+
+- "Possibly banned" has a "Found" column with the month of the finding and
+  arrives sorted by it, newest first, each main by its newest character.
+  The table only sorted by name, so a fresh ban sat wherever its main's
+  name put it among months-old ones. The month is that of the newest GM X
+  booking where there is one, else the newest month a list showed the
+  character: a GM taking ISK is the firmer trace, so it wins even over a
+  newer list month. Months only, since the lists know no finer date.
+  Clicking "Found" sorts the mains and the characters inside them, and
+  either it or "Main" orders the groups, never both at once.
+
 ## [0.4.25] - 2026-11-16
 
 ### Changed

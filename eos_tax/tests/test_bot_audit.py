@@ -255,7 +255,9 @@ class TestAuditTab(EosTaxTestCase):
 
         self.assertIn("eosTaxSortGroups(pane);", script)
         self.assertIn("[scope='rowgroup']", script)
-        self.assertIn("a.dataset.eosGroup", script)
+        self.assertIn("a.dataset[groupKey]", script)
+        # "Found" on Possibly banned orders the groups by its own key
+        self.assertIn("button.dataset.eosGroupKey", script)
 
     def test_should_say_so_when_everybody_has_a_current_audit(self):
         response = self.client.get(
