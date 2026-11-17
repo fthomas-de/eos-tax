@@ -4,13 +4,24 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-17 (0.4.27).
+Last updated 2026-11-17 (0.4.28).
 
 ## Release
 
-- Version **0.4.27** in `eos_tax/__init__.py`, released 2026-11-17, tag
-  `v0.4.27`
-- `[0.4.27]` in `CHANGELOG.md`: GM Transactions opens to `basic_access`
+- Version **0.4.28** in `eos_tax/__init__.py`, released 2026-11-17, tag
+  `v0.4.28`
+- `[0.4.28]` in `CHANGELOG.md`: a "Reason" column (the journal's
+  `reason`, the text the GM typed) before "Description" on GM Transactions
+  (searchable) and on the bots GM tab. Where it lives:
+  `gm_transactions.find_gm_transactions` stores `reason` (None as `""`),
+  `row_for` passes `transaction.get("reason")` - None for a report stored
+  before, which the templates print as a dash (`default_if_none`);
+  `gm-transactions.html`, `partials/bot-gm-detail.html`, the `columns`
+  entry in `gm-transactions.js`; `add_wallet_entry(..., reason=)` in
+  `factories.py`. Tests: one in `TestFindGmTransactions`, two in
+  `TestGmView`, one in `TestGmTab`; three sabotages caught. "Reason"
+  already existed in all catalogues (kept English). Decisions below
+- `[0.4.27]`: GM Transactions opens to `basic_access`
   (the CEOs), narrowed to the Corporation of their main and read only.
   Where it lives: `views.gm_transactions` (lets `basic_access` in; without
   `admin_view`/`gm_bots_access` it passes the main's `corporation_id` and
@@ -97,7 +108,7 @@ Last updated 2026-11-17 (0.4.27).
   0028, `GmReport` 0029). `manage_settings` (0.4.5, 0027) guards every
   settings write; `admin_view` alone sees the settings page read only
 - Migrations **0001-0037** applied to `aa_dev`
-- 863 tests, all green (848 without the translation tag, 15 with it); the
+- 867 tests, all green (852 without the translation tag, 15 with it); the
   suite ran `--fresh` at the commit
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the page's
   GM rows can only be seen in tests or on production data. 0.4.9 to 0.4.16
@@ -108,6 +119,18 @@ Last updated 2026-11-17 (0.4.27).
   kept literal in de. `zh_Hans` (0.4.24) is machine-translated, not read by
   a native speaker, not looked at in a browser
 - `CHANGELOG.md` is newest first
+
+## Decisions of the 2026-11-17 session (0.4.28)
+
+The "Reason" column - the user's choices unless marked:
+
+- **Stored by the GM job**, not read live at render: an old report shows
+  a dash until the next run or Recalculate.
+- **Before "Description"**, **searchable**, and **on the bots GM tab too**.
+- Claude's calls: hidden on narrow screens like Description (`d-lg`); an
+  empty reason is an empty cell, the dash only means "not read yet"; the
+  wallet-below-zero row stays empty. Not looked at in a browser (`aa_dev`
+  has no GM booking).
 
 ## Decisions of the 2026-11-17 session (0.4.27)
 
@@ -630,6 +653,12 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
+0000000000. **On deploying 0.4.28**: no migration; `collectstatic` for
+   `gm-transactions.js`, and restart the Celery workers - a worker on
+   older code stores reports without `reason`. Then press Recalculate on
+   GM Transactions once, or the Reason column stays all dashes until the
+   next periodic run. Check what GMs really write there and whether the
+   column is worth its width.
 000000000. **On deploying 0.4.27**: nothing to migrate or restart, no
    static file changed. Log in as a CEO holding `basic_access` only: is
    the "GM Transactions" tab there, does it list only the main's
