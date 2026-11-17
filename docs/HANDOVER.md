@@ -4,13 +4,22 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-16 (0.4.26).
+Last updated 2026-11-17 (0.4.27).
 
 ## Release
 
-- Version **0.4.26** in `eos_tax/__init__.py`, released 2026-11-16, tag
-  `v0.4.26`
-- `[0.4.26]` in `CHANGELOG.md`: "Possibly banned" has a "Found" column
+- Version **0.4.27** in `eos_tax/__init__.py`, released 2026-11-17, tag
+  `v0.4.27`
+- `[0.4.27]` in `CHANGELOG.md`: GM Transactions opens to `basic_access`
+  (the CEOs), narrowed to the Corporation of their main and read only.
+  Where it lives: `views.gm_transactions` (lets `basic_access` in; without
+  `admin_view`/`gm_bots_access` it passes the main's `corporation_id` and
+  `read_only`), `gm_transactions.get_gm_page(..., corporation_id=)` (the
+  `own()` filter after `corporation_then`), `gm-transactions.html` (note
+  as text, green check, no popup when `read_only`), `base.html` (nav tab).
+  The note/cleared endpoints were left at `BOTS_GM_READ`, so a CEO's POST
+  is a 403. Tests `TestGmCeo` and two in `TestGmView`. Decisions below
+- `[0.4.26]`: "Possibly banned" has a "Found" column
   (month of the finding) and arrives sorted by it, newest first, each main
   by its newest character. Where it lives: `gm_transactions.gm_x_months`
   (was `gm_x_character_ids`, now `{character_id: "YYYY-MM"}` of the
@@ -88,7 +97,7 @@ Last updated 2026-11-16 (0.4.26).
   0028, `GmReport` 0029). `manage_settings` (0.4.5, 0027) guards every
   settings write; `admin_view` alone sees the settings page read only
 - Migrations **0001-0037** applied to `aa_dev`
-- 857 tests, all green (842 without the translation tag, 15 with it); the
+- 863 tests, all green (848 without the translation tag, 15 with it); the
   suite ran `--fresh` at the commit
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the page's
   GM rows can only be seen in tests or on production data. 0.4.9 to 0.4.16
@@ -99,6 +108,32 @@ Last updated 2026-11-16 (0.4.26).
   kept literal in de. `zh_Hans` (0.4.24) is machine-translated, not read by
   a native speaker, not looked at in a browser
 - `CHANGELOG.md` is newest first
+
+## Decisions of the 2026-11-17 session (0.4.27)
+
+GM Transactions for CEOs - the user's choices unless marked:
+
+- **The CEO permission is `basic_access`** - no new permission.
+- **Own Corporation = the main's Corporation only**, not those of the
+  user's alts (the overview uses every character's; this page does not).
+- **A row counts when the character is in that Corporation now, or was
+  when it booked the transaction** - so a member of today shows with
+  bookings from before joining, a member who left with the bookings made
+  while in.
+- **Wallet below zero: only for a member of today** (no moment to look
+  the Corporation up at).
+- **Read only, notes visible**: note as text, the tick as a green check,
+  no popup, no Recalculate.
+- Claude's calls: `admin_view` or `gm_bots_access` beside `basic_access`
+  still sees everything; the "Main", "Corporations in the Alliance" and
+  alliance-switch stay for CEOs (they can reveal where a member's alts
+  are - accepted, mentioned to the user); the footer counts only the
+  CEO's rows; the character name still links to corptools (a CEO without
+  corptools access gets corptools' own refusal); the GM tab of the bots
+  character page stays `BOTS_GM_READ`. Eight sabotages (filter, view,
+  admin case, template, nav), all caught. "Main's
+  Corporation, not the alt's" is covered by the CEO's alt in Bravo in
+  `TestGmCeo.setUp`, not sabotaged on its own. Not looked at in a browser.
 
 ## Decisions of the 2026-11-16 session (0.4.26)
 
@@ -595,6 +630,13 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
+000000000. **On deploying 0.4.27**: nothing to migrate or restart, no
+   static file changed. Log in as a CEO holding `basic_access` only: is
+   the "GM Transactions" tab there, does it list only the main's
+   Corporation (members of today, and bookings made while in it by those
+   who left), are the notes readable and nothing editable? Check whether
+   the Character link to corptools makes sense for a CEO, or should go
+   for them.
 00000000. **On deploying 0.4.25 / 0.4.26**: nothing to migrate or restart
    - the tab reads live; `collectstatic` for `bots.js`. Open "Possibly
    banned" after the GM job has run: do the characters with a GM X
@@ -819,6 +861,11 @@ script runs there.
 
 ## Traps recent sessions cost time on
 
+- **`gm-transactions.html` is stored with CRLF line endings** (`base.html`
+  and `views.py` with LF; other files not checked). The Edit tool through `\\wsl.localhost` wrote it back
+  as LF, and `git diff` showed all 287 lines changed (2026-11-17). Check
+  `git diff --stat` before committing; `sed -i 's/$/\r/' <file>` restored
+  it.
 - **Through PowerShell, `wsl.exe ... bash -lc '...'` loses `"$(...)"`
   and inner double quotes** - a `grep -c` inside `$(...)` and a
   `--format="%h %s"` came out mangled (2026-11-16). Anything beyond a
