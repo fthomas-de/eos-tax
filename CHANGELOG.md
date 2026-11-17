@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.27] - 2026-11-17
+
+### Changed
+
+- GM Transactions opens to `basic_access` too - the CEOs - narrowed to the
+  Corporation of their main: a character in it now, with every GM booking
+  it has, and a booking made while the character was in it, even after it
+  left. A wallet below zero has no moment to look back at, so it shows only
+  for a member of today. The main's Corporation alone, not an alt's, so a
+  CEO's alt in another Corporation opens no rows there. CEOs read the notes
+  and the cleared ticks but cannot change them, and get no Recalculate
+  button; the note and cleared endpoints already refused them with a 403.
+  `admin_view` and `gm_bots_access` still see every row, also beside
+  `basic_access`.
+
 ## [0.4.26] - 2026-11-16
 
 ### Changed

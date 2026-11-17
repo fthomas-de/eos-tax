@@ -122,6 +122,16 @@
                                         attribute; gm-transactions.js reads and writes it as text.
                                         The title is the tooltip, the stored note itself.
                                     {% endcomment %}
+                                    {% if read_only %}
+                                        {# a CEO reads leadership's note and tick, as on the bots page's GM tab #}
+                                        <td class="small" data-order="{{ row.note }}" data-search="{{ row.note }}">{{ row.note|linebreaksbr }}</td>
+                                        <td class="text-center" data-order="{% if row.cleared %}1{% else %}0{% endif %}">
+                                            {% if row.cleared %}
+                                                <i class="fa-solid fa-check text-success" aria-hidden="true"></i>
+                                                <span class="visually-hidden">{{ cleared_label }}</span>
+                                            {% endif %}
+                                        </td>
+                                    {% else %}
                                     <td data-order="{{ row.note }}" data-search="{{ row.note }}">
                                         <button type="button"
                                                 class="btn btn-sm {% if row.note %}btn-secondary{% else %}btn-outline-secondary{% endif %}"
@@ -142,6 +152,7 @@
                                                title="{% if row.note %}{{ cleared_label }}{% else %}{{ needs_note_label }}{% endif %}"
                                                {% if row.cleared %}checked{% endif %} {% if not row.note %}disabled{% endif %}>
                                     </td>
+                                    {% endif %}
                                     {# a wallet below zero without a GM transaction has no date #}
                                     {% if row.amount is not None %}
                                         <td class="text-nowrap" data-order="{{ row.date|date:'c' }}">{{ row.date|date:"Y-m-d H:i" }}</td>
@@ -203,6 +214,7 @@
                     </table>
                 </div>
 
+                {% if not read_only %}
                 {# one popup for every row; gm-transactions.js fills it from the button that opened it #}
                 <div class="modal fade" id="eos-tax-gm-note" tabindex="-1"
                      aria-labelledby="eos-tax-gm-note-title" aria-hidden="true"
@@ -239,6 +251,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
             {% else %}
                 <div class="alert alert-success text-center">
                     {% translate "No GM transaction in any character journal, and no wallet below zero." %}

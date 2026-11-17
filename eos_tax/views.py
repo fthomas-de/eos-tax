@@ -245,9 +245,15 @@ def tax_changes(request):
 
 
 @login_required
-@any_permission_required(BOTS_GM_READ)
+# basic_access - the CEOs - reads its own Corporation's rows, the user's choice
+@any_permission_required(BOTS_GM_READ + ("eos_tax.basic_access",))
 def gm_transactions(request):
     """Characters with a GM transaction in their journal, or a wallet below zero."""
+    corporation_id = None
+    if not any(request.user.has_perm(perm) for perm in BOTS_GM_READ):
+        # the main's Corporation alone, not every alt's - the user's choice
+        corporation_id = request.user.profile.main_character.corporation_id
+
     stored = get_stored_gm_report()
 
     if stored is None:
@@ -259,13 +265,15 @@ def gm_transactions(request):
         "title": _("GM Transactions"),
         "version": VERSION,
         "pending": stored is None,
+        # notes and ticks shown but not editable; the endpoints refuse a CEO too
+        "read_only": corporation_id is not None,
         "js_config": {
             "searchLabel": _("Search:"),
             "searchPlaceholder": _("Character, Corporation or Main"),
         },
     }
     if stored is not None:
-        context.update(get_gm_page(stored))
+        context.update(get_gm_page(stored, corporation_id=corporation_id))
 
     return render(request, "eos_tax/gm-transactions.html", context)
 

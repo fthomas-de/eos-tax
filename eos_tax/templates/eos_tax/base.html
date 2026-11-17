@@ -31,7 +31,8 @@
         {% include "eos_tax/partials/nav-item.html" with nav_url=tax_changes_url nav_title=tax_changes_title nav_view="eos_tax:tax_changes eos_tax:tax_change_detail" %}
     {% endif %}
 
-    {% if perms.eos_tax.admin_view or perms.eos_tax.gm_bots_access %}
+    {# basic_access sees its own Corporation's rows there #}
+    {% if perms.eos_tax.admin_view or perms.eos_tax.gm_bots_access or perms.eos_tax.basic_access %}
         {% url "eos_tax:gm_transactions" as gm_transactions_url %}
         {% translate "GM Transactions" as gm_transactions_title %}
         {% include "eos_tax/partials/nav-item.html" with nav_url=gm_transactions_url nav_title=gm_transactions_title nav_view="eos_tax:gm_transactions" %}

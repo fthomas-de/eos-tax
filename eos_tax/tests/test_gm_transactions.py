@@ -574,11 +574,22 @@ class TestGmView(GmTestCase):
     def tearDown(self):
         cache.clear()
 
-    def test_should_redirect_without_admin_view(self):
-        user = create_user("basic", 2100000197, BRAVO_CORP_ID, "Bravo Corp", ["basic_access"])
+    def test_should_redirect_without_any_permission(self):
+        user = create_user("nobody", 2100000197, BRAVO_CORP_ID, "Bravo Corp")
         self.client.force_login(user)
 
         self.assertEqual(self.client.get(self.url).status_code, 302)
+
+    def test_should_show_admin_view_every_corporation(self):
+        """basic_access beside admin_view must not narrow the page to the
+        admin's own Corporation."""
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3))
+        EveCharacter.objects.filter(character_id=GM_ID).update(corporation_id=ALPHA_CORP_ID)
+
+        body = table_body(self.client.get(self.url))
+
+        self.assertIn("Mr Vaseline", body)
+        self.assertIn("data-eos-note-character", body)
 
     def test_should_render_the_rows_the_job_found(self):
         add_wallet_entry(self.gm, GM_TEXT, Decimal("-5000000000"), _at(3))
@@ -865,6 +876,98 @@ class TestGmView(GmTestCase):
         self.assertIn("order: []", script)
         self.assertIn("[data-eos-pending]", script)
         self.assertIn("window.location.reload()", script)
+
+
+class TestGmCeo(GmTestCase):
+    """basic_access - a CEO - sees its main's Corporation only: characters in
+    it now, and transactions booked while in it."""
+
+    def setUp(self):
+        super().setUp()
+        self.ceo = create_user("ceo", 2100000196, ALPHA_CORP_ID, "Alpha Corp", ["basic_access"])
+        self.url = reverse("eos_tax:gm_transactions")
+        # an alt in Bravo must not open Bravo's rows - the main's Corporation only
+        create_alt(self.ceo, 2100000195, "CEO alt")
+        # Mr Vaseline: in Bravo now, in Alpha during 2022
+        add_corporation_history(GM_ID, ALPHA_CORP_ID, datetime(2022, 1, 1, tzinfo=timezone.utc))
+        add_corporation_history(GM_ID, BRAVO_CORP_ID, datetime(2023, 1, 1, tzinfo=timezone.utc))
+        self.while_ours = add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"),
+                                           datetime(2022, 6, 1, tzinfo=timezone.utc))
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-2"), _at(3))
+
+    def tearDown(self):
+        cache.clear()
+
+    def audit(self, character_id, corporation_id, balance, name):
+        audit = add_character_audit(character_id, True, name=name)
+        audit.balance = Decimal(balance)
+        audit.save()
+        EveCharacter.objects.filter(character_id=character_id).update(
+            corporation_id=corporation_id
+        )
+        return audit
+
+    def ceo_page(self):
+        store_gm_report()
+
+        return get_gm_page(get_stored_gm_report(), corporation_id=ALPHA_CORP_ID)
+
+    def test_should_keep_a_transaction_booked_while_in_the_corporation(self):
+        rows = self.ceo_page()["rows"]
+
+        self.assertEqual([row["amount"] for row in rows], [Decimal("-1")])
+
+    def test_should_keep_every_transaction_of_a_member_now(self):
+        """Booked before joining, still the CEO's member today."""
+        member = self.audit(MAIN_ID, ALPHA_CORP_ID, "100.00", "New Member")
+        add_wallet_entry(member, "GM [1] issued transaction between New Member and GM X",
+                         Decimal("-7"), _at(5))
+
+        rows = self.ceo_page()["rows"]
+
+        self.assertEqual(
+            [(row["character_id"], row["amount"]) for row in rows],
+            [(MAIN_ID, Decimal("-7")), (GM_ID, Decimal("-1"))],
+        )
+
+    def test_should_keep_a_wallet_below_zero_only_for_a_member_now(self):
+        self.audit(BROKE_ID, ALPHA_CORP_ID, "-10.00", "Broke Member")
+        self.audit(DEEPER_ID, BRAVO_CORP_ID, "-900.00", "Broke Stranger")
+
+        page = self.ceo_page()
+
+        self.assertEqual(
+            [row["character_id"] for row in page["rows"]], [GM_ID, BROKE_ID]
+        )
+        self.assertEqual(page["stats"], {"transactions": 1, "characters": 2, "negative": 1})
+
+    def test_should_show_the_ceo_only_the_own_rows_read_only(self):
+        GmNote.objects.create(character_id=GM_ID, entry_id=self.while_ours.entry_id,
+                              text="refund asked", cleared=True)
+        self.client.force_login(self.ceo)
+
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, 200)
+        body = table_body(response)
+        self.assertEqual(body.count("</tr>"), 1)
+        self.assertIn("refund asked", body)
+        self.assertIn("fa-check text-success", body)
+        self.assertNotIn("data-eos-note-character", body)
+        self.assertNotIn("data-eos-cleared-box", body)
+        self.assertNotContains(response, 'id="eos-tax-gm-note"')
+        self.assertNotContains(response, reverse("eos_tax:gm_transactions_recalculate"))
+        self.assertContains(response, f'href="{self.url}"')
+
+    def test_should_refuse_a_note_or_tick_from_the_ceo(self):
+        self.client.force_login(self.ceo)
+        row = {"character_id": GM_ID, "entry_id": self.while_ours.entry_id}
+
+        self.assertEqual(self.client.post(reverse("eos_tax:gm_transactions_note"),
+                                          {**row, "text": "x"}).status_code, 403)
+        self.assertEqual(self.client.post(reverse("eos_tax:gm_transactions_cleared"),
+                                          {**row, "cleared": "1"}).status_code, 403)
+        self.assertFalse(GmNote.objects.exists())
 
 
 class TestFlaggedParty(EosTaxTestCase):

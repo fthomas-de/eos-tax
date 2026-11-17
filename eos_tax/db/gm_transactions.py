@@ -499,10 +499,12 @@ def account_character_ids(character_id):
     return set(owners) | {character_id}
 
 
-def get_gm_page(stored, character_ids=None):
+def get_gm_page(stored, character_ids=None, corporation_id=None):
     """One row per GM transaction, and one per character below zero without one.
 
     character_ids: only these characters - one account on the bots page.
+    corporation_id: only what this Corporation's CEO may see - characters in
+    it now, and transactions booked while in it.
     """
     transactions = stored["transactions"]
     balances = _negative_balances()
@@ -562,6 +564,22 @@ def get_gm_page(stored, character_ids=None):
         return corporation_names.get(
             _corporation_at(periods.get(character_id), transaction["date"]), ""
         )
+
+    if corporation_id is not None:
+        def own(character_id, transaction=None):
+            character = characters.get(character_id)
+            if character and character.corporation_id == corporation_id:
+                return True
+            # a member who left still booked this one with us
+            return bool(transaction) and _corporation_at(
+                periods.get(character_id), transaction["date"]
+            ) == corporation_id
+
+        transactions = [row for row in transactions if own(row["character_id"], row)]
+        negative_only = {eve_id for eve_id in negative_only if own(eve_id)}
+        listed = {row["character_id"] for row in transactions} | negative_only
+        # the footer counts the wallets of the rows shown, not everyone's
+        balances = {eve_id: balance for eve_id, balance in balances.items() if eve_id in listed}
 
     def row_for(character_id, transaction=None):
         character = characters.get(character_id)
