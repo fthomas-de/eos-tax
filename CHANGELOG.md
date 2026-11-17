@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.28] - 2026-11-17
+
+### Added
+
+- GM Transactions and the GM tab of the bots character page have a
+  "Reason" column before "Description": the text the GM typed into the
+  transfer, which the page did not show although corptools keeps it. It is
+  searchable on GM Transactions. The GM job stores it with the rest of
+  the booking, so a report stored before shows a dash until the next run
+  or Recalculate; a booking without a reason shows an empty cell.
+
 ## [0.4.27] - 2026-11-17
 
 ### Changed

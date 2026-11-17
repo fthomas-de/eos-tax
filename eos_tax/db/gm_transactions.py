@@ -111,8 +111,10 @@ def find_gm_transactions():
             "date": date,
             "amount": amount,
             "description": description,
+            # corptools stores a missing reason as None
+            "reason": reason or "",
         }
-        for character_id, entry_id, date, amount, description in (
+        for character_id, entry_id, date, amount, description, reason in (
             CharacterWalletJournalEntry.objects.filter(
                 description__startswith=GM_PREFIX
             )
@@ -123,6 +125,7 @@ def find_gm_transactions():
                 "date",
                 "amount",
                 "description",
+                "reason",
             )
         )
     ]
@@ -621,6 +624,8 @@ def get_gm_page(stored, character_ids=None, corporation_id=None):
             "named_character": named,
             "counterparty": other,
             "description": transaction["description"] if transaction else "",
+            # None, a dash, for a report stored before the job read reasons
+            "reason": transaction.get("reason") if transaction else "",
             "note": note,
             "cleared": cleared,
         }

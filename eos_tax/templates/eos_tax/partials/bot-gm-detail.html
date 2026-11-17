@@ -21,6 +21,7 @@
                     <th scope="col">{% translate "Corporation at the time" %}</th>
                     <th scope="col" class="text-end">{% translate "Amount" %}</th>
                     <th scope="col" class="text-end">{% translate "Wallet balance" %}</th>
+                    <th scope="col" class="d-none d-lg-table-cell">{% translate "Reason" %}</th>
                     <th scope="col" class="d-none d-lg-table-cell">{% translate "Description" %}</th>
                     <th scope="col" class="d-none d-md-table-cell">{% translate "Note" %}</th>
                     <th scope="col" class="d-none d-md-table-cell">{% translate "Cleared" %}</th>
@@ -55,6 +56,8 @@
                         {% else %}
                             <td class="text-end">&mdash;</td>
                         {% endif %}
+                        {# a dash only for a report stored before the job read reasons #}
+                        <td class="d-none d-lg-table-cell small">{{ row.reason|default_if_none:"&mdash;" }}</td>
                         <td class="d-none d-lg-table-cell small">{{ row.description }}</td>
                         {# read only here; it is written on GM Transactions #}
                         <td class="d-none d-md-table-cell small">{{ row.note|linebreaksbr }}</td>

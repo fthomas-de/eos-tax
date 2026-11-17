@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: eos_tax\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-16 10:44+0000\n"
+"POT-Creation-Date: 2026-11-17 14:42+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: auth_hooks.py:19 templates/eos_tax/base.html:5
-#: templates/eos_tax/base.html:60
+#: templates/eos_tax/base.html:61
 msgid "Alliance PvE Tax"
 msgstr "Alliance PvE Tax"
 
@@ -625,7 +625,7 @@ msgstr "Resumen"
 msgid "Statistics"
 msgstr "Estadísticas"
 
-#: templates/eos_tax/base.html:24 views.py:696
+#: templates/eos_tax/base.html:24 views.py:704
 msgid "Bots"
 msgstr "Bots"
 
@@ -633,14 +633,14 @@ msgstr "Bots"
 msgid "Corp Tax Changes"
 msgstr "Corp Tax Changes"
 
-#: templates/eos_tax/base.html:36
+#: templates/eos_tax/base.html:37
 #: templates/eos_tax/partials/bot-gm-detail.html:6
 #: templates/eos_tax/partials/bot-tabs.html:38
-#: templates/eos_tax/partials/progress.html:16 views.py:259
+#: templates/eos_tax/partials/progress.html:16 views.py:265
 msgid "GM Transactions"
 msgstr "Transacciones de GM"
 
-#: templates/eos_tax/base.html:42 views.py:431
+#: templates/eos_tax/base.html:43 views.py:439
 msgid "Settings"
 msgstr "Ajustes"
 
@@ -840,8 +840,8 @@ msgid "Add a note"
 msgstr "Añadir una nota"
 
 #: templates/eos_tax/gm-transactions.html:8
-#: templates/eos_tax/partials/bot-gm-detail.html:26
-#: templates/eos_tax/partials/bot-gm-detail.html:65
+#: templates/eos_tax/partials/bot-gm-detail.html:27
+#: templates/eos_tax/partials/bot-gm-detail.html:68
 msgid "Cleared"
 msgstr "Aclarado"
 
@@ -894,15 +894,15 @@ msgid "This character or another character of the same Main is in the Alliance"
 msgstr "Este character u otro character del mismo Main está en la Alliance"
 
 #: templates/eos_tax/gm-transactions.html:78
-#: templates/eos_tax/gm-transactions.html:114
+#: templates/eos_tax/gm-transactions.html:115
 msgid "In the Alliance"
 msgstr "En la Alliance"
 
 #: templates/eos_tax/gm-transactions.html:79
-#: templates/eos_tax/gm-transactions.html:137
-#: templates/eos_tax/gm-transactions.html:220
-#: templates/eos_tax/gm-transactions.html:226
-#: templates/eos_tax/partials/bot-gm-detail.html:25
+#: templates/eos_tax/gm-transactions.html:148
+#: templates/eos_tax/gm-transactions.html:235
+#: templates/eos_tax/gm-transactions.html:241
+#: templates/eos_tax/partials/bot-gm-detail.html:26
 msgid "Note"
 msgstr "Nota"
 
@@ -974,59 +974,64 @@ msgstr "Importe"
 msgid "Wallet balance"
 msgstr "Saldo del wallet"
 
-#: templates/eos_tax/gm-transactions.html:92
+#: templates/eos_tax/gm-transactions.html:92 templates/eos_tax/index.html:55
 #: templates/eos_tax/partials/bot-gm-detail.html:24
+msgid "Reason"
+msgstr "Reason"
+
+#: templates/eos_tax/gm-transactions.html:93
+#: templates/eos_tax/partials/bot-gm-detail.html:25
 msgid "Description"
 msgstr "Descripción"
 
-#: templates/eos_tax/gm-transactions.html:162
+#: templates/eos_tax/gm-transactions.html:174
 #, python-format
 msgid "%(days)s day"
 msgid_plural "%(days)s days"
 msgstr[0] "%(days)s día"
 msgstr[1] "%(days)s días"
 
-#: templates/eos_tax/gm-transactions.html:177
+#: templates/eos_tax/gm-transactions.html:189
 #: templates/eos_tax/partials/bot-character-cells.html:23
 msgid "not registered"
 msgstr "sin registrar"
 
-#: templates/eos_tax/gm-transactions.html:214
+#: templates/eos_tax/gm-transactions.html:229
 msgid "Could not save the note."
 msgstr "No se pudo guardar la nota."
 
-#: templates/eos_tax/gm-transactions.html:223
-#: templates/eos_tax/gm-transactions.html:236
+#: templates/eos_tax/gm-transactions.html:238
+#: templates/eos_tax/gm-transactions.html:251
 msgid "Cancel"
 msgstr "Cancelar"
 
-#: templates/eos_tax/gm-transactions.html:239
+#: templates/eos_tax/gm-transactions.html:254
 msgid "Save"
 msgstr "Guardar"
 
-#: templates/eos_tax/gm-transactions.html:247
+#: templates/eos_tax/gm-transactions.html:263
 msgid "No GM transaction in any character journal, and no wallet below zero."
 msgstr ""
 "Ninguna transacción de GM en el journal de ningún character, y ningún wallet "
 "por debajo de cero."
 
-#: templates/eos_tax/gm-transactions.html:253
-#: templates/eos_tax/partials/bot-gm-detail.html:75
+#: templates/eos_tax/gm-transactions.html:269
+#: templates/eos_tax/partials/bot-gm-detail.html:78
 #, python-format
 msgid "%(counter)s GM transaction"
 msgid_plural "%(counter)s GM transactions"
 msgstr[0] "%(counter)s transacción de GM"
 msgstr[1] "%(counter)s transacciones de GM"
 
-#: templates/eos_tax/gm-transactions.html:254
-#: templates/eos_tax/partials/bot-gm-detail.html:76
+#: templates/eos_tax/gm-transactions.html:270
+#: templates/eos_tax/partials/bot-gm-detail.html:79
 #, python-format
 msgid "%(counter)s wallet below zero"
 msgid_plural "%(counter)s wallets below zero"
 msgstr[0] "%(counter)s wallet por debajo de cero"
 msgstr[1] "%(counter)s wallets por debajo de cero"
 
-#: templates/eos_tax/gm-transactions.html:255
+#: templates/eos_tax/gm-transactions.html:271
 #: templates/eos_tax/partials/bot-clock.html:72
 #: templates/eos_tax/partials/bot-group-header.html:15
 #: templates/eos_tax/partials/bot-rhythm.html:72
@@ -1099,10 +1104,6 @@ msgstr "Importe a pagar en ISK"
 #: templates/eos_tax/index.html:53
 msgid "Amount paid in ISK"
 msgstr "Importe pagado en ISK"
-
-#: templates/eos_tax/index.html:55
-msgid "Reason"
-msgstr "Reason"
 
 #: templates/eos_tax/index.html:75 templates/eos_tax/index.html:77
 msgid "No ingame corp tax, so nothing reaches the corporation wallet to tax."
@@ -1230,28 +1231,28 @@ msgstr "Aparece en Transacciones de GM"
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:8
 #: templates/eos_tax/partials/progress.html:23
-#: templates/eos_tax/settings.html:239 views.py:874
+#: templates/eos_tax/settings.html:239 views.py:882
 msgid "Hours per day"
 msgstr "Horas por día"
 
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:15
 #: templates/eos_tax/partials/progress.html:24
-#: templates/eos_tax/settings.html:254 views.py:875
+#: templates/eos_tax/settings.html:254 views.py:883
 msgid "Unbroken runs"
 msgstr "Rachas ininterrumpidas"
 
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:22
 #: templates/eos_tax/partials/progress.html:25
-#: templates/eos_tax/settings.html:271 views.py:876
+#: templates/eos_tax/settings.html:271 views.py:884
 msgid "Against the Corporation"
 msgstr "Al ritmo de la Corporation"
 
 #: templates/eos_tax/partials/bot-audit.html:49
 #: templates/eos_tax/partials/bot-tabs.html:29
 #: templates/eos_tax/partials/progress.html:26
-#: templates/eos_tax/settings.html:289 views.py:877
+#: templates/eos_tax/settings.html:289 views.py:885
 msgid "Off the Corporation clock"
 msgstr "Fuera del horario de la Corporation"
 
@@ -1454,7 +1455,7 @@ msgstr "Diferencia"
 
 #: templates/eos_tax/partials/bot-clock.html:33
 #: templates/eos_tax/partials/bot-rhythm.html:33
-#: templates/eos_tax/tax-changes.html:73 views.py:354
+#: templates/eos_tax/tax-changes.html:73 views.py:362
 msgid "Payouts"
 msgstr "Pagos"
 
@@ -1542,7 +1543,7 @@ msgstr ""
 "Las transacciones de GM se están buscando en segundo plano. Esta pestaña las "
 "carga por sí sola en cuanto estén listas."
 
-#: templates/eos_tax/partials/bot-gm-detail.html:81
+#: templates/eos_tax/partials/bot-gm-detail.html:84
 msgid "No GM transaction and no wallet below zero on this account."
 msgstr ""
 "Ninguna transacción de GM y ningún wallet por debajo de cero en esta cuenta."
@@ -1790,12 +1791,12 @@ msgstr "Día promedio (horas)"
 msgid "Contributed tax"
 msgstr "Impuesto aportado"
 
-#: templates/eos_tax/partials/bot-tabs.html:48 views.py:878
+#: templates/eos_tax/partials/bot-tabs.html:48 views.py:886
 msgid "Without current audit"
 msgstr "Sin auditoría al día"
 
 #: templates/eos_tax/partials/bot-tabs.html:55
-#: templates/eos_tax/settings.html:307 views.py:879
+#: templates/eos_tax/settings.html:307 views.py:887
 msgid "Possibly banned"
 msgstr "Posiblemente baneado"
 
@@ -2484,7 +2485,7 @@ msgstr "Cambio en la parte"
 msgid "On"
 msgstr "El"
 
-#: templates/eos_tax/tax-changes.html:72 views.py:355
+#: templates/eos_tax/tax-changes.html:72 views.py:363
 msgid "Systems"
 msgstr "Sistemas"
 
@@ -2553,7 +2554,7 @@ msgstr "Corporation:"
 msgid "Filter by corporation name"
 msgstr "Filtrar por nombre de Corporation"
 
-#: views.py:167 views.py:663 views.py:722
+#: views.py:167 views.py:671 views.py:730
 msgid "Loading…"
 msgstr "Cargando…"
 
@@ -2593,7 +2594,7 @@ msgstr "{value} ISK de ingreso"
 msgid "{value} ISK tax"
 msgstr "{value} ISK de impuesto"
 
-#: views.py:240 views.py:263
+#: views.py:240 views.py:271
 msgid "Search:"
 msgstr "Buscar:"
 
@@ -2601,60 +2602,60 @@ msgstr "Buscar:"
 msgid "Corporation name, or a rate such as 0 or 100"
 msgstr "Nombre de la corporation o un tipo como 0 o 100"
 
-#: views.py:264
+#: views.py:272
 msgid "Character, Corporation or Main"
 msgstr "Character, Corporation o Main"
 
-#: views.py:353
+#: views.py:361
 msgid "Share of the bounty in percent"
 msgstr "Parte de la bounty en por ciento"
 
-#: views.py:396
+#: views.py:404
 msgid "Settings saved."
 msgstr "Ajustes guardados."
 
-#: views.py:444
+#: views.py:452
 msgid "Calculating…"
 msgstr "Calculando…"
 
-#: views.py:445
+#: views.py:453
 msgid "Could not recalculate this month."
 msgstr "No se pudo recalcular este mes."
 
-#: views.py:664 views.py:723
+#: views.py:672 views.py:731
 msgid "Could not load this view."
 msgstr "No se pudo cargar esta vista."
 
-#: views.py:778
+#: views.py:786
 #, python-format
 msgid "%(name)s is not one of your characters."
 msgstr "%(name)s no es uno de tus characters."
 
-#: views.py:786 views.py:817
+#: views.py:794 views.py:825
 #, python-format
 msgid "Windows now open in the EVE client of %(name)s."
 msgstr "Las ventanas se abren ahora en el cliente de EVE de %(name)s."
 
-#: views.py:801
+#: views.py:809
 msgid "No in-game character chosen."
 msgstr "Ningún character en el juego elegido."
 
-#: views.py:830
+#: views.py:838
 msgid "Choose your in-game character above first."
 msgstr "Elige primero arriba tu character en el juego."
 
-#: views.py:838
+#: views.py:846
 #, python-format
 msgid "%(name)s has no token for in-game windows any more - add it again."
 msgstr ""
 "%(name)s ya no tiene token para ventanas en el juego; vuelve a añadirlo."
 
-#: views.py:852
+#: views.py:860
 #, python-format
 msgid "The window could not be opened. Is %(name)s logged in to EVE?"
 msgstr "No se pudo abrir la ventana. ¿Está %(name)s conectado a EVE?"
 
-#: views.py:857
+#: views.py:865
 #, python-format
 msgid "Opened in the EVE client of %(name)s."
 msgstr "Abierto en el cliente de EVE de %(name)s."

@@ -393,7 +393,8 @@ def add_member_payout(character_id, corporation_id, date, amount, tax,
     )
 
 
-def add_wallet_entry(audit, description, amount, date, ref_type="gm_cash_transfer"):
+def add_wallet_entry(audit, description, amount, date, ref_type="gm_cash_transfer",
+                     reason=None):
     """One row of a character's own wallet journal, written by hand.
 
     `audit` from `add_character_audit` - corptools keeps a character's
@@ -406,4 +407,5 @@ def add_wallet_entry(audit, description, amount, date, ref_type="gm_cash_transfe
         entry_id=next(entry_ids),
         ref_type=ref_type,
         amount=amount,
+        reason=reason,
     )

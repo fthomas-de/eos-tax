@@ -89,6 +89,7 @@
                                 <th scope="col" class="d-none d-md-table-cell">{% translate "Alliance" %}</th>
                                 <th scope="col" class="text-end">{% translate "Amount" %}</th>
                                 <th scope="col" class="text-end">{% translate "Wallet balance" %}</th>
+                                <th scope="col" class="d-none d-lg-table-cell">{% translate "Reason" %}</th>
                                 <th scope="col" class="d-none d-lg-table-cell">{% translate "Description" %}</th>
                             </tr>
                         </thead>
@@ -207,6 +208,8 @@
                                     {% else %}
                                         <td class="text-end" data-order="0">&mdash;</td>
                                     {% endif %}
+                                    {# a dash only for a report stored before the job read reasons #}
+                                    <td class="d-none d-lg-table-cell small">{{ row.reason|default_if_none:"&mdash;" }}</td>
                                     <td class="d-none d-lg-table-cell small">{{ row.description }}</td>
                                 </tr>
                             {% endfor %}

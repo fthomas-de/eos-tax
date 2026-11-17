@@ -148,6 +148,16 @@ class TestFindGmTransactions(GmTestCase):
         self.assertEqual(transaction["date"], _at(3))
         self.assertEqual(transaction["amount"], Decimal("-5000000000.50"))
 
+    def test_should_keep_the_reason_and_an_empty_one_as_empty(self):
+        """corptools stores a missing reason as None; the page shows a dash
+        only for a report from before reasons were read."""
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3), reason="Refund ticket 42")
+        add_wallet_entry(self.gm, BANK_TEXT, Decimal("-2"), _at(4))
+
+        rows = self.page()["rows"]
+
+        self.assertEqual([row["reason"] for row in rows], ["", "Refund ticket 42"])
+
 
 class TestGmPage(GmTestCase):
     def test_should_list_a_gm_transaction_with_everything_around_it(self):
@@ -722,6 +732,30 @@ class TestGmView(GmTestCase):
         first_cell = table_body(self.client.get(self.url)).split("</td>")[0]
 
         self.assertIn('data-order="">&mdash;', first_cell)
+
+    def test_should_show_the_reason_before_the_description(self):
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3), reason="Refund ticket 42")
+
+        response = self.client.get(self.url)
+        header = response.content.decode().split("<thead>")[1].split("</thead>")[0]
+        titles = [cell.split(">", 1)[1].split("<", 1)[0] for cell in header.split("<th ")[1:]]
+        cells = table_body(response).split("</tr>")[0].split("</td>")
+
+        self.assertEqual(titles[-2:], ["Reason", "Description"])
+        self.assertIn("Refund ticket 42", cells[-3])
+        self.assertIn(GM_TEXT, cells[-2])
+
+    def test_should_show_a_dash_for_a_reason_the_job_did_not_read(self):
+        add_wallet_entry(self.gm, GM_TEXT, Decimal("-1"), _at(3), reason="Refund ticket 42")
+        transactions = find_gm_transactions()
+        for row in transactions:
+            del row["reason"]
+        GmReport.objects.create(pk=1, report={"transactions": transactions}, computed_at=_at(4))
+
+        cells = table_body(self.client.get(self.url)).split("</tr>")[0].split("</td>")
+
+        self.assertIn("&mdash;", cells[-3])
+        self.assertNotIn("Refund ticket 42", cells[-3])
 
     def test_script_should_describe_every_column(self):
         """DataTables refuses a table whose columns option has a different

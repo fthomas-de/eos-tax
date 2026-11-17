@@ -231,6 +231,7 @@ document.addEventListener("DOMContentLoaded", function () {
             { searchable: true },   // Alliance
             { searchable: false },  // Amount
             { searchable: false },  // Wallet balance
+            { searchable: true },   // Reason
             { searchable: true }    // Description
         ],
         search: {

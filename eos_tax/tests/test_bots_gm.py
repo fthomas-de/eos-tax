@@ -253,6 +253,21 @@ class TestGmTab(BotsPageTestCase):
         self.assertNotIn("Stranger Pilot", body)
         self.assertNotIn(f"bots/{BROKE_ID}/", body)
 
+    def test_should_show_the_reason_before_the_description(self):
+        owner = create_user("owner", 2100000396, BRAVO_CORP_ID, "Bravo Corp")
+        create_alt(owner, RATTER_ID, "Busy Ratter")
+        create_alt(owner, ALT_ID, "Alt Pilot")
+        add_wallet_entry(add_character_audit(ALT_ID, True), GM_TEXT, Decimal("-5"), _at(3),
+                         reason="Refund ticket 42")
+
+        body = self.gm_tab().content.decode()
+        header = body.split("<thead>")[1].split("</thead>")[0]
+        cells = body.split("<tbody>")[1].split("</tr>")[0].split("</td>")
+
+        self.assertLess(header.index("Reason"), header.index("Description"))
+        self.assertIn("Refund ticket 42", cells[4])
+        self.assertIn(GM_TEXT, cells[5])
+
     def test_should_list_a_wallet_below_zero_of_the_account(self):
         self.below_zero(RATTER_ID)
 
