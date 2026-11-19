@@ -4,13 +4,18 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-19 (0.4.29).
+Last updated 2026-11-19 (0.4.30).
 
 ## Release
 
-- Version **0.4.29** in `eos_tax/__init__.py`, released 2026-11-19, tag
-  `v0.4.29`
-- `[0.4.29]` in `CHANGELOG.md`, the outcome of a permission review of all
+- Version **0.4.30** in `eos_tax/__init__.py`, released 2026-11-19, tag
+  `v0.4.30`
+- `[0.4.30]` in `CHANGELOG.md`: GM Transactions shows a CEO **whole
+  accounts** ("Level 2", decisions below). Where it lives: `get_gm_page`,
+  `members` and `own()` in its `corporation_id` branch. Tests: three in
+  `TestGmCeo` (visitor's account, member's alt elsewhere, account that
+  left); three sabotages caught
+- `[0.4.29]`, the outcome of a permission review of all
   five eos-* apps (one session per app, notes merged by a coordination
   session): `basic_access` sees the overview and the menu badge for the
   **main's Corporation only** (`payments.main_corporation_ids(user)`,
@@ -122,7 +127,7 @@ Last updated 2026-11-19 (0.4.29).
   0028, `GmReport` 0029). `manage_settings` (0.4.5, 0027) guards every
   settings write; `admin_view` alone sees the settings page read only
 - Migrations **0001-0037** applied to `aa_dev`
-- 872 tests, all green (857 without the translation tag, 15 with it); the
+- 875 tests, all green (860 without the translation tag, 15 with it); the
   suite ran `--fresh` at the commit
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the page's
   GM rows can only be seen in tests or on production data. 0.4.9 to 0.4.16
@@ -134,7 +139,7 @@ Last updated 2026-11-19 (0.4.29).
   a native speaker, not looked at in a browser
 - `CHANGELOG.md` is newest first
 
-## Decisions of the 2026-11-18/19 session (0.4.29)
+## Decisions of the 2026-11-18/19 session (0.4.29, 0.4.30)
 
 The permission review - the user's answers unless marked:
 
@@ -159,7 +164,7 @@ The permission review - the user's answers unless marked:
   block's holding Corporation) now also goes by the main alone.
 - eos-invoices stays with the main's Corporation (decided there).
 - **"Level 2" for CEOs on GM Transactions** (decided in the coordination
-  of all eos-* apps, built after 0.4.29, not yet committed): the CEO sees
+  of all eos-* apps, 0.4.30): the CEO sees
   **whole accounts** - every account with a character in the main's
   Corporation now, a member's alt elsewhere and a visitor's main and other
   alts (also outside the alliance) included, as eos-spy-network's
@@ -711,12 +716,17 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
-00000000000. **On deploying 0.4.29**: no migration, no Celery restart,
-   no static file. Log in as a CEO with an alt in another Corporation of
-   the alliance: the overview and the menu badge show only the main's
-   Corporation. On GM Transactions, a former member's row shows the
-   booking but empty wallet, login, Corporation and Alliance. Not looked
-   at in a browser - only through the tests.
+00000000000. **On deploying 0.4.29 / 0.4.30**: no migration, no Celery
+   restart, no static file. Log in as a CEO with an alt in another
+   Corporation of the alliance: the overview and the menu badge show only
+   the main's Corporation. On GM Transactions the CEO sees the whole
+   account of a member (alts elsewhere too) and of a visitor (main and
+   other alts too, with their data of today); an account that left
+   altogether shows only the bookings made while in the Corporation,
+   with empty wallet, login, Corporation and Alliance. Compare a
+   visitor's GM X characters with eos-auth-monitor's "Alts of mains in
+   other Corporations" for the same CEO. Not looked at in a browser -
+   only through the tests.
 0000000000. **On deploying 0.4.28**: no migration; `collectstatic` for
    `gm-transactions.js`, and restart the Celery workers - a worker on
    older code stores reports without `reason`. Then press Recalculate on
