@@ -4,13 +4,27 @@ Where the work stands and what is still open. `CLAUDE.md` holds the durable
 rules for working on this app; this file holds the moment, and goes stale on
 purpose - if a statement here contradicts the code, the code is right.
 
-Last updated 2026-11-17 (0.4.28).
+Last updated 2026-11-19 (0.4.29).
 
 ## Release
 
-- Version **0.4.28** in `eos_tax/__init__.py`, released 2026-11-17, tag
-  `v0.4.28`
-- `[0.4.28]` in `CHANGELOG.md`: a "Reason" column (the journal's
+- Version **0.4.29** in `eos_tax/__init__.py`, released 2026-11-19, tag
+  `v0.4.29`
+- `[0.4.29]` in `CHANGELOG.md`, the outcome of a permission review of all
+  five eos-* apps (one session per app, notes merged by a coordination
+  session): `basic_access` sees the overview and the menu badge for the
+  **main's Corporation only** (`payments.main_corporation_ids(user)`,
+  replacing `get_all_corps_for_user`; used by `views.index` and
+  `auth_hooks`); on GM Transactions a CEO no longer sees the wallet, last
+  login, Corporation and Alliance of today of a member who left
+  (`get_gm_page`: `members` filters `balances`/`logins`, `present` blanks
+  the two names); the Recalculate partial is shown on the endpoints' own
+  condition (`gm_bots_access`, or `admin_view` and `manage_settings`);
+  README permission table lists all four. Tests: two in `TestIndexContent`
+  / `TestMenuBadge` for the alt, one for the badge without a main, one in
+  `TestGmCeo` for who left, one for the button; seven sabotages caught.
+  Decisions below
+- `[0.4.28]`: a "Reason" column (the journal's
   `reason`, the text the GM typed) before "Description" on GM Transactions
   (searchable) and on the bots GM tab. Where it lives:
   `gm_transactions.find_gm_transactions` stores `reason` (None as `""`),
@@ -108,7 +122,7 @@ Last updated 2026-11-17 (0.4.28).
   0028, `GmReport` 0029). `manage_settings` (0.4.5, 0027) guards every
   settings write; `admin_view` alone sees the settings page read only
 - Migrations **0001-0037** applied to `aa_dev`
-- 867 tests, all green (852 without the translation tag, 15 with it); the
+- 872 tests, all green (857 without the translation tag, 15 with it); the
   suite ran `--fresh` at the commit
 - `aa_dev` has **no GM transactions** and no stored `GmReport`: the page's
   GM rows can only be seen in tests or on production data. 0.4.9 to 0.4.16
@@ -119,6 +133,33 @@ Last updated 2026-11-17 (0.4.28).
   kept literal in de. `zh_Hans` (0.4.24) is machine-translated, not read by
   a native speaker, not looked at in a browser
 - `CHANGELOG.md` is newest first
+
+## Decisions of the 2026-11-18/19 session (0.4.29)
+
+The permission review - the user's answers unless marked:
+
+- **`basic_access` is held by CEOs and alliance leadership only** in
+  production; the scope it opens is therefore meant. The **Guest state of
+  `aa_dev` holds `admin_view` and `basic_access`** (and the model
+  permissions) on purpose, for testing - production is clean.
+- **Overview and menu badge: the main's Corporation only**, like GM
+  Transactions and eos-auth-monitor (first answered "every alt", changed
+  after the scenario was spelled out: an alt as a plain member opened a
+  foreign Corporation's amounts and its members without audit).
+- **GM Transactions for CEOs: who left keeps the booking**, not the wallet,
+  login, Corporation and Alliance of today. Claude's call: the main, the
+  Corporations in the Alliance and the age stay (accepted in 0.4.27); the
+  footer counts the wallets of members of today only.
+- **Corp Tax Changes stays open for any `corp_id`**, also of a Corporation
+  outside the taxed alliances - `admin_view` may see everything.
+- Claude's calls: the "500 without a main" finding was wrong - Alliance
+  Auth wraps every app url in `main_character_required`
+  (`allianceauth/urls.py:41`); only the menu hook runs without a main,
+  hence the guard in `main_corporation_ids`. `get_tax_corp` (the help
+  block's holding Corporation) now also goes by the main alone.
+- Open for the coordination session: eos-invoices reads `MonthlyTax` as a
+  payment source (`EOS_INVOICES_SOURCE_APPS = ["eos_tax"]`) - whether it
+  shows a CEO the main's Corporation only is decided there, not here.
 
 ## Decisions of the 2026-11-17 session (0.4.28)
 
@@ -138,7 +179,7 @@ GM Transactions for CEOs - the user's choices unless marked:
 
 - **The CEO permission is `basic_access`** - no new permission.
 - **Own Corporation = the main's Corporation only**, not those of the
-  user's alts (the overview uses every character's; this page does not).
+  user's alts (since 0.4.29 the overview too).
 - **A row counts when the character is in that Corporation now, or was
   when it booked the transaction** - so a member of today shows with
   bookings from before joining, a member who left with the bookings made
@@ -287,7 +328,8 @@ The audit (`docs/AUDIT.md`, "Decisions") - the user's choices:
   the page, the README says it.
 - **Left as they are**: the exception text on the progress bar (it is what
   makes a failure easy to find); what `basic_access` sees, the characters
-  without wallet audit included (holders are CEOs or alliance leadership);
+  without wallet audit included (holders are CEOs or alliance leadership;
+  since 0.4.29 for the main's Corporation only);
   `duration` / `apart_for` on the runs and clock tabs written in the
   worker's language.
 - Claude's calls: a reason that names another `n/n/n` beside the code (a
@@ -653,6 +695,12 @@ plain list of alts from Alliance Auth, without assessments.
 
 ## Open
 
+00000000000. **On deploying 0.4.29**: no migration, no Celery restart,
+   no static file. Log in as a CEO with an alt in another Corporation of
+   the alliance: the overview and the menu badge show only the main's
+   Corporation. On GM Transactions, a former member's row shows the
+   booking but empty wallet, login, Corporation and Alliance. Not looked
+   at in a browser - only through the tests.
 0000000000. **On deploying 0.4.28**: no migration; `collectstatic` for
    `gm-transactions.js`, and restart the Celery workers - a worker on
    older code stores reports without `reason`. Then press Recalculate on
@@ -889,6 +937,18 @@ The browser pane opens a `file://` page only as a static snapshot - no
 script runs there.
 
 ## Traps recent sessions cost time on
+
+- **`eos-test` always exits 0** - it ends in a `grep`. A sabotage runner
+  that checks the exit code reports every sabotage as missed; look for
+  `FAILED (` and the test name in the output (2026-11-19).
+- **`get_gm_page` already has a local `today`** (the date the login days
+  are counted from). A new `today` inside `row_for` shadowed it and broke
+  three login tests with a TypeError - pick another name.
+- **The tests' `audit()` helper in `TestGmCeo` moves `corporation_id`
+  only**, not `corporation_name`; update the name too where a test reads it.
+- **Git Bash mangles `/home/...` paths** handed to `wsl.exe` (it turned
+  one into `C:/Program Files/Git/home/...`): run such calls through
+  PowerShell or with `MSYS_NO_PATHCONV=1`.
 
 - **`gm-transactions.html` is stored with CRLF line endings** (`base.html`
   and `views.py` with LF; other files not checked). The Edit tool through `\\wsl.localhost` wrote it back
