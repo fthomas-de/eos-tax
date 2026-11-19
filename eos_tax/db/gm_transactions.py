@@ -507,7 +507,8 @@ def get_gm_page(stored, character_ids=None, corporation_id=None):
 
     character_ids: only these characters - one account on the bots page.
     corporation_id: only what this Corporation's CEO may see - characters in
-    it now, and transactions booked while in it.
+    it now, and transactions booked while in it; for one who left, without
+    the wallet, login, Corporation and Alliance of today.
     """
     transactions = stored["transactions"]
     balances = _negative_balances()
@@ -580,14 +581,22 @@ def get_gm_page(stored, character_ids=None, corporation_id=None):
 
         transactions = [row for row in transactions if own(row["character_id"], row)]
         negative_only = {eve_id for eve_id in negative_only if own(eve_id)}
-        listed = {row["character_id"] for row in transactions} | negative_only
+        # who left keeps the booking made with us, not the wallet, login and
+        # whereabouts of today - the user's choice
+        members = {
+            eve_id for eve_id, character in characters.items()
+            if character.corporation_id == corporation_id
+        }
         # the footer counts the wallets of the rows shown, not everyone's
-        balances = {eve_id: balance for eve_id, balance in balances.items() if eve_id in listed}
+        balances = {eve_id: balance for eve_id, balance in balances.items() if eve_id in members}
+        logins = {eve_id: login for eve_id, login in logins.items() if eve_id in members}
 
     def row_for(character_id, transaction=None):
         character = characters.get(character_id)
         main = mains.get(character_id)
         last_login = logins.get(character_id)
+        # where the character is today - not for whoever left a CEO's Corporation
+        present = character if corporation_id is None or character_id in members else None
         named, other = (
             sides(transaction["description"], player_names) if transaction else ("", "")
         )
@@ -603,10 +612,10 @@ def get_gm_page(stored, character_ids=None, corporation_id=None):
             # did not see, which is not the same as "left"
             "in_alliance": in_alliance.get(character_id),
             "character_name": character.character_name if character else str(character_id),
-            "corporation_name": character.corporation_name if character else "",
+            "corporation_name": present.corporation_name if present else "",
             # empty without a history reaching back that far
             "corporation_then": corporation_then(character_id, transaction),
-            "alliance_name": (character.alliance_name or "") if character else "",
+            "alliance_name": (present.alliance_name or "") if present else "",
             "alliance_corporations": history.get(character_id, []),
             "main_name": main[1] if main else "",
             # as of the job's run, like the bots lists. Gone below zero since:

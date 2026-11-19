@@ -1,11 +1,10 @@
 from django.utils.translation import gettext_lazy as _
 
 from allianceauth import hooks
-from allianceauth.framework.api.user import get_all_characters_from_user
 from allianceauth.services.hooks import MenuItemHook, UrlHook
 
 from . import urls
-from eos_tax.db.payments import get_all_corps_for_user, get_open_payment_count
+from eos_tax.db.payments import get_open_payment_count, main_corporation_ids
 from .util import get_dates
 
 
@@ -36,7 +35,8 @@ class EosTaxMenuItem(MenuItemHook):
         # hrapplications, srp and corptools use. None hides it, so a user with
         # nothing outstanding sees the entry exactly as before.
         admin = request.user.has_perm("eos_tax.admin_view")
-        corps = get_all_corps_for_user(get_all_characters_from_user(request.user))
+        # the overview's own rule, or the badge counts rows the page hides
+        corps = main_corporation_ids(request.user)
         due = get_open_payment_count(get_dates(), admin=admin, corps=corps)
 
         self.count = due if due else None

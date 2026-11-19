@@ -25,6 +25,7 @@ from .factories import (
     OUTSIDER_CORP_ID,
     TAXED_ALLIANCE_ID,
     create_alliance,
+    create_alt,
     create_corporation,
     create_tax_row,
     create_user,
@@ -111,6 +112,20 @@ class TestIndexContent(EosTaxTestCase):
             "member", 91000002, BRAVO_CORP_ID, "Bravo Corp", ["basic_access"]
         )
         self.client.force_login(basic_user)
+
+        rows = table_body(self.client.get(reverse("eos_tax:index"), {"show": "all"}))
+
+        self.assertIn("Bravo Corp", rows)
+        self.assertNotIn("Alpha Corp", rows)
+
+    def test_should_leave_out_the_corporation_of_an_alt(self):
+        """The main's Corporation only - an alt that is a plain member in
+        Alpha must not open Alpha's figures to its owner."""
+        create_tax_row(BRAVO_CORP_ID, "Bravo Corp", payed=False)
+        create_tax_row(ALPHA_CORP_ID, "Alpha Corp", payed=False)
+        ceo = create_user("ceo", 91000005, BRAVO_CORP_ID, "Bravo Corp", ["basic_access"])
+        create_alt(ceo, 91000006, "CEO Alt", ALPHA_CORP_ID, "Alpha Corp")
+        self.client.force_login(ceo)
 
         rows = table_body(self.client.get(reverse("eos_tax:index"), {"show": "all"}))
 
@@ -814,6 +829,35 @@ class TestMenuBadge(EosTaxTestCase):
         self.row.save()
 
         self.assertIsNone(self.rendered_for(["basic_access"]).count)
+
+    def test_should_not_count_the_corporation_of_an_alt(self):
+        """The overview's rule: Bravo's due row belongs to the alt's
+        Corporation, not the main's."""
+        user = create_user("badge", 95000012, ALPHA_CORP_ID, "Alpha Corp", ["basic_access"])
+        create_alt(user, 95000013, "Badge Alt", BRAVO_CORP_ID, "Bravo Corp")
+        request = RequestFactory().get(reverse("eos_tax:index"))
+        request.user = user
+
+        item = EosTaxMenuItem()
+        item.render(request)
+
+        self.assertIsNone(item.count)
+
+    def test_should_render_without_a_main(self):
+        """The menu is drawn on every page, the dashboard of a user without
+        a main included - unlike the app's urls, it is not behind
+        main_character_required."""
+        user = User.objects.create_user("nomain", "nomain@example.com")
+        user.user_permissions.add(
+            Permission.objects.get(content_type__app_label="eos_tax", codename="basic_access")
+        )
+        request = RequestFactory().get(reverse("eos_tax:index"))
+        request.user = user
+
+        item = EosTaxMenuItem()
+        item.render(request)
+
+        self.assertIsNone(item.count)
 
     def test_should_render_nothing_without_access(self):
         user = create_user("outsider", 95000011, BRAVO_CORP_ID, "Bravo Corp", [])

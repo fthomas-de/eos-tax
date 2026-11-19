@@ -17,7 +17,6 @@ from esi.models import Token
 
 from allianceauth.eveonline.models import EveCharacter, EveCorporationInfo
 from allianceauth.services.hooks import get_extension_logger
-from allianceauth.framework.api.user import get_all_characters_from_user
 
 from eos_tax import VERSION
 from eos_tax.app_settings import get_config
@@ -48,9 +47,9 @@ from eos_tax.db.payments import (
     STATE_OPEN,
     STATE_PAID,
     STATE_PROGRESS,
-    get_all_corps_for_user,
     get_tax_corp,
     get_website_data,
+    main_corporation_ids,
     update_corp,
 )
 from eos_tax.db.shared import alts_of
@@ -104,8 +103,7 @@ def index(request):
         return redirect("eos_tax:bots")
 
     dates = get_dates()
-    characters = get_all_characters_from_user(user=request.user)
-    corps = get_all_corps_for_user(characters)
+    corps = main_corporation_ids(request.user)
     # outstanding only by default, like eos-invoices' overview: a corp
     # officer lands here to see what can be collected now. ?paid=1 is the
     # link of the old two-button toggle, kept so a bookmark still shows

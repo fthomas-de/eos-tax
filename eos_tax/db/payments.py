@@ -741,12 +741,16 @@ def update_corp(corp_id: int, month: int = -1, year: int = -1) -> dict:
     }
 
 
-def get_all_corps_for_user(characters: list = []):
-    corporation_ids = []
-    for char in characters:
-        if char.corporation_id:
-            corporation_ids.append(char.corporation_id)
-    return corporation_ids
+def main_corporation_ids(user):
+    """The Corporation of the user's main, as a list - empty without a main.
+
+    Not every alt's: an alt that is a plain member elsewhere would open that
+    Corporation's figures and members to its owner, the user's choice. The
+    same rule as GM Transactions and eos-auth-monitor.
+    """
+    main = user.profile.main_character
+
+    return [main.corporation_id] if main and main.corporation_id else []
 
 
 def get_tax_corp(corps: list):

@@ -975,6 +975,40 @@ class TestGmCeo(GmTestCase):
         )
         self.assertEqual(page["stats"], {"transactions": 1, "characters": 2, "negative": 1})
 
+    def test_should_hide_where_a_member_who_left_is_today(self):
+        """Mr Vaseline left for Bravo: the CEO keeps the booking made in
+        Alpha, not his wallet, login, Corporation or Alliance of today. A
+        member of today keeps all four."""
+        self.gm.last_known_login = _at(9)
+        self.gm.save()
+        member = self.audit(MAIN_ID, ALPHA_CORP_ID, "100.00", "New Member")
+        member.last_known_login = _at(9)
+        member.save()
+        add_wallet_entry(member, "GM [1] issued transaction between New Member and GM X",
+                         Decimal("-7"), _at(5))
+        EveCharacter.objects.filter(character_id__in=[GM_ID, MAIN_ID]).update(
+            alliance_name="Taxed Alliance"
+        )
+        # audit() moves the id only
+        EveCharacter.objects.filter(character_id=MAIN_ID).update(corporation_name="Alpha Corp")
+
+        rows = {row["character_id"]: row for row in self.ceo_page()["rows"]}
+
+        def today(row):
+            return (row["balance"], row["last_login"], row["corporation_name"], row["alliance_name"])
+
+        self.assertEqual(today(rows[GM_ID]), (None, None, "", ""))
+        # the Corporation he booked in stays - corptools' history names it so here
+        self.assertEqual(rows[GM_ID]["corporation_then"], f"Corp {ALPHA_CORP_ID}")
+        self.assertEqual(
+            today(rows[MAIN_ID]), (Decimal("100.00"), _at(9), "Alpha Corp", "Taxed Alliance")
+        )
+        # and the full view still sees where he went
+        full = {row["character_id"]: row for row in get_gm_page(get_stored_gm_report())["rows"]}
+        self.assertEqual(
+            today(full[GM_ID]), (Decimal("1500.00"), _at(9), "Bravo Corp", "Taxed Alliance")
+        )
+
     def test_should_show_the_ceo_only_the_own_rows_read_only(self):
         GmNote.objects.create(character_id=GM_ID, entry_id=self.while_ours.entry_id,
                               text="refund asked", cleared=True)
@@ -992,6 +1026,17 @@ class TestGmCeo(GmTestCase):
         self.assertNotContains(response, 'id="eos-tax-gm-note"')
         self.assertNotContains(response, reverse("eos_tax:gm_transactions_recalculate"))
         self.assertContains(response, f'href="{self.url}"')
+
+    def test_should_offer_no_recalculate_button_the_endpoint_refuses(self):
+        """manage_settings beside basic_access alone: the endpoint wants read
+        access as well, so the button would only meet a login redirect."""
+        ceo = create_user("ceo-settings", 2100000197, ALPHA_CORP_ID, "Alpha Corp",
+                          ["basic_access", "manage_settings"])
+        self.client.force_login(ceo)
+        recalculate_url = reverse("eos_tax:gm_transactions_recalculate")
+
+        self.assertNotContains(self.client.get(self.url), recalculate_url)
+        self.assertEqual(self.client.post(recalculate_url).status_code, 302)
 
     def test_should_refuse_a_note_or_tick_from_the_ceo(self):
         self.client.force_login(self.ceo)

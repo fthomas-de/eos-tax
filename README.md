@@ -127,7 +127,7 @@ rate is stored per row, so a new entry never rewrites the past.
 
 **Overview** - what each Corporation owes for the previous and the running month and whether
 it has paid. Sortable columns, the Corporation column is searchable. Members see
-their own Corporations, `admin_view` sees all.
+the Corporation of their main, `admin_view` sees all.
 
 **Statistics** - tax per Corporation over a year, either as a trend line or as
 the share of a single month. The legend doubles as a table and its checkboxes
@@ -202,9 +202,10 @@ ordered and each row carries the Corporation's own figure beside it.
 
 | Permission | Grants |
 |---|---|
-| `eos_tax.basic_access` | the Overview, limited to the user's own Corporations |
-| `eos_tax.admin_view` | all Corporations, plus Statistics, Bots and Settings - Settings read only |
+| `eos_tax.basic_access` | meant for CEOs: the Overview and GM Transactions, both limited to the Corporation of the user's main; GM Transactions read only, and for a member who left only the bookings made while in it |
+| `eos_tax.admin_view` | all Corporations, plus Statistics, Bots, Corp Tax Changes, GM Transactions (notes and cleared ticks included) and Settings - Settings read only |
 | `eos_tax.manage_settings` | saving Settings, recalculating a month, dismissing a finished run from the progress bar; given together with `admin_view` |
+| `eos_tax.gm_bots_access` | the Bots and GM Transactions pages with every function on them, both Recalculate buttons included, and nothing else of the app |
 
 **Upgrading from 0.4.4 or earlier:** `admin_view` used to save Settings and
 recalculate as well. After `migrate`, give `eos_tax.manage_settings` to every

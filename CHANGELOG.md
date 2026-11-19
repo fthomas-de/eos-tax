@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.29] - 2026-11-19
+
+### Changed
+
+- The overview and the menu badge show `basic_access` the Corporation of
+  the main only, no longer that of every alt. A CEO with an alt as a plain
+  member in another Corporation of the alliance saw that Corporation's
+  amounts, payments and the names and ISK of its members without wallet
+  audit - figures its own CEO never handed over. GM Transactions and
+  eos-auth-monitor already went by the main alone; now all three agree.
+- GM Transactions no longer shows a CEO where a member who left is today:
+  for a character outside the CEO's Corporation now, listed for a booking
+  made while in it, the wallet balance, the last login, the Corporation
+  and the Alliance stay empty. The booking itself, the Corporation at the
+  time, the main and the Corporations in the Alliance stay, as before.
+  `admin_view` and `gm_bots_access` still see all of it.
+
+### Fixed
+
+- The Recalculate button on GM Transactions and the bots page is offered
+  only to whom its endpoint lets through: `gm_bots_access`, or
+  `admin_view` together with `manage_settings`. A CEO holding
+  `manage_settings` beside `basic_access` alone saw the button, and the
+  click met a login redirect.
+- The README's permission table names `gm_bots_access` and says what
+  `basic_access` and `admin_view` open since 0.4.27.
+
 ## [0.4.28] - 2026-11-17
 
 ### Added
