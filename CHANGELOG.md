@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.30] - 2026-11-19
+
+### Changed
+
+- GM Transactions shows a CEO (`basic_access`) whole accounts: every
+  account with a character in the Corporation of the CEO's main now, with
+  all its characters - a member's alt in another Corporation, and a
+  visitor's main and other alts, in or outside the alliance - their GM
+  bookings wherever and whenever made, their wallets below zero and their
+  data of today. The page looked at single characters, so a visitor's
+  main and a member's alt elsewhere never showed, although eos-spy-network
+  and eos-auth-monitor give the CEO those accounts whole. An account with
+  no character left in the Corporation keeps what 0.4.29 showed: the
+  bookings made while in it, without the data of today. The CEO's own alt
+  in another Corporation still opens nothing there.
+
 ## [0.4.29] - 2026-11-19
 
 ### Changed

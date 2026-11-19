@@ -202,7 +202,7 @@ ordered and each row carries the Corporation's own figure beside it.
 
 | Permission | Grants |
 |---|---|
-| `eos_tax.basic_access` | meant for CEOs: the Overview and GM Transactions, both limited to the Corporation of the user's main; GM Transactions read only, and for a member who left only the bookings made while in it |
+| `eos_tax.basic_access` | meant for CEOs: the Overview for the Corporation of the user's main; GM Transactions read only, for every account with a character in that Corporation now, whole (alts elsewhere and mains outside it included), and of an account that left only the bookings made while in it |
 | `eos_tax.admin_view` | all Corporations, plus Statistics, Bots, Corp Tax Changes, GM Transactions (notes and cleared ticks included) and Settings - Settings read only |
 | `eos_tax.manage_settings` | saving Settings, recalculating a month, dismissing a finished run from the progress bar; given together with `admin_view` |
 | `eos_tax.gm_bots_access` | the Bots and GM Transactions pages with every function on them, both Recalculate buttons included, and nothing else of the app |

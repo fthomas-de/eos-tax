@@ -157,9 +157,25 @@ The permission review - the user's answers unless marked:
   (`allianceauth/urls.py:41`); only the menu hook runs without a main,
   hence the guard in `main_corporation_ids`. `get_tax_corp` (the help
   block's holding Corporation) now also goes by the main alone.
-- Open for the coordination session: eos-invoices reads `MonthlyTax` as a
-  payment source (`EOS_INVOICES_SOURCE_APPS = ["eos_tax"]`) - whether it
-  shows a CEO the main's Corporation only is decided there, not here.
+- eos-invoices stays with the main's Corporation (decided there).
+- **"Level 2" for CEOs on GM Transactions** (decided in the coordination
+  of all eos-* apps, built after 0.4.29, not yet committed): the CEO sees
+  **whole accounts** - every account with a character in the main's
+  Corporation now, a member's alt elsewhere and a visitor's main and other
+  alts (also outside the alliance) included, as eos-spy-network's
+  "visitors" and eos-auth-monitor's "Alts of mains in other Corporations".
+  Of those accounts **every GM booking** (any time, any Corporation),
+  **the data of today** and **every wallet below zero**. An account with
+  no character left in the Corporation: **the bookings made while in it,
+  without the data of today** (0.4.29 unchanged). Where it lives:
+  `get_gm_page`, `members` = characters of those accounts plus
+  unregistered characters in the Corporation; `own()` = in `members`, or
+  booked while in the Corporation. Three tests in `TestGmCeo`, three
+  sabotages caught. Claude's call: the CEO's own account counts like any
+  other, so the CEO's own alt in a second Corporation shows - its own
+  data. eos-auth-monitor gets the GM X characters of those accounts
+  through `character_ids(corporation_id)` without a change of its own;
+  checked against it by the coordination session.
 
 ## Decisions of the 2026-11-17 session (0.4.28)
 
@@ -183,7 +199,7 @@ GM Transactions for CEOs - the user's choices unless marked:
 - **A row counts when the character is in that Corporation now, or was
   when it booked the transaction** - so a member of today shows with
   bookings from before joining, a member who left with the bookings made
-  while in.
+  while in. (Widened to whole accounts after 0.4.29 - see "Level 2".)
 - **Wallet below zero: only for a member of today** (no moment to look
   the Corporation up at).
 - **Read only, notes visible**: note as text, the tick as a green check,

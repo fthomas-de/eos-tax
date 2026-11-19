@@ -1027,6 +1027,62 @@ class TestGmCeo(GmTestCase):
         self.assertNotContains(response, reverse("eos_tax:gm_transactions_recalculate"))
         self.assertContains(response, f'href="{self.url}"')
 
+    def test_should_show_a_visitors_whole_account(self):
+        """A main in Bravo with an alt in Alpha: the CEO sees the main's
+        booking made in Bravo with its data of today, and the wallet below
+        zero of a third character outside the alliance."""
+        visitor = create_user("visitor", 2100000201, BRAVO_CORP_ID, "Bravo Corp")
+        create_alt(visitor, 2100000202, "Visitor Alt", ALPHA_CORP_ID, "Alpha Corp")
+        create_alt(visitor, 2100000203, "Visitor Broke", OUTSIDER_CORP_ID, "Outsider Corp")
+        main = self.audit(2100000201, BRAVO_CORP_ID, "50.00", "visitor character")
+        add_wallet_entry(main, "GM [2] issued transaction between visitor character and GM X",
+                         Decimal("-3"), _at(4))
+        self.audit(2100000203, OUTSIDER_CORP_ID, "-20.00", "Visitor Broke")
+
+        rows = {row["character_id"]: row for row in self.ceo_page()["rows"]}
+
+        self.assertEqual(
+            (rows[2100000201]["amount"], rows[2100000201]["balance"],
+             rows[2100000201]["corporation_name"]),
+            (Decimal("-3"), Decimal("50.00"), "Bravo Corp"),
+        )
+        self.assertEqual(rows[2100000203]["balance"], Decimal("-20.00"))
+
+    def test_should_show_a_members_alt_in_another_corporation(self):
+        member = create_user("member", 2100000204, ALPHA_CORP_ID, "Alpha Corp")
+        create_alt(member, 2100000205, "Member Alt")
+        alt = self.audit(2100000205, BRAVO_CORP_ID, "10.00", "Member Alt")
+        add_wallet_entry(alt, "GM [3] issued transaction between Member Alt and GM X",
+                         Decimal("-4"), _at(6))
+
+        rows = {row["character_id"]: row for row in self.ceo_page()["rows"]}
+
+        self.assertEqual(rows[2100000205]["amount"], Decimal("-4"))
+
+    def test_should_keep_only_the_bookings_of_an_account_that_left(self):
+        """Main and alt in Bravo now, the main in Alpha during 2022: the CEO
+        keeps that one booking, without the data of today, and nothing of
+        the alt - the account is no longer a whole account of Alpha's."""
+        gone = create_user("gone", 2100000206, BRAVO_CORP_ID, "Bravo Corp")
+        create_alt(gone, 2100000207, "Gone Alt")
+        main = self.audit(2100000206, BRAVO_CORP_ID, "30.00", "gone character")
+        alt = self.audit(2100000207, BRAVO_CORP_ID, "-40.00", "Gone Alt")
+        add_corporation_history(2100000206, ALPHA_CORP_ID, datetime(2022, 1, 1, tzinfo=timezone.utc))
+        add_corporation_history(2100000206, BRAVO_CORP_ID, datetime(2023, 1, 1, tzinfo=timezone.utc))
+        text = "GM [4] issued transaction between gone character and GM X"
+        add_wallet_entry(main, text, Decimal("-5"), datetime(2022, 6, 1, tzinfo=timezone.utc))
+        add_wallet_entry(main, text, Decimal("-6"), _at(7))
+        add_wallet_entry(alt, "GM [5] issued transaction between Gone Alt and GM X",
+                         Decimal("-8"), _at(8))
+
+        rows = [
+            (row["character_id"], row["amount"], row["balance"], row["corporation_name"])
+            for row in self.ceo_page()["rows"]
+            if row["character_id"] in (2100000206, 2100000207)
+        ]
+
+        self.assertEqual(rows, [(2100000206, Decimal("-5"), None, "")])
+
     def test_should_offer_no_recalculate_button_the_endpoint_refuses(self):
         """manage_settings beside basic_access alone: the endpoint wants read
         access as well, so the button would only meet a login redirect."""
